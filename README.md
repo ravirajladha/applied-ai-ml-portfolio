@@ -16,7 +16,8 @@ Large binary files (`.pptx`, `.xlsx`) are tracked with [Git LFS](https://git-lfs
 | Deep Reinforcement Learning | [`deep-reinforcement-learning/`](deep-reinforcement-learning/) |
 | Natural Language Processing | [`natural-language-processing/`](natural-language-processing/) |
 
-More subjects will be added as the semester progresses.
+More subjects will be added as the semester progresses. See [`GUIDE.md`](GUIDE.md)
+for folder conventions, the Git LFS/secrets setup, and how to add a new subject.
 
 ## Layout
 
