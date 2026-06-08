@@ -1,8 +1,8 @@
-# BITS MTech Coursework
+# Applied AI/ML Coursework Portfolio
 
-Personal archive of notes, lab notebooks, slides, and webinar material for my
-BITS Pilani WILP M.Tech coursework — mirrors the subject/session structure used
-on Taxila LMS. Heavy PDFs are kept on Drive and linked from each subject's
+Personal archive of notes, lab notebooks, slides, and webinar material from my
+ongoing M.Tech journey — mirrors the subject/session structure used on the
+Taxila LMS. Heavy PDFs are kept on Drive and linked from each subject's
 `resources.md` rather than committed (see `.gitignore`).
 
 Large binary files (`.pptx`, `.xlsx`) are tracked with [Git LFS](https://git-lfs.com/).
