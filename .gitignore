@@ -1,5 +1,7 @@
 .ipynb_checkpoints/
 *.html
+# ...but keep the interactive explainers that are part of practice topics
+!**/practice/**/*.html
 *.pdf
 .DS_Store
 __pycache__/

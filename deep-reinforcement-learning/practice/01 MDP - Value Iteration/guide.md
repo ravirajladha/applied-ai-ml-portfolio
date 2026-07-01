@@ -1,7 +1,10 @@
 # MDP Practice — Value Iteration (Build Guide)
 
 **Date:** 2026-07-01
-**Companion notebook:** `MDP Practice - Value Iteration.ipynb`
+**Files in this topic folder:**
+- `explainer.html` — interactive, click-to-learn visual explanation (open this first!)
+- `practice.ipynb` — the template notebook you fill in
+- `guide.md` — this cell-by-cell build guide
 **Goal:** Learn Markov Decision Processes by building a value-iteration solver for Frozen Lake **cell by cell.**
 
 This is the *basic version*: the problem statement and an empty scaffold. We fill in the code together, one cell at a time.

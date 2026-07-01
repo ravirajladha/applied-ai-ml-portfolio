@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MDP, Explained Simply — Frozen Lake</title>
+<style>
+  :root{
+    --bg:#0f1226; --card:#1a1f3d; --ink:#eef1ff; --muted:#a6adcf;
+    --accent:#4f8cff; --good:#38d39f; --bad:#ff6b6b; --warn:#ffcf5c;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:radial-gradient(1200px 600px at 20% -10%, #202a5c 0%, var(--bg) 55%);
+    color:var(--ink); line-height:1.6;
+  }
+  .wrap{max-width:900px; margin:0 auto; padding:28px 20px 80px}
+  h1{font-size:2rem; margin:.2em 0}
+  h2{font-size:1.4rem; margin-top:1.6em; border-left:4px solid var(--accent); padding-left:12px}
+  p{color:var(--ink)}
+  .lead{color:var(--muted); font-size:1.05rem}
+  .card{background:var(--card); border:1px solid #2b336b; border-radius:16px; padding:20px 22px; margin:18px 0; box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .analogy{background:linear-gradient(180deg,#20265280,#1a1f3d); border:1px dashed #46508f; border-radius:14px; padding:14px 18px; margin:14px 0}
+  .analogy b{color:var(--warn)}
+  code{background:#0d1030; padding:2px 7px; border-radius:6px; color:#bcd0ff; font-size:.92em}
+  table.mdp{width:100%; border-collapse:collapse; margin-top:8px}
+  table.mdp td,table.mdp th{border:1px solid #333c78; padding:9px 11px; text-align:left; vertical-align:top}
+  table.mdp th{background:#232a5e}
+  /* grid */
+  .board{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; max-width:420px; margin:16px auto}
+  .tile{
+    position:relative; aspect-ratio:1/1; border-radius:12px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; font-weight:700; font-size:1rem;
+    background:#0e1230; border:1px solid #2a326a; transition:background .35s ease;
+  }
+  .tile .emoji{font-size:1.7rem; line-height:1}
+  .tile .val{font-size:.85rem; color:#dfe6ff; margin-top:2px}
+  .tile .arrow{position:absolute; top:4px; right:8px; font-size:1.1rem; color:var(--warn)}
+  .tile.hole{background:#132a5e; color:#7fa8ff}
+  .tile.goal{background:#12482f}
+  .tile.start{outline:2px dashed var(--warn)}
+  .controls{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:14px 0}
+  button{
+    background:var(--accent); color:#fff; border:0; padding:11px 16px; border-radius:10px;
+    font-size:.95rem; font-weight:600; cursor:pointer; transition:transform .05s, filter .2s;
+  }
+  button:hover{filter:brightness(1.1)} button:active{transform:translateY(1px)}
+  button.ghost{background:#2b336b}
+  button.good{background:var(--good); color:#04231a}
+  .status{text-align:center; color:var(--muted); min-height:1.5em; margin-top:6px}
+  .status b{color:var(--good)}
+  .legend{display:flex; gap:18px; flex-wrap:wrap; justify-content:center; color:var(--muted); font-size:.9rem; margin-top:10px}
+  .swatch{display:inline-block; width:14px; height:14px; border-radius:4px; vertical-align:-2px; margin-right:5px}
+  .step{counter-increment:step; }
+  ol.steps{list-style:none; padding:0; counter-reset:step}
+  ol.steps li{position:relative; padding:10px 10px 10px 48px; margin:8px 0; background:#141935; border-radius:10px}
+  ol.steps li::before{content:counter(step); counter-increment:step; position:absolute; left:12px; top:10px;
+    width:26px; height:26px; background:var(--accent); border-radius:50%; text-align:center; line-height:26px; font-weight:700}
+  .pill{display:inline-block; background:#2b336b; padding:2px 10px; border-radius:20px; font-size:.8rem; color:#cdd6ff}
+  footer{color:var(--muted); text-align:center; margin-top:40px; font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>🧊 Frozen Lake, explained like you're new to this</h1>
+  <p class="lead">No jargon. We'll build up the whole idea — the problem, the setup, "values", and the "policy" — one small piece at a time, with a grid you can actually click.</p>
+
+  <!-- ===================== THE STORY ===================== -->
+  <div class="card">
+    <h2>1. The problem (the story) 🎁</h2>
+    <p>Imagine a little robot standing on a <b>frozen lake</b> made of square tiles. Somewhere on the lake there's a <b>gift 🎁</b>. The robot wants to walk to the gift.</p>
+    <p>But some tiles are <b>holes 💧</b>. Step on a hole and the robot falls in — game over, no gift.</p>
+    <div class="analogy">
+      🧠 <b>Relate it to:</b> it's like a tiny board game. You want to walk from <b>Start</b> to the <b>🎁</b>, avoiding the 💧 traps. That's literally the whole problem. Everything else we do is just <i>teaching the robot the smartest path</i>.
+    </div>
+    <p>The robot earns <b>+1 point</b> only when it reaches the gift. Stepping on a normal tile = <b>0 points</b>. So the robot's mission: <b>collect that 1 point by reaching the gift safely.</b></p>
+  </div>
+
+  <!-- ===================== THE BOARD ===================== -->
+  <div class="card">
+    <h2>2. The setup (the board) 🗺️</h2>
+    <p>Here's our lake. 4 rows × 4 columns = 16 tiles. Each tile has a number (0 to 15) so the computer can talk about it.</p>
+    <div class="board" id="board-static"></div>
+    <div class="legend">
+      <span><span class="swatch" style="background:#0e1230"></span>Frozen (safe)</span>
+      <span><span class="swatch" style="background:#132a5e"></span>💧 Hole (trap)</span>
+      <span><span class="swatch" style="background:#12482f"></span>🎁 Gift (goal)</span>
+      <span><span class="swatch" style="background:#0e1230;outline:2px dashed var(--warn)"></span>Start</span>
+    </div>
+    <div class="analogy">
+      🧠 <b>"Setup"</b> just means: <i>tell the computer what the board looks like</i> — where the start, holes, and gift are. In the code that's the line <code>gym.make('FrozenLake-v1')</code>. It hands you this exact board.
+    </div>
+  </div>
+
+  <!-- ===================== MDP PIECES ===================== -->
+  <div class="card">
+    <h2>3. The 5 words people use (MDP) 🧩</h2>
+    <p>"MDP" is just a fancy name for <b>a game with these 5 ingredients</b>. You already understand all of them — here are the plain-English versions:</p>
+    <table class="mdp">
+      <tr><th>Fancy word</th><th>What it really means</th><th>On our lake</th></tr>
+      <tr><td><b>State</b></td><td>Where you are right now</td><td>Which tile you're standing on (0–15)</td></tr>
+      <tr><td><b>Action</b></td><td>A move you can make</td><td>Step Left, Down, Right, or Up</td></tr>
+      <tr><td><b>Transition</b></td><td>Where a move takes you</td><td>Step Right from tile 0 → tile 1</td></tr>
+      <tr><td><b>Reward</b></td><td>Points for what just happened</td><td>+1 for reaching 🎁, else 0</td></tr>
+      <tr><td><b>Discount (γ)</b></td><td>"Sooner is better than later"</td><td>A number like 0.9 (more on this below)</td></tr>
+    </table>
+    <div class="analogy">
+      🧠 <b>Discount (γ) in one line:</b> winning <i>now</i> feels better than winning in 10 steps. γ = 0.9 means "each step of waiting shrinks the prize a little" — it nudges the robot to find the <b>shortest safe path</b>, not just any path.
+    </div>
+  </div>
+
+  <!-- ===================== VALUES (INTERACTIVE) ===================== -->
+  <div class="card">
+    <h2>4. "Value" — how good is each tile? 🔥❄️ (click me!)</h2>
+    <p>Here's the key idea. We want to give every tile a <b>score</b> that answers: <i>"If I'm standing here and play smart, how close am I to that gift?"</i> We call that score the tile's <b>value</b>.</p>
+    <div class="analogy">
+      🧠 <b>Think of the hot-and-cold game.</b> The gift tile is <b>hot 🔥</b>. Tiles right next to it are pretty hot. Tiles far away are <b>cold ❄️</b>. The "value" is exactly this hotness — and it <b>spreads outward from the gift</b>, one ripple at a time.
+    </div>
+    <p>Press <b>"Do one step"</b> and watch the heat spread out from the gift. This process is called <b>value iteration</b> — literally "figure out the values, step by step".</p>
+
+    <div class="board" id="board-live"></div>
+    <div class="controls">
+      <button id="btn-step" class="good">▶ Do one step</button>
+      <button id="btn-auto" class="ghost">⏩ Auto-run to finish</button>
+      <button id="btn-policy" class="ghost">🧭 Show the arrows (policy)</button>
+      <button id="btn-reset" class="ghost">↺ Reset</button>
+    </div>
+    <div class="status" id="status">All tiles start cold (value 0). Press “Do one step”.</div>
+
+    <div class="analogy" style="margin-top:18px">
+      🧠 <b>What one "step" does:</b> for every tile, the robot asks <i>"of my 4 possible moves, which one lands me on the best (hottest) neighbour?"</i> and copies a bit of that heat onto itself. Repeat a few times and the heat reaches all the way back to the Start. That's the whole trick. ✨
+    </div>
+  </div>
+
+  <!-- ===================== POLICY ===================== -->
+  <div class="card">
+    <h2>5. "Policy" — the cheat-sheet of arrows 🧭</h2>
+    <p>Once every tile has a value, the smart move on any tile is easy: <b>step toward your hottest neighbour</b>. If you draw that best move as an arrow on every tile, you get a <b>policy</b>.</p>
+    <div class="analogy">
+      🧠 <b>A policy is just GPS directions.</b> "On this tile, go this way." Follow the arrows from Start and they walk you around every hole, straight to the 🎁. Press <b>"Show the arrows"</b> above to see it.
+    </div>
+    <p><span class="pill">Left = ←</span> <span class="pill">Down = ↓</span> <span class="pill">Right = →</span> <span class="pill">Up = ↑</span></p>
+    <p>In the notebook, the function <code>extract_policy()</code> does exactly this: it looks at the values and writes down the best arrow for each tile.</p>
+  </div>
+
+  <!-- ===================== RECAP ===================== -->
+  <div class="card">
+    <h2>6. Putting the words together 🔁</h2>
+    <ol class="steps">
+      <li><b>Problem:</b> get the robot from Start to the 🎁 without falling in a 💧.</li>
+      <li><b>Setup:</b> load the board — <code>gym.make('FrozenLake-v1')</code>.</li>
+      <li><b>Value iteration:</b> spread "hotness" out from the gift until every tile has a value (how good it is).</li>
+      <li><b>Policy extraction:</b> on each tile, draw an arrow toward the hottest neighbour. Follow the arrows → you win.</li>
+    </ol>
+    <div class="analogy">
+      🎯 <b>That's the entire notebook.</b> "Value iteration" fills in the heat map; "extract policy" turns the heat map into arrows. Everything else is just Python plumbing around these two ideas.
+    </div>
+  </div>
+
+  <footer>Interactive study aid · Frozen Lake (deterministic) · built for hands-on MDP practice</footer>
+</div>
+
+<script>
+/* ---------- The board ---------- */
+// 16 tiles. Holes and the goal are "terminal" (the game ends there).
+const HOLES = new Set([5,7,11,12]);
+const GOAL = 15, START = 0, GAMMA = 0.9;
+const emojiFor = (s)=> s===GOAL ? "🎁" : HOLES.has(s) ? "💧" : s===START ? "🤖" : "🧊";
+
+function nextState(s, a){
+  let row = Math.floor(s/4), col = s%4;
+  if(a===0) col = Math.max(0,col-1);      // Left
+  else if(a===1) row = Math.min(3,row+1); // Down
+  else if(a===2) col = Math.min(3,col+1); // Right
+  else if(a===3) row = Math.max(0,row-1); // Up
+  return row*4+col;
+}
+const isTerminal = (s)=> HOLES.has(s) || s===GOAL;
+
+// Q-value of one move from s: reward for the move + discounted value of where you land
+function moveValue(s, a, V){
+  const sp = nextState(s,a);
+  const reward = (sp===GOAL) ? 1 : 0;
+  return reward + GAMMA * V[sp];
+}
+
+/* ---------- Render helpers ---------- */
+function heatColor(v){ // v in 0..1 -> cold blue to hot orange
+  if(v<=0.0001) return "#0e1230";
+  const t = Math.min(v,1);
+  const r = Math.round(30 + t*205), g = Math.round(30 + t*110), b = Math.round(70 - t*40);
+  return `rgb(${r},${g},${b})`;
+}
+function buildBoard(el, {showVals=false, V=null, policy=null}={}){
+  el.innerHTML = "";
+  for(let s=0;s<16;s++){
+    const d = document.createElement("div");
+    d.className = "tile" + (HOLES.has(s)?" hole":"") + (s===GOAL?" goal":"") + (s===START?" start":"");
+    if(showVals && V && !isTerminal(s)) d.style.background = heatColor(V[s]);
+    const em = document.createElement("div"); em.className="emoji"; em.textContent = emojiFor(s);
+    d.appendChild(em);
+    if(showVals && V){
+      const val = document.createElement("div"); val.className="val";
+      val.textContent = isTerminal(s) ? "" : V[s].toFixed(2);
+      d.appendChild(val);
+    } else {
+      const val = document.createElement("div"); val.className="val"; val.textContent = "#"+s;
+      val.style.color = "#7581b8"; d.appendChild(val);
+    }
+    if(policy && !isTerminal(s)){
+      const ar = document.createElement("div"); ar.className="arrow";
+      ar.textContent = ["←","↓","→","↑"][policy[s]];
+      d.appendChild(ar);
+    }
+    el.appendChild(d);
+  }
+}
+
+/* ---------- Static intro board ---------- */
+buildBoard(document.getElementById("board-static"));
+
+/* ---------- Live value-iteration board ---------- */
+let V = new Array(16).fill(0);
+let iter = 0, showPolicy = false, timer = null;
+
+function currentPolicy(){
+  const p = new Array(16).fill(0);
+  for(let s=0;s<16;s++){
+    if(isTerminal(s)) continue;
+    let best=-Infinity, bestA=0;
+    for(let a=0;a<4;a++){ const q=moveValue(s,a,V); if(q>best){best=q; bestA=a;} }
+    p[s]=bestA;
+  }
+  return p;
+}
+function draw(){
+  buildBoard(document.getElementById("board-live"),
+    {showVals:true, V, policy: showPolicy ? currentPolicy() : null});
+}
+function oneStep(){
+  const newV = V.slice();
+  let change = 0;
+  for(let s=0;s<16;s++){
+    if(isTerminal(s)){ newV[s]=0; continue; }
+    let best=-Infinity;
+    for(let a=0;a<4;a++) best = Math.max(best, moveValue(s,a,V));
+    newV[s]=best; change += Math.abs(newV[s]-V[s]);
+  }
+  V = newV; iter++;
+  draw();
+  const st = document.getElementById("status");
+  if(change < 1e-4){
+    st.innerHTML = `<b>Converged after ${iter} steps!</b> The heat has spread everywhere. Now press “Show the arrows”. 🧭`;
+    if(timer){ clearInterval(timer); timer=null; }
+    return false;
+  }
+  st.innerHTML = `Step ${iter} done — heat is spreading out from the 🎁. (things still changing…)`;
+  return true;
+}
+
+document.getElementById("btn-step").onclick = ()=> oneStep();
+document.getElementById("btn-auto").onclick = ()=>{
+  if(timer) return;
+  timer = setInterval(()=>{ if(!oneStep()){ clearInterval(timer); timer=null; } }, 550);
+};
+document.getElementById("btn-policy").onclick = ()=>{
+  showPolicy = !showPolicy; draw();
+  const st = document.getElementById("status");
+  if(showPolicy) st.innerHTML = "Arrows = the <b>policy</b>: on each tile, step toward the hottest neighbour. Follow them from 🤖 to 🎁!";
+};
+document.getElementById("btn-reset").onclick = ()=>{
+  if(timer){ clearInterval(timer); timer=null; }
+  V = new Array(16).fill(0); iter=0; showPolicy=false; draw();
+  document.getElementById("status").textContent = "All tiles start cold (value 0). Press “Do one step”.";
+};
+
+draw();
+</script>
+</body>
+</html>
