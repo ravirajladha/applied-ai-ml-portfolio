@@ -2,22 +2,22 @@
 
 **Date:** 2026-07-01
 **Companion notebook:** `MDP Practice - Value Iteration.ipynb`
-**Goal:** Learn Markov Decision Processes by building a value-iteration solver for Frozen Lake **cell by cell, together with Claude.**
+**Goal:** Learn Markov Decision Processes by building a value-iteration solver for Frozen Lake **cell by cell.**
 
 This is the *basic version*: the problem statement and an empty scaffold. We fill in the code together, one cell at a time.
 
 ---
 
-## How we'll work (cell by cell with Claude)
+## How we'll work (cell by cell)
 
 For each cell below we follow the same loop:
 
-1. **Claude explains** the concept for that cell in plain English.
+1. **Read the concept** for that cell in plain English.
 2. **You write** the code (the notebook has `# TODO` blanks for the important lines).
-3. **You run it** and paste back the output (or any error).
-4. **Claude checks** it with you and we move to the next cell.
+3. **You run it** and check the output (or any error).
+4. **Verify** it and move to the next cell.
 
-> Rule for today: Claude does **not** hand you the finished answer up front. You try first; Claude guides. That's how it sticks.
+> Rule for today: don't jump to the finished answer up front. Try each `# TODO` first, then check. That's how it sticks.
 
 ---
 
@@ -70,7 +70,7 @@ Everything in Cell 2 and Cell 3 is just this one line, read straight from `env.P
 
 ## Progress log
 
-Use this to track what we finished together (Claude will help you tick these off):
+Use this to track what we finished together:
 
 - [ ] Understood `env.P` output
 - [ ] `value_iteration` runs without error
