@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Experiment{% endblock %}
+
+{% block content %}
+    <div class="toolbar">
+        <h2>{{ action }} experiment</h2>
+        <a class="btn" href="{{ url_for('index') }}">← Back</a>
+    </div>
+
+    <form method="post" class="card">
+        <label>
+            Name <span class="required">*</span>
+            <input type="text" name="name" required
+                   value="{{ experiment['name'] if experiment else '' }}">
+        </label>
+
+        <label>
+            Algorithm
+            <input type="text" name="algorithm"
+                   placeholder="e.g. Random Forest, CNN, XGBoost"
+                   value="{{ experiment['algorithm'] if experiment else '' }}">
+        </label>
+
+        <label>
+            Accuracy (0–1)
+            <input type="number" name="accuracy" step="0.001" min="0" max="1"
+                   placeholder="e.g. 0.947"
+                   value="{{ experiment['accuracy'] if experiment and experiment['accuracy'] is not none else '' }}">
+        </label>
+
+        <label>
+            Notes
+            <textarea name="notes" rows="4"
+                      placeholder="Hyperparameters, dataset, observations…">{{ experiment['notes'] if experiment else '' }}</textarea>
+        </label>
+
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit">{{ action }}</button>
+            <a class="btn" href="{{ url_for('index') }}">Cancel</a>
+        </div>
+    </form>
+{% endblock %}
