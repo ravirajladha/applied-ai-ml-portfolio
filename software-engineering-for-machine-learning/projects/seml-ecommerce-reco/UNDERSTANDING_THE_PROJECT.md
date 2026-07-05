@@ -128,45 +128,93 @@ queue + worker + the ML), and a **web frontend** (the Streamlit page you see).
 
 ---
 
-## 5. Codebase structure (where everything lives)
+## 5. Codebase structure — the full map
+
+### ⚠️ First, the one thing that explains all your confusion
+
+**This repository contains TWO complete versions of the same assignment.** That's why you
+saw "backend", "frontend", "hugging face" and got lost — some of those belong to a version we
+**do not use**.
+
+| | **Version A — what we submitted & deployed** | **Version B — an older, alternate design (ignore)** |
+|---|---|---|
+| Design | Event-Driven Architecture + API Gateway | Microservices + CQRS |
+| Lives in | **`event_driven_prototype/` only** | everything else at the top level |
+| Used by the report? | ✅ Yes | ❌ No |
+| Deployed to Hugging Face? | ✅ Yes | ❌ No |
+
+👉 **If you only open ONE folder, open `event_driven_prototype/`.** That single folder is the
+entire project — the ML, both backend services, the frontend, and the deployment. Everything
+else can be ignored for understanding the submission.
+
+---
+
+### Every top-level folder, and whether you need it
+
+| Path | Version | What it is | Do you need it? |
+|------|---------|-----------|-----------------|
+| **`event_driven_prototype/`** | **A ✅** | **The whole submitted project (code + frontend + deployment)** | **YES — go here** |
+| `final_submission/` | A | The files you upload to the college portal (notebook + report) | Yes, to submit |
+| `UNDERSTANDING_THE_PROJECT.md` | A | This guide | Yes |
+| `SUBMISSION_G49.md` | A | Submission checklist | Optional |
+| `backend/` | B | Version B's backend (CQRS command/query services) | No — ignore |
+| `frontend/` | B | Version B's frontend (`app.py`, a different Streamlit UI) | No — ignore |
+| `scripts/`, `tools/` | B | Version B's helper scripts (seed data, build report/notebook) | No — ignore |
+| `data/`, `artifacts/`, `evidence/` | B | Version B's sample data, saved model, screenshots | No — ignore |
+| `Dockerfile`, `docker-compose.yml`, `Makefile`, `pyproject.toml`, root `requirements.txt` | B | Version B's build/config files | No — ignore |
+| `Assignment Iseml.pdf` | — | The original assignment question | Reference only |
+| `Vivek_..._Final_Report.docx` (+ `.BACKUP`) | A | Loose copies of the report (the real one lives in `final_submission/`) | Reference only |
+
+> Why do both versions exist? The repo was originally cloned from a teammate whose code had
+> been rewritten into Version B (CQRS). Our report describes Version A (Event-Driven), so we
+> restored Version A into `event_driven_prototype/`. Both were kept so nothing was lost.
+
+---
+
+### Inside `event_driven_prototype/` — the folder you actually go through
 
 ```
-seml-ecommerce-reco/
+event_driven_prototype/
 │
-├── event_driven_prototype/          ← THE ACTUAL PROJECT (start here)
-│   ├── recommender_engine.py        ← the ML: matrix, similarity, ranking, evaluation
-│   ├── recommendation_api.py        ← internal FastAPI service + queue + background worker (Pattern 1)
-│   ├── api_gateway.py               ← the API Gateway: token, rate-limit, routing (Pattern 2)
-│   ├── frontend_app.py              ← the Streamlit web UI
-│   ├── demo_requests.py             ← a script that sends test events + asks for recommendations
-│   ├── report_evidence.py           ← regenerates metrics + the evidence plot
-│   │
-│   ├── Dockerfile                   ← recipe to package all 3 processes into one container
-│   ├── start.sh                     ← starts all 3 processes inside the container
-│   ├── requirements-hf.txt          ← Python packages for the hosted version
-│   ├── requirements.txt             ← Python packages for running locally
-│   ├── run_local.ps1                ← one-click local runner (auto-picks free ports)
-│   ├── README.md                    ← run instructions + Hugging Face Space config
-│   └── evidence/                    ← captured outputs: metrics JSON, sample run, plots
+│   ── THE BACKEND (two services) ──
+├── recommender_engine.py     ← the ML brain: matrix, similarity, ranking, Precision@5
+├── recommendation_api.py     ← internal service: /rank + /track + the queue & worker  (Pattern 1)
+├── api_gateway.py            ← the front door: token, rate-limit, routing              (Pattern 2)
 │
-├── final_submission/                ← what you upload to the college portal
-│   ├── G49.ipynb                    ← notebook: the report's code, executed
-│   ├── G49_..._Final_Report.docx    ← the written report (Event-Driven design)
-│   ├── G049.ipynb                   ← older CQRS variant (kept for reference)
-│   └── G049_..._Complete_Report.docx
+│   ── THE FRONTEND ──
+├── frontend_app.py           ← the Streamlit web page (what you see in the browser)
 │
-├── SUBMISSION_G49.md                ← what to submit + checklist
-├── UNDERSTANDING_THE_PROJECT.md     ← this file
+│   ── THE HUGGING FACE DEPLOYMENT ──
+├── Dockerfile                ← recipe that packages all 3 processes into one container
+├── start.sh                  ← the container's startup: launches all 3 processes
+├── requirements-hf.txt       ← Python packages installed on Hugging Face
+├── README.md                 ← its top has the HF "sdk: docker" config that makes it a Space
+├── .gitattributes            ← keeps files uncorrupted when deployed (binary/line-ending rules)
 │
-└── (backend/, frontend/, artifacts/, data/, etc.)  ← files from an ALTERNATE CQRS
-                                                       version of the project; not used by
-                                                       the Event-Driven submission
+│   ── HELPERS & PROOF ──
+├── demo_requests.py          ← a script that fires test events + fetches recommendations
+├── report_evidence.py        ← regenerates the metrics JSON + the evidence chart
+├── requirements.txt          ← packages for running locally (not the HF one)
+├── run_local.ps1             ← one-click local runner (auto-picks free ports)
+└── evidence/                 ← captured proof: metrics JSON, sample output, PNG charts
 ```
 
-> **Important:** the folder to focus on is **`event_driven_prototype/`**. The other
-> top-level folders (`backend/`, `frontend/`, `artifacts/`, `data/`, `docker-compose.yml`)
-> belong to a *different* design (Microservices + CQRS) that the report does **not** use. You
-> can ignore them for understanding the submission.
+### Answering your three words directly
+
+- **"backend"** — the backend is the **two FastAPI files** in `event_driven_prototype/`:
+  `api_gateway.py` (front door) and `recommendation_api.py` (does the work, holds the queue),
+  with `recommender_engine.py` as the ML underneath.
+  *(The top-level `backend/` folder is Version B's backend — not used.)*
+
+- **"frontend"** — the frontend is **`event_driven_prototype/frontend_app.py`** (Streamlit).
+  *(The top-level `frontend/` folder is Version B's frontend — not used.)*
+
+- **"hugging face"** — that's not a separate folder; it's **how we deploy**. The deployment is
+  the three files inside `event_driven_prototype/`: `Dockerfile` + `start.sh` +
+  `requirements-hf.txt` (plus the config at the top of `README.md`). Hugging Face reads these,
+  builds the container, and runs `start.sh` — which starts backend + frontend together.
+
+---
 
 ### The 3 files that matter most, in reading order
 1. **`recommender_engine.py`** — read this first. It's the ML in ~200 lines: build the matrix,
