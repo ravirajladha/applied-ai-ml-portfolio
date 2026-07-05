@@ -261,3 +261,213 @@ the user genuinely engaged with — solidly above our target of 0.30. (This is t
 > **API Gateway** (a single secured entry point that handles auth, rate-limiting, and
 > routing). It's implemented in Python with FastAPI + scikit-learn, has a Streamlit UI, and is
 > deployed for free on Hugging Face as a Docker container running all three services."
+
+---
+
+## 9. Line-by-line code walkthrough (deep dive)
+
+This section explains the three core files in `event_driven_prototype/`, block by block.
+Read them in this order: **engine → recommendation service → gateway.**
+
+### 9a. `recommender_engine.py` — the ML brain
+
+This file holds the data and does all the math. It has **no web code** — it's pure Python
+functions that other files call.
+
+**The setup (module top):**
+```python
+USERS = [f"u{i}" for i in range(1, 61)]      # 60 users: u1 … u60
+ITEMS = [f"P{i:02d}" for i in range(1, 41)]  # 40 products: P01 … P40
+USER_INDEX = {user_id: index for index, user_id in enumerate(USERS)}   # "u7" -> row 6
+ITEM_INDEX = {item_id: index for index, item_id in enumerate(ITEMS)}   # "P12" -> col 11
+ACTION_WEIGHT = {"view": 1.0, "click": 2.0, "cart": 3.0, "purchase": 5.0}
+```
+- `USERS`/`ITEMS` are the fixed IDs. `USER_INDEX`/`ITEM_INDEX` translate an ID → a
+  row/column number, because NumPy works with numbers, not names.
+
+```python
+_LOCK = threading.RLock()
+_MATRIX = np.zeros((len(USERS), len(ITEMS)))       # the 60×40 user–item grid, all zeros
+_ITEM_SIMILARITY = np.zeros((len(ITEMS), len(ITEMS)))  # the 40×40 product-similarity table
+_EVENT_COUNT = 0
+_SEEDED = False
+```
+- These are the **shared memory** of the app. `_MATRIX` is the grid from §2. `_LOCK` prevents
+  two threads (the web request and the background worker) from writing at the same time and
+  corrupting it. The `_` prefix just means "internal, don't touch from outside."
+
+**`seed_demo_data()` — invent realistic starter data**
+```python
+rng = np.random.default_rng(546)          # fixed seed => same data every run (reproducible)
+for user_index, _user_id in enumerate(USERS):
+    cluster = user_index % 4              # put each user in one of 4 "taste groups"
+    core_items = np.arange(cluster*10, cluster*10 + 10)          # their group's products
+    neighbour_items = np.arange(((cluster+1)%4)*10, ...+10)      # a neighbouring group
+    selected_core = rng.choice(core_items, size=7, replace=False)      # 7 from their group
+    selected_neighbour = rng.choice(neighbour_items, size=2, ...)      # 2 from the neighbour
+    for item_index in selected:
+        _MATRIX[user_index, item_index] += rng.choice([1,2,3,5], p=[...])  # a weighted action
+```
+- Real stores have real logs; for the demo we **fabricate believable behavior**. Users cluster
+  into taste groups so there's an actual pattern to learn. `seed=546` makes it identical every
+  time, which is why your results always match the report.
+
+**`_refresh_similarity_locked()` — turn the grid into a similarity table**
+```python
+_ITEM_SIMILARITY = cosine_similarity(_MATRIX.T)   # .T = transpose, so we compare COLUMNS (items)
+np.fill_diagonal(_ITEM_SIMILARITY, 0.0)           # a product is not "similar to itself" for recos
+```
+- This is the heart of collaborative filtering: how alike is every product to every other
+  product, based on who interacted with them. The diagonal is zeroed so an item never
+  recommends itself.
+
+**`track_event()` — the WRITE path (record one action)**
+```python
+_MATRIX[USER_INDEX[user_id], ITEM_INDEX[item_id]] += ACTION_WEIGHT[action]  # add the weight
+_EVENT_COUNT += 1
+_refresh_similarity_locked()          # the model just changed, so recompute similarity
+return {..., "event_count": _EVENT_COUNT}   # a receipt
+```
+- Convert IDs to row/col, add the action's weight to that cell, and recompute similarity.
+  This is what the background worker calls for every queued event.
+
+**`rank_items()` — the READ path (the actual recommendation)** — the most important function:
+```python
+user_row = _MATRIX[USER_INDEX[user_id]].copy()   # this user's row (what they like)
+scores   = user_row @ _ITEM_SIMILARITY           # (1×40)·(40×40) = a score for every product
+scores[user_row > 0] = -np.inf                   # never recommend already-seen products
+ordered  = np.argsort(...scores...)[::-1]         # sort products best-first
+# then walk down 'ordered', skip seen ones, collect the first k
+return recommendations                            # e.g. [{"item_id":"P28","score":10.027}, ...]
+```
+- Line 2 (`user_row @ _ITEM_SIMILARITY`) is the whole idea in one line: "for every product,
+  add up how similar it is to the things this user already likes." Line 3 masks seen items by
+  setting their score to minus-infinity so they sink to the bottom. Then take the top `k`.
+
+**`evaluate_precision_at_k()` — how we grade it (§6)**
+```python
+holdout_items = rng.choice(positives, size=3, ...)   # secretly hide 3 items this user liked
+train_matrix[user_index, holdout_items] = 0.0        # pretend they never happened
+similarity = cosine_similarity(train_matrix.T)       # rebuild similarity WITHOUT the hidden ones
+top = np.argsort(...)[:k]                             # ask for top-k
+hits = len(set(top) & holdout_items)                 # how many hidden items came back?
+precision_values.append(hits / k)                    # score for this user
+# final answer = average across all users  => 0.323
+```
+- A fair "did it actually work?" test: hide some real interactions, then see if the model can
+  rediscover them. Averaged over all users, that's **Precision@5 = 0.323**.
+
+---
+
+### 9b. `recommendation_api.py` — the internal service + the queue (Pattern 1)
+
+This wraps the engine in a **web service** and adds the **Event-Driven** machinery.
+
+```python
+EVENT_QUEUE: Queue[dict] = Queue()   # the "inbox" that events land in
+STOP_WORKER = Event()                # a flag to tell the worker to stop
+```
+- `EVENT_QUEUE` is the queue at the center of Pattern 1. `STOP_WORKER` lets us shut the worker
+  down cleanly.
+
+**`consumer_loop()` — the background worker (runs forever on its own thread)**
+```python
+while not STOP_WORKER.is_set():
+    event = EVENT_QUEUE.get(timeout=0.2)          # take the next event off the queue (wait if empty)
+    result = recommender_engine.track_event(event["user_id"], event["item_id"], event["action"])
+    print("processed event:", result)             # update the model, then log it
+    EVENT_QUEUE.task_done()
+```
+- This is the "asynchronous" part: it quietly drains the queue and updates the model **in the
+  background**, separately from anyone asking for recommendations.
+
+**`lifespan()` — startup/shutdown wiring**
+```python
+recommender_engine.seed_demo_data()               # load starter data
+worker = Thread(target=consumer_loop, daemon=True) # create the background worker
+worker.start()                                     # start it when the server boots
+yield                                              # (server runs here)
+STOP_WORKER.set(); worker.join(timeout=1)          # stop the worker when the server shuts down
+```
+
+**The endpoints (URLs this service exposes):**
+```python
+@app.post("/track", status_code=202)              # 202 = "Accepted", i.e. "I'll handle it later"
+def track(event):
+    recommender_engine.validate_event(...)         # reject bad events immediately
+    EVENT_QUEUE.put(event.model_dump())            # drop it on the queue and RETURN RIGHT AWAY
+    return {"status": "accepted", "pattern": "event-driven", ...}
+
+@app.get("/rank")                                  # the read path
+def rank(user_id, k=5):
+    return {"recommendations": recommender_engine.rank_items(user_id, k), ...}
+```
+- **`/track` is the key line for Pattern 1:** it *queues* the event and replies instantly (202),
+  instead of processing it on the spot. The worker handles it moments later. `/rank` just calls
+  the engine's `rank_items()`.
+
+---
+
+### 9c. `api_gateway.py` — the single front door (Pattern 2)
+
+The outside world talks **only** to this service. It never touches the engine directly.
+
+```python
+RECO_SERVICE = "http://127.0.0.1:8001"             # where the internal service lives
+VALID_TOKEN  = "Bearer seml-demo-token"            # the password callers must send
+REQUEST_LOG  = {}                                  # remembers when each caller last called
+MIN_SECONDS_BETWEEN_REQUESTS = 0.25
+```
+
+**The two "guard" helpers:**
+```python
+def require_token(authorization):
+    if authorization != VALID_TOKEN:
+        raise HTTPException(status_code=401, ...)   # 401 = "not allowed"
+
+def enforce_rate_limit(key):
+    if now - REQUEST_LOG.get(key, 0) < 0.25:
+        raise HTTPException(status_code=429, ...)   # 429 = "slow down"
+    REQUEST_LOG[key] = now
+```
+- These are Pattern 2's whole point: **security and throttling live in one place**, so the
+  internal service can stay simple.
+
+**The public endpoints — they check, then forward:**
+```python
+@app.get("/recommend")
+async def recommend(user_id, k=5, authorization=Header(...)):
+    require_token(authorization)                    # 1. is the caller allowed?
+    enforce_rate_limit(f"recommend:{user_id}")      # 2. are they calling too fast?
+    async with httpx.AsyncClient() as client:       # 3. forward to the internal service…
+        response = await client.get(f"{RECO_SERVICE}/rank", params={"user_id": user_id, "k": k})
+    payload = await forward_response(response)
+    payload["served_by"] = "api-gateway"            # 4. tag it so you can see it went through here
+    return payload
+```
+- `/recommend` checks the token, checks the rate limit, then calls the internal service's
+  `/rank` and returns the result. `/activity` does the same but forwards to `/track`. The
+  gateway itself contains **no ML** — it only guards and routes.
+
+---
+
+### 9d. Follow ONE request through all three files
+
+**"Recommend 5 products for u7"** (what the Streamlit button does):
+1. **Frontend** (`frontend_app.py`) → `GET /recommend?user_id=u7&k=5` to the **gateway**, with
+   the token header.
+2. **Gateway** (`api_gateway.py`) → `require_token` ✔ → `enforce_rate_limit` ✔ → forwards to the
+   internal service's `GET /rank`.
+3. **Service** (`recommendation_api.py`) → calls `recommender_engine.rank_items("u7", 5)`.
+4. **Engine** (`recommender_engine.py`) → `user_row @ _ITEM_SIMILARITY`, mask seen, take top-5 →
+   `[P28, P25, P21, P16, P40]`.
+5. The list travels back up the same chain to the browser. Done.
+
+**"u7 just purchased P12"** (the event path):
+1. Frontend → `POST /activity` to the **gateway**.
+2. Gateway → checks token/rate-limit → forwards to the service's `POST /track`.
+3. Service → drops the event on `EVENT_QUEUE` and **immediately** returns "accepted" (202).
+4. Moments later, `consumer_loop` (the background worker) pulls it off the queue and calls
+   `track_event`, which updates `_MATRIX` and recomputes similarity.
+5. The **next** `/recommend` call for u7 reflects the change. (This delay is the deliberate
+   "asynchronous / eventually-updated" behavior of Event-Driven Architecture.)
