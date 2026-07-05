@@ -50,6 +50,16 @@ def reco_stats() -> dict | None:
         return None
 
 
+def safe_image(path: str, caption: str) -> None:
+    """Render an evidence image, but never let a bad/missing file crash the app."""
+    if not os.path.exists(path):
+        return
+    try:
+        st.image(path, caption=caption)
+    except Exception:  # noqa: BLE001 - defensive: corrupt image should not break the page
+        st.caption(f"({caption} — image unavailable)")
+
+
 st.title("🛒 Real-Time Product Recommendation")
 st.caption(
     "Item-based collaborative filtering · Event-Driven Architecture + API Gateway · "
@@ -115,14 +125,9 @@ st.subheader("Offline evaluation & evidence")
 c1, c2 = st.columns(2)
 with c1:
     st.metric("Offline Precision@5 (leave-3-out)", "0.323", help="From evidence/offline_metrics.json")
-    if os.path.exists("evidence/recommendation_output_plot.png"):
-        st.image("evidence/recommendation_output_plot.png", caption="Interaction matrix + top-5 for u7")
+    safe_image("evidence/recommendation_output_plot.png", "Interaction matrix + top-5 for u7")
 with c2:
-    if os.path.exists("evidence/system_architecture.png"):
-        st.image(
-            "evidence/system_architecture.png",
-            caption="Event-Driven ingestion + API Gateway architecture",
-        )
+    safe_image("evidence/system_architecture.png", "Event-Driven ingestion + API Gateway architecture")
 
 st.caption(
     "Two FastAPI services (internal recommendation/event service + API gateway) and this "

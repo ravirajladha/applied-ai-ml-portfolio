@@ -1,4 +1,13 @@
-* text=auto
+# Keep shell scripts LF so they run inside the Linux container.
 *.sh text eol=lf
-start.sh text eol=lf
 Dockerfile text eol=lf
+
+# Never apply text/EOL normalization to binaries (was corrupting PNGs on checkout).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.docx binary
+*.pdf binary
+*.npz binary
+*.ipynb -text
