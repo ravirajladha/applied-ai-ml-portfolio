@@ -1,4 +1,18 @@
+---
+title: SEML E-commerce Recommendation
+emoji: 🛒
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Event-Driven + API Gateway prototype (Group G49 submission)
+
+> **Deployed as a Hugging Face Docker Space:** one container runs the internal
+> recommendation/event service (`:8001`), the API gateway (`:8000`), and the Streamlit
+> frontend (`:7860`, public). See `Dockerfile`, `start.sh`, and `frontend_app.py`.
 
 Runnable code for the SEML Assignment I report
 *"Real-Time Product Recommendation for an E-commerce Platform"*.
