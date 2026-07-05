@@ -17,5 +17,8 @@ RUN pip install --no-cache-dir --user -r requirements-hf.txt
 
 COPY --chown=user . .
 
+# Guard against CRLF line endings sneaking in from Windows checkouts.
+RUN sed -i 's/\r$//' start.sh
+
 EXPOSE 7860
 CMD ["bash", "start.sh"]
