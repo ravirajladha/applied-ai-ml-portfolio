@@ -14,7 +14,7 @@ answering.
 | `02-Chat-Bots.ipynb` | The full, worked solution notebook | ✅ Yes — this is the lab |
 | `train_qa.txt` | Training data: 10,000 `(story, question, answer)` tuples, pickled | ✅ Yes |
 | `test_qa.txt` | Test data: 1,000 `(story, question, answer)` tuples, pickled | ✅ Yes |
-| `Lab2_Slides.pptx` | Lecture slides for the session | Reference |
+| `Lab2_Slides.pptx` | Lecture slides for the session | Reference (not committed — hosted on Drive) |
 | `SYNTHETIC LAB DATASET.docx` | An advanced "where / what" dataset for a stretch exercise (open-vocabulary answers, not just yes/no) | Reference / challenge |
 | `End-to-End Memory Networks.pdf` | The original paper the model is based on | Reference (not committed — hosted on Drive) |
 
