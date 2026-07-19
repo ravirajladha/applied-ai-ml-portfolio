@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parsing — a visual first look (Session 9)</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --card:#ffffff; --ink:#1f2333; --muted:#5b6070;
+    --line:#e5e7f0; --accent:#5b6cff; --accent2:#00b3a4;
+    --np:#3b82f6; --vp:#ef4444; --pp:#a855f7; --det:#f59e0b; --n:#10b981; --v:#ec4899; --s:#6366f1;
+    --shadow:0 6px 24px rgba(30,35,60,.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#14151c; --card:#1d1f2a; --ink:#e9ebf5; --muted:#a4a9bd; --line:#2c2f3d; --shadow:0 6px 24px rgba(0,0,0,.35);}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px;margin:0 auto;padding:28px 20px 80px}
+  header.hero{background:linear-gradient(135deg,#5b6cff,#00b3a4);color:#fff;border-radius:20px;
+       padding:34px 30px;margin-bottom:26px;box-shadow:var(--shadow)}
+  header.hero h1{margin:0 0 6px;font-size:30px;letter-spacing:-.5px}
+  header.hero p{margin:0;opacity:.95;font-size:16px}
+  .pill{display:inline-block;background:rgba(255,255,255,.2);padding:3px 12px;border-radius:999px;
+       font-size:12.5px;font-weight:600;margin-bottom:14px;letter-spacing:.3px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;
+       margin:18px 0;box-shadow:var(--shadow)}
+  h2{font-size:22px;margin:6px 0 4px;letter-spacing:-.3px}
+  h2 .num{display:inline-grid;place-items:center;width:30px;height:30px;background:var(--accent);
+       color:#fff;border-radius:9px;font-size:15px;margin-right:10px;vertical-align:middle}
+  h3{font-size:16px;margin:18px 0 6px}
+  p{margin:10px 0}
+  .muted{color:var(--muted)}
+  .analogy{border-left:4px solid var(--accent2);background:rgba(0,179,164,.07);padding:12px 16px;
+       border-radius:0 10px 10px 0;margin:14px 0}
+  .analogy b{color:var(--accent2)}
+  code{background:rgba(120,130,180,.14);padding:1px 6px;border-radius:5px;font-size:.92em;
+       font-family:"SF Mono",Consolas,Menlo,monospace}
+  .chip{display:inline-block;padding:3px 10px;border-radius:8px;color:#fff;font-weight:600;
+       font-size:13px;margin:2px}
+  .np{background:var(--np)} .vp{background:var(--vp)} .pp{background:var(--pp)}
+  .det{background:var(--det)} .nn{background:var(--n)} .vv{background:var(--v)} .ss{background:var(--s)}
+  .word{display:inline-block;background:rgba(120,130,180,.14);padding:4px 12px;border-radius:8px;
+       margin:3px;font-weight:600}
+  button{font:inherit;font-weight:600;border:none;border-radius:10px;padding:9px 16px;cursor:pointer;
+       background:var(--accent);color:#fff;transition:transform .05s ease, opacity .2s}
+  button:hover{opacity:.9} button:active{transform:translateY(1px)}
+  button.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
+  table.chart{border-collapse:separate;border-spacing:4px;margin:10px auto;width:100%}
+  table.chart td{background:rgba(120,130,180,.08);border:1px dashed var(--line);border-radius:8px;
+       text-align:center;padding:8px 4px;min-width:70px;height:52px;font-size:13px;transition:.25s}
+  table.chart td.word{background:rgba(120,130,180,.18);font-weight:700;border-style:solid}
+  table.chart td.filled{background:rgba(91,108,255,.14);border-color:var(--accent);border-style:solid}
+  table.chart td.active{background:rgba(0,179,164,.22);border-color:var(--accent2);border-style:solid;
+       transform:scale(1.06);box-shadow:0 4px 12px rgba(0,179,164,.3)}
+  table.chart td .lab{font-weight:700}
+  table.chart td .pr{font-size:11px;color:var(--muted);display:block}
+  .explain-box{background:rgba(91,108,255,.08);border:1px solid var(--line);border-radius:10px;
+       padding:12px 16px;margin-top:10px;min-height:48px;font-size:14.5px}
+  .tree{font-family:"SF Mono",Consolas,monospace;white-space:pre;line-height:1.5;font-size:14px;
+       background:rgba(120,130,180,.08);border-radius:10px;padding:14px 18px;overflow-x:auto}
+  .toggle-row{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+  .grammar{font-family:"SF Mono",Consolas,monospace;font-size:14px;line-height:2}
+  .grammar .rule{cursor:pointer;padding:2px 8px;border-radius:7px;display:inline-block;transition:.15s}
+  .grammar .rule:hover{background:rgba(91,108,255,.14)}
+  .steps-learn li{margin:8px 0}
+  .kbd{background:var(--card);border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;
+       padding:1px 7px;font-size:12.5px;font-family:monospace}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:620px){.grid2{grid-template-columns:1fr}}
+  .mini{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:rgba(120,130,180,.05)}
+  .mini h4{margin:0 0 6px;font-size:15px}
+  a{color:var(--accent)}
+  .foot{color:var(--muted);font-size:13px;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="pill">NLP · SESSION 9</div>
+  <h1>Parsing — teaching a computer to <em>diagram</em> a sentence</h1>
+  <p>A friendly, click-around first look. No maths needed to start — just read, hover, and press the buttons.</p>
+</header>
+
+<!-- 0 the one big idea -->
+<div class="card">
+  <h2><span class="num">★</span>The one idea to hold onto</h2>
+  <p>A sentence looks <em>flat</em> — just words in a row. But hidden inside is a <b>structure</b>:
+     little groups of words that belong together, stacked into bigger groups, up to the whole sentence.
+     <b>Parsing = discovering that hidden structure.</b></p>
+  <div class="analogy">
+    <b>Analogy — LEGO instructions.</b> Words are LEGO bricks. A grammar is the instruction booklet
+    that says which bricks click together into small pieces, and which small pieces click into bigger
+    pieces, until you've built the whole model (the sentence). Parsing is <em>figuring out the build
+    steps</em> just by looking at the finished model.
+  </div>
+  <p>Why bother? Because meaning hides in structure. <em>"I do <b>not</b> like Frozen"</em> vs
+     <em>"I like Frozen"</em> — nearly the same words, opposite meaning. Where the <em>not</em> attaches
+     is a <b>structure</b> question. Same for translation, question-answering, and grammar checking.</p>
+</div>
+
+<!-- 1 building blocks -->
+<div class="card">
+  <h2><span class="num">1</span>The building blocks: words → phrases</h2>
+  <p>Words get sorted into <b>categories</b> (their "job"), then categories group into <b>phrases</b>.
+     These are the coloured labels you'll see everywhere:</p>
+  <h3>Word categories (a word's job)</h3>
+  <p>
+    <span class="chip det">Det</span> a determiner — <span class="word">the</span> <span class="word">a</span> &nbsp;·&nbsp;
+    <span class="chip nn">N</span> a noun — <span class="word">flight</span> <span class="word">meal</span> &nbsp;·&nbsp;
+    <span class="chip vv">V</span> a verb — <span class="word">includes</span>
+  </p>
+  <h3>Phrases (groups that act as one unit)</h3>
+  <p>
+    <span class="chip np">NP</span> noun phrase = "a thing" (<em>the flight</em>) &nbsp;·&nbsp;
+    <span class="chip vp">VP</span> verb phrase = "an action" (<em>includes a meal</em>) &nbsp;·&nbsp;
+    <span class="chip pp">PP</span> prepositional phrase (<em>with ears</em>)
+  </p>
+  <p class="muted">Rule of thumb: a phrase is named after its most important word (its <b>head</b>).
+     A noun phrase is built around a noun; a verb phrase around a verb.</p>
+  <div class="analogy">
+    <b>Test for "is this a real group?"</b> A true phrase moves around as a chunk.
+    <em>John talked <b>[to the kids] [about drugs]</b></em> ✔ &nbsp;=&nbsp;
+    <em>John talked <b>[about drugs] [to the kids]</b></em> ✔ — the brackets slide together, so each is a real unit.
+  </div>
+</div>
+
+<!-- 2 grammar rules -->
+<div class="card">
+  <h2><span class="num">2</span>The grammar = a set of "clicks together" rules</h2>
+  <p>A <b>Context-Free Grammar (CFG)</b> is just a list of rules. Each rule says
+     <em>"this thing on the left can be built from these things on the right."</em>
+     The arrow <code>→</code> means <b>"is made of"</b>.</p>
+  <div class="grammar" id="grammar">
+    <span class="rule" data-x="A sentence is a noun phrase followed by a verb phrase — e.g. [the flight][includes a meal].">S <span class="muted">→</span> <span class="chip np">NP</span> <span class="chip vp">VP</span></span><br>
+    <span class="rule" data-x="A noun phrase = a determiner then a noun — e.g. 'the flight', 'a meal'.">NP <span class="muted">→</span> <span class="chip det">Det</span> <span class="chip nn">N</span></span><br>
+    <span class="rule" data-x="A verb phrase = a verb then a noun phrase — e.g. 'includes [a meal]'.">VP <span class="muted">→</span> <span class="chip vv">V</span> <span class="chip np">NP</span></span><br>
+    <span class="rule" data-x="These are LEXICAL rules: a category turning straight into an actual word.">Det <span class="muted">→</span> <span class="word">the</span> | <span class="word">a</span> &nbsp;&nbsp; N <span class="muted">→</span> <span class="word">flight</span> | <span class="word">meal</span> &nbsp;&nbsp; V <span class="muted">→</span> <span class="word">includes</span></span>
+  </div>
+  <div class="explain-box" id="grammarExplain">👆 Hover or tap any rule above to read it in plain English.</div>
+  <p class="muted" style="margin-top:14px">Two flavours of rule: <b>grammar rules</b> (category → categories, like <code>S → NP VP</code>)
+     and <b>lexical rules</b> (category → a real word, like <code>N → flight</code>).</p>
+</div>
+
+<!-- 3 the tree -->
+<div class="card">
+  <h2><span class="num">3</span>Apply the rules → you get a tree</h2>
+  <p>Start at <code>S</code> and keep replacing each symbol using the rules until only real words are left.
+     Draw it and you get a <b>parse tree</b> — a family tree for the sentence
+     <em>"the flight includes a meal"</em>:</p>
+  <div class="tree" id="mainTree">S
+├─ NP  (the flight)
+│  ├─ Det ── "the"
+│  └─ N ──── "flight"
+└─ VP  (includes a meal)
+   ├─ V ───── "includes"
+   └─ NP  (a meal)
+      ├─ Det ── "a"
+      └─ N ──── "meal"</div>
+  <p class="muted">Read it top-down as "is made of": the sentence <em>is made of</em> a noun phrase + a verb phrase;
+     the noun phrase <em>is made of</em> "the" + "flight"; and so on down to the words.</p>
+</div>
+
+<!-- 4 ambiguity -->
+<div class="card">
+  <h2><span class="num">4</span>The headache: one sentence, many trees</h2>
+  <p><em>"I saw the man with the telescope."</em> — <b>Who has the telescope?</b> Both readings are
+     grammatically legal. That's <b>ambiguity</b>, and it's why parsing is hard.</p>
+  <div class="toggle-row">
+    <button onclick="showReading('a')" id="btnA">🔭 I used the telescope</button>
+    <button class="ghost" onclick="showReading('b')" id="btnB">👤 The man had the telescope</button>
+  </div>
+  <div class="tree" id="ambigTree"></div>
+  <p class="muted" id="ambigNote"></p>
+  <div class="analogy" style="margin-top:14px">
+    <b>The fix (coming in step 6):</b> give every rule a <b>probability</b>, so the computer can say
+    <em>"reading A is more likely than reading B"</em> and pick the winner. That's a <b>PCFG</b>.
+  </div>
+</div>
+
+<!-- 5 CKY interactive -->
+<div class="card">
+  <h2><span class="num">5</span>How the computer <em>finds</em> the tree: the CKY chart</h2>
+  <p>The computer doesn't guess the whole tree at once. It works <b>bottom-up</b>: start from single
+     words, glue neighbours into small phrases, glue those into bigger phrases, until it reaches <code>S</code>
+     covering everything. It records every piece in a <b>chart</b> (a table) so it never redoes work.</p>
+  <div class="analogy">
+    <b>Analogy — a knockout tournament.</b> Bottom row = individual players (words). Winners pair up
+    into small teams (phrases), those into bigger teams, until one champion (<code>S</code>) spans the
+    whole sentence. Each cell of the chart = "what can this stretch of words become?"
+  </div>
+  <p>Press <b>Next step</b> to watch it fill in for <em>"the flight includes a meal"</em>. Each cell
+     <code>[i–j]</code> means "the words from position <em>i</em> to <em>j</em>."</p>
+  <div class="controls">
+    <button onclick="ckyStep()" id="ckyNext">▶ Next step</button>
+    <button class="ghost" onclick="ckyReset()">↻ Reset</button>
+    <span class="muted" id="ckyCount"></span>
+  </div>
+  <table class="chart" id="ckyTable"></table>
+  <div class="explain-box" id="ckyExplain">Press <b>▶ Next step</b> to begin. Watch the phrases grow from the words upward.</div>
+</div>
+
+<!-- 6 PCFG probs -->
+<div class="card">
+  <h2><span class="num">6</span>Adding probabilities (PCFG) — picking the <em>best</em> tree</h2>
+  <p>A <b>PCFG</b> tags every rule with a probability (how often it's used). The probability of a whole
+     tree is just <b>every rule's probability multiplied together</b>. The tree with the biggest number wins —
+     that's how the computer resolves ambiguity.</p>
+  <p>For our sentence, the <b>same CKY chart</b> now carries probabilities. Press through to see the
+     numbers multiply up to the final answer:</p>
+  <div class="controls">
+    <button onclick="probStep()" id="probNext">▶ Next multiply</button>
+    <button class="ghost" onclick="probReset()">↻ Reset</button>
+  </div>
+  <div class="tree" id="probBox"></div>
+  <p class="muted">That final <code>2.304e-08</code> is exactly what the notebook's Probabilistic-CKY cell
+     prints. Tiny number — that's normal, since we multiply many values below 1. We only care which tree's
+     number is <em>biggest</em>, not the size.</p>
+</div>
+
+<!-- 7 recap -->
+<div class="card">
+  <h2><span class="num">7</span>60-second recap</h2>
+  <div class="grid2">
+    <div class="mini"><h4>Grammar (CFG)</h4>Rules saying what's "made of" what. <code>S → NP VP</code>.</div>
+    <div class="mini"><h4>Parse tree</h4>The family tree you get by applying rules down to words.</div>
+    <div class="mini"><h4>Bottom-up / CKY</h4>Build phrases from words upward, storing each in a chart.</div>
+    <div class="mini"><h4>Ambiguity</h4>One sentence can have many legal trees.</div>
+    <div class="mini"><h4>PCFG</h4>Rules get probabilities; tree probability = product of rules.</div>
+    <div class="mini"><h4>Best parse</h4>The tree with the highest probability wins.</div>
+  </div>
+</div>
+
+<!-- LEARNING PYTHON -->
+<div class="card" style="border:2px solid var(--accent2)">
+  <h2><span class="num" style="background:var(--accent2)">🐍</span>How to not drown in the Python</h2>
+  <p>The notebook looks like a wall of code, but you do <b>not</b> memorise it or write it from scratch.
+     Here's the exact way to make it feel small:</p>
+  <ol class="steps-learn">
+    <li><b>Run first, understand second.</b> Open the notebook, press <span class="kbd">Shift</span>+<span class="kbd">Enter</span>
+        on each cell top to bottom. Just watching the output appear teaches you half of it. Nothing breaks — you can always re-run.</li>
+    <li><b>Read the story, not every character.</b> Each code cell has a markdown cell above it explaining
+        the idea in English. Read that, look at the <em>output</em>, and only <em>then</em> glance at the code
+        to connect the two. The output is the point; the code is how it got there.</li>
+    <li><b>Learn 5 building blocks — that's 90% of this notebook:</b>
+      <div class="grid2" style="margin-top:8px">
+        <div class="mini"><h4><code>list</code> — a row of things</h4><code>xs = ["a","b"]</code> · <code>xs[0]</code> is <code>"a"</code> · <code>len(xs)</code> is 2</div>
+        <div class="mini"><h4><code>dict</code> — a lookup table</h4><code>d = {"the":"Det"}</code> · <code>d["the"]</code> gives <code>"Det"</code></div>
+        <div class="mini"><h4><code>for</code> — do it for each</h4><code>for w in words:</code> repeats the block once per word</div>
+        <div class="mini"><h4><code>if</code> — a fork in the road</h4><code>if x in cell:</code> runs the block only when true</div>
+        <div class="mini"><h4><code>def</code> — a named recipe</h4><code>def f(x): ...</code> — call it later with <code>f(5)</code></div>
+        <div class="mini"><h4><code>print()</code> — show me</h4>Your best friend. Sprinkle it anywhere to see what a variable holds.</div>
+      </div>
+    </li>
+    <li><b>Poke it.</b> Change one number or one word (e.g. swap the sentence to <code>"the meal includes a flight"</code>)
+        and re-run. Watching what changes is how it clicks. You can't break anything permanent.</li>
+    <li><b>Confused by a line?</b> Copy it into a new empty cell by itself, wrap it in <code>print(...)</code>,
+        and run it. Seeing the value of that one piece removes the mystery.</li>
+    <li><b>Don't rush.</b> One section per sitting is a win. This notebook is a <em>reference you revisit</em>,
+        not an exam. You've got the matching <a href="constituency_parsing.ipynb">notebook</a> and
+        <a href="README.md">README</a> right next to this file.</li>
+  </ol>
+  <div class="analogy" style="border-color:var(--accent)">
+    <b>Mindset:</b> you're learning to <b>read</b> code fluently long before you <b>write</b> it —
+    exactly like understanding a language before you can speak it. Reading + running + tweaking, in small
+    doses, is the whole game.
+  </div>
+</div>
+
+<div class="foot">Open <b>explainer.html</b> first · then run <b>constituency_parsing.ipynb</b> cell by cell.
+   Session 9 — Parsing.</div>
+
+</div>
+
+<script>
+/* ---- grammar hover explanations ---- */
+document.querySelectorAll('#grammar .rule').forEach(function(el){
+  function show(){ document.getElementById('grammarExplain').innerHTML = '💡 ' + el.dataset.x; }
+  el.addEventListener('mouseenter', show);
+  el.addEventListener('click', show);
+});
+
+/* ---- ambiguity toggle ---- */
+var readings = {
+  a: {tree:
+`VP
+├─ V ──── "saw"
+├─ NP ─── "the man"
+└─ PP ─── "with the telescope"   ← attaches to the VERB
+                                   (the seeing used a telescope)`,
+      note:'Reading A: the PP "with the telescope" hangs off the verb — you did the seeing with a telescope.'},
+  b: {tree:
+`VP
+├─ V ──── "saw"
+└─ NP
+   ├─ "the man"
+   └─ PP ─ "with the telescope"   ← attaches to the MAN
+                                    (the man who had a telescope)`,
+      note:'Reading B: the PP hangs off "the man" — it describes which man (the one holding a telescope).'}
+};
+function showReading(k){
+  document.getElementById('ambigTree').textContent = readings[k].tree;
+  document.getElementById('ambigNote').textContent = readings[k].note;
+  document.getElementById('btnA').className = (k==='a')?'':'ghost';
+  document.getElementById('btnB').className = (k==='b')?'':'ghost';
+}
+showReading('a');
+
+/* ---- CKY interactive chart ---- */
+var words = ["the","flight","includes","a","meal"];
+var N = words.length;
+// each step: {i,j,label,prob,note}
+var ckySteps = [
+  {i:0,j:1,label:"Det",prob:".4",note:'Word 0 "the" is a determiner → put <b>Det</b> in cell [0–1].'},
+  {i:1,j:2,label:"N",prob:".02",note:'Word 1 "flight" is a noun → <b>N</b> in cell [1–2].'},
+  {i:0,j:2,label:"NP",prob:".0024",note:'Rule <b>NP → Det N</b>: cell[0–1]=Det and cell[1–2]=N sit side by side → glue them into <b>NP</b> spanning [0–2] = "the flight".'},
+  {i:2,j:3,label:"V",prob:".05",note:'Word 2 "includes" is a verb → <b>V</b> in cell [2–3].'},
+  {i:3,j:4,label:"Det",prob:".4",note:'Word 3 "a" is a determiner → <b>Det</b> in cell [3–4].'},
+  {i:4,j:5,label:"N",prob:".01",note:'Word 4 "meal" is a noun → <b>N</b> in cell [4–5].'},
+  {i:3,j:5,label:"NP",prob:".0012",note:'Rule <b>NP → Det N</b> again: [3–4]=Det + [4–5]=N → <b>NP</b> over [3–5] = "a meal".'},
+  {i:2,j:5,label:"VP",prob:"1.2e-5",note:'Rule <b>VP → V NP</b>: [2–3]=V + [3–5]=NP → <b>VP</b> over [2–5] = "includes a meal".'},
+  {i:0,j:5,label:"S",prob:"2.3e-8",note:'Rule <b>S → NP VP</b>: [0–2]=NP + [2–5]=VP → 🎉 <b>S</b> covers the whole sentence [0–5]. Parsed!'}
+];
+var ckyIdx = 0;
+
+function buildCkyTable(){
+  var t = document.getElementById('ckyTable');
+  t.innerHTML = "";
+  // word header row
+  var wr = document.createElement('tr');
+  words.forEach(function(w){ var td=document.createElement('td'); td.className='word'; td.textContent=w; wr.appendChild(td); });
+  t.appendChild(wr);
+  // one row per span-length, cells positioned by start
+  for(var span=1; span<=N; span++){
+    var tr=document.createElement('tr');
+    for(var i=0;i+span<=N;i++){
+      var td=document.createElement('td');
+      td.id='c'+i+'_'+(i+span);
+      td.dataset.span=span;
+      td.innerHTML='<span class="muted" style="font-size:10px">['+i+'–'+(i+span)+']</span>';
+      tr.appendChild(td);
+    }
+    t.appendChild(tr);
+  }
+}
+function ckyReset(){
+  ckyIdx=0; buildCkyTable();
+  document.getElementById('ckyExplain').innerHTML='Press <b>▶ Next step</b> to begin. Watch the phrases grow from the words upward.';
+  document.getElementById('ckyNext').disabled=false;
+  document.getElementById('ckyCount').textContent='';
+}
+function ckyStep(){
+  document.querySelectorAll('#ckyTable td.active').forEach(function(td){td.classList.remove('active');td.classList.add('filled');});
+  if(ckyIdx>=ckySteps.length){return;}
+  var s=ckySteps[ckyIdx];
+  var td=document.getElementById('c'+s.i+'_'+s.j);
+  td.classList.add('active');
+  td.innerHTML='<span class="muted" style="font-size:10px">['+s.i+'–'+s.j+']</span><br><span class="lab">'+s.label+'</span><span class="pr">'+s.prob+'</span>';
+  document.getElementById('ckyExplain').innerHTML='<b>Step '+(ckyIdx+1)+'.</b> '+s.note;
+  ckyIdx++;
+  document.getElementById('ckyCount').textContent='step '+ckyIdx+' / '+ckySteps.length;
+  if(ckyIdx>=ckySteps.length){ document.getElementById('ckyNext').disabled=true; }
+}
+ckyReset();
+
+/* ---- probability build-up ---- */
+var probSteps = [
+  'NP("the flight")  = 0.30 × Det(.4) × N(.02)              = 0.0024',
+  'NP("a meal")      = 0.30 × Det(.4) × N(.01)              = 0.0012',
+  'VP("includes a meal") = 0.20 × V(.05) × NP(0.0012)      = 0.000012',
+  'S(whole sentence) = 0.80 × NP(0.0024) × VP(0.000012)    = 2.304e-08   ✅ best parse'
+];
+var probIdx=0;
+function probReset(){ probIdx=0; document.getElementById('probBox').textContent='Press ▶ to multiply the rule probabilities up the tree…'; document.getElementById('probNext').disabled=false;}
+function probStep(){
+  if(probIdx>=probSteps.length) return;
+  var lines = probSteps.slice(0,probIdx+1).join('\n');
+  document.getElementById('probBox').textContent = lines;
+  probIdx++;
+  if(probIdx>=probSteps.length) document.getElementById('probNext').disabled=true;
+}
+probReset();
+</script>
+</body>
+</html>

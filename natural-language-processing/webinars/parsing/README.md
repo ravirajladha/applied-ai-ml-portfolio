@@ -3,7 +3,12 @@
 Interactive study notes for **NLP Session 9 – Parsing**. Everything is pure Python
 (no installs needed); an optional NLTK demo sits at the end.
 
-**Notebook:** [`constituency_parsing.ipynb`](constituency_parsing.ipynb)
+**👉 Open first:** [`explainer.html`](explainer.html) — a visual, click-around
+introduction (no maths). Best for a first-time look at the topic. Just double-click it
+to open in your browser. Includes a step-through CKY chart, an ambiguity toggle, a
+probability build-up, and a "how to not drown in the Python" guide.
+
+**Then run:** [`constituency_parsing.ipynb`](constituency_parsing.ipynb) — the hands-on notebook.
 
 ## What's inside
 1. Why parse? — applications (sentiment, relation extraction, QA, MT, speech)
