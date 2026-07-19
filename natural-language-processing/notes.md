@@ -1,11 +1,23 @@
-# Natural Language Processing — Notes
+# Natural Language Processing — Notes & Reading Index
 
-Working example subject — shows the layout other subjects follow.
+Your single starting point for every NLP topic. Open the **explainer** first (visual,
+no maths), then the **notes**, then run the **notebook**.
+
+## How this is organized
+- **`notes/<topic>/`** — the stuff you *read*: `explainer.html` (visual first-look) + `README.md` (written notes).
+- **`webinars/<topic>/`** — the stuff you *run*: the Jupyter `.ipynb` notebook.
+- **`materials/`** — the original slide decks / PDFs.
+- **`practice/<NN Topic>/`** — your own from-scratch practice (explainer + template notebook + guide).
+
+> Convention for future topics: same three filenames every time — `explainer.html`,
+> `README.md`, and one notebook — so any past topic is instantly familiar.
 
 ## Topics
 
-- [Parsing — Constituency, CFG, Chart & Probabilistic CKY (Session 9)](webinars/parsing/README.md) — interactive notes + from-scratch CKY / probabilistic-CKY notebook.
-- [Dependency Parsing — Transition-Based (Arc-Eager)](notes/dependency-parsing/README.md) — study notes + a from-scratch arc-eager parser notebook.
+| # | Topic | 👀 Explainer (open first) | 📖 Notes | ▶ Notebook |
+|---|-------|---------------------------|----------|------------|
+| 9 | **Parsing** — Constituency, CFG, Chart & Probabilistic CKY | [explainer.html](notes/parsing/explainer.html) | [README](notes/parsing/README.md) | [constituency_parsing.ipynb](webinars/parsing/constituency_parsing.ipynb) |
+| 10 | **Dependency Parsing** — Transition-Based (Arc-Eager) | _(todo)_ | [README](notes/dependency-parsing/README.md) | [arc_eager_parser.ipynb](webinars/dependency-parsing/arc_eager_parser.ipynb) |
 
 ## Session log
 

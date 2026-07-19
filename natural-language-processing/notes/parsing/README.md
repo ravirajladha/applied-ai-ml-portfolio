@@ -8,7 +8,7 @@ introduction (no maths). Best for a first-time look at the topic. Just double-cl
 to open in your browser. Includes a step-through CKY chart, an ambiguity toggle, a
 probability build-up, and a "how to not drown in the Python" guide.
 
-**Then run:** [`constituency_parsing.ipynb`](constituency_parsing.ipynb) — the hands-on notebook.
+**Then run:** [`constituency_parsing.ipynb`](../../webinars/parsing/constituency_parsing.ipynb) — the hands-on notebook (lives in `webinars/parsing/`).
 
 ## What's inside
 1. Why parse? — applications (sentiment, relation extraction, QA, MT, speech)
@@ -31,4 +31,5 @@ jupyter notebook webinars/parsing/constituency_parsing.ipynb
 Then run cells top to bottom. Every code cell is self-contained.
 
 Next session (10) is **Dependency Parsing** — the other view of structure:
-[`../dependency-parsing/arc_eager_parser.ipynb`](../dependency-parsing/arc_eager_parser.ipynb).
+[notes](../dependency-parsing/README.md) ·
+[notebook](../../webinars/dependency-parsing/arc_eager_parser.ipynb).
