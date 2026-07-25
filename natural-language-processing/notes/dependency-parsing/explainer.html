@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dependency Parsing — a visual first look (Session 10)</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --card:#ffffff; --ink:#1f2333; --muted:#5b6070;
+    --line:#e5e7f0; --accent:#5b6cff; --accent2:#00b3a4;
+    --shift:#3b82f6; --left:#ef4444; --right:#10b981; --reduce:#f59e0b; --root:#6366f1;
+    --shadow:0 6px 24px rgba(30,35,60,.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#14151c; --card:#1d1f2a; --ink:#e9ebf5; --muted:#a4a9bd; --line:#2c2f3d; --shadow:0 6px 24px rgba(0,0,0,.35);}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px;margin:0 auto;padding:28px 20px 80px}
+  header.hero{background:linear-gradient(135deg,#5b6cff,#00b3a4);color:#fff;border-radius:20px;
+       padding:34px 30px;margin-bottom:26px;box-shadow:var(--shadow)}
+  header.hero h1{margin:0 0 6px;font-size:30px;letter-spacing:-.5px}
+  header.hero p{margin:0;opacity:.95;font-size:16px}
+  .pill{display:inline-block;background:rgba(255,255,255,.2);padding:3px 12px;border-radius:999px;
+       font-size:12.5px;font-weight:600;margin-bottom:14px;letter-spacing:.3px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;
+       margin:18px 0;box-shadow:var(--shadow)}
+  h2{font-size:22px;margin:6px 0 4px;letter-spacing:-.3px}
+  h2 .num{display:inline-grid;place-items:center;width:30px;height:30px;background:var(--accent);
+       color:#fff;border-radius:9px;font-size:15px;margin-right:10px;vertical-align:middle}
+  h3{font-size:16px;margin:18px 0 6px}
+  p{margin:10px 0}
+  .muted{color:var(--muted)}
+  .analogy{border-left:4px solid var(--accent2);background:rgba(0,179,164,.07);padding:12px 16px;
+       border-radius:0 10px 10px 0;margin:14px 0}
+  .analogy b{color:var(--accent2)}
+  code{background:rgba(120,130,180,.14);padding:1px 6px;border-radius:5px;font-size:.92em;
+       font-family:"SF Mono",Consolas,Menlo,monospace}
+  .chip{display:inline-block;padding:4px 12px;border-radius:8px;color:#fff;font-weight:600;
+       font-size:13.5px;margin:3px}
+  .word{display:inline-block;background:rgba(120,130,180,.14);padding:4px 12px;border-radius:8px;
+       margin:3px;font-weight:600}
+  button{font:inherit;font-weight:600;border:none;border-radius:10px;padding:9px 16px;cursor:pointer;
+       background:var(--accent);color:#fff;transition:transform .05s ease, opacity .2s}
+  button:hover{opacity:.9} button:active{transform:translateY(1px)}
+  button.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
+  .explain-box{background:rgba(91,108,255,.08);border:1px solid var(--line);border-radius:10px;
+       padding:12px 16px;margin-top:10px;min-height:48px;font-size:14.5px}
+  .tree{font-family:"SF Mono",Consolas,monospace;white-space:pre;line-height:1.5;font-size:14px;
+       background:rgba(120,130,180,.08);border-radius:10px;padding:14px 18px;overflow-x:auto}
+  .kbd{background:var(--card);border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;
+       padding:1px 7px;font-size:12.5px;font-family:monospace}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:620px){.grid2{grid-template-columns:1fr}}
+  .mini{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:rgba(120,130,180,.05)}
+  .mini h4{margin:0 0 6px;font-size:15px}
+  a{color:var(--accent)}
+  .foot{color:var(--muted);font-size:13px;text-align:center;margin-top:30px}
+  /* transition legend chips */
+  .t-shift{background:var(--shift)} .t-left{background:var(--left)}
+  .t-right{background:var(--right)} .t-reduce{background:var(--reduce)} .t-root{background:var(--root)}
+  /* the machine */
+  .machine{display:grid;grid-template-columns:1fr;gap:12px;margin:14px 0}
+  .lane{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:rgba(120,130,180,.05)}
+  .lane .tag{font-size:12px;font-weight:700;letter-spacing:.4px;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+  .slots{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:44px}
+  .tok{display:inline-block;padding:6px 13px;border-radius:9px;font-weight:600;font-size:14px;
+       background:rgba(120,130,180,.16);border:1.5px solid transparent;transition:.2s}
+  .tok.rootbox{background:rgba(99,102,241,.2)}
+  .tok.top{border-color:var(--left);box-shadow:0 3px 10px rgba(239,68,68,.28);transform:translateY(-2px)}
+  .tok.front{border-color:var(--right);box-shadow:0 3px 10px rgba(16,185,129,.28);transform:translateY(-2px)}
+  .arcs{font-family:"SF Mono",Consolas,monospace;font-size:13.5px;line-height:1.9;min-height:30px}
+  .arcrow{opacity:0;animation:fadein .35s forwards}
+  @keyframes fadein{to{opacity:1}}
+  .action-badge{display:inline-block;padding:5px 14px;border-radius:999px;color:#fff;font-weight:700;font-size:14px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 2px}
+  table.rel{border-collapse:collapse;width:100%;font-size:14px;margin-top:6px}
+  table.rel th,table.rel td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+  table.rel th{background:rgba(120,130,180,.1)}
+  .steps-learn li{margin:8px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="pill">NLP · SESSION 10</div>
+  <h1>Dependency Parsing — join the words with <em>arrows</em></h1>
+  <p>A friendly, click-around first look at the Arc-Eager parser. No maths to start — read, hover, and press the buttons.</p>
+</header>
+
+<!-- 0 one idea -->
+<div class="card">
+  <h2><span class="num">★</span>The one idea to hold onto</h2>
+  <p>Last session (Parsing) we drew a <b>family tree of phrases</b> — words grouped into NP, VP, and so on.
+     Dependency parsing draws a <b>different kind of picture</b>: forget the phrase boxes, just draw an
+     <b>arrow from each word to the one word it depends on</b>. Every arrow means
+     <em>"this word is the boss of that word."</em></p>
+  <div class="tree">He   sent   her   a   letter   .
+      └────┘             each arrow: <b>head → dependent</b>
+ sent →(nsubj) He     sent is the boss of "He"  (who did the sending?)
+ sent →(iobj)  her    sent is the boss of "her" (sent to whom?)
+ sent →(dobj)  letter sent is the boss of "letter" (sent what?)
+ letter →(det) a      letter is the boss of "a"
+ ROOT →(root)  sent   the whole sentence hangs off the verb "sent"</div>
+  <div class="analogy">
+    <b>Analogy — an org chart.</b> A company has one boss (the <code>ROOT</code>). Everyone else reports to
+    exactly <b>one</b> manager. Dependency parsing is drawing that org chart for a sentence: who reports to
+    whom, and with what job title (the <em>relation label</em>, like <code>nsubj</code> = "is the subject of").
+  </div>
+  <p><b>Two rules that make it a tree:</b> (1) every word has <b>exactly one head</b> (one manager), and
+     (2) there's a single artificial <code>ROOT</code> at the top so even the main verb has a boss.</p>
+</div>
+
+<!-- 1 constituency vs dependency -->
+<div class="card">
+  <h2><span class="num">1</span>Two ways to see structure (last week vs this week)</h2>
+  <div class="grid2">
+    <div class="mini"><h4>Constituency (Session 9)</h4>
+      Groups words into nested <b>phrases</b> (NP, VP, PP). Answers <em>"which words form a chunk?"</em>
+      Internal nodes are phrase labels; words sit at the bottom.</div>
+    <div class="mini"><h4>Dependency (Session 10)</h4>
+      Links <b>word&nbsp;→&nbsp;word</b> directly. Answers <em>"which word governs which?"</em>
+      No phrase boxes — every node is a real word, joined by labelled arrows.</div>
+  </div>
+  <p class="muted">Same sentence, two lenses. Dependency is popular for extracting <b>who-did-what-to-whom</b>
+     (subject → verb → object) because that relationship is drawn as one direct arrow.</p>
+  <h3>The vocabulary (define once, use everywhere)</h3>
+  <p>
+    <span class="chip" style="background:var(--muted)">head</span> the boss word (parent) &nbsp;·&nbsp;
+    <span class="chip" style="background:var(--muted)">dependent</span> the word that reports to it (child) &nbsp;·&nbsp;
+    <span class="chip t-root">ROOT</span> fake top node so the main verb has a head
+  </p>
+  <table class="rel">
+    <tr><th>Label</th><th>Means</th><th>Example arrow</th></tr>
+    <tr><td><code>nsubj</code></td><td>nominal <b>subject</b> (who does it)</td><td>sent → He</td></tr>
+    <tr><td><code>dobj</code></td><td><b>direct</b> object (done to what)</td><td>sent → letter</td></tr>
+    <tr><td><code>iobj</code></td><td><b>indirect</b> object (to whom)</td><td>sent → her</td></tr>
+    <tr><td><code>det</code></td><td>determiner</td><td>letter → a</td></tr>
+    <tr><td><code>root</code></td><td>head of the whole sentence</td><td>ROOT → sent</td></tr>
+  </table>
+</div>
+
+<!-- 2 the machine -->
+<div class="card">
+  <h2><span class="num">2</span>The trick: don't guess the whole tree — use a little machine</h2>
+  <p>Trying every possible tree is far too slow. Instead a <b>transition-based</b> parser reads the sentence
+     <b>left to right</b> and builds the tree one small action at a time — like a tiny state machine. Its whole
+     memory is just three things (together called the <b>configuration</b>):</p>
+  <div class="grid2">
+    <div class="mini"><h4>🥞 Stack</h4>Words we're still working on. Starts as just <code>[ROOT]</code>.
+       The <b>top</b> (right end) is the one we act on.</div>
+    <div class="mini"><h4>📥 Buffer</h4>Words not read yet, in order. Starts as the <b>whole sentence</b>.
+       The <b>front</b> (left end) is next up.</div>
+  </div>
+  <div class="mini" style="margin-top:14px"><h4>🔗 Arcs</h4>The arrows committed so far. Starts <b>empty</b> and
+     grows as the parser makes decisions. When the <b>buffer is empty</b>, we're done.</div>
+  <div class="analogy">
+    <b>Analogy — a checkout line.</b> The buffer is the queue of customers waiting. The stack is the small
+    counter where you handle people who need more attention. You pull the next customer off the queue, deal
+    with them (maybe link them to someone), and set them down or send them away — until the queue is empty.
+  </div>
+</div>
+
+<!-- 3 four moves -->
+<div class="card">
+  <h2><span class="num">3</span>The four moves (Arc-Eager)</h2>
+  <p>At every step the parser looks at just <b>two</b> words: <span class="chip t-left">s</span> = top of the
+     stack, and <span class="chip t-right">b</span> = front of the buffer. It then picks <b>one</b> of four moves:</p>
+  <div class="grid2">
+    <div class="mini"><h4><span class="chip t-shift">SHIFT</span></h4>Move <code>b</code> from the buffer onto
+       the stack. Meaning: <em>"not ready to link this yet — read it in."</em></div>
+    <div class="mini"><h4><span class="chip t-left">LEFT-ARC(l)</span></h4>Draw arrow <code>b → s</code>
+       (buffer word is boss of stack top), then <b>pop</b> <code>s</code>. A left dependent is attached and
+       immediately removed.</div>
+    <div class="mini"><h4><span class="chip t-right">RIGHT-ARC(l)</span></h4>Draw arrow <code>s → b</code>
+       (stack top is boss of buffer word), then <b>push</b> <code>b</code> onto the stack. It's kept, because
+       it might collect its own children later.</div>
+    <div class="mini"><h4><span class="chip t-reduce">REDUCE</span></h4><b>Pop</b> <code>s</code> off the stack —
+       <em>"I'm finished with this word."</em> Only allowed once <code>s</code> already has a head.</div>
+  </div>
+  <div class="analogy" style="margin-top:14px">
+    <b>Why "eager"?</b> The moment a right-hand dependent appears, <code>RIGHT-ARC</code> attaches it straight
+    away — <em>before</em> its own children are known. Later, <code>REDUCE</code> clears it out. That eagerness
+    is what makes the parser fast and incremental.
+  </div>
+  <p class="muted">Big picture: <b>SHIFT / RIGHT-ARC</b> put words <em>onto</em> the stack;
+     <b>LEFT-ARC / REDUCE</b> take words <em>off</em>. A sentence of <em>n</em> words is done in about
+     <b>2n moves</b> — so parsing is <b>linear time, O(n)</b>.</p>
+</div>
+
+<!-- 4 INTERACTIVE trace -->
+<div class="card">
+  <h2><span class="num">4</span>Watch the machine run — <em>"He sent her a letter."</em></h2>
+  <p>Press <b>Next step</b> to step through the parse. Watch the <span style="color:var(--left);font-weight:700">top of the stack</span>
+     and the <span style="color:var(--right);font-weight:700">front of the buffer</span> — those are the two words
+     every decision looks at. New arrows appear in the Arcs lane as they're committed.</p>
+  <div class="legend">
+    <span class="chip t-shift">SHIFT = read a word in</span>
+    <span class="chip t-left">LEFT-ARC = link + pop</span>
+    <span class="chip t-right">RIGHT-ARC = link + keep</span>
+    <span class="chip t-reduce">REDUCE = pop (done)</span>
+  </div>
+  <div class="controls">
+    <button onclick="dpStep()" id="dpNext">▶ Next step</button>
+    <button class="ghost" onclick="dpReset()">↻ Reset</button>
+    <span class="muted" id="dpCount"></span>
+    <span id="dpAction"></span>
+  </div>
+  <div class="machine">
+    <div class="lane"><div class="tag">🥞 Stack (top = right)</div><div class="slots" id="dpStack"></div></div>
+    <div class="lane"><div class="tag">📥 Buffer (front = left)</div><div class="slots" id="dpBuffer"></div></div>
+    <div class="lane"><div class="tag">🔗 Arcs committed</div><div class="arcs" id="dpArcs"></div></div>
+  </div>
+  <div class="explain-box" id="dpExplain">Press <b>▶ Next step</b> to begin. The parser reads left-to-right and builds arrows as it goes.</div>
+</div>
+
+<!-- 5 arc-eager vs arc-standard -->
+<div class="card">
+  <h2><span class="num">5</span>Arc-Eager vs Arc-Standard (the two cousins)</h2>
+  <p>Both are transition-based and linear-time; they differ in <em>which two words</em> they act on and
+     <em>when</em> they attach right-hand dependents.</p>
+  <table class="rel">
+    <tr><th></th><th>Arc-Standard</th><th>Arc-Eager (this session)</th></tr>
+    <tr><td><b>Moves</b></td><td>3 (SHIFT, LEFT-ARC, RIGHT-ARC)</td><td>4 (adds <b>REDUCE</b>)</td></tr>
+    <tr><td><b>Looks at</b></td><td>top <b>two stack</b> words</td><td>stack top <b>+ buffer front</b></td></tr>
+    <tr><td><b>Right children</b></td><td>attached <b>late</b> (after subtree built)</td><td>attached <b>eagerly</b>, then REDUCE later</td></tr>
+    <tr><td><b>Style</b></td><td>bottom-up &amp; lazy</td><td>eager &amp; incremental</td></tr>
+  </table>
+  <p class="muted"><b>Mnemonic:</b> arc-standard waits until a word's whole family is ready; arc-eager grabs
+     the arrow the instant it can, and cleans up with <code>REDUCE</code> afterwards.</p>
+</div>
+
+<!-- 6 where used -->
+<div class="card">
+  <h2><span class="num">6</span>Where this shows up in the real world</h2>
+  <div class="grid2">
+    <div class="mini"><h4>spaCy</h4>Its fast dependency parser is a neural version of exactly this
+       transition machine — linear-time, incremental, production-ready.</div>
+    <div class="mini"><h4>Information extraction</h4>Pulling <b>subject → verb → object</b> triples straight
+       off the arrows: relation extraction, QA, grammar checking.</div>
+  </div>
+  <div class="analogy">
+    <b>Honest note.</b> Big language models pick up syntax <em>implicitly</em>, so a separate "parse the
+    sentence" step is used less than it used to be. It still shines for <b>interpretability</b>, auditable
+    rule-based extraction, low-resource languages, and lightweight CPU-only pipelines.
+  </div>
+</div>
+
+<!-- 7 recap -->
+<div class="card">
+  <h2><span class="num">7</span>60-second recap</h2>
+  <div class="grid2">
+    <div class="mini"><h4>Dependency tree</h4>Arrows <code>head → dependent</code>; every word has one head, all under <code>ROOT</code>.</div>
+    <div class="mini"><h4>Configuration</h4>Three things: <b>Stack</b>, <b>Buffer</b>, <b>Arcs</b>.</div>
+    <div class="mini"><h4>Four moves</h4>SHIFT, LEFT-ARC, RIGHT-ARC, REDUCE.</div>
+    <div class="mini"><h4>Oracle order</h4>LEFT-ARC → RIGHT-ARC → REDUCE → SHIFT (first that fits wins).</div>
+    <div class="mini"><h4>Speed</h4>~2n moves for n words → <b>O(n)</b>, projective trees.</div>
+    <div class="mini"><h4>Eager</h4>Attach right children early, then REDUCE to tidy up.</div>
+  </div>
+</div>
+
+<!-- LEARNING PYTHON -->
+<div class="card" style="border:2px solid var(--accent2)">
+  <h2><span class="num" style="background:var(--accent2)">🐍</span>How to not drown in the Python</h2>
+  <p>The notebook looks like a wall of code, but you do <b>not</b> memorise it. The whole parser is just
+     the little machine you watched above, written down. Here's the calm way in:</p>
+  <ol class="steps-learn">
+    <li><b>Run first, understand second.</b> Open the notebook, press <span class="kbd">Shift</span>+<span class="kbd">Enter</span>
+        on each cell top to bottom. Watching the printed trace appear teaches you half of it. You can always re-run.</li>
+    <li><b>Map code back to the picture.</b> The <code>stack</code>, <code>buffer</code>, and <code>arcs</code>
+        in the code are the exact three lanes from step 4. When a cell prints a step, find that step above.</li>
+    <li><b>Learn 5 building blocks — that's 90% of this notebook:</b>
+      <div class="grid2" style="margin-top:8px">
+        <div class="mini"><h4><code>list</code> — a row of things</h4><code>stack = ["ROOT"]</code> · <code>stack[-1]</code> is the top · <code>.append(x)</code> pushes · <code>.pop()</code> removes the top</div>
+        <div class="mini"><h4><code>dict</code> — a lookup table</h4><code>head = {}</code> · <code>head["He"] = "sent"</code> records an arrow</div>
+        <div class="mini"><h4><code>for</code> — do it for each</h4><code>for step in trace:</code> repeats the block once per step</div>
+        <div class="mini"><h4><code>if / elif</code> — choose a move</h4>Exactly the four-way choice: <code>if action=="SHIFT": …</code></div>
+        <div class="mini"><h4><code>def</code> — a named recipe</h4><code>def shift(): …</code> — one move = one small function</div>
+        <div class="mini"><h4><code>print()</code> — show me</h4>Sprinkle it anywhere to see what the stack/buffer hold right now.</div>
+      </div>
+    </li>
+    <li><b>Poke it.</b> Change the sentence or swap one label and re-run. Watching the trace change is how it
+        clicks — nothing breaks permanently.</li>
+    <li><b>Don't rush.</b> One section per sitting is a win. You've got the matching
+        <a href="../../webinars/dependency-parsing/dependency_parsing_flow.ipynb">basic flow notebook</a>,
+        the full <a href="../../webinars/dependency-parsing/arc_eager_parser.ipynb">from-scratch parser</a>,
+        and the <a href="README.md">README</a> alongside.</li>
+  </ol>
+  <div class="analogy" style="border-color:var(--accent)">
+    <b>Mindset:</b> you're learning to <b>read</b> code fluently long before you <b>write</b> it — like
+    understanding a language before you speak it. Reading + running + tweaking, in small doses, is the whole game.
+  </div>
+</div>
+
+<div class="foot">Open <b>explainer.html</b> first · then run <b>dependency_parsing_flow.ipynb</b> (basic) ·
+   then <b>arc_eager_parser.ipynb</b> (full). Session 10 — Dependency Parsing.</div>
+
+</div>
+
+<script>
+/* ---- interactive Arc-Eager trace: "He sent her a letter ." ---- */
+/* Each step shows the configuration BEFORE the move, plus the move applied.
+   stack/buffer are arrays (stack top = last element, buffer front = first). */
+var dpSteps = [
+  {stack:["ROOT"], buffer:["He","sent","her","a","letter","."],
+   action:"SHIFT", cls:"t-shift", arc:null,
+   note:'Top is <b>ROOT</b>, front is <b>He</b>. "He" is not the boss of ROOT and ROOT is not yet the boss of "He" — so just read it in. <b>SHIFT</b>: push "He" onto the stack.'},
+  {stack:["ROOT","He"], buffer:["sent","her","a","letter","."],
+   action:"LEFT-ARC (nsubj)", cls:"t-left", arc:"sent →(nsubj) He",
+   note:'Top <b>He</b>, front <b>sent</b>. In the correct tree, "sent" is the boss of "He" (He is the subject). Draw <b>sent → He</b> and pop "He". <b>LEFT-ARC</b>.'},
+  {stack:["ROOT"], buffer:["sent","her","a","letter","."],
+   action:"RIGHT-ARC (root)", cls:"t-root", arc:"ROOT →(root) sent",
+   note:'Top <b>ROOT</b>, front <b>sent</b>. The whole sentence hangs off the verb, so ROOT is the boss of "sent". Draw <b>ROOT → sent</b> and push "sent". <b>RIGHT-ARC</b>.'},
+  {stack:["ROOT","sent"], buffer:["her","a","letter","."],
+   action:"RIGHT-ARC (iobj)", cls:"t-right", arc:"sent →(iobj) her",
+   note:'Top <b>sent</b>, front <b>her</b>. "sent" is the boss of "her" (sent to whom?). Draw <b>sent → her</b> and push "her". <b>RIGHT-ARC</b>.'},
+  {stack:["ROOT","sent","her"], buffer:["a","letter","."],
+   action:"SHIFT", cls:"t-shift", arc:null,
+   note:'Top <b>her</b>, front <b>a</b>. No link between them. Read "a" in. <b>SHIFT</b>.'},
+  {stack:["ROOT","sent","her","a"], buffer:["letter","."],
+   action:"LEFT-ARC (det)", cls:"t-left", arc:"letter →(det) a",
+   note:'Top <b>a</b>, front <b>letter</b>. "letter" is the boss of "a" (the determiner). Draw <b>letter → a</b> and pop "a". <b>LEFT-ARC</b>.'},
+  {stack:["ROOT","sent","her"], buffer:["letter","."],
+   action:"REDUCE", cls:"t-reduce", arc:null,
+   note:'Top <b>her</b> already has a head (from step 3), and "letter" needs to reach "sent" underneath it. Clear "her" out of the way. <b>REDUCE</b>: pop "her".'},
+  {stack:["ROOT","sent"], buffer:["letter","."],
+   action:"RIGHT-ARC (dobj)", cls:"t-right", arc:"sent →(dobj) letter",
+   note:'Top <b>sent</b>, front <b>letter</b>. "sent" is the boss of "letter" (sent what?). Draw <b>sent → letter</b> and push "letter". <b>RIGHT-ARC</b>.'},
+  {stack:["ROOT","sent","letter"], buffer:["."],
+   action:"REDUCE", cls:"t-reduce", arc:null,
+   note:'Top <b>letter</b> has a head, and the final "." needs to reach "sent" beneath it. Clear "letter". <b>REDUCE</b>: pop "letter".'},
+  {stack:["ROOT","sent"], buffer:["."],
+   action:"RIGHT-ARC (punct)", cls:"t-right", arc:"sent →(punct) .",
+   note:'Top <b>sent</b>, front <b>.</b> — the full stop attaches to the verb. Draw <b>sent → .</b> and push it. <b>RIGHT-ARC</b>.'},
+  {stack:["ROOT","sent","."], buffer:[],
+   action:"DONE 🎉", cls:"t-root", arc:null, terminal:true,
+   note:'Buffer is <b>empty</b> → terminal configuration. All <b>6 arrows</b> recovered in <b>10 moves</b> (n=6, so ≤ 2n). The org chart is complete!'}
+];
+var dpIdx = 0;
+var dpArcsShown = [];
+
+function renderTokens(el, arr, kind){
+  el.innerHTML = "";
+  arr.forEach(function(w, i){
+    var span = document.createElement('span');
+    span.className = 'tok' + (w==="ROOT" ? ' rootbox':'');
+    if(kind==='stack' && i===arr.length-1) span.className += ' top';   // top of stack
+    if(kind==='buffer' && i===0)           span.className += ' front'; // front of buffer
+    span.textContent = w;
+    el.appendChild(span);
+  });
+  if(arr.length===0){ el.innerHTML = '<span class="muted">— empty —</span>'; }
+}
+function renderArcs(){
+  var el = document.getElementById('dpArcs');
+  if(dpArcsShown.length===0){ el.innerHTML='<span class="muted">— none yet —</span>'; return; }
+  el.innerHTML = dpArcsShown.map(function(a){ return '<div class="arcrow">🔗 '+a+'</div>'; }).join('');
+}
+function dpReset(){
+  dpIdx = 0; dpArcsShown = [];
+  var s = dpSteps[0];
+  renderTokens(document.getElementById('dpStack'), s.stack, 'stack');
+  renderTokens(document.getElementById('dpBuffer'), s.buffer, 'buffer');
+  renderArcs();
+  document.getElementById('dpExplain').innerHTML = 'Press <b>▶ Next step</b> to begin. The parser reads left-to-right and builds arrows as it goes.';
+  document.getElementById('dpNext').disabled = false;
+  document.getElementById('dpCount').textContent = '';
+  document.getElementById('dpAction').innerHTML = '';
+}
+function dpStep(){
+  if(dpIdx >= dpSteps.length){ return; }
+  var s = dpSteps[dpIdx];
+  renderTokens(document.getElementById('dpStack'), s.stack, 'stack');
+  renderTokens(document.getElementById('dpBuffer'), s.buffer, 'buffer');
+  if(s.arc){ dpArcsShown.push(s.arc); }
+  renderArcs();
+  document.getElementById('dpExplain').innerHTML = '<b>Step '+(dpIdx+1)+'.</b> '+s.note;
+  document.getElementById('dpAction').innerHTML = '<span class="action-badge '+s.cls+'">'+s.action+'</span>';
+  document.getElementById('dpCount').textContent = 'step '+(dpIdx+1)+' / '+dpSteps.length;
+  dpIdx++;
+  if(dpIdx >= dpSteps.length){ document.getElementById('dpNext').disabled = true; }
+}
+dpReset();
+</script>
+</body>
+</html>

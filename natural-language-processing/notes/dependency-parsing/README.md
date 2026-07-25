@@ -1,6 +1,10 @@
 # Dependency Parsing — Transition-Based (Arc-Eager)
 
-> Study notes + a from-scratch parser. Companion notebook: [`arc_eager_parser.ipynb`](arc_eager_parser.ipynb).
+**👉 Open first:** [`explainer.html`](explainer.html) — a visual, click-around introduction
+(no maths). Includes a step-through of the parser's stack/buffer/arcs on *"He sent her a letter."*
+
+> Study notes + a from-scratch parser. Notebooks: [`dependency_parsing_flow.ipynb`](../../webinars/dependency-parsing/dependency_parsing_flow.ipynb)
+> (basic, watch-the-flow) then [`arc_eager_parser.ipynb`](../../webinars/dependency-parsing/arc_eager_parser.ipynb) (full, from scratch).
 
 ---
 

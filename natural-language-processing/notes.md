@@ -17,7 +17,7 @@ no maths), then the **notes**, then run the **notebook**.
 | # | Topic | 👀 Explainer (open first) | 📖 Notes | ▶ Notebook |
 |---|-------|---------------------------|----------|------------|
 | 9 | **Parsing** — Constituency, CFG, Chart & Probabilistic CKY | [explainer.html](notes/parsing/explainer.html) | [README](notes/parsing/README.md) | [constituency_parsing.ipynb](webinars/parsing/constituency_parsing.ipynb) |
-| 10 | **Dependency Parsing** — Transition-Based (Arc-Eager) | _(todo)_ | [README](notes/dependency-parsing/README.md) | [arc_eager_parser.ipynb](webinars/dependency-parsing/arc_eager_parser.ipynb) |
+| 10 | **Dependency Parsing** — Transition-Based (Arc-Eager) | [explainer.html](notes/dependency-parsing/explainer.html) | [README](notes/dependency-parsing/README.md) | [flow (basic)](webinars/dependency-parsing/dependency_parsing_flow.ipynb) · [arc_eager_parser.ipynb](webinars/dependency-parsing/arc_eager_parser.ipynb) |
 
 ## Session log
 
