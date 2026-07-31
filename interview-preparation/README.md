@@ -7,6 +7,7 @@ Prep material for AI/ML interviews — theory-first, written so each answer can 
 | [JOURNEY.md](JOURNEY.md) | Roadmap and progress tracker — which subject files exist, which are next, and the conventions they follow |
 | [top-100-questions.md](top-100-questions.md) | The 100 theory questions that repeat most often, each with a one-line answer plus short theory for the follow-up |
 | [coding-questions.md](coding-questions.md) | 60 coding problems with runnable solutions — Python, NumPy, pandas, algorithms from scratch, scikit-learn, SQL, PyTorch |
+| [models-explained.md](models-explained.md) | All 14 models, each at four increasing depths — one-liner + analogy → mechanics → math → practice |
 | [quick-revision-cheatsheet.md](quick-revision-cheatsheet.md) | Formulas, decision tables, Python/pandas and SQL snippets — for the last 30 minutes |
 
 ### Subject deep dives

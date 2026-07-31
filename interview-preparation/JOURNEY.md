@@ -13,6 +13,7 @@ Started: **31 July 2026** (the night before an AI/ML interview).
 |---|------|---------|--------|-----------|
 | — | `top-100-questions.md` | Broad theory across all areas | ✅ Done | 100 |
 | — | `coding-questions.md` | Python, NumPy, pandas, from-scratch, sklearn, SQL, PyTorch | ✅ Done | 60 |
+| — | `models-explained.md` | All 14 models at four increasing depths | ✅ Done | 14 models |
 | — | `quick-revision-cheatsheet.md` | Last-30-minutes revision | ✅ Done | — |
 | 1 | `machine-learning.md` | Classical ML deep dive | ✅ Done | 80 |
 | 2 | `deep-learning.md` | Neural nets, backprop, CNN, RNN, training | ✅ Done | 82 |
