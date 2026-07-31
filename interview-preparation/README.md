@@ -4,7 +4,8 @@ Prep material for AI/ML interviews — theory-first, written so each answer can 
 
 | File | What it is |
 |------|------------|
-| [top-100-questions.md](top-100-questions.md) | The 100 questions that repeat most often, each with a one-line answer plus short theory for the follow-up |
+| [top-100-questions.md](top-100-questions.md) | The 100 theory questions that repeat most often, each with a one-line answer plus short theory for the follow-up |
+| [coding-questions.md](coding-questions.md) | 60 coding problems with runnable solutions — Python, NumPy, pandas, algorithms from scratch, scikit-learn, SQL, PyTorch |
 | [quick-revision-cheatsheet.md](quick-revision-cheatsheet.md) | Formulas, decision tables, Python/pandas and SQL snippets — for the last 30 minutes |
 
 ## How the 100 are organised
@@ -25,6 +26,20 @@ Prep material for AI/ML interviews — theory-first, written so each answer can 
 
 ⭐ marks the very high-frequency questions.
 
+## How the coding questions are organised
+
+| # | Section |
+|---|---------|
+| 1–12 | Python fundamentals & logic |
+| 13–21 | NumPy |
+| 22–33 | Pandas |
+| 34–44 | ML algorithms from scratch (NumPy) |
+| 45–50 | scikit-learn / practical ML |
+| 51–55 | SQL |
+| 56–60 | PyTorch / deep learning |
+
+Plus a debugging table ("training loss won't go down", "loss is NaN", …) which is a favourite live question.
+
 ## Suggested plan for one evening
 
 1. **Hour 1** — Q1–Q12, Q46–Q57 (fundamentals + overfitting/metrics). These come up in almost every interview and
@@ -33,8 +48,11 @@ Prep material for AI/ML interviews — theory-first, written so each answer can 
    what it is.
 3. **Hour 3** — Q65–Q76 and Q84–Q91 (deep learning + Transformers/GenAI). Q90 (RAG vs fine-tuning) is currently
    the most-asked generative AI question, so rehearse that one aloud.
-4. **Last 30 min** — the cheat sheet only, plus one rehearsal of your own project story.
-5. Skim Q13–Q20 and Q92–Q100 for coverage; don't over-invest.
+4. **Hour 4 — coding.** Hand-write these five from a blank file, no copying: linear regression with gradient
+   descent, logistic regression, K-Means, precision/recall/F1 from the confusion matrix, and a scikit-learn
+   pipeline + PyTorch training loop. Skim the rest of `coding-questions.md`.
+5. **Last 30 min** — the cheat sheet only, plus one rehearsal of your own project story.
+6. Skim Q13–Q20 and Q92–Q100 for coverage; don't over-invest.
 
 ## Two things that matter more than the list
 
