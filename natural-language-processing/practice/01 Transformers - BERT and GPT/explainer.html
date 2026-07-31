@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transformers, BERT and GPT — an interactive lesson</title>
+<style>
+:root{
+  --bg:#f4f6fb;--panel:#fff;--ink:#0f172a;--muted:#64748b;--edge:#e2e8f0;
+  --b:#3b82f6;--v:#8b5cf6;--g:#10b981;--y:#f59e0b;--r:#ef4444;--c:#06b6d4;
+  --shadow:0 8px 26px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.05);
+}
+html[data-theme="dark"]{
+  --bg:#0b1120;--panel:#151d2e;--ink:#e8eefc;--muted:#94a3b8;--edge:#26324a;
+  --shadow:0 8px 26px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.62;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;padding-bottom:80px}
+.wrap{max-width:820px;margin:0 auto;padding:0 18px}
+h1{font-size:clamp(26px,6vw,38px);letter-spacing:-.7px;line-height:1.12;margin:0 0 10px}
+h2{font-size:clamp(20px,4.4vw,26px);letter-spacing:-.4px;margin:0 0 6px}
+h3{font-size:17px;margin:26px 0 8px;letter-spacing:-.2px}
+p{margin:12px 0}
+code{background:color-mix(in srgb,var(--ink) 8%,transparent);padding:2px 6px;border-radius:5px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.87em}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+/* header */
+header{padding:44px 0 10px}
+.kicker{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--v);background:color-mix(in srgb,var(--v) 13%,transparent);padding:4px 11px;border-radius:99px;margin-bottom:14px}
+.lede{font-size:17px;color:var(--muted);max-width:62ch}
+.toc{display:flex;flex-wrap:wrap;gap:7px;margin:24px 0 8px;padding:0;list-style:none}
+.toc a{font-size:12.5px;text-decoration:none;color:var(--muted);background:var(--panel);
+  border:1px solid var(--edge);border-radius:99px;padding:5px 11px;display:block}
+.toc a:hover{border-color:var(--v);color:var(--v)}
+
+/* sections */
+section{background:var(--panel);border:1px solid var(--edge);border-radius:20px;padding:26px;
+  margin:20px 0;box-shadow:var(--shadow);scroll-margin-top:16px}
+.snum{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;
+  background:var(--v);color:#fff;font-size:13px;font-weight:700;margin-right:9px;flex:none}
+.shead{display:flex;align-items:center;margin-bottom:4px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 18px}
+
+/* reusable bits */
+.note{border-left:3px solid var(--b);background:color-mix(in srgb,var(--b) 7%,transparent);
+  padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0;font-size:14.5px}
+.note.warn{border-color:var(--y);background:color-mix(in srgb,var(--y) 9%,transparent)}
+.note.key{border-color:var(--g);background:color-mix(in srgb,var(--g) 8%,transparent)}
+.note b{font-weight:700}
+.lab{background:color-mix(in srgb,var(--ink) 3.5%,transparent);border:1px solid var(--edge);
+  border-radius:14px;padding:18px;margin:18px 0}
+.lab h4{margin:0 0 3px;font-size:14px;letter-spacing:.2px}
+.lab .hint{font-size:12.5px;color:var(--muted);margin:0 0 14px}
+button{font:inherit;font-size:13px;background:var(--panel);color:var(--ink);border:1px solid var(--edge);
+  border-radius:9px;padding:7px 13px;cursor:pointer;transition:.13s}
+button:hover{border-color:var(--v)}
+button.pri{background:var(--v);border-color:var(--v);color:#fff;font-weight:600}
+button.pri:hover{filter:brightness(1.08)}
+button.on{background:var(--b);border-color:var(--b);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input[type=text]{font:inherit;font-size:14px;padding:9px 12px;border-radius:9px;border:1px solid var(--edge);
+  background:var(--panel);color:var(--ink);width:100%;max-width:420px}
+input[type=range]{width:100%;max-width:320px;accent-color:var(--v)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:14px 0}
+.tw{overflow-x:auto;border:1px solid var(--edge);border-radius:12px;margin:14px 0}
+.tw table{margin:0}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--edge);vertical-align:top}
+th{background:color-mix(in srgb,var(--ink) 5%,transparent);font-weight:700;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+.tok{display:inline-block;padding:5px 10px;border-radius:8px;font-size:13.5px;font-weight:600;
+  margin:3px;cursor:pointer;border:1.5px solid transparent;transition:.13s;user-select:none}
+.tok:hover{transform:translateY(-1px)}
+.tok.sel{outline:2px solid var(--v);outline-offset:1px}
+svg{display:block;width:100%;height:auto}
+.cap{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:620px){.grid2{grid-template-columns:1fr}}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px}
+.pB{background:color-mix(in srgb,var(--b) 16%,transparent);color:var(--b)}
+.pG{background:color-mix(in srgb,var(--g) 16%,transparent);color:var(--g)}
+.pV{background:color-mix(in srgb,var(--v) 16%,transparent);color:var(--v)}
+.pR{background:color-mix(in srgb,var(--r) 16%,transparent);color:var(--r)}
+.quiz{border:1px solid var(--edge);border-radius:12px;padding:14px 16px;margin:12px 0}
+.quiz p{margin:0 0 10px;font-weight:600;font-size:14.5px}
+.opt{display:block;width:100%;text-align:left;margin:5px 0;padding:9px 12px;border-radius:9px;
+  border:1px solid var(--edge);background:var(--panel);cursor:pointer;font-size:13.5px}
+.opt:hover{border-color:var(--v)}
+.opt.right{background:color-mix(in srgb,var(--g) 18%,transparent);border-color:var(--g);font-weight:600}
+.opt.wrong{background:color-mix(in srgb,var(--r) 15%,transparent);border-color:var(--r)}
+.exp{font-size:13px;color:var(--muted);margin-top:9px;display:none}
+.exp.show{display:block}
+footer{color:var(--muted);font-size:13px;text-align:center;padding:30px 0 10px}
+.top{position:fixed;right:16px;bottom:16px;z-index:20;border-radius:50%;width:42px;height:42px;
+  box-shadow:var(--shadow);background:var(--panel)}
+</style>
+</head>
+<body>
+<button class="top" id="themeBtn" title="Toggle theme">◐</button>
+<div class="wrap">
+
+<header>
+  <span class="kicker">NLP · Practice topic 01</span>
+  <h1>Transformers, BERT and GPT</h1>
+  <p class="lede">An interactive lesson. We start from the problem transformers were invented to solve, build
+  attention up one small step at a time with numbers you can actually follow, and finish by understanding exactly
+  what separates BERT from GPT — which is one line of code and an enormous difference in what the model can do.</p>
+  <ul class="toc">
+    <li><a href="#s1">1 · The problem</a></li>
+    <li><a href="#s2">2 · Tokens</a></li>
+    <li><a href="#s3">3 · Embeddings + position</a></li>
+    <li><a href="#s4">4 · Attention, by hand</a></li>
+    <li><a href="#s5">5 · Q, K, V</a></li>
+    <li><a href="#s6">6 · Multi-head</a></li>
+    <li><a href="#s7">7 · The full block</a></li>
+    <li><a href="#s8">8 · BERT vs GPT</a></li>
+    <li><a href="#s9">9 · How they are trained</a></li>
+    <li><a href="#s10">10 · Which one to use</a></li>
+    <li><a href="#s11">11 · Check yourself</a></li>
+  </ul>
+</header>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <div class="shead"><span class="snum">1</span><h2>The problem transformers solved</h2></div>
+  <p class="sub">Before 2017, sequences were processed one word at a time. That was the bottleneck.</p>
+
+  <p>An <b>RNN</b> reads a sentence like a person reading with a finger on the page — word 1, then word 2, then
+  word 3. Each step carries forward a <i>hidden state</i>: a summary of everything so far.</p>
+
+  <p>Two things break:</p>
+  <ul>
+    <li><b>You cannot parallelise.</b> Word 10 needs word 9's output, so a GPU with 10,000 cores sits mostly idle.</li>
+    <li><b>Long-range memory fades.</b> To connect word 1 to word 50, information passes through 49 steps, each one
+      multiplying the gradient by something small. It vanishes.</li>
+  </ul>
+
+  <div class="lab">
+    <h4>See the difference</h4>
+    <p class="hint">Press play. Watch how many steps each architecture needs to finish reading the sentence.</p>
+    <div class="row"><button class="pri" id="raceBtn">▶ Play</button>
+      <span class="mono" id="raceInfo" style="font-size:12.5px;color:var(--muted)"></span></div>
+    <div id="race" style="margin-top:14px"></div>
+  </div>
+
+  <div class="note key"><b>The transformer's move:</b> throw away recurrence entirely. Let every word look at
+  every other word <i>directly</i>, all at the same time. The path between any two words becomes length 1 instead
+  of length n — and since nothing waits for anything else, the whole sentence goes through the GPU in one shot.</div>
+
+  <div class="note warn"><b>The price:</b> if every word compares itself to every other word, that is n² comparisons.
+  Double the sentence length and you quadruple the cost. This is <i>the</i> limitation of transformers and the
+  reason long-context models are hard.</div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <div class="shead"><span class="snum">2</span><h2>Step one: text becomes tokens</h2></div>
+  <p class="sub">A model never sees letters. It sees integers.</p>
+
+  <p>Text is chopped into <b>tokens</b> — usually pieces of words, not whole words. Each token has an ID in a
+  fixed vocabulary (BERT has ~30,000, GPT-2 has ~50,000).</p>
+
+  <p>Why pieces rather than whole words? Because a fixed vocabulary can never contain every word. Sub-word
+  tokenisation means an unseen word like <code>tokenisation</code> still becomes something the model understands:
+  <code>token</code> + <code>isation</code>. Nothing is ever truly out-of-vocabulary.</p>
+
+  <div class="lab">
+    <h4>Try the tokeniser</h4>
+    <p class="hint">Type anything. This is a simplified sub-word splitter — real ones learn their pieces from data,
+    but the behaviour is the same.</p>
+    <input type="text" id="tokIn" value="Transformers are unbelievably powerful" spellcheck="false">
+    <div id="tokOut" style="margin-top:14px"></div>
+    <div id="tokStats" class="cap" style="text-align:left;margin-top:10px"></div>
+  </div>
+
+  <div class="note"><b>Rule of thumb for interviews:</b> 1 token ≈ 0.75 English words ≈ 4 characters. Context
+  windows, pricing and rate limits are all measured in tokens, not words.</div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <div class="shead"><span class="snum">3</span><h2>Embeddings, and why position must be added back</h2></div>
+  <p class="sub">Token IDs become vectors. But attention has no sense of order, so order is injected deliberately.</p>
+
+  <p>Each token ID looks up a learned <b>embedding</b> — a vector of, say, 768 numbers that encodes meaning.
+  Similar words get similar vectors.</p>
+
+  <p>Now the subtle part. Self-attention treats its input as a <b>set</b>, not a sequence. If you shuffle the
+  words, attention computes exactly the same thing. To the raw mechanism, <i>"dog bites man"</i> and
+  <i>"man bites dog"</i> are identical.</p>
+
+  <p>So we add a <b>positional encoding</b> — a second vector that depends only on the slot number — to every
+  token embedding. Now position 1 and position 5 carry a different fingerprint even for the same word.</p>
+
+  <div class="lab">
+    <h4>Positional encoding</h4>
+    <p class="hint">Drag to move through positions. Each column is one dimension of the vector; the original paper
+    used sine and cosine waves of different frequencies, so every position gets a unique pattern.</p>
+    <input type="range" id="posSlider" min="0" max="31" value="0">
+    <div class="row" style="margin-top:6px"><span class="mono" style="font-size:12.5px" id="posLabel"></span></div>
+    <div id="posViz" style="margin-top:12px"></div>
+    <p class="cap">Low dimensions (left) change fast between neighbouring positions; high dimensions (right)
+    change slowly. Together they act like the digits of a binary clock.</p>
+  </div>
+
+  <div class="note"><b>Interview line:</b> "Self-attention is permutation-invariant, so positional information has
+  to be added explicitly. The original paper used fixed sinusoids; modern models use learned embeddings or
+  rotary encodings (RoPE)."</div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <div class="shead"><span class="snum">4</span><h2>Attention, computed by hand</h2></div>
+  <p class="sub">Four steps, three tiny tokens, two dimensions. Small enough to check the arithmetic yourself.</p>
+
+  <p>Here is the whole idea in one sentence: <b>every token asks every other token "how relevant are you to me?",
+  and then rebuilds itself as a weighted blend of the answers.</b></p>
+
+  <p>Let's do it with a 3-word sentence and vectors of size 2, so the numbers stay readable. Step through it.</p>
+
+  <div class="lab">
+    <h4>The four steps</h4>
+    <p class="hint">Focus token: <b id="stepFocus">"it"</b>. Click Next to advance one step at a time.</p>
+    <div class="row"><button id="stepPrev">← Back</button><button class="pri" id="stepNext">Next step →</button>
+      <button id="stepReset">Reset</button></div>
+    <div id="stepBox" style="margin-top:16px"></div>
+  </div>
+
+  <div class="note key"><b>Why divide by √d<sub>k</sub>?</b> Dot products grow with the number of dimensions. With
+  d=64, raw scores can reach the hundreds — and softmax of a large number is effectively a hard <code>max</code>:
+  one weight becomes 1.0 and everything else 0. The gradient dies. Dividing by √d<sub>k</sub> keeps the scores in
+  a range where softmax stays soft and gradients keep flowing.</div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <div class="shead"><span class="snum">5</span><h2>Query, Key and Value — what they actually mean</h2></div>
+  <p class="sub">Three different projections of the same token, each with a different job.</p>
+
+  <p>Every token produces three vectors by multiplying its embedding with three learned weight matrices:</p>
+
+  <div class="tw"><table>
+    <tr><th>Vector</th><th>Made by</th><th>Its job</th><th>Library analogy</th></tr>
+    <tr><td><b style="color:var(--b)">Query</b></td><td>x · W<sup>Q</sup></td><td>What I am looking for</td>
+        <td>The topic you ask the librarian for</td></tr>
+    <tr><td><b style="color:var(--v)">Key</b></td><td>x · W<sup>K</sup></td><td>What I advertise about myself</td>
+        <td>The label on each book's spine</td></tr>
+    <tr><td><b style="color:var(--g)">Value</b></td><td>x · W<sup>V</sup></td><td>What I actually contribute</td>
+        <td>The contents inside the book</td></tr>
+  </table></div>
+
+  <p>You match your <b>query</b> against every <b>key</b> to decide how much attention each book deserves — then
+  you take a blend of their <b>values</b>. The matching and the content are deliberately separate, which is what
+  lets a token be highly relevant without dominating what gets copied.</p>
+
+  <div class="lab">
+    <h4>Attention explorer</h4>
+    <p class="hint">Click any word to see what it attends to. Thicker, brighter links mean higher attention weight.
+    <span style="color:var(--y)">These weights are illustrative</span> — hand-set to show the patterns a trained
+    model really does learn.</p>
+    <div class="row" style="margin-bottom:6px">
+      <button class="on" data-sent="0" id="sentBtn0">Pronoun resolution</button>
+      <button data-sent="1" id="sentBtn1">Verb agreement</button>
+    </div>
+    <div id="attTokens" style="margin:12px 0"></div>
+    <div id="attViz"></div>
+    <div id="attRead" class="note" style="margin-top:6px;font-size:13.5px"></div>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <div class="shead"><span class="snum">6</span><h2>Multi-head attention</h2></div>
+  <p class="sub">One attention pattern is not enough. Run several in parallel.</p>
+
+  <p>A single attention layer produces one set of weights — one opinion about what relates to what. But language
+  has many kinds of relationship at once: grammatical subject, what a pronoun refers to, which adjective modifies
+  which noun.</p>
+
+  <p>So the model splits its dimensions into <b>heads</b> — typically 8, 12 or 16 — and runs attention separately in
+  each, with its own W<sup>Q</sup>, W<sup>K</sup>, W<sup>V</sup>. Each head is free to specialise. The outputs are
+  concatenated and mixed by one final matrix.</p>
+
+  <div class="lab">
+    <h4>Four heads, four patterns</h4>
+    <p class="hint">Switch heads and watch the attention pattern change completely for the same sentence.</p>
+    <div class="row" id="headBtns"></div>
+    <div id="headViz" style="margin-top:14px"></div>
+    <div id="headDesc" class="note" style="font-size:13.5px"></div>
+  </div>
+
+  <div class="note"><b>Note on cost:</b> heads do not make the layer more expensive. With 768 dimensions and 12
+  heads, each head works in 64 dimensions — 12 × 64 = 768. You get twelve perspectives for the price of one.</div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <div class="shead"><span class="snum">7</span><h2>The full transformer block</h2></div>
+  <p class="sub">Attention is only half of it. Click each part to see what it does.</p>
+
+  <p>A block is attention plus a small feed-forward network, with a residual connection and a normalisation
+  around each. Stack the block 12 times and you have BERT-base; stack it 96 times and you have GPT-3.</p>
+
+  <div class="lab">
+    <h4>Anatomy of a block</h4>
+    <p class="hint">Tap any component.</p>
+    <div id="blockDiagram"></div>
+    <div id="blockInfo" class="note" style="margin-top:10px;min-height:74px"></div>
+  </div>
+
+  <div class="note key"><b>The residual connection is not a detail.</b> Writing <code>y = F(x) + x</code> means the
+  gradient flowing backwards gets an <code>+1</code> term — an unobstructed path that cannot be multiplied away.
+  Without it, a 96-layer model would not train at all.</div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8">
+  <div class="shead"><span class="snum">8</span><h2>BERT vs GPT — the one difference that matters</h2></div>
+  <p class="sub">Same block. Same attention. The entire distinction is a mask.</p>
+
+  <p>This is the part worth truly understanding, because it is asked constantly and most people answer it
+  vaguely.</p>
+
+  <p>Both BERT and GPT are stacks of the transformer block you just saw. The difference is <b>what each token is
+  allowed to look at</b> — enforced by adding <code>−∞</code> to the forbidden scores before the softmax, so those
+  weights become exactly zero.</p>
+
+  <div class="lab">
+    <h4>The attention mask</h4>
+    <p class="hint">Each row is a token doing the looking; each column is a token being looked at. A filled cell
+    means "allowed". Flip between the two modes.</p>
+    <div class="row">
+      <button class="on" id="maskBert">BERT — bidirectional</button>
+      <button id="maskGpt">GPT — causal</button>
+    </div>
+    <div id="maskViz" style="margin-top:14px"></div>
+    <div id="maskInfo" class="note" style="font-size:13.5px"></div>
+  </div>
+
+  <p>Look at the GPT grid: it is a <b>triangle</b>. Token 3 can see tokens 1, 2 and 3 — never 4 or 5. That single
+  constraint is what makes generation possible, because at inference time the future genuinely does not exist yet.</p>
+
+  <div class="note key"><b>Say this in an interview:</b> "BERT is encoder-only and bidirectional — every token sees
+  the full sentence in both directions, so it is built for <i>understanding</i>. GPT is decoder-only and causal —
+  each token sees only what came before it, so it is built for <i>generation</i>. Mechanically the difference is
+  the attention mask."</div>
+
+  <h3>Why BERT cannot simply generate text</h3>
+  <p>If every token can see every other token, then during training the model could look at the word it is meant
+  to predict. It would learn nothing — the answer is in the input. That is exactly why BERT needs a different
+  training objective, which is the next section.</p>
+
+  <h3>Why GPT is bad at some understanding tasks</h3>
+  <p>When GPT encodes the third word of a sentence, it has not yet read the rest. Its representation of that word
+  is built from incomplete information. For classification or entity extraction, where the whole sentence is
+  available anyway, throwing away the right-hand context is a real handicap.</p>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9">
+  <div class="shead"><span class="snum">9</span><h2>How each one is pre-trained</h2></div>
+  <p class="sub">Different masks force different training objectives.</p>
+
+  <div class="grid2">
+    <div>
+      <span class="pill pB">BERT</span>
+      <h3 style="margin-top:8px">Masked Language Modelling</h3>
+      <p style="font-size:14.5px">Hide about 15% of tokens at random and make the model reconstruct them using
+      context from <i>both</i> sides. It is a fill-in-the-blank exam.</p>
+    </div>
+    <div>
+      <span class="pill pG">GPT</span>
+      <h3 style="margin-top:8px">Next-token prediction</h3>
+      <p style="font-size:14.5px">Given everything so far, predict the next token. Repeat over the entire
+      internet. It is autocomplete, taken extremely seriously.</p>
+    </div>
+  </div>
+
+  <div class="lab">
+    <h4>Watch each objective run</h4>
+    <p class="hint">Two different exams on the same sentence.</p>
+    <div class="row"><button class="pri" id="mlmBtn">▶ Run BERT's exam (MLM)</button>
+      <button class="pri" id="clmBtn" style="background:var(--g);border-color:var(--g)">▶ Run GPT's exam (next token)</button></div>
+    <div id="trainViz" style="margin-top:16px;min-height:120px"></div>
+  </div>
+
+  <div class="note warn"><b>The mismatch nobody mentions:</b> the <code>[MASK]</code> token appears during BERT's
+  pre-training but never in real downstream data. This train/serve discrepancy is a known weakness — RoBERTa and
+  ELECTRA were partly built to address it.</div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="s10">
+  <div class="shead"><span class="snum">10</span><h2>Which one would you use?</h2></div>
+  <p class="sub">The practical decision, and where the field has actually gone.</p>
+
+  <div class="tw"><table>
+    <tr><th></th><th>BERT (encoder)</th><th>GPT (decoder)</th><th>T5 / BART (both)</th></tr>
+    <tr><td><b>Attention</b></td><td>Bidirectional</td><td>Causal / masked</td><td>Encoder bidir, decoder causal</td></tr>
+    <tr><td><b>Pre-training</b></td><td>Masked LM (+ NSP)</td><td>Next token</td><td>Span corruption</td></tr>
+    <tr><td><b>Natural at</b></td><td>Understanding</td><td>Generation</td><td>Transformation</td></tr>
+    <tr><td><b>Typical tasks</b></td><td>Classification, NER, extractive QA, retrieval embeddings</td>
+        <td>Chat, summarisation, code, reasoning</td><td>Translation, summarisation</td></tr>
+    <tr><td><b>Output</b></td><td>Vectors per token</td><td>One token at a time</td><td>A new sequence</td></tr>
+    <tr><td><b>Size today</b></td><td>110M–340M</td><td>Billions to trillions</td><td>Millions to billions</td></tr>
+  </table></div>
+
+  <div class="lab">
+    <h4>Pick the right architecture</h4>
+    <p class="hint">Five real tasks. Choose, then see the reasoning.</p>
+    <div id="taskQuiz"></div>
+  </div>
+
+  <div class="note"><b>Where the field went:</b> decoder-only won. Scaling turned out to work better on the
+  next-token objective, and a large enough generative model can do classification just by being asked. But BERT-style
+  encoders are far from dead — they are small, fast and cheap, and every RAG system on earth uses an encoder to
+  produce its embeddings. If you need to embed ten million documents, you do not use GPT-4 for it.</div>
+</section>
+
+<!-- ============ 11 ============ -->
+<section id="s11">
+  <div class="shead"><span class="snum">11</span><h2>Check yourself</h2></div>
+  <p class="sub">If you can answer these without hesitating, you understand the lesson.</p>
+  <div id="quizBox"></div>
+
+  <h3>The six sentences worth memorising</h3>
+  <ol style="font-size:14.5px">
+    <li>A transformer replaces recurrence with attention, so all positions compute in parallel and any two tokens
+      are one step apart.</li>
+    <li>Attention = <code>softmax(QKᵀ/√d<sub>k</sub>)·V</code> — query matches key to get weights, weights blend the values.</li>
+    <li>√d<sub>k</sub> stops the softmax saturating; without it gradients vanish.</li>
+    <li>Self-attention is permutation-invariant, so position must be added explicitly.</li>
+    <li>BERT = encoder-only + bidirectional + masked LM → understanding. GPT = decoder-only + causal + next-token → generation.</li>
+    <li>Attention costs O(n²) in sequence length — the reason long context is hard.</li>
+  </ol>
+
+  <div class="note key"><b>Next:</b> open <code>practice.ipynb</code> and build scaled dot-product attention and the
+  causal mask yourself in NumPy. It is about fifteen lines of real code, and writing them is what turns this from
+  something you have read into something you know.</div>
+</section>
+
+<footer>NLP · practice topic 01 · open <code>guide.md</code> for the build plan</footer>
+</div>
+
+<script>
+const $=i=>document.getElementById(i);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const softmax=a=>{const m=Math.max(...a),e=a.map(x=>Math.exp(x-m)),s=e.reduce((p,c)=>p+c,0);return e.map(x=>x/s);};
+const F=(x,n=2)=>x.toFixed(n);
+const mix=(c,p)=>`color-mix(in srgb, ${c} ${p}%, transparent)`;
+
+/* ---------- 1. RNN vs Transformer race ---------- */
+const WORDS=['The','cat','sat','on','the','mat'];
+function drawRace(rnn,tr){
+  const cell=(w,i,active,done,c)=>`<span style="display:inline-block;padding:6px 10px;margin:3px;border-radius:8px;
+    font-size:13px;font-weight:600;border:1.5px solid ${active?c:'var(--edge)'};
+    background:${done?mix(c,18):active?mix(c,32):'transparent'};
+    transition:.2s">${w}</span>`;
+  $('race').innerHTML=`
+    <div style="margin-bottom:12px"><span class="pill pR">RNN</span> — one step at a time<br>
+      ${WORDS.map((w,i)=>cell(w,i,i===rnn,i<rnn,'var(--r)')).join('')}</div>
+    <div><span class="pill pV">Transformer</span> — all at once<br>
+      ${WORDS.map((w,i)=>cell(w,i,tr>0,tr>1,'var(--v)')).join('')}</div>`;
+}
+drawRace(-1,0);
+$('raceBtn').onclick=()=>{
+  let i=0; $('raceBtn').disabled=true;
+  drawRace(0,1); $('raceInfo').textContent='RNN: step 1 of 6   ·   Transformer: 1 of 1';
+  const t=setInterval(()=>{
+    i++;
+    if(i>=WORDS.length){clearInterval(t);drawRace(WORDS.length,2);
+      $('raceInfo').innerHTML='RNN needed <b>6 sequential steps</b> · Transformer needed <b>1</b>';
+      $('raceBtn').disabled=false;return;}
+    drawRace(i,2); $('raceInfo').textContent=`RNN: step ${i+1} of 6   ·   Transformer: done`;
+  },420);
+};
+
+/* ---------- 2. tokeniser ---------- */
+const SUF=['ing','ed','ly','s','tion','ation','isation','ization','ness','able','ably','ful','ers','er','est','ment'];
+const PRE=['un','re','pre','trans','over','under','inter','dis','non'];
+function tokenize(text){
+  const out=[];
+  text.split(/(\s+|[.,!?;:'"()])/).filter(s=>s.trim()).forEach(w=>{
+    if(/^[.,!?;:'"()]$/.test(w)){out.push([w,'punct']);return;}
+    let rest=w, parts=[];
+    const p=PRE.find(p=>rest.toLowerCase().startsWith(p)&&rest.length>p.length+3);
+    if(p){parts.push([rest.slice(0,p.length),'pre']);rest=rest.slice(p.length);}
+    const s=SUF.slice().sort((a,b)=>b.length-a.length)
+      .find(s=>rest.toLowerCase().endsWith(s)&&rest.length>s.length+2);
+    let suf=null;
+    if(s){suf=rest.slice(rest.length-s.length);rest=rest.slice(0,rest.length-s.length);}
+    parts.push([rest,'root']);
+    if(suf)parts.push([suf,'suf']);
+    parts.forEach((x,i)=>out.push([i===0?x[0]:'##'+x[0],x[1]]));
+  });
+  return out;
+}
+function renderTok(){
+  const txt=$('tokIn').value||'';
+  const toks=tokenize(txt);
+  const col={root:'var(--b)',pre:'var(--v)',suf:'var(--g)',punct:'var(--muted)'};
+  $('tokOut').innerHTML='<span class="tok" style="background:'+mix('var(--muted)',14)+';color:var(--muted)">[CLS]</span>'
+    + toks.map(([t,k])=>`<span class="tok" style="background:${mix(col[k],16)};color:${col[k]}">${t}</span>`).join('')
+    + '<span class="tok" style="background:'+mix('var(--muted)',14)+';color:var(--muted)">[SEP]</span>';
+  const words=txt.trim()?txt.trim().split(/\s+/).length:0;
+  $('tokStats').innerHTML=`<b>${words}</b> words → <b>${toks.length}</b> tokens
+    (+2 special) &nbsp;·&nbsp; ratio <b>${words?F(toks.length/words):'0'}</b> tokens per word
+    &nbsp;·&nbsp; <code>##</code> marks a continuation piece
+    <br><span style="color:var(--b)">■</span> root
+    <span style="color:var(--v)">■</span> prefix
+    <span style="color:var(--g)">■</span> suffix`;
+}
+$('tokIn').oninput=renderTok; renderTok();
+
+/* ---------- 3. positional encoding ---------- */
+function renderPos(){
+  const pos=+$('posSlider').value, D=16, rows=6;
+  const pe=(p,i)=>i%2===0?Math.sin(p/Math.pow(10000,i/D)):Math.cos(p/Math.pow(10000,(i-1)/D));
+  let html='<div style="overflow-x:auto"><table style="font-size:11px;margin:0;border-collapse:separate;border-spacing:2px">';
+  for(let r=Math.max(0,pos-2);r<Math.max(0,pos-2)+rows;r++){
+    html+=`<tr><td style="border:none;padding:2px 8px;white-space:nowrap;font-weight:${r===pos?700:400};
+      color:${r===pos?'var(--v)':'var(--muted)'}">pos ${r}</td>`;
+    for(let i=0;i<D;i++){
+      const v=pe(r,i), a=(v+1)/2;
+      html+=`<td style="border:none;padding:0"><div style="width:22px;height:22px;border-radius:4px;
+        background:${v>=0?mix('var(--v)',Math.round(a*90)):mix('var(--y)',Math.round((1-a)*90))};
+        outline:${r===pos?'2px solid var(--v)':'none'}"></div></td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</table></div>';
+  $('posViz').innerHTML=html;
+  $('posLabel').innerHTML=`position <b>${pos}</b> → its own unique 16-dim fingerprint`;
+}
+$('posSlider').oninput=renderPos; renderPos();
+
+/* ---------- 4. step-by-step attention ---------- */
+const ST={toks:['The','cat','it'],
+  q:[0.9,0.2], K:[[0.2,0.8],[1.0,0.3],[0.8,0.2]], V:[[1,0],[0,1],[0.5,0.5]]};
+let step=0;
+function renderStep(){
+  const {toks,q,K,V}=ST, dk=2;
+  const raw=K.map(k=>q[0]*k[0]+q[1]*k[1]);
+  const sc=raw.map(s=>s/Math.sqrt(dk));
+  const w=softmax(sc);
+  const out=[0,1].map(d=>w.reduce((a,wi,i)=>a+wi*V[i][d],0));
+  const bar=(v,c,mx=1)=>`<div style="display:inline-block;vertical-align:middle;width:${clamp(v/mx*110,2,110)}px;
+     height:11px;border-radius:3px;background:${c}"></div>`;
+  const S=[
+   {t:'Step 1 · Score every token against the query',
+    b:`The focus token <b>"it"</b> has query <span class="mono">q = [${q.join(', ')}]</span>.<br>
+       Dot it with each token's key:
+       <div class="mono" style="margin-top:10px;font-size:13px">
+       ${toks.map((t,i)=>`q · k(${t}) = ${q[0]}×${K[i][0]} + ${q[1]}×${K[i][1]} = <b>${F(raw[i])}</b>`).join('<br>')}
+       </div>
+       <p style="margin-top:10px">A bigger dot product means "these two vectors point the same way" — i.e. more relevant.</p>`},
+   {t:'Step 2 · Scale by √d<sub>k</sub>',
+    b:`Here d<sub>k</sub> = 2, so divide by √2 ≈ 1.41:
+       <div class="mono" style="margin-top:10px;font-size:13px">
+       ${toks.map((t,i)=>`${F(raw[i])} / 1.41 = <b>${F(sc[i])}</b>`).join('<br>')}</div>
+       <p style="margin-top:10px">With d=2 this barely matters. With d=64 it is the difference between a working
+       model and a dead one.</p>`},
+   {t:'Step 3 · Softmax → attention weights',
+    b:`Turn the scores into weights that are positive and sum to 1:
+       <div style="margin-top:12px">
+       ${toks.map((t,i)=>`<div style="margin:6px 0"><span class="mono" style="display:inline-block;width:46px">${t}</span>
+          ${bar(w[i],'var(--v)')} <b class="mono" style="margin-left:8px">${F(w[i],3)}</b></div>`).join('')}
+       </div>
+       <p style="margin-top:10px">Sum = <b>${F(w.reduce((a,b)=>a+b,0),3)}</b>. These are the attention weights —
+       how much of each token "it" will absorb.</p>`},
+   {t:'Step 4 · Blend the values',
+    b:`Multiply each token's <b>value</b> vector by its weight and add them up:
+       <div class="mono" style="margin-top:10px;font-size:13px">
+       ${toks.map((t,i)=>`${F(w[i],3)} × [${V[i].join(', ')}]`).join('  +<br>')}
+       <br>= <b>[${out.map(x=>F(x,3)).join(', ')}]</b></div>
+       <p style="margin-top:12px">That output vector is the new representation of <b>"it"</b> — no longer just
+       the word "it", but "it, informed by everything it decided was relevant".</p>
+       <p>Every token does this simultaneously. In real code it is one matrix multiply.</p>`}
+  ];
+  const s=S[step];
+  $('stepBox').innerHTML=`
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      ${S.map((_,i)=>`<div style="flex:1;height:4px;border-radius:2px;
+        background:${i<=step?'var(--v)':'var(--edge)'}"></div>`).join('')}</div>
+    <h4 style="margin:0 0 8px;font-size:15px">${s.t}</h4>
+    <div style="font-size:14.5px">${s.b}</div>`;
+  $('stepPrev').disabled=step===0; $('stepNext').disabled=step===S.length-1;
+}
+$('stepNext').onclick=()=>{step=clamp(step+1,0,3);renderStep();};
+$('stepPrev').onclick=()=>{step=clamp(step-1,0,3);renderStep();};
+$('stepReset').onclick=()=>{step=0;renderStep();};
+renderStep();
+
+/* ---------- 5. attention explorer ---------- */
+const SENTS=[
+ {toks:['The','animal','did','not','cross','the','street','because','it','was','too','tired'],
+  focus:8,
+  w:{8:[.02,.46,.02,.02,.04,.02,.16,.04,.10,.04,.02,.06],
+     1:[.30,.18,.04,.03,.20,.02,.06,.03,.08,.03,.01,.02],
+     6:[.22,.08,.02,.02,.24,.24,.10,.03,.02,.01,.01,.01],
+     11:[.02,.28,.02,.02,.03,.02,.04,.06,.30,.10,.05,.06]},
+  note:{8:'"it" attends most strongly to <b>animal</b>, not <b>street</b> — the model has resolved the pronoun. This is the famous example from the original illustration of attention.',
+        1:'"animal" attends to its determiner <b>The</b> and to the verb it governs, <b>cross</b>.',
+        6:'"street" attends to <b>cross</b> and its own determiner <b>the</b> — the object–verb link.',
+        11:'"tired" attends back to <b>it</b> and through it to <b>animal</b> — the thing that is tired.'}},
+ {toks:['The','keys','to','the','cabinet','were','on','the','table'],
+  focus:5,
+  w:{5:[.04,.52,.04,.02,.12,.06,.06,.04,.10],
+     1:[.26,.14,.10,.04,.26,.12,.02,.02,.04],
+     4:[.03,.22,.18,.24,.12,.06,.05,.05,.05],
+     8:[.03,.08,.02,.10,.06,.14,.22,.28,.07]},
+  note:{5:'"were" attends to <b>keys</b>, not to the nearer noun <b>cabinet</b> — the model has learned that the plural verb agrees with the head of the subject phrase, not whatever word happens to sit closest.',
+        1:'"keys" attends to <b>The</b> and to <b>cabinet</b>, the phrase it heads.',
+        4:'"cabinet" attends to its determiner and the preposition <b>to</b> that attaches it.',
+        8:'"table" attends to <b>on</b> and <b>the</b> — a prepositional phrase holding together.'}}
+];
+let curSent=0, curFocus=SENTS[0].focus;
+function renderAtt(){
+  const S=SENTS[curSent], w=S.w[curFocus]||S.toks.map(()=>1/S.toks.length);
+  $('attTokens').innerHTML=S.toks.map((t,i)=>{
+    const a=w[i], sel=i===curFocus;
+    return `<span class="tok ${sel?'sel':''}" data-i="${i}"
+      style="background:${sel?mix('var(--v)',30):mix('var(--b)',Math.round(a*160))};
+      color:${sel?'var(--v)':a>.2?'var(--b)':'inherit'}">${t}</span>`;}).join('');
+  const W=560,H=Math.max(70,S.toks.length*4+40),n=S.toks.length,gap=W/n;
+  let svg=`<svg viewBox="0 0 ${W} ${H}">`;
+  S.toks.forEach((t,i)=>{
+    if(i===curFocus)return;
+    const x1=curFocus*gap+gap/2,x2=i*gap+gap/2,a=w[i];
+    svg+=`<path d="M${x1} ${H-14} Q${(x1+x2)/2} ${H-14-Math.min(60,Math.abs(x1-x2)*.5)} ${x2} ${H-14}"
+      stroke="var(--v)" stroke-width="${clamp(a*22,.4,9)}" fill="none" opacity="${clamp(a*3.2,.08,.85)}"/>`;});
+  S.toks.forEach((t,i)=>{
+    svg+=`<circle cx="${i*gap+gap/2}" cy="${H-14}" r="${i===curFocus?5:3+w[i]*9}"
+      fill="${i===curFocus?'var(--v)':'var(--b)'}" opacity="${i===curFocus?1:clamp(w[i]*3.4,.25,1)}"/>`;
+    svg+=`<text x="${i*gap+gap/2}" y="${H-1}" font-size="9" text-anchor="middle"
+      fill="var(--muted)">${w[i]>=.1?F(w[i],2):''}</text>`;});
+  $('attViz').innerHTML=svg+'</svg>';
+  $('attRead').innerHTML=S.note[curFocus]||`Attention weights for <b>${S.toks[curFocus]}</b>.`;
+  $('attTokens').querySelectorAll('.tok').forEach(el=>el.onclick=()=>{
+    const i=+el.dataset.i; curFocus=S.w[i]?i:curFocus; renderAtt();});
+}
+[0,1].forEach(i=>$('sentBtn'+i).onclick=()=>{
+  curSent=i;curFocus=SENTS[i].focus;
+  $('sentBtn0').classList.toggle('on',i===0);$('sentBtn1').classList.toggle('on',i===1);renderAtt();});
+renderAtt();
+
+/* ---------- 6. multi-head ---------- */
+const HEAD_TOKS=['The','tired','cat','quietly','sat','down'];
+const HEADS=[
+ {n:'Head 1 — adjacent words',d:'Many heads simply look at the previous or next token. Unglamorous, but it is how local phrasing is tracked.',
+  m:[[.6,.3,.05,.02,.02,.01],[.35,.4,.2,.03,.01,.01],[.05,.4,.4,.1,.04,.01],[.02,.05,.35,.4,.15,.03],[.01,.03,.2,.35,.35,.06],[.01,.02,.05,.2,.42,.3]]},
+ {n:'Head 2 — adjective to noun',d:'This head links modifiers to what they modify: "tired" → "cat", "quietly" → "sat".',
+  m:[[.5,.2,.2,.05,.03,.02],[.05,.25,.6,.04,.04,.02],[.1,.5,.3,.04,.04,.02],[.02,.03,.05,.3,.55,.05],[.02,.04,.3,.4,.2,.04],[.02,.02,.05,.15,.5,.26]]},
+ {n:'Head 3 — subject to verb',d:'The grammatical backbone: who is doing the action. "cat" and "sat" lock onto each other regardless of distance.',
+  m:[[.4,.1,.3,.05,.13,.02],[.05,.3,.4,.05,.18,.02],[.08,.15,.25,.04,.45,.03],[.02,.04,.15,.25,.5,.04],[.03,.06,.5,.08,.28,.05],[.02,.03,.2,.05,.55,.15]]},
+ {n:'Head 4 — everything to the first token',d:'A real and initially baffling pattern: heads that dump attention onto [CLS] or the first token. It acts as a "no-op" — a place to point when this head has nothing useful to contribute.',
+  m:[[.8,.05,.05,.04,.03,.03],[.75,.1,.05,.04,.03,.03],[.7,.06,.14,.04,.03,.03],[.72,.05,.05,.12,.03,.03],[.68,.05,.06,.05,.13,.03],[.7,.05,.05,.04,.04,.12]]}
+];
+let curHead=0;
+$('headBtns').innerHTML=HEADS.map((h,i)=>
+  `<button data-h="${i}" class="${i===0?'on':''}">Head ${i+1}</button>`).join('');
+function renderHead(){
+  const h=HEADS[curHead],n=HEAD_TOKS.length;
+  let html='<div style="overflow-x:auto"><table style="border-collapse:separate;border-spacing:3px;margin:0;font-size:11px">';
+  html+='<tr><td style="border:none"></td>'+HEAD_TOKS.map(t=>
+    `<td style="border:none;text-align:center;color:var(--muted);font-size:10px;padding:0 2px">${t}</td>`).join('')+'</tr>';
+  h.m.forEach((row,r)=>{
+    html+=`<tr><td style="border:none;text-align:right;color:var(--muted);padding-right:6px;white-space:nowrap">${HEAD_TOKS[r]}</td>`;
+    row.forEach(v=>{html+=`<td style="border:none;padding:0"><div title="${F(v,2)}" style="width:34px;height:26px;
+      border-radius:5px;display:grid;place-items:center;font-size:9.5px;font-weight:600;
+      background:${mix('var(--v)',Math.round(v*95))};color:${v>.35?'#fff':'var(--muted)'}">${v>=.15?F(v,2):''}</div></td>`;});
+    html+='</tr>';});
+  $('headViz').innerHTML=html+'</table></div><p class="cap" style="text-align:left">Row = the token looking · column = the token being looked at</p>';
+  $('headDesc').innerHTML=`<b>${h.n}.</b> ${h.d}`;
+  $('headBtns').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',i===curHead));
+}
+$('headBtns').onclick=e=>{const b=e.target.closest('button');if(b){curHead=+b.dataset.h;renderHead();}};
+renderHead();
+
+/* ---------- 7. block anatomy ---------- */
+const BLOCK=[
+ {id:'emb',t:'Input + positional encoding',c:'var(--muted)',
+  d:'Token embeddings carry meaning; positional encodings carry order. They are simply added together — the model learns to disentangle them.'},
+ {id:'att',t:'Multi-head self-attention',c:'var(--v)',
+  d:'The mixing step. Every token gathers information from every other token it is allowed to see. This is the only place in the whole block where tokens talk to each other.'},
+ {id:'an1',t:'Add & Norm',c:'var(--g)',
+  d:'Add the input back (the residual connection) and normalise. The residual gives gradients a clear path backwards; LayerNorm keeps activations in a stable range. LayerNorm rather than BatchNorm because sequences vary in length and inference often runs one sample at a time.'},
+ {id:'ffn',t:'Feed-forward network',c:'var(--b)',
+  d:'Two linear layers with a GELU between, applied to each position independently. It expands to 4× the width and back — this is where most of the model\'s parameters live, and it is thought to act as the model\'s key-value memory of facts.'},
+ {id:'an2',t:'Add & Norm',c:'var(--g)',
+  d:'Same again around the feed-forward network. Every sub-layer in a transformer is wrapped this way: x → sublayer → add x back → normalise.'}
+];
+function renderBlock(sel){
+  const W=520,rowH=44;
+  let svg=`<svg viewBox="0 0 ${W} ${BLOCK.length*rowH+30}">`;
+  BLOCK.forEach((b,i)=>{
+    const y=10+i*rowH, on=sel===b.id;
+    svg+=`<rect x="110" y="${y}" width="300" height="34" rx="8" fill="${mix(b.c,on?38:15)}"
+      stroke="${b.c}" stroke-width="${on?2.4:1.4}" style="cursor:pointer" data-b="${b.id}"/>`;
+    svg+=`<text x="260" y="${y+22}" font-size="13" font-weight="600" text-anchor="middle"
+      fill="var(--ink)" style="pointer-events:none">${b.t}</text>`;
+    if(i<BLOCK.length-1)svg+=`<line x1="260" y1="${y+34}" x2="260" y2="${y+44}" stroke="var(--muted)" stroke-width="1.4"/>`;
+  });
+  svg+=`<path d="M110 44 Q70 44 70 100 Q70 142 106 142" stroke="var(--g)" stroke-width="1.6" fill="none" stroke-dasharray="4 3"/>`;
+  svg+=`<path d="M110 142 Q40 142 40 188 Q40 230 106 230" stroke="var(--g)" stroke-width="1.6" fill="none" stroke-dasharray="4 3"/>`;
+  svg+=`<text x="30" y="112" font-size="10" fill="var(--g)" transform="rotate(-90 30 112)">residual</text>`;
+  svg+=`<text x="440" y="${BLOCK.length*rowH/2+16}" font-size="11" fill="var(--muted)">× 12 blocks</text>`;
+  $('blockDiagram').innerHTML=svg+'</svg>';
+  $('blockDiagram').querySelectorAll('[data-b]').forEach(el=>
+    el.onclick=()=>renderBlock(el.dataset.b));
+  const b=BLOCK.find(x=>x.id===sel);
+  $('blockInfo').innerHTML=b?`<b>${b.t}.</b> ${b.d}`:'Tap a component to read what it does.';
+}
+renderBlock('att');
+
+/* ---------- 8. mask ---------- */
+const MTOKS=['The','cat','sat','on','it'];
+let maskMode='bert';
+function renderMask(){
+  const n=MTOKS.length, causal=maskMode==='gpt';
+  let html='<div style="overflow-x:auto"><table style="border-collapse:separate;border-spacing:3px;margin:0">';
+  html+='<tr><td style="border:none"></td>'+MTOKS.map(t=>
+    `<td style="border:none;text-align:center;font-size:10px;color:var(--muted)">${t}</td>`).join('')+'</tr>';
+  for(let r=0;r<n;r++){
+    html+=`<tr><td style="border:none;text-align:right;font-size:11px;color:var(--muted);padding-right:6px">${MTOKS[r]}</td>`;
+    for(let c=0;c<n;c++){
+      const ok=causal?c<=r:true;
+      html+=`<td style="border:none;padding:0"><div style="width:36px;height:30px;border-radius:6px;
+        display:grid;place-items:center;font-size:11px;font-weight:700;transition:.2s;
+        background:${ok?mix(causal?'var(--g)':'var(--b)',30):mix('var(--r)',12)};
+        color:${ok?(causal?'var(--g)':'var(--b)'):'var(--r)'};
+        border:1px solid ${ok?(causal?'var(--g)':'var(--b)'):'transparent'}">${ok?'✓':'−∞'}</div></td>`;
+    }
+    html+='</tr>';}
+  $('maskViz').innerHTML=html+'</table></div><p class="cap" style="text-align:left">Row = token doing the looking · column = token being looked at</p>';
+  $('maskInfo').innerHTML=causal
+    ? `<b>Causal mask (GPT).</b> A lower triangle. Token <b>"sat"</b> sees "The", "cat", "sat" — and nothing after.
+       In code this is one line: <code>scores = scores.masked_fill(mask == 0, -1e9)</code> before the softmax.
+       Because <code>e<sup>−∞</sup> = 0</code>, those weights vanish exactly.
+       <br><br>This is what makes generation honest: at inference the future has not been written yet, so the
+       model must never have been allowed to peek at it during training.`
+    : `<b>Bidirectional (BERT).</b> Every cell is open. When BERT encodes <b>"sat"</b> it can use "on" and "it" —
+       words that come <i>after</i> it. That is a far richer representation for classification, tagging or search.
+       <br><br>But it also means BERT can never be asked to predict the next word: the answer would already be
+       visible in its input.`;
+  $('maskBert').classList.toggle('on',!causal); $('maskGpt').classList.toggle('on',causal);
+}
+$('maskBert').onclick=()=>{maskMode='bert';renderMask();};
+$('maskGpt').onclick=()=>{maskMode='gpt';renderMask();};
+renderMask();
+
+/* ---------- 9. training objectives ---------- */
+const TSENT=['The','cat','sat','on','the','mat'];
+function tokRow(arr){return arr.map(x=>`<span class="tok" style="background:${x[1]};color:${x[2]||'inherit'};cursor:default">${x[0]}</span>`).join('');}
+$('mlmBtn').onclick=()=>{
+  const hide=[1,4];
+  const stages=[
+    {t:'1 · Take a sentence',h:TSENT.map(w=>[w,mix('var(--muted)',12)])},
+    {t:'2 · Randomly hide ~15% of the tokens',
+     h:TSENT.map((w,i)=>hide.includes(i)?['[MASK]',mix('var(--y)',30),'var(--y)']:[w,mix('var(--muted)',12)])},
+    {t:'3 · The model must reconstruct them using context from BOTH sides',
+     h:TSENT.map((w,i)=>hide.includes(i)?[w,mix('var(--g)',30),'var(--g)']:[w,mix('var(--muted)',12)]),
+     n:'To fill slot 2 it can read "The __ sat on the mat" — using <b>sat</b>, which comes after. That is only possible because attention is bidirectional.'}
+  ];
+  play(stages,'var(--b)','BERT · Masked Language Modelling');
+};
+$('clmBtn').onclick=()=>{
+  const stages=[];
+  for(let i=1;i<=TSENT.length;i++){
+    stages.push({t:`${i} · Predict token ${i}`,
+      h:TSENT.map((w,j)=>j<i-1?[w,mix('var(--muted)',12)]
+        :j===i-1?[w,mix('var(--g)',32),'var(--g)']:['▒',mix('var(--r)',8),'var(--r)']),
+      n:i===TSENT.length?'Every token was predicted from its left context only. Repeat this over the entire internet and you get GPT.':''});
+  }
+  play(stages,'var(--g)','GPT · Next-token prediction');
+};
+function play(stages,col,title){
+  let i=0;
+  const show=()=>{
+    const s=stages[i];
+    $('trainViz').innerHTML=`<div style="font-size:12px;font-weight:700;color:${col};margin-bottom:8px">${title}</div>
+      <div style="font-size:13.5px;color:var(--muted);margin-bottom:8px">${s.t}</div>
+      <div>${tokRow(s.h)}</div>
+      ${s.n?`<div class="note" style="margin-top:12px;font-size:13.5px;border-color:${col}">${s.n}</div>`:''}
+      <div style="display:flex;gap:4px;margin-top:12px">${stages.map((_,j)=>
+        `<div style="flex:1;height:3px;border-radius:2px;background:${j<=i?col:'var(--edge)'}"></div>`).join('')}</div>`;
+    i++; if(i<stages.length) setTimeout(show,1100);
+  };
+  show();
+}
+
+/* ---------- 10. task quiz ---------- */
+const TASKS=[
+ {q:'Classify support tickets as urgent / normal / low',a:0,
+  o:['BERT-style encoder','GPT-style decoder'],
+  e:'Encoder. It is a classification task with the full text available up front — you want bidirectional context, and a 110M-parameter model is far cheaper and faster than a generative one.'},
+ {q:'Write a first-draft reply to a customer email',a:1,
+  o:['BERT-style encoder','GPT-style decoder'],
+  e:'Decoder. You are producing new text token by token, which is exactly what causal language modelling does.'},
+ {q:'Extract every company name from a legal contract',a:0,
+  o:['BERT-style encoder','GPT-style decoder'],
+  e:'Encoder. Named entity recognition is token-level tagging, and knowing what follows a word helps decide whether it is an entity. (A large decoder can also do this — but slower and more expensively.)'},
+ {q:'Turn 10 million documents into vectors for a RAG system',a:0,
+  o:['BERT-style encoder','GPT-style decoder'],
+  e:'Encoder. Embedding models are almost all encoders — small, fast, and they naturally output one vector per input. Doing this with a large generative model would be enormously wasteful.'},
+ {q:'Answer open-ended questions about a knowledge base',a:1,
+  o:['BERT-style encoder','GPT-style decoder'],
+  e:'Decoder — for the generation. But note the full system uses both: an <b>encoder</b> embeds and retrieves the relevant chunks, then a <b>decoder</b> writes the answer. That is RAG, and it is why encoders still matter.'}
+];
+$('taskQuiz').innerHTML=TASKS.map((t,i)=>`
+  <div class="quiz"><p>${i+1}. ${t.q}</p>
+    ${t.o.map((o,j)=>`<button class="opt" data-q="${i}" data-o="${j}">${o}</button>`).join('')}
+    <div class="exp" id="te${i}">${t.e}</div></div>`).join('');
+$('taskQuiz').onclick=e=>{
+  const b=e.target.closest('.opt'); if(!b)return;
+  const qi=+b.dataset.q, oi=+b.dataset.o, t=TASKS[qi];
+  const box=b.closest('.quiz');
+  box.querySelectorAll('.opt').forEach((o,j)=>{
+    o.classList.remove('right','wrong');
+    if(j===t.a)o.classList.add('right'); else if(j===oi)o.classList.add('wrong');});
+  $('te'+qi).classList.add('show');
+};
+
+/* ---------- 11. quiz ---------- */
+const QUIZ=[
+ {q:'Why is a transformer faster to train than an RNN on the same data?',a:1,
+  o:['It has fewer parameters','All positions are computed in parallel — nothing waits for the previous step','It uses a smaller vocabulary','It skips backpropagation'],
+  e:'Removing recurrence removes the sequential dependency, so the whole sequence goes through the GPU at once. It usually has MORE parameters, not fewer.'},
+ {q:'What breaks if you remove positional encoding?',a:2,
+  o:['The model runs out of memory','Gradients explode','The model cannot tell word order — "dog bites man" = "man bites dog"','Attention weights stop summing to 1'],
+  e:'Self-attention is permutation-invariant. Without positional information it sees a bag of tokens, not a sentence.'},
+ {q:'Why divide the attention scores by √d_k?',a:0,
+  o:['To stop softmax saturating, which would kill the gradients','To make the weights sum to 1','To normalise the input embeddings','To reduce memory usage'],
+  e:'Dot products grow with dimension. Large scores make softmax nearly one-hot, and its gradient goes to zero. Softmax already handles the summing-to-1 part.'},
+ {q:'The single mechanical difference between BERT and GPT is…',a:3,
+  o:['The number of layers','The tokeniser','The size of the embedding','The attention mask — bidirectional vs causal'],
+  e:'Same block, same attention maths. GPT adds −∞ to every score for future positions before the softmax; BERT does not.'},
+ {q:'Why can BERT not be used to generate text directly?',a:1,
+  o:['It is too small','With bidirectional attention it would see the answer it is meant to predict','It has no decoder vocabulary','Its tokeniser is different'],
+  e:'If a token can see the future, next-token prediction is trivially cheating. That is why BERT is trained with masked LM instead.'},
+ {q:'What is the main scaling limitation of self-attention?',a:2,
+  o:['It needs labelled data','It cannot use GPUs','Cost grows with the square of sequence length','It only works on English'],
+  e:'Every token attends to every token, so n tokens means n² comparisons. Doubling the context quadruples the cost — the reason long-context models need approximations like sparse or linear attention.'},
+ {q:'In a RAG system, which part is a BERT-style encoder typically used for?',a:0,
+  o:['Embedding documents and the query for retrieval','Writing the final answer','Tokenising the input','Storing the vectors'],
+  e:'Encoders produce the embeddings; the vector database stores them; a decoder writes the answer. Encoders are small and fast, which matters when you embed millions of chunks.'}
+];
+$('quizBox').innerHTML=QUIZ.map((q,i)=>`
+  <div class="quiz"><p>${i+1}. ${q.q}</p>
+    ${q.o.map((o,j)=>`<button class="opt" data-q="${i}" data-o="${j}">${o}</button>`).join('')}
+    <div class="exp" id="qe${i}">${q.e}</div></div>`).join('');
+$('quizBox').onclick=e=>{
+  const b=e.target.closest('.opt'); if(!b)return;
+  const qi=+b.dataset.q, oi=+b.dataset.o, q=QUIZ[qi];
+  const box=b.closest('.quiz');
+  box.querySelectorAll('.opt').forEach((o,j)=>{
+    o.classList.remove('right','wrong');
+    if(j===q.a)o.classList.add('right'); else if(j===oi)o.classList.add('wrong');});
+  $('qe'+qi).classList.add('show');
+};
+
+/* ---------- theme ---------- */
+$('themeBtn').onclick=()=>{
+  const d=document.documentElement,nx=d.getAttribute('data-theme')==='dark'?'light':'dark';
+  d.setAttribute('data-theme',nx);localStorage.setItem('tf_theme',nx);
+  renderPos();renderAtt();renderHead();renderBlock('att');renderMask();};
+if(localStorage.getItem('tf_theme')==='dark'||
+   (!localStorage.getItem('tf_theme')&&matchMedia('(prefers-color-scheme:dark)').matches)){
+  document.documentElement.setAttribute('data-theme','dark');}
+</script>
+</body>
+</html>
