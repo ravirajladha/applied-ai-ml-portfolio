@@ -1,5 +1,9 @@
 # Interview preparation
 
+**📱 Open it in a browser: https://ravirajladha.github.io/applied-ai-ml-portfolio/interview-preparation/**
+— works on phone and desktop, no install. Straight to the flashcards:
+[flashcards.html](https://ravirajladha.github.io/applied-ai-ml-portfolio/interview-preparation/flashcards.html)
+
 Prep material for AI/ML interviews — theory-first, written so each answer can be *spoken*, not just read.
 
 | File | What it is |
@@ -7,6 +11,8 @@ Prep material for AI/ML interviews — theory-first, written so each answer can 
 | [JOURNEY.md](JOURNEY.md) | Roadmap and progress tracker — which subject files exist, which are next, and the conventions they follow |
 | [top-100-questions.md](top-100-questions.md) | The 100 theory questions that repeat most often, each with a one-line answer plus short theory for the follow-up |
 | [coding-questions.md](coding-questions.md) | 60 coding problems with runnable solutions — Python, NumPy, pandas, algorithms from scratch, scikit-learn, SQL, PyTorch |
+| [flashcards.html](flashcards.html) | 100 flip cards — question on the front, short answer + diagram on the back. Best opened via the link above |
+| [index.html](index.html) | The web hub — reads every file below on a phone. Best opened via the link above |
 | [models-explained.md](models-explained.md) | All 14 models, each at four increasing depths — one-liner + analogy → mechanics → math → practice |
 | [quick-revision-cheatsheet.md](quick-revision-cheatsheet.md) | Formulas, decision tables, Python/pandas and SQL snippets — for the last 30 minutes |
 

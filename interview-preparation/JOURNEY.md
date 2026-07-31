@@ -5,6 +5,11 @@ now without re-deciding anything.
 
 Started: **31 July 2026** (the night before an AI/ML interview).
 
+**Published at:** https://ravirajladha.github.io/applied-ai-ml-portfolio/interview-preparation/
+(GitHub Pages, `master` branch, root path, `.nojekyll` so files serve verbatim). Any new `.html` under
+`interview-preparation/` is published automatically on push — `.gitignore` has an exception for that folder.
+When you add a new `.md`, also add it to the `FILES` array in `index.html` so it appears on the hub.
+
 ---
 
 ## Where things stand
@@ -13,6 +18,8 @@ Started: **31 July 2026** (the night before an AI/ML interview).
 |---|------|---------|--------|-----------|
 | — | `top-100-questions.md` | Broad theory across all areas | ✅ Done | 100 |
 | — | `coding-questions.md` | Python, NumPy, pandas, from-scratch, sklearn, SQL, PyTorch | ✅ Done | 60 |
+| — | `flashcards.html` | 100 flip cards, each with an inline SVG diagram | ✅ Done | 100 |
+| — | `index.html` | Web hub — renders every `.md` in-page on mobile | ✅ Done | — |
 | — | `models-explained.md` | All 14 models at four increasing depths | ✅ Done | 14 models |
 | — | `quick-revision-cheatsheet.md` | Last-30-minutes revision | ✅ Done | — |
 | 1 | `machine-learning.md` | Classical ML deep dive | ✅ Done | 80 |
