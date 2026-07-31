@@ -3,6 +3,8 @@
 # ...but keep the interactive explainers that are part of learning topics
 !**/practice/**/*.html
 !**/explainer.html
+# ...and the interview-prep site (published via GitHub Pages)
+!interview-preparation/*.html
 *.pdf
 .DS_Store
 __pycache__/

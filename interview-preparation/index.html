@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1120">
+<meta name="description" content="AI/ML interview preparation — 100 flashcards with diagrams, 322 questions, model reference and cheat sheet.">
+<title>AI/ML Interview Preparation</title>
+<style>
+:root{
+  --bg:#f1f5f9;--panel:#fff;--ink:#0f172a;--muted:#64748b;--edge:#e2e8f0;
+  --accent:#3b82f6;--accent2:#8b5cf6;--good:#10b981;--warn:#f59e0b;
+  --shadow:0 8px 24px rgba(15,23,42,.09),0 1px 3px rgba(15,23,42,.06);
+}
+html[data-theme="dark"]{
+  --bg:#0b1120;--panel:#151d2e;--ink:#e8eefc;--muted:#94a3b8;--edge:#26324a;
+  --shadow:0 8px 24px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;line-height:1.55;padding-bottom:56px}
+.wrap{max-width:820px;margin:0 auto;padding:0 18px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+header{padding:32px 0 8px}
+h1{font-size:clamp(24px,6vw,32px);margin:0 0 6px;letter-spacing:-.6px;line-height:1.15}
+.tag{display:inline-block;font-size:11.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
+  color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent);
+  padding:4px 10px;border-radius:99px;margin-bottom:12px}
+.lede{color:var(--muted);font-size:15px;margin:0 0 4px;max-width:60ch}
+.stats{display:flex;gap:18px;flex-wrap:wrap;margin:18px 0 6px;padding:0;list-style:none}
+.stats li{font-size:12.5px;color:var(--muted)}
+.stats b{display:block;font-size:21px;color:var(--ink);font-weight:700;letter-spacing:-.4px}
+
+.hero{display:block;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  border-radius:18px;padding:22px 24px;margin:22px 0 26px;box-shadow:var(--shadow);
+  position:relative;overflow:hidden}
+.hero:hover{text-decoration:none;filter:brightness(1.05)}
+.hero h2{margin:0 0 4px;font-size:20px;letter-spacing:-.3px}
+.hero p{margin:0;font-size:13.5px;opacity:.92;max-width:44ch}
+.hero .go{position:absolute;right:22px;top:50%;transform:translateY(-50%);font-size:26px;opacity:.85}
+.hero svg{position:absolute;right:-20px;bottom:-30px;width:170px;opacity:.16}
+
+h3.sec{font-size:12px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);
+  margin:28px 0 12px;font-weight:700}
+.list{display:flex;flex-direction:column;gap:10px}
+.item{display:flex;align-items:flex-start;gap:14px;background:var(--panel);border:1px solid var(--edge);
+  border-radius:14px;padding:15px 16px;box-shadow:var(--shadow);cursor:pointer;
+  transition:.15s border-color,.15s transform}
+.item:hover{border-color:var(--accent);transform:translateY(-1px)}
+.ic{flex:none;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
+  font-size:15px;font-weight:700;color:#fff}
+.item h4{margin:0 0 2px;font-size:15.5px;letter-spacing:-.2px}
+.item p{margin:0;font-size:13px;color:var(--muted)}
+.item .n{flex:none;font-size:11.5px;color:var(--muted);align-self:center;font-variant-numeric:tabular-nums;
+  white-space:nowrap}
+
+/* reader */
+.reader{display:none;padding-top:14px}
+.reader.on{display:block}
+.home.off{display:none}
+.rbar{position:sticky;top:0;z-index:9;background:color-mix(in srgb,var(--bg) 92%,transparent);
+  backdrop-filter:blur(10px);display:flex;gap:8px;align-items:center;padding:12px 0;margin-bottom:8px;
+  border-bottom:1px solid var(--edge)}
+.btn{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--edge);
+  border-radius:10px;padding:7px 12px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.rtitle{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+#doc{font-size:15.5px}
+#doc h1{font-size:26px;margin:26px 0 10px;letter-spacing:-.5px}
+#doc h2{font-size:21px;margin:32px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--edge);letter-spacing:-.3px}
+#doc h3{font-size:17px;margin:24px 0 8px}
+#doc h4{font-size:15.5px;margin:18px 0 6px}
+#doc p{margin:11px 0}
+#doc ul,#doc ol{margin:10px 0;padding-left:22px}
+#doc li{margin:5px 0}
+#doc code{background:color-mix(in srgb,var(--ink) 8%,transparent);padding:2px 5px;border-radius:5px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.87em}
+#doc pre{background:color-mix(in srgb,var(--ink) 6%,transparent);border:1px solid var(--edge);
+  border-radius:12px;padding:14px 16px;overflow-x:auto;margin:14px 0;-webkit-overflow-scrolling:touch}
+#doc pre code{background:none;padding:0;font-size:12.8px;line-height:1.55}
+#doc blockquote{margin:14px 0;padding:10px 16px;border-left:3px solid var(--accent2);
+  background:color-mix(in srgb,var(--accent2) 8%,transparent);border-radius:0 10px 10px 0;font-size:15px}
+#doc hr{border:none;border-top:1px solid var(--edge);margin:28px 0}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:14px 0;
+  border:1px solid var(--edge);border-radius:12px}
+#doc table{border-collapse:collapse;width:100%;font-size:13.5px}
+#doc th,#doc td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--edge);vertical-align:top}
+#doc th{background:color-mix(in srgb,var(--ink) 5%,transparent);font-weight:700;white-space:nowrap}
+#doc tr:last-child td{border-bottom:none}
+#doc a{word-break:break-word}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--edge);
+  font-size:12.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.load{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="home" id="home">
+  <header>
+    <span class="tag">Interview preparation</span>
+    <h1>AI/ML Interview Prep</h1>
+    <p class="lede">Everything in one place — flashcards with diagrams, subject deep dives, coding problems and a
+      last-minute cheat sheet. Works offline once loaded.</p>
+    <ul class="stats">
+      <li><b>100</b>flashcards</li>
+      <li><b>322</b>questions</li>
+      <li><b>14</b>models explained</li>
+      <li><b>60</b>coding problems</li>
+    </ul>
+  </header>
+
+  <a class="hero" href="flashcards.html">
+    <h2>Open the flashcards →</h2>
+    <p>100 questions, each with a short answer and a hand-drawn diagram. Tap to flip, mark what you know.</p>
+    <span class="go">→</span>
+    <svg viewBox="0 0 120 90" fill="none" stroke="#fff" stroke-width="3">
+      <rect x="8" y="14" width="70" height="52" rx="8"/><rect x="30" y="26" width="70" height="52" rx="8"/>
+    </svg>
+  </a>
+
+  <h3 class="sec">Subject deep dives</h3>
+  <div class="list" id="deep"></div>
+
+  <h3 class="sec">Broad coverage</h3>
+  <div class="list" id="broad"></div>
+
+  <h3 class="sec">Reference</h3>
+  <div class="list" id="ref"></div>
+
+  <footer>
+    <a href="https://github.com/ravirajladha/applied-ai-ml-portfolio/tree/master/interview-preparation">View on GitHub</a>
+    <span>·</span>
+    <a href="#" id="theme">Toggle theme</a>
+  </footer>
+</div>
+
+<div class="reader" id="reader">
+  <div class="rbar">
+    <button class="btn" id="back">← Back</button>
+    <span class="rtitle" id="rtitle"></span>
+    <button class="btn" id="top">↑</button>
+  </div>
+  <div id="doc"></div>
+  <footer><a href="#" id="ghlink" target="_blank" rel="noopener">Open this file on GitHub</a></footer>
+</div>
+
+</div>
+<script>
+const FILES=[
+ {f:'machine-learning.md',t:'Machine Learning',d:'Classical ML in depth — algorithms, math, the follow-up chains',n:'80 Q',c:'#3b82f6',i:'ML',g:'deep'},
+ {f:'deep-learning.md',t:'Deep Learning',d:'Backprop, activations, optimisers, CNNs, sequence models, debugging',n:'82 Q',c:'#8b5cf6',i:'DL',g:'deep'},
+ {f:'top-100-questions.md',t:'Top 100 Questions',d:'The questions that repeat most often, across every area',n:'100 Q',c:'#10b981',i:'100',g:'broad'},
+ {f:'coding-questions.md',t:'Coding Questions',d:'Python, NumPy, pandas, from-scratch ML, sklearn, SQL, PyTorch',n:'60 Q',c:'#f59e0b',i:'{}',g:'broad'},
+ {f:'models-explained.md',t:'Models Explained',d:'14 models at four depths — intuition, mechanics, math, practice',n:'14',c:'#06b6d4',i:'◇',g:'ref'},
+ {f:'quick-revision-cheatsheet.md',t:'Cheat Sheet',d:'Formulas, decision tables, pandas and SQL — the last 30 minutes',n:'',c:'#ef4444',i:'⚡',g:'ref'},
+ {f:'JOURNEY.md',t:'Roadmap',d:'What is built, what is next, and the conventions each file follows',n:'',c:'#64748b',i:'→',g:'ref'},
+];
+const GH='https://github.com/ravirajladha/applied-ai-ml-portfolio/blob/master/interview-preparation/';
+const $=i=>document.getElementById(i);
+
+FILES.forEach(x=>{
+  const el=document.createElement('div');
+  el.className='item'; el.dataset.f=x.f;
+  el.innerHTML=`<span class="ic" style="background:${x.c}">${x.i}</span>
+    <span style="flex:1;min-width:0"><h4>${x.t}</h4><p>${x.d}</p></span>
+    ${x.n?`<span class="n">${x.n}</span>`:''}`;
+  el.onclick=()=>open_(x);
+  $(x.g).appendChild(el);
+});
+
+/* ---------- minimal markdown renderer ---------- */
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const slug=s=>s.replace(/[`*_]/g,'').toLowerCase().replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'-');
+function inline(s){
+  return esc(s)
+    .replace(/`([^`]+)`/g,(m,a)=>'<code>'+a+'</code>')
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/(^|[^*\w])\*([^*\n]+)\*/g,'$1<em>$2</em>')
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,(m,txt,url)=>
+      /^https?:/.test(url)?`<a href="${url}" target="_blank" rel="noopener">${txt}</a>`
+      :/^#/.test(url)?`<a href="${url}">${txt}</a>`
+      :`<a href="#" data-md="${url}">${txt}</a>`);
+}
+function md(src){
+  const L=src.split(/\r?\n/), o=[]; let i=0;
+  const isBreak=l=>/^(#{1,6}\s|\||>|```|\s*[-*+]\s|\s*\d+\.\s|---\s*$)/.test(l);
+  while(i<L.length){
+    const l=L[i];
+    if(/^```/.test(l)){const b=[];i++;while(i<L.length&&!/^```/.test(L[i])){b.push(L[i]);i++;}i++;
+      o.push('<pre><code>'+esc(b.join('\n'))+'</code></pre>');continue;}
+    if(/^\s*\|/.test(l)&&/^\s*\|[\s:|-]+\|\s*$/.test(L[i+1]||'')){
+      const cells=r=>r.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(s=>s.trim());
+      const head=cells(l);i+=2;const rows=[];
+      while(i<L.length&&/^\s*\|/.test(L[i])){rows.push(cells(L[i]));i++;}
+      o.push('<div class="tw"><table><thead><tr>'+head.map(h=>'<th>'+inline(h)+'</th>').join('')
+        +'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+inline(c)+'</td>').join('')+'</tr>').join('')
+        +'</tbody></table></div>');continue;}
+    let m=l.match(/^(#{1,6})\s+(.*)$/);
+    if(m){const n=m[1].length;o.push(`<h${n} id="${slug(m[2])}">${inline(m[2])}</h${n}>`);i++;continue;}
+    if(/^(---|\*\*\*|___)\s*$/.test(l)){o.push('<hr>');i++;continue;}
+    if(/^>\s?/.test(l)){const b=[];while(i<L.length&&/^>\s?/.test(L[i])){b.push(L[i].replace(/^>\s?/,''));i++;}
+      o.push('<blockquote>'+inline(b.join(' '))+'</blockquote>');continue;}
+    if(/^\s*[-*+]\s+/.test(l)){const b=[];
+      while(i<L.length&&/^\s*[-*+]\s+/.test(L[i])){let x=L[i].replace(/^\s*[-*+]\s+/,'');i++;
+        while(i<L.length&&L[i].trim()&&!isBreak(L[i])){x+=' '+L[i].trim();i++;}b.push(x);}
+      o.push('<ul>'+b.map(x=>'<li>'+inline(x)+'</li>').join('')+'</ul>');continue;}
+    if(/^\s*\d+\.\s+/.test(l)){const b=[];
+      while(i<L.length&&/^\s*\d+\.\s+/.test(L[i])){let x=L[i].replace(/^\s*\d+\.\s+/,'');i++;
+        while(i<L.length&&L[i].trim()&&!isBreak(L[i])){x+=' '+L[i].trim();i++;}b.push(x);}
+      o.push('<ol>'+b.map(x=>'<li>'+inline(x)+'</li>').join('')+'</ol>');continue;}
+    if(!l.trim()){i++;continue;}
+    const b=[];while(i<L.length&&L[i].trim()&&!isBreak(L[i])){b.push(L[i]);i++;}
+    if(b.length)o.push('<p>'+inline(b.join(' '))+'</p>'); else i++;
+  }
+  return o.join('\n');
+}
+
+async function open_(x){
+  $('home').classList.add('off'); $('reader').classList.add('on');
+  $('rtitle').textContent=x.t; $('ghlink').href=GH+x.f;
+  $('doc').innerHTML='<div class="load">Loading…</div>';
+  window.scrollTo(0,0);
+  try{
+    const r=await fetch(x.f);
+    if(!r.ok) throw new Error(r.status);
+    $('doc').innerHTML=md(await r.text());
+    history.replaceState(null,'','#'+x.f);
+  }catch(e){
+    $('doc').innerHTML=`<div class="load">Could not load this file here.<br><br>
+      <a href="${GH+x.f}" target="_blank" rel="noopener">Open it on GitHub instead →</a></div>`;
+  }
+}
+function home(){ $('reader').classList.remove('on'); $('home').classList.remove('off');
+  history.replaceState(null,'',location.pathname); window.scrollTo(0,0); }
+$('back').onclick=home;
+$('top').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+$('doc').addEventListener('click',e=>{const a=e.target.closest('a[data-md]');
+  if(a){e.preventDefault();const f=a.dataset.md.split('#')[0];
+    const x=FILES.find(v=>v.f===f); if(x)open_(x); else window.open(GH+f,'_blank');}});
+$('theme').onclick=e=>{e.preventDefault();
+  const d=document.documentElement,nx=d.getAttribute('data-theme')==='dark'?'light':'dark';
+  d.setAttribute('data-theme',nx);localStorage.setItem('prep_theme',nx);};
+if(localStorage.getItem('prep_theme')==='dark'||
+   (!localStorage.getItem('prep_theme')&&matchMedia('(prefers-color-scheme:dark)').matches))
+  document.documentElement.setAttribute('data-theme','dark');
+addEventListener('popstate',home);
+const h=decodeURIComponent(location.hash.slice(1));
+if(h){const x=FILES.find(v=>v.f===h); if(x)open_(x);}
+</script>
+</body>
+</html>

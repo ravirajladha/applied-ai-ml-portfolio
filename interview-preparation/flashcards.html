@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI/ML Interview Flashcards — 100 questions</title>
+<style>
+:root{
+  --bg:#f1f5f9; --panel:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#94a3b8;
+  --edge:#e2e8f0; --accent:#3b82f6; --accent2:#8b5cf6; --good:#10b981; --warn:#f59e0b;
+  --shadow:0 10px 30px rgba(15,23,42,.10), 0 2px 6px rgba(15,23,42,.06);
+  --radius:18px;
+}
+html[data-theme="dark"]{
+  --bg:#0b1120; --panel:#151d2e; --ink:#e8eefc; --muted:#94a3b8; --line:#64748b;
+  --edge:#26324a; --shadow:0 10px 30px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased; padding:0 0 60px;
+}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px}
+
+/* ---------- header ---------- */
+header{padding:26px 0 14px}
+h1{font-size:22px;margin:0 0 4px;letter-spacing:-.3px}
+.sub{color:var(--muted);font-size:13.5px;margin:0}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0 10px}
+select,button{
+  font:inherit;font-size:13px;color:var(--ink);background:var(--panel);
+  border:1px solid var(--edge);border-radius:10px;padding:7px 11px;cursor:pointer;
+  transition:.15s border-color,.15s background,.15s transform;
+}
+select:hover,button:hover{border-color:var(--line)}
+button:active{transform:translateY(1px)}
+button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.spacer{flex:1}
+.count{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* ---------- progress ---------- */
+.bar{height:5px;background:var(--edge);border-radius:99px;overflow:hidden;margin:6px 0 18px}
+.bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  border-radius:99px;transition:width .3s ease}
+
+/* ---------- card ---------- */
+.stage{perspective:1600px}
+.card{position:relative;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,.15,.2,1);
+  min-height:470px}
+.card.flip{transform:rotateY(180deg)}
+.face{
+  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  background:var(--panel);border:1px solid var(--edge);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:26px;display:flex;flex-direction:column;overflow:hidden;
+}
+.face.back{transform:rotateY(180deg)}
+.meta{display:flex;align-items:center;gap:9px;margin-bottom:auto}
+.pill{font-size:11px;font-weight:600;letter-spacing:.3px;padding:4px 9px;border-radius:99px;
+  background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.num{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.star{color:var(--warn);font-size:12px;letter-spacing:-1px}
+.q{font-size:23px;line-height:1.34;font-weight:600;letter-spacing:-.35px;margin:20px 0}
+.hint{margin-top:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.kbd{border:1px solid var(--edge);border-bottom-width:2px;border-radius:5px;padding:1px 5px;
+  font-size:10.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted)}
+
+/* back face */
+.back{overflow-y:auto}
+.qsm{font-size:13px;color:var(--muted);font-weight:500;margin-bottom:12px;line-height:1.4}
+.ans{font-size:16.5px;line-height:1.5;font-weight:500;margin:0 0 14px}
+.keys{list-style:none;padding:0;margin:0 0 16px;display:flex;flex-direction:column;gap:6px}
+.keys li{font-size:13.5px;line-height:1.45;color:var(--ink);padding-left:18px;position:relative}
+.keys li::before{content:"";position:absolute;left:3px;top:7px;width:6px;height:6px;border-radius:2px;
+  background:var(--accent2)}
+.dia{margin-top:auto;background:color-mix(in srgb,var(--ink) 3.5%,transparent);
+  border:1px solid var(--edge);border-radius:12px;padding:8px 10px}
+.dia svg{display:block;width:100%;height:auto;max-height:190px}
+.cap{font-size:11px;color:var(--muted);text-align:center;margin-top:2px}
+
+/* ---------- nav ---------- */
+.nav{display:flex;gap:8px;align-items:center;margin-top:18px}
+.nav button{padding:10px 16px;font-weight:500}
+.nav .big{flex:1;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.nav .big:hover{filter:brightness(1.07)}
+.known{border-color:var(--good);color:var(--good)}
+.known.on{background:var(--good);border-color:var(--good);color:#fff}
+
+/* ---------- grid ---------- */
+.grid{display:none;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px;margin-top:20px}
+.grid.show{display:grid}
+.grid b{display:flex;align-items:center;justify-content:center;height:38px;border-radius:9px;
+  border:1px solid var(--edge);background:var(--panel);font-size:12px;font-weight:600;
+  color:var(--muted);cursor:pointer;font-variant-numeric:tabular-nums;transition:.12s}
+.grid b:hover{border-color:var(--accent);color:var(--accent)}
+.grid b.cur{background:var(--accent);border-color:var(--accent);color:#fff}
+.grid b.kn{background:color-mix(in srgb,var(--good) 16%,transparent);border-color:var(--good);color:var(--good)}
+.defs{position:absolute;width:0;height:0;overflow:hidden}
+@media(max-width:560px){ .q{font-size:19px} .face{padding:20px} .card{min-height:520px} }
+</style>
+</head>
+<body>
+
+<svg class="defs" xmlns="http://www.w3.org/2000/svg"><defs>
+  <marker id="ah"  markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker>
+  <marker id="ahb" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#3b82f6"/></marker>
+  <marker id="ahg" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#10b981"/></marker>
+  <marker id="ahr" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#ef4444"/></marker>
+  <marker id="ahv" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8b5cf6"/></marker>
+</defs></svg>
+
+<div class="wrap">
+  <header>
+    <h1>AI/ML Interview Flashcards</h1>
+    <p class="sub">100 questions · flip for a short answer and a diagram · ★ marks high-frequency</p>
+    <div class="tools">
+      <select id="sec"></select>
+      <button id="shuffle">Shuffle</button>
+      <button id="hide">Hide known</button>
+      <button id="grid">All cards</button>
+      <span class="spacer"></span>
+      <span class="count" id="count"></span>
+      <button id="theme" title="Toggle theme">◐</button>
+    </div>
+    <div class="bar"><i id="fill"></i></div>
+  </header>
+
+  <div class="stage"><div class="card" id="card">
+    <div class="face front">
+      <div class="meta"><span class="pill" id="fsec"></span><span class="num" id="fnum"></span><span class="star" id="fstar"></span></div>
+      <div class="q" id="fq"></div>
+      <div class="hint"><span class="kbd">space</span> flip &nbsp;·&nbsp; <span class="kbd">←</span><span class="kbd">→</span> move &nbsp;·&nbsp; <span class="kbd">k</span> known</div>
+    </div>
+    <div class="face back">
+      <div class="qsm" id="bq"></div>
+      <div class="ans" id="ba"></div>
+      <ul class="keys" id="bk"></ul>
+      <div class="dia"><div id="bd"></div><div class="cap" id="bc"></div></div>
+    </div>
+  </div></div>
+
+  <div class="nav">
+    <button id="prev">← Prev</button>
+    <button class="big" id="flip">Flip card</button>
+    <button id="next">Next →</button>
+    <button class="known" id="mark">✓ Known</button>
+  </div>
+
+  <div class="grid" id="gridbox"></div>
+</div>
+
+<script>
+/* ============================ drawing helpers ============================ */
+const B='#3b82f6',G='#10b981',R='#ef4444',Y='#f59e0b',V='#8b5cf6',C='#06b6d4',N='#94a3b8';
+const S=(inner,vb='0 0 300 150')=>`<svg viewBox="${vb}">${inner}</svg>`;
+const t=(x,y,s,o={})=>`<text x="${x}" y="${y}" font-size="${o.s||9.5}" fill="${o.f||'currentColor'}" text-anchor="${o.a||'middle'}" font-weight="${o.w||500}" opacity="${o.o??1}">${s}</text>`;
+const tm=(x,y,s,o={})=>t(x,y,s,Object.assign({f:N,s:9},o));
+const rc=(x,y,w,h,o={})=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${o.r??5}" fill="${o.f||'none'}" stroke="${o.s||'none'}" stroke-width="${o.sw||1.6}" opacity="${o.o??1}" stroke-dasharray="${o.dash||'none'}"/>`;
+const ln=(x1,y1,x2,y2,o={})=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${o.s||N}" stroke-width="${o.sw||1.6}" stroke-dasharray="${o.dash||'none'}" stroke-linecap="round" opacity="${o.o??1}"/>`;
+const ci=(x,y,r,o={})=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${o.f||'none'}" stroke="${o.s||'none'}" stroke-width="${o.sw||1.6}" opacity="${o.o??1}"/>`;
+const pa=(d,o={})=>`<path d="${d}" fill="${o.f||'none'}" stroke="${o.s||'none'}" stroke-width="${o.sw||2}" stroke-linecap="round" stroke-linejoin="round" opacity="${o.o??1}"/>`;
+const M={[N]:'ah',[B]:'ahb',[G]:'ahg',[R]:'ahr',[V]:'ahv'};
+const ar=(x1,y1,x2,y2,o={})=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${o.s||N}" stroke-width="${o.sw||1.6}" marker-end="url(#${M[o.s||N]||'ah'})" stroke-dasharray="${o.dash||'none'}"/>`;
+const bx=(x,y,w,h,lb,c=B,o={})=>rc(x,y,w,h,{f:c,o:o.fo??.15,s:c,r:o.r??6})+t(x+w/2,y+h/2+3.4,lb,{s:o.s||9.5,w:600});
+const ax=(x,y,w,h)=>ln(x,y,x,y+h,{s:N,o:.7})+ln(x,y+h,x+w,y+h,{s:N,o:.7});
+const dots=(a,c,r=3.1)=>a.map(([x,y])=>ci(x,y,r,{f:c})).join('');
+const bell=(cx,by,w,h)=>{let d=`M${cx-w} ${by}`;for(let i=-w;i<=w;i+=2)d+=` L${cx+i} ${by-h*Math.exp(-(i*i)/(2*(w/2.6)**2))}`;return d;};
+const curve=(pts)=>'M'+pts.map(p=>p.join(' ')).join(' L');
+
+/* ============================ the 100 cards ============================ */
+const CARDS=[
+/* ---- 1. Fundamentals ---- */
+{n:1,s:'Fundamentals',x:1,q:'What is Artificial Intelligence?',
+ a:'The field of building systems that do tasks normally needing human intelligence. AI is the umbrella; ML is one way of achieving it.',
+ k:['AI = the goal, ML = a method, DL = a method within ML','Includes rule-based systems, not just learning'],
+ c:'AI ⊃ ML ⊃ Deep Learning',
+ d:ci(150,88,62,{f:B,o:.12,s:B})+ci(150,96,42,{f:G,o:.15,s:G})+ci(150,104,23,{f:V,o:.2,s:V})
+   +t(150,40,'AI',{s:13,w:700,f:B})+t(150,68,'ML',{s:12,w:700,f:G})+t(150,108,'DL',{s:11,w:700,f:V})},
+
+{n:2,s:'Fundamentals',x:1,q:'What is Machine Learning?',
+ a:'A system that learns patterns from data instead of being programmed with explicit rules.',
+ k:['Mitchell: improves at task T, measured by P, with experience E','Show it 10,000 labelled emails — it derives the spam rule itself'],
+ c:'Data in, learned rule out',
+ d:bx(14,58,64,42,'Data',B)+ar(82,79,104,79,{s:N})+bx(108,52,76,54,'Model',V)
+   +ar(188,79,210,79,{s:N})+bx(214,58,72,42,'Predict',G)
+   +tm(150,126,'learns the rule, not told the rule')},
+
+{n:3,s:'Fundamentals',x:1,q:'Difference between AI, ML and Deep Learning?',
+ a:'Nested sets. AI is any technique that looks smart, ML learns the mapping from data, DL uses multi-layer neural networks that also learn the features.',
+ k:['ML usually needs hand-engineered features','DL learns features itself — needs more data and GPUs'],
+ c:'Same idea, three levels of specificity',
+ d:bx(8,30,88,34,'AI',B)+tm(52,80,'rules + search')+tm(52,94,'+ learning')
+   +bx(106,30,88,34,'ML',G)+tm(150,80,'learns mapping')+tm(150,94,'you make features')
+   +bx(204,30,88,34,'DL',V)+tm(248,80,'neural nets')+tm(248,94,'learns features too')
+   +ar(96,47,104,47,{s:N})+ar(194,47,202,47,{s:N})+tm(150,128,'each is a subset of the one before')},
+
+{n:4,s:'Fundamentals',q:'What is Data Science and how is it different from ML?',
+ a:'Data Science is the whole practice of getting insight from data — collection, cleaning, analysis, visualisation, statistics. ML is one tool inside it.',
+ k:['Data scientist: framing + EDA + communication','ML engineer: building, training and shipping models'],
+ c:'ML is a subset of the wider practice',
+ d:ci(120,78,52,{f:B,o:.13,s:B})+ci(190,78,40,{f:V,o:.16,s:V})
+   +t(96,80,'Data Science',{s:10,w:700,f:B})+t(206,82,'ML',{s:11,w:700,f:V})
+   +tm(150,138,'stats · EDA · viz · engineering · modelling')},
+
+{n:5,s:'Fundamentals',x:1,q:'What are the types of Machine Learning?',
+ a:'Supervised (labelled data), unsupervised (no labels), semi-supervised (a mix), and reinforcement (learn from rewards).',
+ k:['Supervised → classification & regression','Unsupervised → clustering & dimensionality reduction','RL → agent, actions, rewards'],
+ c:'Four families, split by what feedback you get',
+ d:bx(6,20,68,32,'Supervised',B)+tm(40,66,'labels ✓')+tm(40,79,'classify')+tm(40,92,'regress')
+   +bx(80,20,68,32,'Unsuper.',G)+tm(114,66,'no labels')+tm(114,79,'cluster')+tm(114,92,'reduce dims')
+   +bx(154,20,64,32,'Semi-sup.',C)+tm(186,66,'few labels')+tm(186,79,'+ lots of')+tm(186,92,'unlabelled')
+   +bx(224,20,70,32,'Reinforce.',Y)+tm(259,66,'rewards')+tm(259,79,'agent acts')+tm(259,92,'learns policy')
+   +tm(150,130,'the feedback signal defines the family')},
+
+{n:6,s:'Fundamentals',x:1,q:'What is supervised learning?',
+ a:'Learning from data where every input already carries the correct answer, so the model learns the input → output mapping.',
+ k:['Classification = discrete output (spam / not spam)','Regression = continuous output (price, temperature)'],
+ c:'Labelled points, learned boundary',
+ d:ax(24,20,250,104)+dots([[52,44],[70,36],[64,60],[88,50],[46,70],[80,68]],B)
+   +dots([[170,96],[196,84],[210,102],[186,110],[228,92],[244,106]],R)
+   +pa('M40 118 L262 34',{s:V,sw:2.2,dash:'6 4'})
+   +tm(70,26,'class A',{f:B})+tm(238,128,'class B',{f:R})+tm(150,140,'labels known → learn the line')},
+
+{n:7,s:'Fundamentals',x:1,q:'What is unsupervised learning?',
+ a:'Learning from data with no labels — the model finds structure by itself.',
+ k:['Segmentation, anomaly detection, topic discovery','K-Means, DBSCAN, PCA, autoencoders'],
+ c:'No labels — groups discovered, not given',
+ d:dots([[54,42],[70,34],[62,56],[84,48],[48,64]],N)+dots([[168,96],[192,86],[206,104],[182,110]],N)
+   +dots([[224,44],[244,36],[236,60],[258,50]],N)
+   +ci(66,49,30,{s:B,dash:'5 4',sw:1.6})+ci(188,99,28,{s:G,dash:'5 4',sw:1.6})+ci(240,47,26,{s:V,dash:'5 4',sw:1.6})
+   +tm(66,10,'cluster 1',{f:B})+tm(188,140,'cluster 2',{f:G})+tm(240,12,'cluster 3',{f:V})},
+
+{n:8,s:'Fundamentals',q:'What is reinforcement learning?',
+ a:'An agent takes actions in an environment, lands in new states and receives rewards, learning a policy that maximises long-term reward.',
+ k:['No labelled dataset — feedback is delayed and evaluative','Games, robotics, pricing, traffic control'],
+ c:'The agent–environment loop',
+ d:bx(30,54,80,42,'Agent',B)+bx(190,54,84,42,'Environment',G)
+   +pa('M112 66 Q152 40 188 66',{s:B,sw:1.8})+t(150,42,'action',{s:9,f:B,w:600})
+   +pa('M188 86 Q150 116 112 86',{s:G,sw:1.8})+t(150,124,'state + reward',{s:9,f:G,w:600})
+   +ci(186,66,2.6,{f:B})+ci(114,86,2.6,{f:G})},
+
+{n:9,s:'Fundamentals',x:1,q:'Training vs validation vs test data?',
+ a:'Train fits the parameters, validation tunes the hyperparameters and picks the model, test is touched once at the end for an honest estimate.',
+ k:['Typical split 70 / 15 / 15','Tuning on the test set makes your number meaningless'],
+ c:'Three sets, three distinct jobs',
+ d:rc(20,44,182,34,{f:B,o:.18,s:B})+t(111,65,'TRAIN  70%',{s:10,w:700,f:B})
+   +rc(206,44,40,34,{f:Y,o:.22,s:Y})+t(226,65,'VAL',{s:9,w:700,f:Y})
+   +rc(250,44,32,34,{f:R,o:.2,s:R})+t(266,65,'TEST',{s:8.5,w:700,f:R})
+   +tm(111,96,'learn weights')+tm(226,96,'tune')+tm(266,110,'use once')
+   +tm(150,132,'never let the test set influence a decision')},
+
+{n:10,s:'Fundamentals',x:1,q:'Parameter vs hyperparameter?',
+ a:'Parameters are learned by the model from data. Hyperparameters are set by you before training starts.',
+ k:['Parameters: weights, coefficients, split thresholds','Hyperparameters: learning rate, k, max_depth, n_estimators'],
+ c:'Who sets it — you, or the data?',
+ d:bx(16,34,126,30,'HYPERPARAMETERS',V,{s:9})+tm(79,80,'you set before training')
+   +tm(79,96,'learning rate · k · depth')+tm(79,112,'tuned by search + CV')
+   +bx(158,34,126,30,'PARAMETERS',G,{s:9})+tm(221,80,'model learns from data')
+   +tm(221,96,'weights · coefficients')+tm(221,112,'fitted by gradient descent')
+   +ln(150,24,150,128,{s:N,dash:'4 4',o:.5})},
+
+{n:11,s:'Fundamentals',q:'What is inductive bias / No Free Lunch?',
+ a:'Inductive bias is the assumptions a model makes to generalise beyond its training data. No Free Lunch says no single algorithm wins on every problem.',
+ k:['Linear regression assumes a straight line; KNN assumes neighbours agree','So always baseline several models'],
+ c:'Every model assumes something',
+ d:pa('M150 26 L150 44',{s:N,sw:2})+pa('M92 44 L208 44',{s:N,sw:2.4})
+   +ln(92,44,92,64,{s:N})+ln(208,44,208,64,{s:N})
+   +bx(56,64,72,30,'Model A',B)+bx(172,64,72,30,'Model B',V)
+   +tm(92,110,'wins here')+tm(208,110,'wins there')
+   +tm(150,136,'no universal winner — match bias to problem')},
+
+{n:12,s:'Fundamentals',x:1,q:'What are the steps of an end-to-end ML project?',
+ a:'Frame the problem and the metric, get data, EDA, clean, engineer features, split, baseline, model, evaluate, deploy, monitor.',
+ k:['70–80% of the effort is data collection and preparation','Split BEFORE preprocessing, or you leak'],
+ c:'The pipeline, start to finish',
+ d:['Frame','Data','EDA','Clean','Features','Model','Eval','Deploy'].map((s,i)=>{
+     const x=6+i*37; const c=[V,B,B,B,B,G,G,Y][i];
+     return rc(x,54,32,36,{f:c,o:.16,s:c,r:5})+t(x+16,70,String(i+1),{s:8,f:c,w:700})+t(x+16,82,s,{s:7.3,w:600});
+   }).join('')+[0,1,2,3,4,5,6].map(i=>ar(38+i*37,72,44+i*37,72,{s:N,sw:1.2})).join('')
+   +pa('M290 96 Q296 120 150 120 Q10 120 22 98',{s:Y,sw:1.4,dash:'4 3'})+tm(150,134,'monitor → retrain')},
+
+/* ---- 2. Statistics ---- */
+{n:13,s:'Statistics',q:'Mean, median, mode — when do you use which?',
+ a:'Mean is the average, median the middle value, mode the most frequent. Use median when the data is skewed or has outliers.',
+ k:['Income and house price → median','Categorical data → mode'],
+ c:'On a skewed curve they separate',
+ d:pa('M26 118 Q60 34 108 44 Q170 58 274 116',{s:B,sw:2.2})+ln(26,118,278,118,{s:N,o:.6})
+   +ln(96,44,96,118,{s:V,sw:1.8})+ln(120,52,120,118,{s:G,sw:1.8})+ln(150,66,150,118,{s:R,sw:1.8})
+   +tm(96,36,'mode',{f:V})+tm(126,42,'median',{f:G})+tm(166,58,'mean',{f:R})
+   +tm(240,134,'long tail pulls the mean →')},
+
+{n:14,s:'Statistics',q:'What is variance and standard deviation?',
+ a:'Variance is the average squared distance from the mean; standard deviation is its square root, back in the original units.',
+ k:['High std dev = data spread out','Std dev is what z-score standardisation divides by'],
+ c:'Spread around the mean',
+ d:pa(bell(150,116,120,74),{s:B,sw:2.2})+ln(30,116,270,116,{s:N,o:.6})+ln(150,42,150,116,{s:R,sw:1.6,dash:'4 3'})
+   +ln(104,116,104,86,{s:V,sw:1.4})+ln(196,116,196,86,{s:V,sw:1.4})
+   +ar(150,78,196,78,{s:V,sw:1.3})+ar(150,78,104,78,{s:V,sw:1.3})
+   +t(150,34,'μ',{s:11,f:R,w:700})+t(174,72,'σ',{s:10,f:V,w:700})
+   +tm(150,136,'variance = σ² · std dev = σ')},
+
+{n:15,s:'Statistics',q:'Normal distribution and the empirical rule?',
+ a:'A symmetric bell defined by mean and standard deviation, where mean = median = mode.',
+ k:['68% within 1σ, 95% within 2σ, 99.7% within 3σ','Which is why "beyond 3σ" is a common outlier rule'],
+ c:'68 – 95 – 99.7',
+ d:pa(bell(150,116,128,76),{s:B,sw:2.2,f:B})+`<path d="${bell(150,116,128,76)}" fill="${B}" opacity=".1"/>`
+   +ln(22,116,278,116,{s:N,o:.6})
+   +[[-3,'3σ'],[-2,'2σ'],[-1,'1σ'],[0,'μ'],[1,'1σ'],[2,'2σ'],[3,'3σ']].map(([i,l])=>
+     ln(150+i*42,116,150+i*42,121,{s:N})+tm(150+i*42,132,l)).join('')
+   +t(150,72,'68%',{s:10,w:700,f:B})+t(150,54,'95%',{s:9.5,w:700,f:V})+t(150,38,'99.7%',{s:9,w:700,f:N})},
+
+{n:16,s:'Statistics',x:1,q:'What is the Central Limit Theorem?',
+ a:'The distribution of sample means approaches a normal distribution as sample size grows, no matter what the population looks like.',
+ k:['Rule of thumb n ≥ 30','Why normal-based tests work on non-normal data'],
+ c:'Any population → normal sample means',
+ d:rc(14,52,74,54,{s:N,o:.5,dash:'3 3'})+pa('M22 100 L34 66 L46 100 L58 74 L70 100 L80 82',{s:R,sw:2})
+   +tm(51,120,'skewed population',{f:R})
+   +ar(96,80,124,80,{s:N})+tm(110,68,'sample')+tm(110,96,'means')
+   +rc(134,52,150,54,{s:N,o:.5,dash:'3 3'})+pa(bell(209,100,66,44),{s:G,sw:2.2})
+   +tm(209,120,'sampling distribution → normal',{f:G})},
+
+{n:17,s:'Statistics',x:1,q:'What is a p-value?',
+ a:'The probability of seeing a result at least as extreme as yours, assuming the null hypothesis is true. Small p means the data is unlikely under the null.',
+ k:['p < 0.05 → reject the null','It is NOT the probability the hypothesis is true'],
+ c:'The shaded tail is the p-value',
+ d:pa(bell(140,112,120,72),{s:B,sw:2})
+   +`<path d="${(()=>{let d='M228 112';for(let x=228;x<=260;x+=2){const i=x-140;
+       d+=` L${x} ${(112-72*Math.exp(-(i*i)/(2*(120/2.6)**2))).toFixed(1)}`;}return d+' L260 112 Z';})()}" fill="${R}" opacity=".5"/>`
+   +ln(20,112,280,112,{s:N,o:.6})+ln(228,112,228,64,{s:R,sw:1.6,dash:'4 3'})
+   +tm(140,58,'the null hypothesis world',{f:B})+tm(252,52,'your result',{f:R})
+   +ar(252,62,236,92,{s:R,sw:1.3})+tm(150,134,'that shaded tail area IS the p-value')},
+
+{n:18,s:'Statistics',q:'Type I vs Type II error?',
+ a:'Type I (α) is a false positive — rejecting a true null. Type II (β) is a false negative — missing a real effect.',
+ k:['Type I: telling a healthy patient they are sick','Type II: missing a real disease','Lower one, the other usually rises'],
+ c:'The 2×2 of being wrong',
+ d:rc(80,32,190,92,{s:N,o:.5})+ln(175,32,175,124,{s:N,o:.5})+ln(80,78,270,78,{s:N,o:.5})
+   +tm(127,24,'H₀ true')+tm(222,24,'H₀ false')+tm(48,60,'reject')+tm(48,104,'keep')
+   +rc(84,36,87,38,{f:R,o:.2,r:4})+t(127,52,'Type I',{s:10,w:700,f:R})+tm(127,66,'false positive')
+   +t(222,58,'✓ correct',{s:9.5,w:600,f:G})
+   +t(127,104,'✓ correct',{s:9.5,w:600,f:G})
+   +rc(179,82,87,38,{f:Y,o:.24,r:4})+t(222,98,'Type II',{s:10,w:700,f:Y})+tm(222,112,'false negative')},
+
+{n:19,s:'Statistics',x:1,q:'Correlation vs causation? Covariance vs correlation?',
+ a:'Correlation means two things move together; causation means one makes the other change. Correlation is covariance normalised to −1…1.',
+ k:['A hidden confounder can create correlation with no causal link','Only a controlled experiment establishes causation'],
+ c:'The confounder problem',
+ d:bx(18,84,72,32,'Ice cream',B)+bx(206,84,74,32,'Drownings',R)
+   +pa('M92 100 L202 100',{s:N,sw:1.4,dash:'5 4'})+t(149,92,'correlated',{s:8.5,f:N})+t(149,114,'✗ not causal',{s:8.5,f:R,w:600})
+   +bx(112,20,76,30,'Hot weather',Y)
+   +ar(136,52,60,80,{s:Y,sw:1.5})+ar(166,52,236,80,{s:Y,sw:1.5})
+   +tm(150,140,'the confounder causes both')},
+
+{n:20,s:'Statistics',x:1,q:"What is Bayes' theorem?",
+ a:'It updates a prior belief using new evidence to produce a posterior: P(A|B) = P(B|A)·P(A) / P(B).',
+ k:['Basis of Naive Bayes classifiers','A rare disease + a 99% accurate test still gives a low posterior'],
+ c:'Prior → evidence → posterior',
+ d:bx(12,58,68,40,'PRIOR',N,{s:9})+tm(46,112,'belief before')
+   +ar(84,78,104,78,{s:N})
+   +bx(108,58,80,40,'EVIDENCE',Y,{s:9})+tm(148,112,'new data')
+   +ar(192,78,212,78,{s:N})
+   +bx(216,58,72,40,'POSTERIOR',G,{s:9})+tm(252,112,'updated belief')
+   +t(150,32,'P(A|B) = P(B|A)·P(A) / P(B)',{s:10.5,w:600,f:V})},
+
+/* ---- 3. Data prep ---- */
+{n:21,s:'Data prep',x:1,q:'How do you handle missing values?',
+ a:'Ask why it is missing first, then drop, impute (median / mode / KNN), or flag it — always fitting the imputer on train only.',
+ k:['Median for skewed numeric, mode for categorical','Add a was_missing flag — missingness can be predictive','Fit on train, transform test → no leakage'],
+ c:'Gaps in the table, four ways out',
+ d:[0,1,2,3,4].map(r=>[0,1,2,3].map(c2=>{
+     const miss=(r===1&&c2===2)||(r===3&&c2===0)||(r===4&&c2===2);
+     return rc(70+c2*42,26+r*20,38,16,{f:miss?R:B,o:miss?.28:.14,s:miss?R:B,r:3})
+       +(miss?t(89+c2*42,38,'?',{s:9,w:700,f:R}):'');}).join('')).join('')
+   +tm(150,140,'drop · impute · model-based · flag it')},
+
+{n:22,s:'Data prep',x:1,q:'How do you detect and handle outliers?',
+ a:'Detect with a box plot / IQR rule, z-scores, or Isolation Forest. Then remove, cap, transform, or use a robust model.',
+ k:['IQR rule: below Q1−1.5·IQR or above Q3+1.5·IQR','Trees tolerate outliers; linear regression and K-Means do not'],
+ c:'The IQR fences on a box plot',
+ d:ln(56,76,244,76,{s:N,sw:1.4})+rc(104,54,86,44,{f:B,o:.2,s:B,r:3})+ln(147,54,147,98,{s:B,sw:2.4})
+   +ln(56,64,56,88,{s:N,sw:1.8})+ln(244,64,244,88,{s:N,sw:1.8})
+   +ci(268,76,4,{f:R})+ci(30,76,4,{f:R})
+   +tm(104,114,'Q1')+tm(147,114,'median')+tm(190,114,'Q3')
+   +tm(56,44,'Q1−1.5·IQR')+tm(244,44,'Q3+1.5·IQR')
+   +tm(268,96,'outlier',{f:R})+tm(30,96,'outlier',{f:R})},
+
+{n:23,s:'Data prep',x:1,q:'What is feature scaling? Normalisation vs standardisation?',
+ a:'Bringing features onto a comparable range so no feature dominates just because of its units.',
+ k:['Min-Max → 0…1  ·  Z-score → mean 0, std 1','Needed: KNN, K-Means, SVM, PCA, neural nets','Not needed: trees, Random Forest, XGBoost'],
+ c:'Before and after scaling',
+ d:ax(18,24,116,92)+dots([[36,110],[44,104],[52,112],[40,116],[60,106]],R)
+   +tm(76,132,'age 0–80 vs salary 0–1e6',{s:8})+tm(76,16,'unscaled',{f:R})
+   +ar(140,74,166,74,{s:N})
+   +ax(174,24,110,92)+dots([[204,72],[220,60],[236,84],[212,90],[248,68]],G)
+   +tm(238,132,'comparable ranges',{s:8})+tm(238,16,'scaled',{f:G})},
+
+{n:24,s:'Data prep',x:1,q:'How do you encode categorical variables?',
+ a:'Label encoding for ordinal or tree models, one-hot for nominal, target encoding for high cardinality (computed inside CV folds).',
+ k:['Label encoding invents a fake order — risky for linear models','One-hot explodes with high cardinality'],
+ c:'One column becomes many',
+ d:rc(16,44,58,64,{s:N,o:.6,r:4})+tm(45,34,'city')
+   +['Delhi','Mumbai','Pune'].map((c2,i)=>t(45,62+i*20,c2,{s:9})).join('')
+   +ar(80,76,104,76,{s:N})
+   +[0,1,2].map(r=>[0,1,2].map(c2=>rc(112+c2*36,46+r*20,32,16,{f:r===c2?G:N,o:r===c2?.35:.12,s:r===c2?G:N,r:3})
+      +t(128+c2*36,58+r*20,r===c2?'1':'0',{s:8.5,w:600,f:r===c2?G:N})).join('')).join('')
+   +tm(128,36,'Delhi')+tm(164,36,'Mum')+tm(200,36,'Pune')
+   +tm(150,136,'one-hot: one binary column per category')},
+
+{n:25,s:'Data prep',q:'What is the dummy variable trap?',
+ a:'One-hot encoding k categories into k columns while keeping an intercept makes the columns perfectly collinear — they always sum to 1.',
+ k:['Fix by dropping one column (drop_first=True)','Matters for linear/logistic regression, not for trees'],
+ c:'k columns + intercept = redundant',
+ d:[0,1,2].map(r=>[0,1,2].map(c2=>rc(70+c2*44,40+r*22,40,18,{f:r===c2?B:N,o:r===c2?.3:.1,s:r===c2?B:N,r:3})
+     +t(90+c2*44,53+r*22,r===c2?'1':'0',{s:9,w:600})).join('')).join('')
+   +rc(202,40,52,62,{s:R,sw:2,dash:'4 3',r:5})+tm(228,116,'drop this one',{f:R})
+   +t(150,24,'col1 + col2 + col3 = 1  always',{s:10,w:600,f:R})
+   +tm(150,140,'perfect collinearity breaks the coefficients')},
+
+{n:26,s:'Data prep',x:1,q:'What is feature engineering?',
+ a:'Creating new input variables from raw data so the model can learn more easily — often the single biggest lever on accuracy.',
+ k:['Timestamp → day, month, is_weekend','Ratios like debt-to-income; log of skewed features'],
+ c:'Raw column → several useful ones',
+ d:bx(14,60,76,36,'timestamp',N)
+   +ar(94,78,116,78,{s:N})
+   +['is_weekend','hour','month','days_since'].map((s,i)=>bx(122,20+i*30,86,24,s,[G,B,V,C][i],{s:8.5})).join('')
+   +bx(220,60,70,36,'model',G)+ar(212,78,216,78,{s:N})
+   +tm(150,140,'the model can only use what you give it')},
+
+{n:27,s:'Data prep',q:'What is feature selection?',
+ a:'Keeping only the useful features — improves accuracy, speed and interpretability while reducing overfitting.',
+ k:['Filter: correlation, chi-square, mutual information','Wrapper: RFE, forward/backward selection','Embedded: Lasso, tree importance'],
+ c:'A funnel from many features to few',
+ d:pa('M28 30 L272 30 L192 82 L192 122 L108 122 L108 82 Z',{s:B,sw:1.8,f:B,o:.09})
+   +tm(150,22,'100 raw features')
+   +tm(150,52,'filter → statistics',{f:B})+tm(150,72,'wrapper → search',{f:V})+tm(150,100,'embedded',{f:G})
+   +t(150,116,'12 kept',{s:10,w:700,f:G})},
+
+{n:28,s:'Data prep',x:1,q:'What is the curse of dimensionality?',
+ a:'As features grow, the space grows exponentially, data becomes sparse, distances stop meaning anything and models overfit.',
+ k:['Nearest and farthest points become almost equidistant','Hurts KNN, K-Means, SVM most','Fix: selection, PCA, regularisation'],
+ c:'Same points, exponentially emptier space',
+ d:ln(14,100,90,100,{s:N})+dots([[26,100],[42,100],[58,100],[74,100]],B)+tm(52,120,'1-D: dense',{f:G})
+   +rc(104,44,72,58,{s:N,o:.6})+dots([[118,58],[152,88],[136,66],[166,52]],B)+tm(140,120,'2-D: spread')
+   +rc(196,32,86,70,{s:N,o:.6})+ln(196,32,214,20,{s:N,o:.4})+ln(282,32,300,20,{s:N,o:.4})+ln(214,20,300,20,{s:N,o:.4})
+   +dots([[212,84],[262,44],[236,66]],B)+tm(239,120,'3-D: sparse',{f:R})
+   +tm(150,140,'data needed grows exponentially')},
+
+{n:29,s:'Data prep',q:'What is multicollinearity?',
+ a:'Two or more predictors are highly correlated with each other, so coefficients become unstable and uninterpretable even though predictions stay fine.',
+ k:['Detect with a correlation matrix or VIF (>5 suspicious, >10 serious)','Fix: drop one, combine, PCA, or Ridge'],
+ c:'Two features carrying the same signal',
+ d:ci(118,74,44,{f:B,o:.16,s:B})+ci(178,74,44,{f:V,o:.16,s:V})
+   +t(94,78,'height',{s:9.5,w:600,f:B})+t(206,78,'weight',{s:9.5,w:600,f:V})
+   +t(148,60,'overlap',{s:8.5,f:R,w:600})+t(148,94,'r = 0.93',{s:8.5,f:R,w:600})
+   +t(150,26,'VIF = 1 / (1 − R²ᵢ)',{s:10.5,w:600,f:R})
+   +tm(150,140,'model cannot tell which one deserves credit')},
+
+{n:30,s:'Data prep',x:1,q:'What is data leakage?',
+ a:'Information not available at prediction time sneaks into training, giving a great validation score that collapses in production.',
+ k:['Scaling or imputing BEFORE the split','Target-derived features; future data in time series','Fix: split first, then use a Pipeline'],
+ c:'Test information flowing backwards',
+ d:rc(20,50,150,38,{f:B,o:.18,s:B,r:6})+t(95,73,'TRAIN',{s:11,w:700,f:B})
+   +rc(184,50,96,38,{f:Y,o:.2,s:Y,r:6})+t(232,73,'TEST',{s:11,w:700,f:Y})
+   +pa('M232 44 Q160 12 96 42',{s:R,sw:2.2})+`<path d="M96 42 l8 -7 l1 9 z" fill="${R}"/>`
+   +t(164,20,'leak',{s:10,w:700,f:R})
+   +tm(150,110,'scaler fitted on everything · target-derived feature')
+   +tm(150,128,'→ validation looks great, production does not')},
+
+{n:31,s:'Data prep',x:1,q:'How do you handle imbalanced datasets?',
+ a:'Fix the metric first, then class weights, then threshold tuning, and only then resampling like SMOTE.',
+ k:['Accuracy is useless at 99:1 — use precision, recall, PR-AUC','Resample inside CV folds, on training data only','Use stratified splits'],
+ c:'99 to 1, and why accuracy lies',
+ d:rc(24,44,224,26,{f:B,o:.2,s:B,r:4})+t(136,61,'majority — 99%',{s:10,w:600,f:B})
+   +rc(252,44,10,26,{f:R,o:.55,s:R,r:3})+tm(268,88,'1%',{f:R})
+   +t(150,104,'"always predict majority" → 99% accuracy',{s:10,w:600,f:R})
+   +t(150,124,'…and catches zero of what matters',{s:9.5,f:N})
+   +tm(150,142,'weights · threshold · SMOTE · stratify')},
+
+/* ---- 4. Supervised algorithms ---- */
+{n:32,s:'Algorithms',x:1,q:'Explain linear regression and its assumptions.',
+ a:'Fits the straight line minimising the sum of squared errors between predicted and actual values.',
+ k:['LINE: Linearity, Independence, Normality of residuals, Equal variance','Plus no multicollinearity','Normality applies to residuals, not features'],
+ c:'Minimise the squared vertical gaps',
+ d:ax(24,20,252,96)+pa('M36 106 L268 36',{s:B,sw:2.2})
+   +[[62,96],[100,74],[140,80],[182,56],[222,54]].map(([x,y])=>{
+      const ly=106-(x-36)*(70/232); return ci(x,y,3.4,{f:V})+ln(x,y,x,ly,{s:R,sw:1.3,dash:'2 2'});}).join('')
+   +t(150,138,'minimise Σ (y − ŷ)²',{s:10.5,w:600,f:R})},
+
+{n:33,s:'Algorithms',q:'Cost function of linear regression and how is it minimised?',
+ a:'Mean Squared Error, which is convex so it has a single global minimum. Solved by the normal equation or gradient descent.',
+ k:['Normal equation: β = (XᵀX)⁻¹Xᵀy — exact, O(d³)','Gradient descent — iterative, scales to large data'],
+ c:'A convex bowl with one minimum',
+ d:pa('M30 26 Q150 176 270 26',{s:B,sw:2.2})
+   +[[62,74],[92,110],[122,134],[144,142]].map(([x,y],i)=>ci(x,y,3.6,{f:V,o:.4+i*.2})).join('')
+   +[[62,74,92,110],[92,110,122,134],[122,134,144,142]].map(([a1,b1,c1,d1])=>ar(a1,b1,c1,d1,{s:V,sw:1.3})).join('')
+   +ci(150,144,4.4,{f:G})+t(150,132,'minimum',{s:9,f:G,w:600})
+   +tm(46,40,'MSE')+tm(258,140,'weights →')},
+
+{n:34,s:'Algorithms',x:1,q:'What is Logistic Regression?',
+ a:'A classifier that passes a linear combination through a sigmoid to give a probability between 0 and 1.',
+ k:['Cost is log loss / binary cross-entropy, not MSE','Linear regression can output below 0 and above 1'],
+ c:'The sigmoid squashes any number into 0–1',
+ d:ax(28,18,246,98)+ln(28,67,274,67,{s:N,dash:'3 3',o:.5})
+   +pa(curve(Array.from({length:50},(_,i)=>{const x=28+i*5;const z=(x-150)/22;return [x,116-98/(1+Math.exp(-z))];})),{s:B,sw:2.4})
+   +ln(150,18,150,116,{s:V,sw:1.4,dash:'4 3'})+tm(150,132,'threshold 0.5',{f:V})
+   +tm(20,24,'1')+tm(20,114,'0')+tm(64,58,'σ(z) = 1/(1+e⁻ᶻ)',{f:B,s:9})},
+
+{n:35,s:'Algorithms',q:'Is logistic regression a linear model?',
+ a:'Yes — the decision boundary is linear in the features. Only the output is transformed non-linearly by the sigmoid.',
+ k:['Setting p = 0.5 gives z = 0, which is a hyperplane','For curves, add polynomial or interaction features'],
+ c:'The boundary is still a straight line',
+ d:ax(24,20,252,96)+dots([[56,44],[76,36],[68,62],[94,50],[52,72]],B)
+   +dots([[186,92],[212,80],[228,100],[200,106],[244,86]],R)
+   +pa('M44 112 L266 34',{s:V,sw:2.4})+tm(150,138,'p = 0.5  ⇔  z = 0  ⇔  a hyperplane',{f:V,s:9.5})},
+
+{n:36,s:'Algorithms',x:1,q:'Explain Decision Trees. How does it choose a split?',
+ a:'A flowchart of if-else questions; each node splits on the feature that best separates the classes.',
+ k:['Gini or Entropy / Information Gain for classification','Variance reduction for regression','Overfits — control with max_depth, min_samples_leaf'],
+ c:'Recursive yes/no splits',
+ d:bx(108,14,86,26,'age < 30?',B,{s:9})
+   +ln(128,40,74,58,{s:N})+ln(174,40,228,58,{s:N})+tm(90,52,'yes')+tm(214,52,'no')
+   +bx(34,58,80,26,'income?',B,{s:9})+bx(190,58,80,26,'city?',B,{s:9})
+   +ln(56,84,42,100,{s:N})+ln(92,84,106,100,{s:N})+ln(212,84,198,100,{s:N})+ln(248,84,262,100,{s:N})
+   +bx(14,100,56,24,'Yes',G,{s:8.5})+bx(78,100,56,24,'No',R,{s:8.5})
+   +bx(170,100,56,24,'No',R,{s:8.5})+bx(234,100,56,24,'Yes',G,{s:8.5})},
+
+{n:37,s:'Algorithms',q:'What is entropy and information gain?',
+ a:'Entropy measures impurity of a node; information gain is the drop in impurity achieved by a split. The tree picks the highest gain.',
+ k:['Entropy = −Σ p log₂ p — 0 is pure, 1 is 50/50','Gain = entropy(parent) − weighted entropy(children)'],
+ c:'Impure parent → purer children',
+ d:rc(104,16,92,30,{f:N,o:.15,s:N,r:5})
+   +[0,1,2,3,4,5].map(i=>ci(118+i*13,31,4.2,{f:i<3?B:R})).join('')+tm(150,58,'entropy = 1.0 (impure)')
+   +ln(128,46,74,74,{s:N})+ln(172,46,226,74,{s:N})
+   +rc(34,74,80,28,{f:B,o:.15,s:B,r:5})+[0,1,2].map(i=>ci(56+i*14,88,4.2,{f:B})).join('')+tm(74,114,'entropy = 0',{f:B})
+   +rc(186,74,80,28,{f:R,o:.15,s:R,r:5})+[0,1,2].map(i=>ci(208+i*14,88,4.2,{f:R})).join('')+tm(226,114,'entropy = 0',{f:R})
+   +t(150,138,'information gain = 1.0 → best split',{s:10,w:600,f:G})},
+
+{n:38,s:'Algorithms',x:1,q:'Bagging vs Boosting?',
+ a:'Bagging trains models in parallel on bootstrap samples and averages them, cutting variance. Boosting trains sequentially, each fixing the last one’s errors, cutting bias.',
+ k:['Bagging → Random Forest · Boosting → XGBoost','Bagging: deep trees. Boosting: shallow stumps'],
+ c:'Parallel and averaged vs sequential and corrective',
+ d:tm(74,18,'BAGGING — parallel',{f:B,s:9.5,w:700})
+   +[0,1,2].map(i=>bx(16+i*40,30,34,26,'T'+(i+1),B,{s:8.5})).join('')
+   +[0,1,2].map(i=>ar(33+i*40,58,68,76,{s:B,sw:1.2})).join('')+bx(38,78,72,24,'average',B,{s:8.5})
+   +tm(74,118,'reduces variance',{f:B})
+   +ln(150,14,150,132,{s:N,dash:'4 4',o:.4})
+   +tm(226,18,'BOOSTING — sequential',{f:V,s:9.5,w:700})
+   +[0,1,2].map(i=>bx(172+i*42,44,36,24,'T'+(i+1),V,{s:8.5})).join('')
+   +[0,1].map(i=>ar(208+i*42,56,212+i*42,56,{s:V,sw:1.2})).join('')
+   +tm(226,86,'each fixes the last one’s errors')+tm(226,118,'reduces bias',{f:V})},
+
+{n:39,s:'Algorithms',x:1,q:'Explain Random Forest.',
+ a:'Bagging over decision trees, plus a random subset of features considered at every split — which decorrelates the trees.',
+ k:['Two randomisations: bootstrap rows AND random features per split','Without feature randomness all trees would look alike','More trees never overfits — it plateaus'],
+ c:'Many decorrelated trees, one vote',
+ d:[0,1,2,3].map(i=>{const x=22+i*68;return pa(`M${x+20} 78 L${x+20} 58`,{s:G,sw:1.8})
+    +pa(`M${x+20} 62 L${x+8} 44 M${x+20} 62 L${x+32} 44`,{s:G,sw:1.6})
+    +ci(x+8,42,4,{f:G,o:.5})+ci(x+32,42,4,{f:G,o:.5})+tm(x+20,92,'tree '+(i+1),{s:8});}).join('')
+   +[0,1,2,3].map(i=>ar(42+i*68,98,150,112,{s:N,sw:1})).join('')
+   +bx(104,112,92,24,'majority vote',B,{s:9})
+   +tm(150,18,'each tree: random rows + random features',{s:9})},
+
+{n:40,s:'Algorithms',q:'What is out-of-bag (OOB) error?',
+ a:'Each bootstrap sample leaves out about 37% of rows; those act as a free validation set for that tree.',
+ k:['(1 − 1/n)ⁿ → 1/e ≈ 0.368','Gives an unbiased estimate with no separate holdout'],
+ c:'~63% in the bag, ~37% out',
+ d:ci(96,74,50,{s:B,sw:2,f:B,o:.1})+t(96,70,'63.2%',{s:14,w:700,f:B})+tm(96,88,'in the bag')
+   +tm(96,138,'used to train this tree',{f:B})
+   +ci(220,74,40,{s:Y,sw:2,dash:'5 4',f:Y,o:.1})+t(220,70,'36.8%',{s:12,w:700,f:Y})+tm(220,86,'out-of-bag')
+   +tm(220,138,'free validation set',{f:Y})
+   +t(150,20,'sampling n rows with replacement',{s:9.5,f:N})},
+
+{n:41,s:'Algorithms',q:'Why is XGBoost so popular for tabular data?',
+ a:'Gradient boosting done efficiently — each tree fits the residual errors of the ensemble so far, with regularisation built into the objective.',
+ k:['L1/L2 penalties, handles missing values, early stopping','Uses second-order gradients for better splits','Key knobs: learning_rate, max_depth, subsample'],
+ c:'Each tree eats the remaining error',
+ d:ax(24,20,254,92)
+   +[[0,88],[1,62],[2,42],[3,28],[4,20],[5,15]].map(([i,h])=>rc(40+i*40,112-h,28,h,{f:R,o:.55-i*.07,s:R,r:3})).join('')
+   +[0,1,2,3,4,5].map(i=>tm(54+i*40,126,'t'+(i+1),{s:8})).join('')
+   +pa(curve([[54,24],[94,50],[134,70],[174,84],[214,92],[254,97]]),{s:B,sw:2,dash:'4 3'})
+   +tm(74,32,'residual error shrinking',{f:R,s:9})},
+
+{n:42,s:'Algorithms',x:1,q:'Explain SVM and the kernel trick.',
+ a:'Finds the boundary with the widest margin to the closest points of each class — the support vectors.',
+ k:['Margin = 2/‖w‖ — minimise ‖w‖ to maximise it','Kernel trick: similarity as if in higher dimensions','C = margin/error trade-off, gamma = reach of a point'],
+ c:'Widest possible street between classes',
+ d:pa('M40 128 L262 30',{s:V,sw:2.4})
+   +pa('M40 100 L262 2',{s:V,sw:1.2,dash:'4 3'})+pa('M40 156 L262 58',{s:V,sw:1.2,dash:'4 3'})
+   +`<path d="M40 100 L262 2 L262 58 L40 156 Z" fill="${V}" opacity=".07"/>`
+   +dots([[62,52],[92,38],[74,74],[116,44]],B)+dots([[196,110],[228,96],[250,116],[214,128]],R)
+   +ci(104,66,5.4,{s:B,sw:2.2})+ci(186,94,5.4,{s:R,sw:2.2})+ci(140,42,5.4,{s:B,sw:2.2})
+   +tm(150,146,'circled points = support vectors',{f:V})},
+
+{n:43,s:'Algorithms',x:1,q:'Explain KNN. Why is it a lazy learner?',
+ a:'Classify by the majority vote of the k nearest training points. Lazy because there is no training phase — all work happens at prediction time.',
+ k:['Requires feature scaling','Small k overfits, large k underfits; use odd k','Slow at inference — O(n) per query'],
+ c:'k = 5 → 3 red beats 2 blue',
+ d:dots([[80,44],[108,30],[64,74],[196,44],[222,88],[250,50]],B)
+   +dots([[152,54],[176,86],[128,96],[204,116],[92,116]],R)
+   +ci(154,78,44,{s:V,sw:1.8,dash:'5 4'})
+   +ci(154,78,6.5,{f:V})+t(154,82,'?',{s:9,w:700,f:'#fff'})
+   +tm(154,138,'k = 5 → 3 red, 2 blue → predict red',{f:V})},
+
+{n:44,s:'Algorithms',x:1,q:'Explain Naive Bayes. Why "naive"?',
+ a:'Applies Bayes’ theorem and picks the highest-probability class, assuming all features are conditionally independent given the class.',
+ k:['Independence is rarely true, yet it still classifies well','Laplace smoothing stops one zero killing the product','Great fast baseline for text'],
+ c:'Multiply the per-word likelihoods',
+ d:t(150,26,'P(spam | words) ∝ P(spam) · Π P(wordᵢ | spam)',{s:9.5,w:600,f:V})
+   +['free','winner','click'].map((w,i)=>bx(24+i*74,50,64,26,w,Y,{s:9})).join('')
+   +[0,1].map(i=>t(94+i*74,68,'×',{s:12,w:700,f:N})).join('')
+   +ar(150,80,150,96,{s:N})
+   +bx(96,98,108,26,'P(spam) = 0.94',R,{s:9.5})
+   +tm(150,140,'"naive" = pretends the words are independent')},
+
+{n:45,s:'Algorithms',q:'When would you choose a simple model over a complex one?',
+ a:'When data is small, latency is tight, or the business needs explainability — and always as the baseline that a complex model must beat.',
+ k:['Credit, insurance and healthcare are regulated','A 0.3% AUC gain rarely moves a business metric'],
+ c:'Accuracy traded against explainability',
+ d:ax(30,18,246,94)+tm(16,66,'acc',{s:8})+tm(150,134,'← more interpretable   ·   more accurate →',{s:8.5})
+   +pa(curve([[44,104],[100,76],[160,52],[220,38],[266,32]]),{s:B,sw:2.2})
+   +ci(44,104,4.5,{f:G})+tm(56,118,'linear reg',{f:G,s:8})
+   +ci(160,52,4.5,{f:Y})+tm(160,40,'random forest',{f:Y,s:8})
+   +ci(266,32,4.5,{f:R})+tm(250,22,'deep net',{f:R,s:8})
+   +tm(206,74,'diminishing returns',{s:8.5})},
+
+/* ---- 5. Evaluation ---- */
+{n:46,s:'Evaluation',x:1,q:'What is overfitting and underfitting?',
+ a:'Overfitting memorises noise — high train, low test. Underfitting is too simple — both low.',
+ k:['Overfit: regularise, simplify, more data, dropout, early stopping','Underfit: more capacity, better features, train longer'],
+ c:'Too simple · just right · too complex',
+ d:[0,1,2].map(i=>{const x=8+i*99;const pts=[[16,74],[32,52],[48,66],[64,40],[82,50]];
+   return rc(x,26,92,84,{s:N,o:.4,r:6})+dots(pts.map(([a,b])=>[x+a,b]),V,2.8)
+    +[pa(`M${x+10} 82 L${x+88} 40`,{s:B,sw:2}),
+      pa(`M${x+10} 80 Q${x+50} 34 ${x+88} 46`,{s:G,sw:2}),
+      pa(`M${x+10} 88 L${x+22} 60 L${x+34} 78 L${x+48} 44 L${x+64} 70 L${x+78} 38 L${x+88} 54`,{s:R,sw:2})][i]
+    +tm(x+46,124,['underfit','good fit','overfit'][i],{f:[B,G,R][i],w:700,s:9.5});}).join('')
+   +tm(150,142,'high bias  ·  balanced  ·  high variance')},
+
+{n:47,s:'Evaluation',x:1,q:'Explain the bias-variance trade-off.',
+ a:'Bias is error from wrong assumptions (underfitting); variance is sensitivity to the training sample (overfitting). Total error is their sum plus irreducible noise.',
+ k:['Error = Bias² + Variance + σ²','Compare train vs validation error to tell which you have'],
+ c:'The U-shaped total error curve',
+ d:ax(28,16,250,96)
+   +pa(curve([[44,30],[80,58],[120,82],[170,98],[230,106],[268,109]]),{s:B,sw:2})+tm(60,26,'bias²',{f:B})
+   +pa(curve([[44,109],[110,102],[160,88],[210,58],[264,20]]),{s:R,sw:2})+tm(250,30,'variance',{f:R})
+   +pa(curve([[44,36],[90,62],[140,74],[180,72],[230,50],[264,22]]),{s:V,sw:2.4})+tm(120,58,'total error',{f:V,w:700})
+   +ln(168,72,168,112,{s:G,sw:1.4,dash:'3 3'})+ci(168,72,4,{f:G})+tm(168,128,'sweet spot',{f:G})
+   +tm(268,128,'complexity →',{s:8})},
+
+{n:48,s:'Evaluation',x:1,q:'What is cross-validation? What is K-fold?',
+ a:'Split into K folds, train on K−1 and validate on the held-out one, rotate K times and average.',
+ k:['Far more reliable than one split; quote the std dev too','Stratified for imbalance, TimeSeriesSplit for time, GroupKFold for entities'],
+ c:'5 folds, each takes a turn as validation',
+ d:[0,1,2,3,4].map(r=>{const y=20+r*22;return [0,1,2,3,4].map(c2=>{const v=(c2===r);
+   return rc(52+c2*44,y,40,17,{f:v?Y:B,o:v?.35:.16,s:v?Y:B,r:3})
+     +t(72+c2*44,y+12,v?'val':'train',{s:7.2,w:600,f:v?Y:B});}).join('')+tm(28,y+12,'k'+(r+1),{s:8});}).join('')
+   +tm(150,144,'average the 5 scores → a stable estimate')},
+
+{n:49,s:'Evaluation',x:1,q:'Explain the confusion matrix.',
+ a:'A 2×2 table of actual versus predicted, from which every classification metric is derived.',
+ k:['Precision = TP/(TP+FP) · Recall = TP/(TP+FN)','Accuracy = (TP+TN)/all','FP = Type I, FN = Type II'],
+ c:'Four cells, all the metrics',
+ d:tm(150,16,'predicted →')+tm(196,30,'positive')+tm(258,30,'negative')+tm(52,60,'actual pos')+tm(52,104,'actual neg')
+   +rc(160,38,70,38,{f:G,o:.25,s:G,r:4})+t(195,56,'TP',{s:11,w:700,f:G})+tm(195,68,'hit')
+   +rc(234,38,52,38,{f:Y,o:.25,s:Y,r:4})+t(260,56,'FN',{s:11,w:700,f:Y})+tm(260,68,'miss')
+   +rc(160,82,70,38,{f:R,o:.25,s:R,r:4})+t(195,100,'FP',{s:11,w:700,f:R})+tm(195,112,'false alarm')
+   +rc(234,82,52,38,{f:B,o:.2,s:B,r:4})+t(260,100,'TN',{s:11,w:700,f:B})
+   +tm(150,140,'Type I = FP  ·  Type II = FN')},
+
+{n:50,s:'Evaluation',x:1,q:'Precision vs Recall — which matters when?',
+ a:'Precision matters when a false alarm is costly; recall matters when a miss is costly.',
+ k:['Precision: spam filter, auto-blocking, expensive interventions','Recall: cancer screening, fraud, security','Tune the threshold to move along the trade-off'],
+ c:'Two different expensive mistakes',
+ d:bx(14,26,124,28,'PRECISION',B,{s:9.5})+t(76,72,'TP / (TP+FP)',{s:9.5,w:600,f:B})
+   +tm(76,92,'"of what I flagged,')+tm(76,106,'how much was right?"')+tm(76,128,'spam · auto-block',{f:B})
+   +bx(162,26,124,28,'RECALL',R,{s:9.5})+t(224,72,'TP / (TP+FN)',{s:9.5,w:600,f:R})
+   +tm(224,92,'"of all real positives,')+tm(224,106,'how many did I catch?"')+tm(224,128,'cancer · fraud',{f:R})
+   +ln(150,20,150,136,{s:N,dash:'4 4',o:.4})},
+
+{n:51,s:'Evaluation',q:'What is the F1 score and why the harmonic mean?',
+ a:'The harmonic mean of precision and recall — one number that balances both, useful on imbalanced data.',
+ k:['F1 = 2PR/(P+R)','Harmonic mean punishes imbalance: P=1.0, R=0 → F1=0, not 0.5','F-beta when recall matters more'],
+ c:'Harmonic mean collapses toward the worse value',
+ d:t(150,26,'F1 = 2 · P · R / (P + R)',{s:11,w:600,f:V})
+   +rc(40,52,58,26,{f:B,o:.25,s:B,r:4})+t(69,69,'P = 1.0',{s:9,w:600,f:B})
+   +rc(122,52,58,26,{f:R,o:.25,s:R,r:4})+t(151,69,'R = 0.0',{s:9,w:600,f:R})
+   +ar(190,65,212,65,{s:N})
+   +rc(218,52,62,26,{f:Y,o:.3,s:Y,r:4})+t(249,69,'F1 = 0',{s:9.5,w:700,f:Y})
+   +tm(150,102,'the arithmetic mean would say 0.5 — misleading')
+   +tm(150,124,'harmonic mean refuses to reward one-sided models')},
+
+{n:52,s:'Evaluation',x:1,q:'What is ROC-AUC? When do you prefer PR-AUC?',
+ a:'ROC plots TPR against FPR across all thresholds; AUC is the probability a random positive is ranked above a random negative.',
+ k:['0.5 = random, 1.0 = perfect, threshold-independent','On heavy imbalance ROC-AUC flatters — use PR-AUC','Random PR-AUC baseline = the positive rate'],
+ c:'Area under the TPR/FPR curve',
+ d:ax(34,16,232,96)+ln(34,112,266,16,{s:N,dash:'4 3',o:.6})
+   +pa(curve([[34,112],[54,64],[80,42],[120,28],[180,20],[266,16]]),{s:B,sw:2.4})
+   +`<path d="M34 112 L54 64 L80 42 L120 28 L180 20 L266 16 L266 112 Z" fill="${B}" opacity=".12"/>`
+   +t(180,74,'AUC = 0.91',{s:11,w:700,f:B})+tm(196,96,'random = 0.5')
+   +tm(150,132,'FPR →')+tm(16,64,'TPR',{s:8})},
+
+{n:53,s:'Evaluation',x:1,q:'Which metrics do you use for regression?',
+ a:'MAE for robustness, RMSE when big errors must hurt, R² for variance explained, adjusted R² when comparing different feature counts.',
+ k:['R² never decreases when you add features — adjusted R² can','MAPE is readable but breaks near zero'],
+ c:'The residuals each metric summarises',
+ d:ln(24,74,278,74,{s:B,sw:2})
+   +[[54,-24],[90,14],[124,-8],[158,32],[192,-14],[226,20],[258,-6]].map(([x,dy])=>
+     ln(x,74,x,74+dy,{s:dy>0?R:Y,sw:2})+ci(x,74+dy,3.2,{f:dy>0?R:Y})).join('')
+   +tm(150,20,'residual = actual − predicted')
+   +t(74,116,'MAE |e|',{s:9,w:600,f:B})+t(150,116,'RMSE √(e²)',{s:9,w:600,f:V})+t(232,116,'R² variance',{s:9,w:600,f:G})
+   +tm(150,138,'RMSE punishes the big misses hardest')},
+
+{n:54,s:'Evaluation',x:1,q:'What is regularisation? L1 vs L2?',
+ a:'A penalty on coefficient size added to the loss, trading a little bias for a large drop in variance.',
+ k:['L1 (Lasso) can shrink weights to exactly zero → feature selection','L2 (Ridge) shrinks smoothly, handles multicollinearity','Scale features first; λ chosen by CV'],
+ c:'Diamond corners vs circle — why L1 zeroes',
+ d:ax(20,20,120,96)+pa('M74 40 L108 74 L74 108 L40 74 Z',{s:B,sw:2,f:B,o:.12})
+   +ci(96,44,26,{s:V,sw:1.6})+ci(96,44,17,{s:V,sw:1.6})
+   +ci(74,40,4.6,{f:R})+tm(74,132,'L1 — hits a CORNER',{f:B,s:9,w:700})+tm(74,146,'β = 0 exactly',{f:R,s:8.5})
+   +ax(168,20,116,96)+ci(216,74,30,{s:G,sw:2,f:G,o:.12})
+   +ci(244,44,26,{s:V,sw:1.6})+ci(244,44,17,{s:V,sw:1.6})
+   +ci(233,54,4.6,{f:R})+tm(226,132,'L2 — no corners',{f:G,s:9,w:700})+tm(226,146,'small but non-zero',{f:R,s:8.5})},
+
+{n:55,s:'Evaluation',x:1,q:'What is gradient descent? Batch vs Stochastic vs Mini-batch?',
+ a:'Move the parameters against the gradient of the loss: w := w − α·∂L/∂w. The variants differ in how much data estimates that gradient.',
+ k:['Batch: whole dataset, smooth, slow','SGD: one sample, noisy, can escape minima','Mini-batch (32–256): the practical default'],
+ c:'Three paths down the same bowl',
+ d:[0,1,2].map(i=>ci(150,80,58-i*17,{s:N,o:.35})).join('')+ci(150,80,4.5,{f:G})
+   +pa(curve([[36,20],[72,44],[104,62],[130,74],[150,80]]),{s:B,sw:2})+tm(46,14,'batch',{f:B})
+   +pa('M262 24 L232 52 L252 62 L216 70 L232 84 L196 78 L206 90 L172 82 L150 80',{s:R,sw:1.6})+tm(268,16,'SGD',{f:R})
+   +pa(curve([[52,138],[92,120],[122,102],[142,88],[150,80]]),{s:V,sw:2})+tm(48,148,'mini-batch',{f:V})},
+
+{n:56,s:'Evaluation',q:'How do you tune hyperparameters?',
+ a:'Grid search when the space is small, random search when it is large, Bayesian optimisation when each run is expensive — always with cross-validation.',
+ k:['Random search beats grid because few hyperparameters matter','Keep the test set out of the tuning loop'],
+ c:'Grid wastes budget; random covers more values',
+ d:rc(16,26,124,96,{s:N,o:.4,r:6})+tm(78,16,'GRID',{f:B,w:700,s:9.5})
+   +[0,1,2,3].map(r=>[0,1,2,3].map(c2=>ci(36+c2*28,44+r*24,3.4,{f:B})).join('')).join('')
+   +tm(78,138,'only 4 distinct values each',{s:8})
+   +rc(160,26,124,96,{s:N,o:.4,r:6})+tm(222,16,'RANDOM',{f:G,w:700,s:9.5})
+   +dots([[178,40],[206,102],[248,52],[268,86],[192,68],[232,116],[260,34],[212,44],[176,116],[244,74],[196,90],[266,110]],G,3.4)
+   +tm(222,138,'16 distinct values each',{s:8})},
+
+{n:57,s:'Evaluation',x:1,q:'95% train accuracy but 65% test — what do you do?',
+ a:'Classic overfitting. Check leakage and distribution mismatch first, then simplify, regularise, get more data, and validate properly.',
+ k:['Rule out duplicate rows across the split','Then: regularise → augment → early stop → more data','Also check the metric suits the class balance'],
+ c:'The gap is the diagnosis',
+ d:ax(28,16,250,96)
+   +pa(curve([[44,96],[90,64],[140,44],[196,32],[266,26]]),{s:B,sw:2.4})+tm(238,18,'train 95%',{f:B})
+   +pa(curve([[44,100],[90,74],[140,66],[196,74],[266,84]]),{s:R,sw:2.4})+tm(232,98,'test 65%',{f:R})
+   +ln(240,30,240,80,{s:V,sw:1.6,dash:'3 3'})+t(196,58,'the gap',{s:9.5,w:700,f:V})
+   +ln(150,16,150,112,{s:G,dash:'3 3',sw:1.2})+tm(150,128,'stop here (early stopping)',{f:G,s:8.5})},
+
+/* ---- 6. Unsupervised ---- */
+{n:58,s:'Unsupervised',x:1,q:'Explain K-Means clustering.',
+ a:'Assign each point to the nearest centroid, move each centroid to the mean of its points, repeat until nothing changes.',
+ k:['Minimises within-cluster sum of squares (inertia)','Local optimum only — use k-means++ and n_init=10','Assumes spherical, similar-sized clusters; needs scaling'],
+ c:'Assign → update → repeat',
+ d:dots([[54,44],[76,34],[62,60],[88,50]],B)+ci(70,47,6,{f:B})+ci(70,47,10,{s:B,sw:1.6})
+   +dots([[152,96],[176,86],[190,104],[164,112]],G)+ci(170,100,6,{f:G})+ci(170,100,10,{s:G,sw:1.6})
+   +dots([[228,42],[248,32],[240,58],[262,48]],V)+ci(244,45,6,{f:V})+ci(244,45,10,{s:V,sw:1.6})
+   +tm(150,20,'★ = centroid = mean of its own points')
+   +tm(150,140,'1. assign to nearest   2. recompute the mean   3. repeat')},
+
+{n:59,s:'Unsupervised',x:1,q:'How do you choose the value of k?',
+ a:'The elbow method on inertia, the silhouette score, or a business constraint — and often the business constraint wins.',
+ k:['Inertia always falls, so you cannot just minimise it','Silhouette: (b−a)/max(a,b), higher is better'],
+ c:'The elbow in the inertia curve',
+ d:ax(30,16,246,96)+tm(16,60,'inertia',{s:8})+tm(150,134,'k →')
+   +pa(curve([[46,26],[86,54],[126,84],[166,96],[206,102],[250,106]]),{s:B,sw:2.4})
+   +[[46,26],[86,54],[126,84],[166,96],[206,102],[250,106]].map(([x,y])=>ci(x,y,3.4,{f:B})).join('')
+   +ci(126,84,7,{s:R,sw:2.2})+tm(146,68,'elbow → k = 3',{f:R,w:700})
+   +[46,86,126,166,206,250].map((x,i)=>tm(x,120,String(i+1),{s:8})).join('')},
+
+{n:60,s:'Unsupervised',q:'K-Means vs Hierarchical vs DBSCAN?',
+ a:'K-Means is fast but needs k and assumes spheres. Hierarchical needs no k but does not scale. DBSCAN finds any shape and labels noise.',
+ k:['DBSCAN discovers k itself and gives outlier detection free','DBSCAN struggles with varying density'],
+ c:'Three shapes, three tools',
+ d:tm(50,16,'K-MEANS',{f:B,w:700,s:9})+ci(50,66,26,{s:B,sw:1.8,f:B,o:.1})+dots([[40,58],[58,60],[48,74],[62,76]],B,2.6)
+   +tm(50,110,'spherical only')+tm(50,126,'must give k',{s:8})
+   +tm(150,16,'HIERARCHICAL',{f:V,w:700,s:9})
+   +pa('M126 88 L126 70 L174 70 L174 88 M150 70 L150 54',{s:V,sw:1.8})
+   +pa('M114 88 L114 80 L138 80 L138 88',{s:V,sw:1.6})+tm(150,110,'dendrogram')+tm(150,126,'no k needed',{s:8})
+   +tm(250,16,'DBSCAN',{f:G,w:700,s:9})
+   +pa('M224 78 Q250 44 276 78',{s:G,sw:2.4})+dots([[228,74],[240,58],[258,58],[270,74]],G,2.6)+ci(250,96,3,{f:R})
+   +tm(250,110,'any shape')+tm(250,126,'+ noise label',{s:8,f:R})},
+
+{n:61,s:'Unsupervised',x:1,q:'Explain PCA.',
+ a:'Projects data onto new orthogonal axes ordered by how much variance they capture, so you keep the first few and drop the rest.',
+ k:['Standardise → covariance → eigenvectors → keep ~95% variance','Unsupervised: ignores the target','Components are not interpretable as original features'],
+ c:'New axes along the directions of spread',
+ d:ax(24,18,254,96)
+   +dots([[70,96],[92,84],[110,78],[128,66],[146,60],[164,52],[186,44],[204,36],[122,84],[160,70],[96,98],[190,58]],N,3)
+   +pa('M62 106 L216 26',{s:R,sw:2.4})+t(224,24,'PC1',{s:10,w:700,f:R})+tm(238,38,'most variance',{s:8})
+   +pa('M132 44 L162 88',{s:B,sw:2})+t(178,44,'PC2',{s:9.5,w:700,f:B})
+   +tm(150,140,'PC1 ⟂ PC2 · ordered by variance captured')},
+
+{n:62,s:'Unsupervised',q:'PCA vs LDA?',
+ a:'PCA is unsupervised and maximises variance; LDA is supervised and maximises separation between classes.',
+ k:['LDA gives at most (classes − 1) components','PCA can discard a low-variance direction that separates classes perfectly'],
+ c:'Variance axis vs separability axis',
+ d:dots([[64,42],[86,34],[76,58],[100,48]],B,3.2)+dots([[140,96],[164,86],[152,110],[178,100]],R,3.2)
+   +pa('M50 118 L196 26',{s:V,sw:2.2})+t(214,24,'PCA',{s:10,w:700,f:V})+tm(224,38,'max variance',{s:8})
+   +pa('M60 30 L164 128',{s:G,sw:2.2})+t(184,128,'LDA',{s:10,w:700,f:G})+tm(196,142,'max class gap',{s:8})
+   +tm(112,16,'PCA never sees the labels',{s:8.5})},
+
+{n:63,s:'Unsupervised',q:'What is t-SNE / UMAP?',
+ a:'Non-linear methods that map high-dimensional data to 2-D preserving local neighbourhoods — for visualisation, not preprocessing.',
+ k:['Distances BETWEEN clusters are not meaningful','t-SNE is slow and non-deterministic; UMAP is faster','Never fit on train and transform test with t-SNE'],
+ c:'Many dimensions → a readable 2-D map',
+ d:rc(16,32,102,80,{s:N,o:.5,dash:'3 3',r:6})+tm(67,24,'768 dimensions')
+   +[0,1,2,3,4,5].map(i=>ln(28+i*15,44,28+i*15,100,{s:N,o:.35,sw:3})).join('')
+   +ar(126,72,152,72,{s:N})
+   +rc(160,32,124,80,{s:N,o:.5,r:6})+tm(222,24,'2-D map')
+   +dots([[178,52],[192,46],[184,62]],B,3)+dots([[236,92],[252,84],[242,100]],G,3)+dots([[262,50],[272,60]],V,3)
+   +tm(150,136,'local neighbourhoods preserved, global distances not',{s:8.5})},
+
+{n:64,s:'Unsupervised',q:'What is anomaly detection?',
+ a:'Finding rare points that deviate from normal behaviour — fraud, machine failure, intrusion.',
+ k:['Statistical (z-score, IQR), density (LOF, DBSCAN), Isolation Forest, autoencoder error','Labels are scarce, so evaluation leans on precision@k'],
+ c:'Dense normal, isolated anomalies',
+ d:ci(112,74,46,{f:B,o:.09,s:B,dash:'4 4'})
+   +dots([[92,60],[110,52],[128,66],[100,84],[122,88],[138,74],[86,80],[116,72],[104,66],[130,54]],B,3)
+   +ci(238,40,5,{f:R})+ci(238,40,11,{s:R,sw:1.6,dash:'3 2'})
+   +ci(262,104,5,{f:R})+ci(262,104,11,{s:R,sw:1.6,dash:'3 2'})
+   +tm(112,136,'normal: dense region',{f:B})+tm(250,72,'anomalies',{f:R})},
+
+/* ---- 7. Deep learning ---- */
+{n:65,s:'Deep learning',x:1,q:'What is a neural network / perceptron?',
+ a:'A neuron computes a weighted sum plus a bias and passes it through an activation. Stack them into input, hidden and output layers.',
+ k:['y = f(Σwᵢxᵢ + b)','Universal approximation: enough hidden units approximate any continuous function'],
+ c:'Weighted sum → activation → next layer',
+ d:[0,1,2].map(i=>ci(40,44+i*32,8,{f:B,o:.35,s:B})).join('')
+   +[0,1,2,3].map(i=>ci(120,30+i*30,8,{f:V,o:.35,s:V})).join('')
+   +[0,1,2,3].map(i=>ci(200,30+i*30,8,{f:V,o:.35,s:V})).join('')
+   +[0,1].map(i=>ci(268,60+i*32,8,{f:G,o:.35,s:G})).join('')
+   +[0,1,2].map(i=>[0,1,2,3].map(j=>ln(48,44+i*32,112,30+j*30,{s:N,o:.22,sw:.9})).join('')).join('')
+   +[0,1,2,3].map(i=>[0,1,2,3].map(j=>ln(128,30+i*30,192,30+j*30,{s:N,o:.22,sw:.9})).join('')).join('')
+   +[0,1,2,3].map(i=>[0,1].map(j=>ln(208,30+i*30,260,60+j*32,{s:N,o:.22,sw:.9})).join('')).join('')
+   +tm(40,146,'input')+tm(160,146,'hidden layers')+tm(268,146,'output')},
+
+{n:66,s:'Deep learning',x:1,q:'What is an activation function and why is it needed?',
+ a:'It introduces non-linearity. Without it, stacked layers collapse into a single linear transformation.',
+ k:['ReLU = default hidden layer; GELU in Transformers','Sigmoid → binary output; Softmax → multi-class','Sigmoid saturates → vanishing gradients'],
+ c:'Three activations at a glance',
+ d:['ReLU','Sigmoid','Tanh'].map((nm,i)=>{const x=10+i*98;
+   const p=[ `M${x+12} 92 L${x+44} 92 L${x+84} 26`,
+             curve(Array.from({length:26},(_,j)=>{const xx=x+12+j*2.9;const z=(xx-(x+48))/9;return [xx,92-66/(1+Math.exp(-z))];})),
+             curve(Array.from({length:26},(_,j)=>{const xx=x+12+j*2.9;const z=(xx-(x+48))/9;return [xx,59-33*Math.tanh(z)];}))][i];
+   return rc(x,20,90,80,{s:N,o:.35,r:6})+pa(p,{s:[G,B,V][i],sw:2.2})
+     +tm(x+45,116,nm,{f:[G,B,V][i],w:700,s:9.5})
+     +tm(x+45,132,['max(0,z) — default','(0,1) — output only','(−1,1) — zero-centred'][i],{s:7.6});}).join('')},
+
+{n:67,s:'Deep learning',x:1,q:'Explain forward propagation and backpropagation.',
+ a:'Forward pushes inputs through the layers to a prediction and a loss. Backprop uses the chain rule to send the error back and get each weight’s gradient.',
+ k:['Backprop computes gradients; gradient descent does the learning','One forward + one backward over a mini-batch = one iteration'],
+ c:'Signal forward, error backward',
+ d:[0,1,2,3].map(i=>rc(20+i*68,50,54,42,{f:i===3?G:B,o:.15,s:i===3?G:B,r:6})
+     +t(47+i*68,75,['input','h1','h2','out'][i],{s:9,w:600})).join('')
+   +[0,1,2].map(i=>ar(76+i*68,62,84+i*68,62,{s:B,sw:1.6})).join('')
+   +[0,1,2].map(i=>ar(84+i*68,82,76+i*68,82,{s:R,sw:1.6})).join('')
+   +t(150,30,'FORWARD  →  prediction, then loss',{s:9.5,w:600,f:B})
+   +t(150,116,'←  BACKWARD  ∂L/∂w by the chain rule',{s:9.5,w:600,f:R})
+   +tm(150,138,'then the optimiser updates every weight')},
+
+{n:68,s:'Deep learning',x:1,q:'What is the vanishing / exploding gradient problem?',
+ a:'Gradients are products of many terms — under 1 they shrink to nothing, over 1 they blow up to NaN.',
+ k:['Sigmoid derivative maxes at 0.25 → 0.25¹⁰ ≈ 10⁻⁶','Fix: ReLU, He init, BatchNorm, residual connections','Exploding → gradient clipping'],
+ c:'Gradient shrinking layer by layer',
+ d:[0,1,2,3,4,5].map(i=>{const h=54/Math.pow(2.1,i);
+   return rc(20+i*45,96-h,32,h,{f:R,o:.55-i*.07,s:R,r:3})+tm(36+i*45,110,'L'+(6-i),{s:8});}).join('')
+   +ar(276,60,40,60,{s:R,sw:1.4,dash:'4 3'})+t(160,48,'gradient travelling backwards',{s:9,f:R})
+   +tm(150,132,'early layers stop learning entirely')},
+
+{n:69,s:'Deep learning',x:1,q:'What are epoch, batch size and iteration?',
+ a:'An epoch is one full pass over the data, batch size is samples per weight update, an iteration is one update.',
+ k:['iterations per epoch = dataset size ÷ batch size','1000 samples, batch 100 → 10 iterations per epoch','Small batch = noisy but often generalises better'],
+ c:'One epoch = many batches = many updates',
+ d:rc(16,32,268,26,{s:B,o:.6,dash:'4 3',r:5})+t(150,49,'1 EPOCH — the whole dataset',{s:10,w:700,f:B})
+   +[0,1,2,3,4,5,6,7,8,9].map(i=>rc(18+i*26.6,72,23,22,{f:V,o:.22,s:V,r:3})).join('')
+   +tm(150,108,'10 batches of 100 samples')
+   +[0,1,2,3,4,5,6,7,8,9].map(i=>ci(29.5+i*26.6,120,3,{f:G})).join('')
+   +tm(150,140,'10 weight updates (iterations)',{f:G})},
+
+{n:70,s:'Deep learning',x:1,q:'Compare SGD, Momentum, RMSprop and Adam.',
+ a:'SGD steps on the raw gradient, momentum adds velocity, RMSprop adapts the rate per parameter, Adam combines both.',
+ k:['Adam is the default: lr ≈ 0.001','AdamW decouples weight decay — standard for Transformers','SGD+momentum often generalises better in vision'],
+ c:'Each optimiser takes a different path',
+ d:[0,1,2].map(i=>ci(160,78,60-i*19,{s:N,o:.3})).join('')+ci(160,78,4.5,{f:G})
+   +pa('M28 128 L52 108 L40 92 L66 80 L54 66 L84 58 L110 62 L140 72 L160 78',{s:R,sw:1.6})+tm(30,142,'SGD',{f:R})
+   +pa(curve([[30,32],[70,40],[104,52],[134,66],[160,78]]),{s:B,sw:2})+tm(38,24,'momentum',{f:B})
+   +pa(curve([[276,120],[232,110],[196,96],[172,84],[160,78]]),{s:V,sw:2.2})+tm(268,134,'Adam',{f:V})
+   +bx(96,14,52,20,'minimum',G,{s:8})},
+
+{n:71,s:'Deep learning',x:1,q:'What is dropout?',
+ a:'Randomly switch off a fraction of neurons each forward pass during training, so the network cannot rely on any single unit.',
+ k:['Acts like averaging many thinned sub-networks','Turned OFF at inference — model.eval()','Typical rate 0.2–0.5'],
+ c:'Half the units dropped this pass',
+ d:[0,1,2,3].map(i=>ci(56,32+i*28,8,{f:B,o:.3,s:B})).join('')
+   +[[0,1],[1,0],[2,1],[3,0],[4,1]].map(([i,on])=>on
+      ? ci(150,26+i*24,8,{f:V,o:.35,s:V})
+      : ci(150,26+i*24,8,{f:'none',s:R,sw:1.8,dash:'2 2'})
+        +ln(145,21+i*24,155,31+i*24,{s:R,sw:1.8})+ln(155,21+i*24,145,31+i*24,{s:R,sw:1.8})).join('')
+   +[0,1,2].map(i=>ci(246,46+i*28,8,{f:G,o:.3,s:G})).join('')
+   +tm(150,148,'dropped units contribute nothing this pass',{f:R})},
+
+{n:72,s:'Deep learning',q:'What is batch normalisation?',
+ a:'Normalises each layer’s inputs per mini-batch to zero mean and unit variance, then rescales with learnable γ and β.',
+ k:['Allows higher learning rates, faster convergence','At inference it uses running averages — model.eval() matters','LayerNorm is the Transformer variant'],
+ c:'Messy distribution → centred and scaled',
+ d:pa('M24 108 Q44 60 62 92 Q84 40 104 96 Q120 66 132 104',{s:R,sw:2})+ln(20,108,136,108,{s:N,o:.5})
+   +tm(78,126,'shifting activations',{f:R})
+   +ar(146,78,176,78,{s:N})+tm(161,64,'BN',{s:9,w:700,f:G})
+   +pa(bell(232,108,52,58),{s:G,sw:2.2})+ln(180,108,284,108,{s:N,o:.5})+ln(232,50,232,108,{s:G,dash:'3 3',sw:1.2})
+   +tm(232,126,'mean 0, variance 1',{f:G})
+   +t(150,20,'x̂ = (x − μ) / σ  →  y = γx̂ + β',{s:9.5,w:600,f:V})},
+
+{n:73,s:'Deep learning',x:1,q:'What loss functions do you use where?',
+ a:'MSE for regression, binary cross-entropy for two classes, categorical cross-entropy with softmax for multi-class.',
+ k:['Multi-label → sigmoid on each output + BCE per output','Focal loss for extreme imbalance','Cross-entropy beats MSE for classification — stronger gradients'],
+ c:'Task → output activation → loss',
+ d:[['Regression','linear','MSE',B],['Binary','sigmoid','BCE',G],['Multi-class','softmax','Cat. CE',V],['Multi-label','sigmoid ×C','BCE ×C',Y]]
+   .map(([task,act,loss,c2],i)=>{const y=26+i*30;
+     return rc(10,y,84,24,{f:c2,o:.15,s:c2,r:4})+t(52,y+16,task,{s:8.8,w:600})
+       +ar(98,y+12,112,y+12,{s:N,sw:1.2})+rc(116,y,74,24,{f:c2,o:.1,s:c2,r:4})+t(153,y+16,act,{s:8.5})
+       +ar(194,y+12,208,y+12,{s:N,sw:1.2})+rc(212,y,78,24,{f:c2,o:.22,s:c2,r:4})+t(251,y+16,loss,{s:8.8,w:600});
+   }).join('')},
+
+{n:74,s:'Deep learning',x:1,q:'Explain CNNs. Why better than ANNs for images?',
+ a:'A small filter slides across the image detecting local patterns, with the same weights reused everywhere.',
+ k:['Parameter sharing, local connectivity, translation invariance','Dense layer on 224×224×3 → 150M params; conv layer → ~1,800','Conv → ReLU → Pool → … → Flatten → Dense'],
+ c:'One kernel sliding over the image',
+ d:[0,1,2,3,4].map(r=>[0,1,2,3,4].map(c2=>rc(24+c2*20,26+r*20,18,18,{f:B,o:.13,s:B,r:2})).join('')).join('')
+   +rc(24,26,58,58,{s:R,sw:2.4,r:3})+tm(53,100,'3×3 kernel',{f:R})
+   +ar(134,66,164,66,{s:N})+tm(149,52,'slide',{s:8})
+   +[0,1,2].map(r=>[0,1,2].map(c2=>rc(180+c2*24,38+r*24,22,22,{f:V,o:.2,s:V,r:2})).join('')).join('')
+   +tm(216,124,'feature map',{f:V})
+   +tm(150,146,'same weights reused everywhere → far fewer parameters',{s:8})},
+
+{n:75,s:'Deep learning',x:1,q:'Explain RNN, LSTM and GRU.',
+ a:'An RNN carries a hidden state across timesteps but forgets long range. An LSTM adds a cell state and three gates; a GRU is a lighter two-gate version.',
+ k:['Gates: forget (discard), input (store), output (expose)','Cell state updates ADDITIVELY → gradient survives','GRU: 2 gates, ~25% fewer parameters'],
+ c:'The cell state runs straight through',
+ d:ln(16,52,284,52,{s:G,sw:3})+tm(150,42,'cell state — additive highway',{f:G,s:8.5})
+   +[0,1,2].map(i=>{const x=40+i*86;
+     return rc(x,64,72,44,{s:V,o:.7,r:6,f:V,fo:.08})
+       +ci(x+16,86,9,{f:R,o:.3,s:R})+t(x+16,89,'f',{s:8,w:700,f:R})
+       +ci(x+36,86,9,{f:B,o:.3,s:B})+t(x+36,89,'i',{s:8,w:700,f:B})
+       +ci(x+56,86,9,{f:G,o:.3,s:G})+t(x+56,89,'o',{s:8,w:700,f:G})
+       +ln(x+36,64,x+36,52,{s:N,sw:1.2})+tm(x+36,124,'t'+(i+1),{s:8});}).join('')
+   +tm(66,144,'forget',{f:R,s:8})+tm(150,144,'input',{f:B,s:8})+tm(234,144,'output',{f:G,s:8})},
+
+{n:76,s:'Deep learning',x:1,q:'What is transfer learning?',
+ a:'Reuse a model pre-trained on a huge dataset for your smaller task — strong results with far less data and compute.',
+ k:['Feature extraction: freeze the backbone, train a new head','Fine-tuning: unfreeze some layers, low learning rate','Little data → freeze more'],
+ c:'Frozen backbone, fresh head',
+ d:[0,1,2,3].map(i=>rc(20+i*52,50,44,46,{f:N,o:.16,s:N,r:5})+t(42+i*52,72,'❄',{s:13,f:C})
+     +tm(42+i*52,88,'frozen',{s:7.5})).join('')
+   +rc(232,50,54,46,{f:G,o:.22,s:G,r:5})+t(259,70,'NEW',{s:9,w:700,f:G})+tm(259,86,'trainable',{s:7.5,f:G})
+   +tm(126,28,'pre-trained on ImageNet / web text',{s:9})
+   +tm(150,124,'early layers = generic edges & syntax')
+   +tm(150,142,'later layers = task-specific → replace them',{f:G})},
+
+/* ---- 8. NLP ---- */
+{n:77,s:'NLP',x:1,q:'What are the standard NLP preprocessing steps?',
+ a:'Lowercase, strip punctuation, tokenise, remove stop words, stem or lemmatise, then vectorise.',
+ k:['Stop-word removal HURTS sentiment ("not good" loses meaning)','Tokenisation can be word-level or sub-word'],
+ c:'Raw text down to model-ready vectors',
+ d:['raw text','lowercase','tokenise','stop words','lemmatise','vectorise']
+   .map((s,i)=>{const x=4+i*49;const c2=[N,B,B,Y,V,G][i];
+     return rc(x,54,45,40,{f:c2,o:.16,s:c2,r:5})+t(x+22,72,String(i+1),{s:8,f:c2,w:700})+t(x+22,84,s,{s:6.8,w:600});}).join('')
+   +[0,1,2,3,4].map(i=>ar(49+i*49,74,53+i*49,74,{s:N,sw:1.1})).join('')
+   +tm(150,30,'"The Cats Were Running!"',{s:9})
+   +tm(150,118,'→ ["cat", "run"] → [0.2, 0.9, …]',{s:9,f:G})},
+
+{n:78,s:'NLP',x:1,q:'Stemming vs lemmatisation?',
+ a:'Stemming chops suffixes with crude rules and may produce non-words. Lemmatisation uses a dictionary and part-of-speech to return a real root.',
+ k:['studies → studi (stem) vs study (lemma)','better → better (stem) vs good (lemma)','Stemming is faster; lemmatisation is accurate'],
+ c:'Crude chop vs dictionary lookup',
+ d:tm(80,20,'STEMMING',{f:R,w:700,s:9.5})+tm(228,20,'LEMMATISATION',{f:G,w:700,s:9.5})
+   +[['studies','studi','study'],['better','better','good'],['running','run','run']].map(([w,st,le],i)=>{
+     const y=44+i*30;
+     return t(38,y+16,w,{s:9,f:N})+ar(64,y+12,80,y+12,{s:R,sw:1.1})
+       +rc(84,y,60,24,{f:R,o:.15,s:R,r:4})+t(114,y+16,st,{s:9,w:600,f:R})
+       +ar(152,y+12,172,y+12,{s:G,sw:1.1})
+       +rc(178,y,60,24,{f:G,o:.15,s:G,r:4})+t(208,y+16,le,{s:9,w:600,f:G});}).join('')
+   +tm(150,142,'stemming can produce non-words; lemmatisation cannot')},
+
+{n:79,s:'NLP',x:1,q:'Bag of Words vs TF-IDF?',
+ a:'BoW counts word occurrences. TF-IDF down-weights words common across all documents and up-weights distinctive ones.',
+ k:['IDF = log(N / documents containing the term)','Both are sparse and carry no meaning — "good" and "great" are unrelated'],
+ c:'Counts vs distinctiveness-weighted counts',
+ d:tm(74,18,'BAG OF WORDS',{f:B,w:700,s:9})+tm(226,18,'TF-IDF',{f:V,w:700,s:9})
+   +[['the',9,0.0],['loan',2,0.8],['approve',1,0.9]].map(([w,cnt,tf],i)=>{const y=34+i*28;
+     return t(30,y+15,w,{s:8.5,f:N,a:'start'})
+       +rc(66,y+3,cnt*9,18,{f:B,o:.35,s:B,r:3})+t(70+cnt*9,y+16,String(cnt),{s:8,f:B,a:'start'})
+       +rc(180,y+3,tf*95,18,{f:V,o:.35,s:V,r:3})+t(184+tf*95,y+16,tf.toFixed(1),{s:8,f:V,a:'start'});}).join('')
+   +tm(80,132,'"the" dominates — useless',{f:R,s:8})+tm(226,132,'"the" suppressed — better',{f:G,s:8})},
+
+{n:80,s:'NLP',x:1,q:'What are word embeddings? Explain Word2Vec.',
+ a:'Dense vectors where semantically similar words sit close together, learned from context.',
+ k:['king − man + woman ≈ queen','CBOW predicts the word from context; Skip-gram the reverse','GloVe = co-occurrence; FastText = sub-word, handles unseen words'],
+ c:'Meaning becomes geometry',
+ d:ax(24,16,254,96)
+   +[[70,44,'king',B],[140,40,'queen',R],[76,96,'man',B],[146,92,'woman',R]].map(([x,y,l,c2])=>
+     ci(x,y,4.4,{f:c2})+t(x,y-10,l,{s:9,w:600,f:c2})).join('')
+   +ar(76,92,70,50,{s:N,sw:1.4,dash:'3 2'})+ar(146,88,140,46,{s:N,sw:1.4,dash:'3 2'})
+   +t(214,64,'king − man + woman',{s:9,w:600,f:V})+t(214,80,'≈ queen',{s:9.5,w:700,f:V})
+   +tm(150,138,'the same vector offset encodes the same relationship',{s:8.5})},
+
+{n:81,s:'NLP',x:1,q:'What limitation of Word2Vec does BERT solve?',
+ a:'Word2Vec gives one static vector per word, so "bank" is identical in both senses. BERT produces contextual embeddings that change with the sentence.',
+ k:['Static: one vector per word type','Contextual: one vector per word occurrence'],
+ c:'Same word, two meanings, two vectors',
+ d:tm(150,16,'"I sat on the river bank"   vs   "I went to the bank"',{s:8.8})
+   +bx(20,36,116,26,'Word2Vec',N,{s:9})+ci(50,90,7,{f:N})+ci(106,90,7,{f:N})
+   +tm(78,112,'ONE vector for both',{f:R})+tm(78,128,'meaning collapsed',{s:8,f:R})
+   +bx(164,36,116,26,'BERT',G,{s:9})+ci(194,90,7,{f:B})+ci(250,90,7,{f:V})
+   +tm(222,112,'TWO different vectors',{f:G})+tm(222,128,'context decides',{s:8,f:G})},
+
+{n:82,s:'NLP',q:'What is NER, POS tagging and sentiment analysis?',
+ a:'POS labels grammatical role, NER extracts entities like person or organisation, sentiment classifies tone.',
+ k:['NER: person, org, location, date, amount','Sentiment: lexicon (VADER), TF-IDF + ML, or a fine-tuned Transformer'],
+ c:'Three labelling tasks on one sentence',
+ d:['Ravi','joined','TCS','in','Pune'].map((w,i)=>{const x=12+i*57;const c2=[B,N,V,N,G][i];
+     return rc(x,44,52,24,{f:c2,o:.16,s:c2,r:4})+t(x+26,60,w,{s:9,w:600});}).join('')
+   +[['PERSON',12,B],['—',69,N],['ORG',126,V],['—',183,N],['LOC',240,G]].map(([l,x,c2])=>
+     t(x+26,88,l,{s:7.5,w:700,f:c2})).join('')
+   +tm(150,26,'NER — entity labels')
+   +[['NNP',12],['VBD',69],['NNP',126],['IN',183],['NNP',240]].map(([l,x])=>tm(x+26,108,l,{s:7.5})).join('')
+   +tm(150,126,'POS — grammatical role')+tm(150,144,'sentiment → neutral',{f:Y})},
+
+{n:83,s:'NLP',q:'How do you evaluate a text-generation model?',
+ a:'Perplexity for language modelling, BLEU/ROUGE for overlap with a reference, BERTScore for semantic similarity, and human judgement in practice.',
+ k:['Perplexity: how surprised the model is — lower is better','BLEU (precision-ish) for translation, ROUGE (recall-ish) for summarisation'],
+ c:'Four measures, increasing in what they capture',
+ d:[['Perplexity','how surprised the model is',B],['BLEU / ROUGE','n-gram overlap with a reference',V],
+    ['BERTScore','semantic similarity, not exact words',G],['Human / LLM judge','relevance, factuality, tone',Y]]
+   .map(([nm,desc,c2],i)=>{const y=20+i*32;
+     return rc(14,y,110,26,{f:c2,o:.18,s:c2,r:5})+t(69,y+17,nm,{s:9,w:600})
+       +t(136,y+17,desc,{s:8.5,f:N,a:'start'});}).join('')},
+
+/* ---- 9. Transformers & GenAI ---- */
+{n:84,s:'GenAI',x:1,q:'What is a Transformer and why did it replace RNNs?',
+ a:'An architecture built entirely on attention. Dropping recurrence lets every token be processed in parallel and lets any token attend directly to any other.',
+ k:['Embeddings + positional encoding → N blocks','Each block: multi-head attention → add&norm → feed-forward → add&norm','Cost is quadratic in sequence length'],
+ c:'One Transformer block',
+ d:bx(96,12,108,20,'input + position',N,{s:8.5})+ar(150,34,150,42,{s:N,sw:1.2})
+   +rc(74,42,152,84,{s:V,o:.6,dash:'4 3',r:8})
+   +bx(88,50,124,22,'multi-head attention',V,{s:8.5})
+   +bx(88,76,124,16,'add & norm',N,{s:7.5})
+   +bx(88,96,124,18,'feed-forward',B,{s:8.5})
+   +ar(150,116,150,124,{s:N,sw:1.2})
+   +pa('M74 60 Q52 84 74 84',{s:G,sw:1.6})+pa('M74 104 Q52 122 74 122',{s:G,sw:1.6})
+   +tm(38,92,'residual',{f:G,s:8})+tm(246,84,'× N blocks',{s:9,f:V})
+   +tm(150,142,'no recurrence → full parallelism')},
+
+{n:85,s:'GenAI',x:1,q:'Explain self-attention, Q/K/V and multi-head attention.',
+ a:'Each token makes a Query (what I want), a Key (what I offer) and a Value (what I carry). Dot products score relevance, softmax turns them into weights.',
+ k:['Attention = softmax(QKᵀ/√dₖ)·V','√dₖ stops the softmax saturating','Multi-head: several in parallel capture different relations'],
+ c:'One token attending to all the others',
+ d:t(150,20,'softmax(QKᵀ / √dₖ) · V',{s:11,w:700,f:V})
+   +['The','cat','sat','on','it'].map((w,i)=>{const x=16+i*57;
+     return rc(x,92,50,24,{f:i===4?V:B,o:i===4?.3:.12,s:i===4?V:B,r:4})+t(x+25,108,w,{s:9,w:600});}).join('')
+   +[[41,.9],[98,.15],[155,.25],[212,.1]].map(([x,w])=>
+     pa(`M269 90 Q${(269+x)/2} 54 ${x} 90`,{s:V,sw:1+w*4,o:.25+w*.7})).join('')
+   +tm(70,50,'strong link',{f:V,s:8})+tm(150,138,'"it" attends most to "cat"',{f:V})},
+
+{n:86,s:'GenAI',q:'Why does a Transformer need positional encoding?',
+ a:'Self-attention is permutation-invariant — it sees a set of tokens, not a sequence. Positional encodings inject word order.',
+ k:['Original: sine/cosine of different frequencies','Modern: learned embeddings or RoPE'],
+ c:'Order added back into the embeddings',
+ d:['cat','sat','on','mat'].map((w,i)=>{const x=22+i*68;
+     return rc(x,86,56,24,{f:B,o:.15,s:B,r:4})+t(x+28,102,w,{s:9,w:600})
+       +rc(x,54,56,24,{f:V,o:.18,s:V,r:4})+t(x+28,70,'pos '+i,{s:8.5,w:600,f:V})
+       +t(x+28,48,'+',{s:11,w:700,f:N});}).join('')
+   +pa(curve(Array.from({length:60},(_,i)=>[22+i*4.4,32-8*Math.sin(i/3.4)])),{s:V,sw:1.4,o:.7})
+   +tm(150,132,'without this, "dog bites man" = "man bites dog"',{s:8.8,f:R})},
+
+{n:87,s:'GenAI',x:1,q:'BERT vs GPT?',
+ a:'BERT is encoder-only and bidirectional, trained with masked language modelling — best for understanding. GPT is decoder-only and autoregressive — best for generation.',
+ k:['BERT: classification, NER, extractive QA','GPT: chat, summarisation, code','T5/BART are encoder-decoder, text-to-text'],
+ c:'Sees both sides vs sees only the left',
+ d:tm(74,16,'BERT — bidirectional',{f:B,w:700,s:9})
+   +[0,1,2,3].map(i=>rc(10+i*34,42,30,22,{f:i===2?Y:B,o:i===2?.3:.14,s:i===2?Y:B,r:3})
+     +t(25+i*34,57,i===2?'[M]':'w'+(i+1),{s:7.5,w:600})).join('')
+   +ar(25,72,72,72,{s:B,sw:1.2})+ar(146,72,96,72,{s:B,sw:1.2})+tm(84,88,'both directions',{f:B,s:8})
+   +tm(74,112,'masked LM')+tm(74,128,'→ understanding',{s:8.5})
+   +ln(150,10,150,140,{s:N,dash:'4 4',o:.4})
+   +tm(226,16,'GPT — causal',{f:G,w:700,s:9})
+   +[0,1,2,3].map(i=>rc(162+i*34,42,30,22,{f:G,o:.14,s:G,r:3})+t(177+i*34,57,'w'+(i+1),{s:7.5,w:600})).join('')
+   +ar(177,72,272,72,{s:G,sw:1.2})+tm(226,88,'left to right only',{f:G,s:8})
+   +tm(226,112,'next-token prediction')+tm(226,128,'→ generation',{s:8.5})},
+
+{n:88,s:'GenAI',x:1,q:'What are tokens, context window, temperature and top-p?',
+ a:'A token is a sub-word chunk (~0.75 words). The context window is the maximum tokens in and out. Temperature and top-p control randomness.',
+ k:['Temperature 0 = deterministic; higher = more creative','Top-p: sample from the smallest set summing to p','Models bill and limit by tokens'],
+ c:'Temperature reshapes the output distribution',
+ d:['Un','forget','table'].map((w,i)=>rc(16+i*46,24,42,22,{f:B,o:.18,s:B,r:4})+t(37+i*46,39,w,{s:8.5,w:600})).join('')
+   +tm(85,58,'1 word → 3 tokens',{s:8})
+   +[0,1,2,3].map(i=>rc(178,22+i*10,[92,58,34,18][i],7,{f:V,o:.5,s:V,r:2})).join('')
+   +tm(214,74,'temp = 0.2 — peaked',{f:V,s:8})
+   +[0,1,2,3].map(i=>rc(178,92+i*10,[60,52,44,38][i],7,{f:Y,o:.5,s:Y,r:2})).join('')
+   +tm(214,144,'temp = 1.2 — flat, creative',{f:Y,s:8})
+   +tm(80,104,'context window =')+tm(80,120,'prompt + response',{s:8})+tm(80,138,'measured in tokens',{s:8})},
+
+{n:89,s:'GenAI',x:1,q:'What is hallucination and how do you reduce it?',
+ a:'Fluent, confident text that is factually wrong — because the model optimises for a plausible next token, not for truth.',
+ k:['Ground it with RAG and demand citations','Lower temperature; allow "I don’t know"','Validation, guardrails, human in the loop'],
+ c:'Confident and fluent, still wrong',
+ d:rc(20,26,260,44,{f:R,o:.1,s:R,r:8})
+   +t(150,46,'"The Eiffel Tower was completed in 1912."',{s:9.5,w:600})
+   +t(150,62,'fluent · confident · false',{s:8.5,f:R})
+   +['RAG grounding','low temperature','allow "I don’t know"','human review'].map((s,i)=>
+     rc(12+i*72,90,68,26,{f:G,o:.16,s:G,r:5})+t(46+i*72,102,s.split(' ')[0],{s:8,w:600,f:G})
+     +t(46+i*72,112,s.split(' ').slice(1).join(' '),{s:7,f:N})).join('')
+   +tm(150,138,'the model predicts plausibility, not truth')},
+
+{n:90,s:'GenAI',x:2,q:'What is RAG? RAG vs fine-tuning vs both?',
+ a:'Retrieval-Augmented Generation: embed your documents into a vector database, retrieve the top-k relevant chunks at query time, and put them in the prompt.',
+ k:['RAG → fresh, private, changing knowledge + citations','Fine-tune → behaviour, format, tone, specialised task','Serious systems use BOTH: fine-tune HOW, RAG WHAT'],
+ c:'The retrieval-augmented pipeline',
+ d:bx(6,58,50,32,'query',B,{s:8.5})+ar(58,74,72,74,{s:N,sw:1.2})
+   +bx(74,58,52,32,'embed',V,{s:8.5})+ar(128,74,142,74,{s:N,sw:1.2})
+   +rc(144,50,56,48,{f:C,o:.16,s:C,r:6})+t(172,70,'vector',{s:8.5,w:600})+t(172,82,'DB',{s:8.5,w:600})
+   +ar(202,74,216,74,{s:N,sw:1.2})+bx(218,58,34,32,'top-k',Y,{s:8})
+   +ar(254,74,266,74,{s:N,sw:1.2})+bx(262,58,34,32,'LLM',G,{s:8.5})
+   +tm(150,26,'documents → chunks → embeddings → stored',{s:8.5})
+   +tm(150,120,'RAG = what it KNOWS   ·   fine-tuning = how it ANSWERS',{s:9,f:V,w:600})
+   +tm(150,140,'most production systems use both')},
+
+{n:91,s:'GenAI',q:'What is LoRA / QLoRA and PEFT?',
+ a:'Parameter-efficient fine-tuning: freeze the base model and train small added matrices instead of all the weights.',
+ k:['LoRA trains ~0.1–1% of parameters, near full quality','QLoRA adds 4-bit quantisation → single-GPU fine-tuning','RLHF aligns the model with human preference after SFT'],
+ c:'Frozen giant + tiny trainable adapters',
+ d:rc(30,34,140,80,{f:N,o:.14,s:N,r:8})+t(100,68,'FROZEN',{s:12,w:700,f:N})+t(100,84,'7B parameters',{s:9,f:N})
+   +t(100,24,'❄',{s:14,f:C})
+   +t(190,76,'+',{s:16,w:700,f:N})
+   +rc(210,52,66,44,{f:G,o:.25,s:G,r:6})+t(243,72,'LoRA',{s:11,w:700,f:G})+t(243,86,'~0.5%',{s:9,f:G})
+   +tm(243,112,'trainable',{f:G})
+   +tm(150,138,'base weights untouched → no catastrophic forgetting')},
+
+/* ---- 10. RL ---- */
+{n:92,s:'RL',q:'What is a Markov Decision Process?',
+ a:'The formal frame for RL: states, actions, transition probabilities, rewards and a discount factor γ.',
+ k:['(S, A, P, R, γ)','Markov property: the next state depends only on the current one','γ trades immediate against future reward'],
+ c:'State → action → reward → next state',
+ d:ci(56,68,26,{f:B,o:.18,s:B})+t(56,72,'S',{s:13,w:700,f:B})
+   +ci(160,68,26,{f:V,o:.18,s:V})+t(160,72,'A',{s:13,w:700,f:V})
+   +ci(258,68,26,{f:G,o:.18,s:G})+t(258,72,"S'",{s:13,w:700,f:G})
+   +ar(84,68,132,68,{s:N})+ar(188,68,230,68,{s:N})
+   +t(108,58,'act',{s:8.5,f:N})+t(210,58,'P(s’|s,a)',{s:8,f:N})
+   +pa('M258 96 Q160 132 56 96',{s:Y,sw:1.8})+t(160,126,'reward R',{s:9.5,w:600,f:Y})
+   +t(150,20,'(S, A, P, R, γ)',{s:11,w:700,f:V})},
+
+{n:93,s:'RL',x:1,q:'Explain exploration vs exploitation.',
+ a:'Exploit takes the action you currently believe is best; explore tries something else to find something better. Pure exploitation locks in a mediocre policy.',
+ k:['ε-greedy: act randomly with probability ε, decayed over time','Also UCB, softmax, Thompson sampling'],
+ c:'The two-armed bandit dilemma',
+ d:rc(38,36,76,72,{f:G,o:.16,s:G,r:8})+t(76,62,'known',{s:9.5,w:600,f:G})+t(76,78,'avg 6/10',{s:9,f:G})
+   +tm(76,124,'EXPLOIT',{f:G,w:700,s:9.5})
+   +rc(186,36,76,72,{f:V,o:.16,s:V,r:8})+t(224,62,'unknown',{s:9.5,w:600,f:V})+t(224,78,'avg ?',{s:11,f:V,w:700})
+   +tm(224,124,'EXPLORE',{f:V,w:700,s:9.5})
+   +t(150,74,'?',{s:18,w:700,f:N})
+   +tm(150,20,'ε-greedy: explore with probability ε, decay it',{s:8.8})},
+
+{n:94,s:'RL',q:'What is Q-learning?',
+ a:'A model-free, off-policy algorithm that learns Q(s,a): the expected total reward of taking action a in state s and behaving optimally afterwards.',
+ k:['Q(s,a) ← Q + α[r + γ·max Q(s’,a’) − Q]','DQN replaces the table with a neural network','Plus experience replay and a target network'],
+ c:'The Q-table: states × actions',
+ d:tm(150,16,'actions →')+['↑','↓','←','→'].map((a,i)=>tm(126+i*44,32,a,{s:11})).join('')
+   +[0,1,2].map(r=>[0,1,2,3].map(c2=>{const v=[[2.1,0.4,1.2,3.8],[0.9,4.2,0.3,1.1],[3.1,1.0,2.7,0.5]][r][c2];
+     const best=Math.max(...[[2.1,0.4,1.2,3.8],[0.9,4.2,0.3,1.1],[3.1,1.0,2.7,0.5]][r])===v;
+     return rc(106+c2*44,38+r*28,40,24,{f:best?G:B,o:best?.3:.1,s:best?G:B,r:3})
+       +t(126+c2*44,54+r*28,v.toFixed(1),{s:8.5,w:best?700:500,f:best?G:N});}).join('')).join('')
+   +[0,1,2].map(r=>tm(80,56+r*28,'s'+(r+1),{s:8.5})).join('')
+   +t(150,140,'Q ← Q + α[r + γ·max Q(s’,a’) − Q]',{s:9.5,w:600,f:V})},
+
+/* ---- 11. MLOps ---- */
+{n:95,s:'MLOps',x:1,q:'How do you deploy an ML model to production?',
+ a:'Serialise the model, wrap it in a REST API, containerise it, deploy, then add logging, monitoring and versioning.',
+ k:['Patterns: real-time API, batch scoring, streaming, edge','Save the WHOLE pipeline, not just the estimator','Pin library versions — pickles are version-sensitive'],
+ c:'From notebook to monitored service',
+ d:['train','serialise','API','Docker','deploy','monitor'].map((s,i)=>{const x=4+i*49;const c2=[V,B,B,C,G,Y][i];
+     return rc(x,58,45,32,{f:c2,o:.16,s:c2,r:5})+t(x+22,78,s,{s:8,w:600});}).join('')
+   +[0,1,2,3,4].map(i=>ar(49+i*49,74,53+i*49,74,{s:N,sw:1.1})).join('')
+   +tm(150,32,'model.pkl → FastAPI → container → cloud')
+   +pa('M276 96 Q286 122 150 122 Q14 122 26 98',{s:Y,sw:1.4,dash:'4 3'})
+   +tm(150,140,'drift detected → retrain → redeploy',{f:Y})},
+
+{n:96,s:'MLOps',x:1,q:'What is model drift and how do you detect it?',
+ a:'Performance decays because the world changed. Data drift is a shift in inputs; concept drift is a shift in the input→output relationship.',
+ k:['Monitor feature distributions: PSI, KL divergence, KS test','Track live metrics against a baseline','Alert on thresholds, retrain on a trigger'],
+ c:'The input distribution slides away',
+ d:pa(bell(96,104,58,52),{s:B,sw:2.2})+`<path d="${bell(96,104,58,52)}" fill="${B}" opacity=".12"/>`
+   +tm(96,124,'training data',{f:B})
+   +pa(bell(206,104,58,52),{s:R,sw:2.2})+`<path d="${bell(206,104,58,52)}" fill="${R}" opacity=".12"/>`
+   +tm(206,124,'live traffic 6 months later',{f:R})
+   +ln(24,104,284,104,{s:N,o:.5})+ar(120,42,182,42,{s:R,sw:1.6})+t(151,34,'drift',{s:10,w:700,f:R})
+   +tm(150,144,'same model, quietly worse every week')},
+
+{n:97,s:'MLOps',q:'How do you A/B test a model?',
+ a:'Route a slice of traffic to the challenger and the rest to the champion, then compare a pre-declared business metric with statistical significance.',
+ k:['Safer: shadow deploy → canary → full rollout','Always have an instant rollback path'],
+ c:'Champion vs challenger on live traffic',
+ d:bx(8,58,54,32,'traffic',N,{s:8.5})
+   +ar(64,66,90,44,{s:B,sw:1.4})+ar(64,82,90,104,{s:V,sw:1.4})
+   +bx(94,28,96,32,'model A — 90%',B,{s:8.5})+tm(142,74,'champion',{f:B,s:8})
+   +bx(94,88,96,32,'model B — 10%',V,{s:8.5})+tm(142,134,'challenger',{f:V,s:8})
+   +ar(194,44,216,66,{s:N,sw:1.2})+ar(194,104,216,82,{s:N,sw:1.2})
+   +bx(220,58,72,32,'compare',G,{s:8.5})
+   +tm(256,110,'pre-declared metric',{s:8})},
+
+{n:98,s:'MLOps',x:1,q:'What is explainability? SHAP and LIME?',
+ a:'Making a model’s decisions understandable. SHAP gives consistent per-prediction feature contributions; LIME fits a simple model locally.',
+ k:['SHAP is game-theoretic (Shapley values), global and local','Tree feature_importances_ is biased — prefer permutation or SHAP','Required in regulated domains'],
+ c:'Which features pushed this prediction, and how far',
+ d:ln(150,20,150,124,{s:N,o:.6,dash:'3 3'})+tm(150,138,'base value')
+   +[['income',66,1],['debt',-48,-1],['age',30,1],['pin code',-22,-1]].map(([f,w,dir],i)=>{const y=28+i*24;
+     return t(84,y+14,f,{s:8.5,f:N,a:'end'})
+       +rc(dir>0?150:150+w,y+4,Math.abs(w),16,{f:dir>0?G:R,o:.4,s:dir>0?G:R,r:3})
+       +t(dir>0?154+w:146+w,y+16,(dir>0?'+':'')+ (w/100).toFixed(2),{s:7.5,w:600,f:dir>0?G:R,a:dir>0?'start':'end'});
+   }).join('')
+   +tm(214,14,'pushes toward approval',{f:G,s:8})+tm(86,14,'pushes away',{f:R,s:8})},
+
+{n:99,s:'MLOps',x:1,q:'What is bias in ML and how do you address it?',
+ a:'Systematic unfairness against a group, inherited from historical data, unbalanced sampling, or proxy features.',
+ k:['Pin code can proxy for ethnicity','Measure fairness per subgroup: demographic parity, equal opportunity','Different from the "bias" in bias-variance'],
+ c:'Equal inputs, unequal outcomes',
+ d:tm(80,18,'GROUP A',{f:B,w:700,s:9})+tm(220,18,'GROUP B',{f:V,w:700,s:9})
+   +rc(30,34,100,26,{f:B,o:.18,s:B,r:4})+t(80,51,'equally qualified',{s:8.5})
+   +rc(170,34,100,26,{f:V,o:.18,s:V,r:4})+t(220,51,'equally qualified',{s:8.5})
+   +ar(80,66,80,84,{s:N,sw:1.4})+ar(220,66,220,84,{s:N,sw:1.4})
+   +rc(38,88,84,28,{f:G,o:.3,s:G,r:4})+t(80,106,'72% approved',{s:9,w:700,f:G})
+   +rc(178,88,84,28,{f:R,o:.3,s:R,r:4})+t(220,106,'41% approved',{s:9,w:700,f:R})
+   +tm(150,138,'the model learned a historical pattern, not a fair rule',{f:R,s:8.5})},
+
+{n:100,s:'MLOps',q:'What are the main ethical and governance concerns?',
+ a:'Privacy and consent, fairness, hallucination, transparency, security, IP, environmental cost, and accountability for automated decisions.',
+ k:['Prompt injection and data exfiltration are real attack surfaces','Practical answer: version data and models, model cards, red-team, log everything','Define who owns the decision when the model is wrong'],
+ c:'The governance checklist',
+ d:[['privacy & consent',B],['fairness',V],['transparency',C],['security',R],['IP & licensing',Y],['accountability',G]]
+   .map(([s,c2],i)=>{const x=8+(i%3)*98,y=26+Math.floor(i/3)*48;
+     return rc(x,y,90,38,{f:c2,o:.16,s:c2,r:6})+t(x+45,y+18,'✓',{s:10,w:700,f:c2})+t(x+45,y+31,s,{s:8,w:600});}).join('')
+   +tm(150,140,'version · document · red-team · log · assign an owner')},
+];
+
+/* ============================ app ============================ */
+const $=id=>document.getElementById(id);
+let order=[], idx=0, flipped=false, sec='All', hideKnown=false;
+let known=new Set(JSON.parse(localStorage.getItem('mlcards_known')||'[]'));
+const save=()=>localStorage.setItem('mlcards_known',JSON.stringify([...known]));
+
+const sections=['All',...new Set(CARDS.map(c=>c.s))];
+$('sec').innerHTML=sections.map(s=>`<option value="${s}">${s==='All'?'All sections':s}</option>`).join('');
+
+function build(shuffle){
+  order=CARDS.filter(c=>(sec==='All'||c.s===sec)&&(!hideKnown||!known.has(c.n))).map(c=>c.n);
+  if(!order.length){order=CARDS.filter(c=>sec==='All'||c.s===sec).map(c=>c.n); hideKnown=false; $('hide').classList.remove('on');}
+  if(shuffle) for(let i=order.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[order[i],order[j]]=[order[j],order[i]];}
+  idx=0; render();
+}
+function card(){ return CARDS.find(c=>c.n===order[idx]); }
+
+function render(){
+  const c=card(); if(!c) return;
+  flipped=false; $('card').classList.remove('flip');
+  $('fsec').textContent=c.s;
+  $('fnum').textContent=`Q${c.n} of 100`;
+  $('fstar').textContent=c.x?'★'.repeat(c.x):'';
+  $('fq').textContent=c.q;
+  $('bq').textContent=`Q${c.n} · ${c.q}`;
+  $('ba').textContent=c.a;
+  $('bk').innerHTML=c.k.map(k=>`<li>${k}</li>`).join('');
+  $('bd').innerHTML=S(c.d);
+  $('bc').textContent=c.c||'';
+  $('mark').classList.toggle('on',known.has(c.n));
+  $('count').textContent=`${idx+1} / ${order.length}  ·  ${known.size} known`;
+  $('fill').style.width=((idx+1)/order.length*100)+'%';
+  drawGrid();
+}
+function drawGrid(){
+  $('gridbox').innerHTML=order.map((n,i)=>
+    `<b class="${i===idx?'cur':''} ${known.has(n)?'kn':''}" data-i="${i}">${n}</b>`).join('');
+}
+const go=d=>{ idx=(idx+d+order.length)%order.length; render(); };
+const flip=()=>{ flipped=!flipped; $('card').classList.toggle('flip',flipped); };
+
+$('flip').onclick=flip;
+$('card').onclick=flip;
+$('prev').onclick=e=>{e.stopPropagation();go(-1);};
+$('next').onclick=e=>{e.stopPropagation();go(1);};
+$('mark').onclick=e=>{e.stopPropagation();const n=card().n;
+  known.has(n)?known.delete(n):known.add(n); save();
+  $('mark').classList.toggle('on',known.has(n));
+  $('count').textContent=`${idx+1} / ${order.length}  ·  ${known.size} known`; drawGrid();};
+$('sec').onchange=e=>{sec=e.target.value;build(false);};
+$('shuffle').onclick=()=>build(true);
+$('hide').onclick=e=>{hideKnown=!hideKnown;e.target.classList.toggle('on',hideKnown);build(false);};
+$('grid').onclick=e=>{$('gridbox').classList.toggle('show');e.target.classList.toggle('on');};
+$('gridbox').onclick=e=>{const b=e.target.closest('b'); if(b){idx=+b.dataset.i;render();}};
+$('theme').onclick=()=>{const d=document.documentElement;
+  const nx=d.getAttribute('data-theme')==='dark'?'light':'dark';
+  d.setAttribute('data-theme',nx); localStorage.setItem('mlcards_theme',nx);};
+if(localStorage.getItem('mlcards_theme')==='dark') document.documentElement.setAttribute('data-theme','dark');
+
+document.addEventListener('keydown',e=>{
+  if(e.key===' '){e.preventDefault();flip();}
+  else if(e.key==='ArrowRight')go(1);
+  else if(e.key==='ArrowLeft')go(-1);
+  else if(e.key.toLowerCase()==='k')$('mark').click();
+  else if(e.key.toLowerCase()==='s')build(true);
+});
+
+build(false);
+</script>
+</body>
+</html>
