@@ -16,7 +16,7 @@ One file per subject, at interview depth: spoken answer → explanation → the 
 | File | Subject | Status |
 |------|---------|--------|
 | [machine-learning.md](machine-learning.md) | Classical ML — 80 questions | ✅ Done |
-| `deep-learning.md` | Neural nets, backprop, CNN/RNN, training | ⬜ Planned |
+| [deep-learning.md](deep-learning.md) | Neural nets, backprop, CNN/RNN, training — 82 questions | ✅ Done |
 | `nlp.md` | Text → embeddings → Transformers → LLMs/RAG | ⬜ Planned |
 | `deep-rl.md` | MDPs, Q-learning, DQN, policy gradients | ⬜ Planned |
 | `probability.md` / `statistics.md` | Distributions, Bayes, inference, A/B testing | ⬜ Planned |

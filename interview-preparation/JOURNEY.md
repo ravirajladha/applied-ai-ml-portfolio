@@ -15,7 +15,7 @@ Started: **31 July 2026** (the night before an AI/ML interview).
 | — | `coding-questions.md` | Python, NumPy, pandas, from-scratch, sklearn, SQL, PyTorch | ✅ Done | 60 |
 | — | `quick-revision-cheatsheet.md` | Last-30-minutes revision | ✅ Done | — |
 | 1 | `machine-learning.md` | Classical ML deep dive | ✅ Done | 80 |
-| 2 | `deep-learning.md` | Neural nets, backprop, CNN, RNN, training | ⬜ Not started | target ~70 |
+| 2 | `deep-learning.md` | Neural nets, backprop, CNN, RNN, training | ✅ Done | 82 |
 | 3 | `nlp.md` | Text processing → embeddings → Transformers → LLMs/RAG | ⬜ Not started | target ~70 |
 | 4 | `deep-rl.md` | MDPs, Bellman, Q-learning, DQN, policy gradients | ⬜ Not started | target ~55 |
 | 5 | `probability.md` | Distributions, Bayes, expectation, common puzzles | ⬜ Not started | target ~45 |
@@ -39,8 +39,10 @@ Each subject file maps to a folder in this repo, so the coursework and the prep 
 
 Ordered by interview value, not by syllabus order:
 
-1. **`deep-learning.md`** — the natural sequel to machine learning, and it's assumed knowledge for NLP.
-2. **`nlp.md`** — highest current market value; every AI/ML JD now has a Gen AI section.
+1. ~~**`deep-learning.md`**~~ — done 31 Jul 2026.
+2. **`nlp.md`** — highest current market value; every AI/ML JD now has a Gen AI section. **Do this next.**
+   Note: `deep-learning.md` Q71–Q72 covers attention and why Transformers replaced RNNs, and deliberately stops
+   short of Q/K/V internals — pick those up in `nlp.md` rather than repeating them.
 3. **`seml.md`** — MLOps questions appear in almost every round above fresher level, and almost nobody prepares them.
 4. **`statistics.md`** + **`probability.md`** — do them together; they overlap and both show up in analytics-leaning rounds.
 5. **`deep-rl.md`** — narrower in interviews, but it's coursework and it's genuinely differentiating when it comes up.
