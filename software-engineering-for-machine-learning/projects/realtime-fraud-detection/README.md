@@ -130,6 +130,7 @@ and what the alternatives were.
 | [`docs/05-glossary.md`](docs/05-glossary.md) | Machine learning jargon translated for a software engineer |
 | [`docs/06-decisions.md`](docs/06-decisions.md) | Every significant design decision and the reasoning behind it |
 | [`docs/07-setup.md`](docs/07-setup.md) | How to get it running, including what failed the first time |
+| [`docs/PROGRESS.md`](docs/PROGRESS.md) | **Where the project stands** — the journey as a checklist, plus every problem hit and how it was resolved |
 | [`docs/BUILD-LOG.md`](docs/BUILD-LOG.md) | A running journal of how this was built, session by session |
 | [`docs/incidents/`](docs/incidents/) | Write-ups of things that broke and how they were fixed |
 
@@ -144,9 +145,9 @@ Parquet archiver are next.
 Setup is documented in [`docs/07-setup.md`](docs/07-setup.md), including the
 parts that failed the first time.
 
-See [`docs/04-roadmap.md`](docs/04-roadmap.md) for what remains and
-[`docs/BUILD-LOG.md`](docs/BUILD-LOG.md) for how it was built, including what
-broke along the way.
+See [`docs/PROGRESS.md`](docs/PROGRESS.md) for the full picture — the journey
+as a checklist and all 13 problems hit so far — and
+[`docs/BUILD-LOG.md`](docs/BUILD-LOG.md) for the session-by-session narrative.
 
 ## Running it
 
