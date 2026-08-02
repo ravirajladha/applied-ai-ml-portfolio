@@ -1,0 +1,78 @@
+# The local stack. Everything a reviewer needs to run this project.
+#
+# Services are added as the milestones that need them arrive, rather than all at
+# once, so that nothing is running without a reason.
+#
+#   M1  redpanda, console
+#   M2  redis
+#   M3  mlflow
+#   M5  prometheus, grafana
+#
+# Start with:  docker compose up -d
+# Check with:  docker compose ps
+
+name: rtfd
+
+services:
+  # --- M1: the transaction stream -----------------------------------------
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.2.7
+    container_name: rtfd-redpanda
+    command:
+      - redpanda
+      - start
+      # Single-node development mode. Explicitly not production settings.
+      - --mode dev-container
+      - --smp 1
+      - --default-log-level=warn
+      # Two listeners: one for other containers, one for the host. Getting this
+      # wrong is the single most common Kafka-in-Docker problem — a client on
+      # the host connects, is handed back an internal hostname it cannot
+      # resolve, and hangs.
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+    ports:
+      - "19092:19092"   # Kafka API, from the host
+      - "9644:9644"     # admin API
+    volumes:
+      - redpanda-data:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -q 'Healthy:.*true'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  console:
+    image: docker.redpanda.com/redpandadata/console:v2.7.2
+    container_name: rtfd-console
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_BROKERS: redpanda:9092
+    # A web UI at localhost:8080 for looking at what is actually on the topic.
+    # Worth the 100 MB: "is my producer working?" becomes a glance instead of a
+    # debugging session.
+
+  # --- M2: the online feature store ---------------------------------------
+  redis:
+    image: redis:7.4-alpine
+    container_name: rtfd-redis
+    ports:
+      - "6379:6379"
+    command:
+      - redis-server
+      - --save ""              # no disk persistence; this is a cache, not a store
+      - --appendonly no
+      - --maxmemory 512mb
+      - --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  redpanda-data:

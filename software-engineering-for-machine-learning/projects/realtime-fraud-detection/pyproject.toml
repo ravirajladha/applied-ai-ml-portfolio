@@ -1,0 +1,115 @@
+[project]
+name = "rtfd"
+version = "0.1.0"
+description = "Real-time fraud detection service — a production-style ML system"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+
+dependencies = [
+    # Data
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "pyarrow>=16.0",
+    "duckdb>=1.0",
+    # Validation and config
+    "pandera>=0.20",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    # Streaming and stores
+    "confluent-kafka>=2.4",
+    "redis>=5.0",
+    # Logging
+    "structlog>=24.1",
+    "rich>=13.7",
+]
+
+[project.optional-dependencies]
+train = [
+    "lightgbm>=4.3",
+    "scikit-learn>=1.5",
+    "mlflow>=2.14",
+    "onnx>=1.16",
+    "onnxruntime>=1.18",
+    "skl2onnx>=1.16",
+    "onnxmltools>=1.12",
+    "matplotlib>=3.9",
+]
+serve = [
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.30",
+    "onnxruntime>=1.18",
+    "prometheus-client>=0.20",
+]
+monitor = [
+    "evidently>=0.4",
+]
+orchestrate = [
+    "prefect>=2.19",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.2",
+    "pytest-cov>=5.0",
+    "ruff>=0.5",
+    "mypy>=1.10",
+    "pre-commit>=3.7",
+    "ipykernel>=6.29",
+    "jupyter>=1.0",
+    "locust>=2.29",
+]
+
+[project.scripts]
+rtfd-download = "rtfd.data.download:main"
+rtfd-profile = "rtfd.data.profile:main"
+rtfd-replay = "rtfd.stream.producer:main"
+rtfd-archive = "rtfd.stream.archiver:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rtfd"]
+
+# ----------------------------------------------------------------------------
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # import sorting
+    "B",    # bugbear
+    "UP",   # pyupgrade
+    "SIM",  # simplify
+    "PTH",  # use pathlib
+    "RUF",  # ruff-specific
+]
+ignore = [
+    "E501",  # line length is handled by the formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+files = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "integration: requires Redpanda and Redis to be running",
+    "slow: takes more than a few seconds",
+]

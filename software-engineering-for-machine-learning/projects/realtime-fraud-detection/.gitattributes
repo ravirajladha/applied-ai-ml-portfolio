@@ -1,0 +1,22 @@
+# The repository is developed from WSL2 (Linux) with a Windows host, so the same
+# working tree gets touched by two git installations with different newline
+# defaults. Without this, every file rewritten from one side shows up as a
+# whole-file diff on the other. See ADR-0007.
+
+* text=auto eol=lf
+
+# Binary and generated files git must not touch.
+*.parquet   binary
+*.onnx      binary
+*.pkl       binary
+*.png       binary
+*.jpg       binary
+*.gz        binary
+*.zip       binary
+
+# Notebooks diff badly by nature; nbstripout handles the outputs. Marking them
+# keeps git from trying to merge JSON line by line.
+*.ipynb     -merge
+
+# Lockfiles are generated. Showing them collapsed keeps reviews readable.
+uv.lock     linguist-generated=true -diff

@@ -1,0 +1,31 @@
+# Runs on every commit. Fast checks only — anything slow belongs in CI.
+#   Install once with:  uv run pre-commit install
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        # Data and models must never reach git. They live in the offline store
+        # and the model registry, which is the whole point of having those.
+        args: ["--maxkb=1024"]
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.7.1
+    hooks:
+      - id: nbstripout
+        # Notebook outputs are noise in diffs and can leak data samples into
+        # git history. The notebook is the analysis; the output is disposable.

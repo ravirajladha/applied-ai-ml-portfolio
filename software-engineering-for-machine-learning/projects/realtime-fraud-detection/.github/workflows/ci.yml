@@ -1,0 +1,102 @@
+# Continuous integration.
+#
+# The interesting part of this pipeline is not the linting — it is that data and
+# model quality are treated as build failures rather than as dashboard readings.
+# Those jobs arrive with the milestones that produce something to check:
+#
+#   M2  feature parity (online vs offline) and the leakage test
+#   M3  model quality gate — the build fails if expected cost regresses
+#
+# Until then this is an ordinary Python pipeline, and says so.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  UV_FROZEN: "1"
+
+jobs:
+  quality:
+    name: Lint, type-check, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Lint
+        run: uv run ruff check src tests
+
+      - name: Check formatting
+        run: uv run ruff format --check src tests
+
+      - name: Type-check
+        run: uv run mypy
+
+      - name: Test
+        # Integration tests need Redpanda and Redis, which are started by the
+        # job below. This job stays fast so a typo fails in under two minutes.
+        run: uv run pytest -m "not integration" --cov=rtfd --cov-report=term-missing
+
+  integration:
+    name: Integration (Redpanda + Redis)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Nothing to integrate against until the producer and archiver land in M1.
+    if: false
+
+    services:
+      redis:
+        image: redis:7.4-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Start Redpanda
+        # Compose rather than a service container: the listener configuration
+        # is fiddly enough that it should be defined in exactly one place, and
+        # that place is docker-compose.yml.
+        run: |
+          docker compose up -d redpanda
+          timeout 90 bash -c 'until docker compose exec -T redpanda rpk cluster health | grep -q "Healthy:.*true"; do sleep 3; done'
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Run integration tests
+        run: uv run pytest -m integration
+        env:
+          RTFD_KAFKA_BOOTSTRAP: localhost:19092
+          RTFD_REDIS_URL: redis://localhost:6379/0
+
+      - name: Show broker logs on failure
+        if: failure()
+        run: docker compose logs redpanda

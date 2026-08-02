@@ -1,0 +1,55 @@
+# Data — never committed. Fetched by `uv run rtfd-download`.
+# Leading slash matters: a bare `data/` would also match `src/rtfd/data/` and
+# silently drop source files from the repository.
+/data/
+*.csv
+*.parquet
+!docs/**/*.parquet
+
+# Models and experiment tracking — lives in the registry, not in git
+models/
+mlruns/
+mlartifacts/
+*.onnx
+*.txt.model
+*.pkl
+
+# Reports generated at runtime
+/reports/
+*.html
+!docs/**/*.html
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Service state from docker compose
+.docker-data/
+prometheus-data/
+grafana-data/
+redpanda-data/
+
+# Local venv used for the ARM64-installable subset (see ADR-0007)
+.probe/
