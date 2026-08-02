@@ -1,1 +1,0 @@
-"""CQRS command/write service."""

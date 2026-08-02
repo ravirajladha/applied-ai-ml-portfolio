@@ -1,0 +1,3 @@
+[submodule "software-engineering-for-machine-learning/projects/seml-ecommerce-reco"]
+	path = software-engineering-for-machine-learning/projects/seml-ecommerce-reco
+	url = https://github.com/sumanthtps/seml-ecommerce-reco.git
