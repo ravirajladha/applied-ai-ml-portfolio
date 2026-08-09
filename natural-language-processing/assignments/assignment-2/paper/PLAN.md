@@ -82,15 +82,16 @@ That is what research is. Most people never get that far.
       four steps, not a smooth ruler. That is the seed of Section 7.2 — it is
       why our 0.0448 must never be printed beside a news benchmark's 0.20.
 
-- [ ] **Session 3 — Introduction**
-      *File:* `sections/01-introduction.tex`
-      *Read first:* `refs/t5-raffel-2020.pdf`, **abstract + section 1 only**
-      (~3 pages). Skip everything after.
-      *Answer before we write:*
-      1. What does the "summarize: " prefix in front of our input actually do?
-      2. T5 was trained on a lot of text. So why was it *bad* at our task
-         before we fine-tuned it?
-      3. In one sentence a shopkeeper would understand: what is this paper for?
+- [x] **Session 3 — Introduction** *(2026-08-09)*
+      Written, with the three contributions stated explicitly and a Scope
+      paragraph that declares the study's limits up front rather than hiding
+      them in Limitations.
+      *The framing to keep hold of:* fine-tuning did not teach the model about
+      food. It taught it **the shape of the answer**. Pretraining gives fluent
+      sentence-shaped summaries; our references are four-word headlines, so a
+      fluent model in the wrong shape scores below a one-line heuristic. Form,
+      not knowledge. This is the same insight as the 3-bigram observation from
+      Session 2, pointed at the model instead of at the metric.
 
 - [ ] **Session 4 — Related Work**
       *File:* `sections/02-related-work.tex`

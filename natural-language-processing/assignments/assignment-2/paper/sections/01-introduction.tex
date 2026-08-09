@@ -1,13 +1,67 @@
 \section{Introduction}
-% STATUS: stub. SESSION 3.
-% GOAL: ~1 page. Motivate, state contributions, forward-reference results.
-% MUST CONTAIN:
-%   - The buyer problem: thousands of reviews, nobody reads them all.
-%   - Framing: two sub-problems, per-review compression AND aggregation.
-%   - The surprise: pretrained-but-untuned < trivial baseline. Say the number.
-%   - Contributions list (3 items, matching EXPERIMENT_FACTS.md "can claim").
-%   - Honesty: single dataset, single seed, small model. Say it here, not only
-%     in Limitations.
-% CITE: \cite{raffel2020t5} for the model, \cite{mcauley2013amazon} for data.
+\label{sec:intro}
 
-TODO
+A popular product on an e-commerce platform accumulates thousands of reviews.
+No buyer reads them. The star average, the one summary statistic that is
+always shown, compresses every one of those opinions into a single number and
+discards what the reviews actually said.
+
+Automatic summarization is the obvious remedy, and it is usually posed as a
+single problem: given a document, produce a shorter document. Product reviews
+split it into two. The first is per-review compression --- turning one review
+into a line a shopper can scan. The second is aggregation --- saying what
+customers as a group praise and criticise, which no per-review summarizer can
+answer, because the answer is not contained in any individual review. We treat
+both, and find that the second is where the interesting information lives.
+
+We fine-tune \texttt{t5-small} \cite{raffel2020t5}, a 60M-parameter
+encoder--decoder, on 4{,}000 reviews from the Amazon Fine Food Reviews corpus
+\cite{mcauley2013amazon}, using the headline each customer wrote as the
+reference summary, and evaluate on 300 held-out reviews with ROUGE
+\cite{lin2004rouge}. Fine-tuning raises ROUGE-1 from 0.109 to 0.175, a relative
+improvement of 61\%.
+
+The headline number is not the interesting one. The interesting one is the
+baseline it is measured against. A trivial extractive baseline that returns the
+review's first sentence and nothing else scores 0.126 --- and the
+\emph{pretrained model without fine-tuning} scores 0.109, below it. A
+60M-parameter model trained on a large corpus loses to a one-line heuristic.
+
+It does not lose because it misunderstands the reviews. Its outputs are fluent,
+on-topic and recognisably summaries. It loses because it writes full sentences
+where the reference is a four-word headline. Pretraining taught it what a
+summary looks like in general; this task rewards a specific and unusual shape,
+and fluency in the wrong shape scores no better than noise. What fine-tuning
+buys here is form, not knowledge. We think this is under-appreciated in
+applied settings, where a pretrained model that produces plausible output is
+easily assumed to be working.
+
+The second finding concerns what per-review summarization conceals. For a baby
+formula product with a 3.13 star average, the generated per-review summaries
+read as broadly positive. Aspect mining over the same reviews returns a
+criticism list headed by \emph{arsenic levels}, \emph{health} and
+\emph{constipation}. The complaint is present in the reviews, survives into
+several individual generated summaries, and is invisible in both the star
+average and the overall positive impression the summaries create.
+
+\textbf{Contributions.}
+\begin{enumerate}
+  \item We document a case where a pretrained encoder--decoder scores below a
+    trivial extractive baseline, and attribute it to a mismatch of output form
+    rather than of content (Section~\ref{sec:analysis}).
+  \item We characterise what ROUGE can and cannot support when references are
+    approximately four words long, where the metric becomes coarse enough that
+    absolute values are not comparable across benchmarks.
+  \item We show that aggregate aspect mining surfaces safety-relevant
+    complaints that both the star average and the per-review summaries hide,
+    and argue that review summarization should be evaluated at the aggregate
+    level rather than only per review.
+\end{enumerate}
+
+\textbf{Scope.} This is a small study and we state its limits at the outset.
+Results come from one dataset in one product domain, one model size, a single
+seed and a single training epoch on CPU. We report no significance test, and
+the from-scratch recurrent baseline we implemented was never trained, so the
+paper contains no from-scratch comparison. Section~\ref{sec:limitations}
+returns to each of these. The claims we make are correspondingly narrow: we
+describe a failure mode and an evaluation hazard, not a new method.
