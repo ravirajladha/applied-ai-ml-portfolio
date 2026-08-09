@@ -1,13 +1,60 @@
 \section{Limitations}
 \label{sec:limitations}
-% STATUS: stub. SESSION 8. Be ruthless here -- it is what makes the rest
-%   credible. Everything in EXPERIMENT_FACTS.md "cannot claim" goes in.
-% - No from-scratch baseline: the LSTM is implemented but never trained.
-% - One dataset, one domain, one model size, one seed, one epoch.
-% - No significance testing.
-% - Eval-set-size observation (24 -> 0.234 vs 300 -> 0.174) is anecdotal.
-% - Aspect miner: frequency-based, no negation handling, singular/plural not
-%   collapsed across lists (formula praised while formulas criticised).
-% - No human evaluation, no faithfulness metric.
 
-TODO
+We set these out in full, because several of them bear directly on how far the
+claims of Section~\ref{sec:analysis} can be carried.
+
+\textbf{No from-scratch baseline.} We implemented a recurrent encoder--decoder
+with additive attention \cite{bahdanau2015attention} and verified that it
+learns, but never trained it on the full data. The paper therefore contains no
+comparison between a model trained from scratch and a pretrained one adapted,
+which is the comparison that would establish how much of the fine-tuned model's
+performance is owed to pretraining. This is the single largest gap.
+
+\textbf{No significance testing.} We report point estimates from one run. The
+differences we discuss are large relative to the values involved and consistent
+in direction, but we did not test them, and the three ROUGE variants are
+correlated, so their agreement is weaker evidence than three independent
+measurements would be.
+
+\textbf{No human evaluation.} As Section~\ref{sec:rouge-limits} concedes, if
+ROUGE substantially measures form-fit then it cannot tell us whether the
+fine-tuned summaries are more useful to a reader --- only that they match the
+reference register. Establishing usefulness requires human judgement, or at
+minimum an embedding-based metric \cite{zhang2020bertscore}. We ran neither.
+
+\textbf{A single configuration.} One dataset, one product domain, one model
+size, one seed, one epoch, 4{,}000 training examples. We do not know how much
+of the fine-tuning gain is available at 1{,}000 examples or how much more
+remains at 40{,}000, and the form-fit account predicts the curve should
+saturate early --- register is a cheap thing to learn --- but we did not
+measure it.
+
+\textbf{The evaluation-size observation is anecdotal.} The difference between
+0.234 on 24 reviews and 0.174 on 300 was noticed in passing, not produced by a
+controlled sweep over evaluation-set sizes. It is consistent with the
+coarseness argument of Section~\ref{sec:rouge-limits}, and it should be treated
+as motivation for that argument rather than as evidence for it.
+
+\textbf{The aggregation ceiling is raised, not removed.} As
+Section~\ref{sec:method} describes, the reduce step re-enters the same
+256-token encoder, so it saturates at roughly forty to fifty per-review
+summaries. The demonstration uses sixty reviews and therefore sits at the edge
+of that regime; a hierarchical reduce would remove the limit and was not
+implemented.
+
+\textbf{The aspect miner is a heuristic.} It is frequency-and-polarity based,
+not a trained aspect-based sentiment model. It cannot resolve a negated aspect
+inside an otherwise positive sentence, and it collapses singular and plural
+forms within each list but not across them, which is why \emph{formula} and
+\emph{formulas} head opposite lists in Section~\ref{sec:analysis}.
+
+\textbf{The displayed verdict is partly templated.} The paragraph the
+application presents combines a threshold-selected mood phrase, the ranked
+aspect lists and one generated sentence. The neural model contributes the
+summaries and that sentence; the surrounding structure is fixed. We describe it
+this way in Section~\ref{sec:method} to avoid implying end-to-end generation.
+
+\textbf{Training cost was not instrumented.} No timing record survives the
+training run, so we report the hardware and the budget in examples and epochs
+but no wall-clock figure.

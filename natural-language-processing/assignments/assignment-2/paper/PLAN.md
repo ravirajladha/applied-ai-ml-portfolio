@@ -158,12 +158,12 @@ That is what research is. Most people never get that far.
          polarity, and a model tuned on 78.1% positive data knows which. So it
          fails precisely on mixed reviews, the informative ones.
 
-- [ ] **Session 8 — Limitations + Conclusion**
-      *Files:* `sections/08-limitations.tex`, `sections/09-conclusion.tex`
-      *Answer before we write:*
-      1. Name the single biggest weakness of this paper without looking at
-         `EXPERIMENT_FACTS.md`.
-      2. If a reviewer had one objection, what would it be?
+- [x] **Session 8 — Limitations + Conclusion** *(2026-08-09)*
+      Nine limitations stated in full, the largest being **no trained
+      from-scratch baseline** — without it we cannot separate how much of the
+      result is owed to pretraining. Conclusion states the two findings and
+      names the two missing measurements as the next steps.
+      **First complete draft: all nine sections written, 7 pages.**
 
 - [ ] **Session 9 — Revision pass**
       Read the whole thing top to bottom out loud. Rewrite the abstract last,

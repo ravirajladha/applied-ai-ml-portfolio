@@ -1,8 +1,33 @@
 \section{Conclusion}
-% STATUS: stub. SESSION 8.
-% GOAL: ~0.3 page. Two claims, one recommendation. No new information.
-%   1. Task fit, not fluency, is what fine-tuning buys on headline-style refs.
-%   2. Per-review summarization conceals aggregate signal that matters.
-%   -> Recommendation: evaluate review summarizers at the aggregate level.
+\label{sec:conclusion}
 
-TODO
+We fine-tuned a 60M-parameter encoder--decoder to summarise product reviews
+against references that are four-word customer headlines, and report two
+findings.
+
+The first is that the same pretrained model, before fine-tuning, scores below a
+baseline that returns the review's first sentence. Its output is fluent and on
+topic; it is the wrong shape. What fine-tuning contributes on a task of this
+kind is conformity to the target register rather than knowledge of the domain,
+and a metric built on surface overlap rewards that conformity heavily. The
+practical reading is that a pretrained model producing plausible output on a
+new task is not evidence that it fits the task, and the gap between the two is
+largest exactly where references are short and stylised --- which describes a
+great deal of user-generated text.
+
+The second is that summarizing reviews individually removes the signal a buyer
+most needs. Per-review summaries, a star average and a summary-of-summaries are
+all averaging operations, and a complaint held by a minority survives none of
+them. In our demonstration a sustained concern about arsenic levels in an
+infant product was invisible in a 3.13 star average and in a set of
+predominantly positive generated summaries, and appeared only in an aspect
+analysis that ranks terms by how disproportionately they attach to one
+polarity rather than by how often they occur.
+
+We therefore suggest that review summarization systems should be specified and
+evaluated at the aggregate level, and that per-review ROUGE, whatever its
+value as a development signal, does not measure the thing such a system exists
+to do. The most useful next steps on this work are the two measurements we did
+not make: training the from-scratch baseline to separate the contribution of
+pretraining, and a human or embedding-based evaluation to establish whether
+matching the reference register corresponds to being more useful to a reader.
