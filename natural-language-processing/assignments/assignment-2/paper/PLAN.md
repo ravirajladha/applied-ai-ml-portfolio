@@ -93,17 +93,19 @@ That is what research is. Most people never get that far.
       not knowledge. This is the same insight as the 3-bigram observation from
       Session 2, pointed at the model instead of at the metric.
 
-- [ ] **Session 4 — Related Work**
-      *File:* `sections/02-related-work.tex`
-      *Read first:* **abstracts only** (one page each, five minutes total) of
-      `seq2seq-sutskever-2014`, `attention-bahdanau-2015`,
-      `pointer-generator-see-2017`, `meansum-chu-liu-2019`.
-      *Answer before we write:*
-      1. Before attention, the encoder squeezed a whole sentence into one fixed
-         vector. Why is that a problem for long reviews?
-      2. MeanSum summarises many reviews at once without training on
-         summary labels. How is our map–reduce approach different?
-      3. Which of these four is closest to what we built, and why?
+- [x] **Session 4 — Related Work** *(2026-08-09)*
+      Four themed paragraphs rather than a list: the encoder--decoder lineage,
+      pretraining and its benchmarks, opinion summarization, and evaluation.
+      *Two load-bearing points placed here deliberately:*
+      (a) prior systems are reported on news corpora whose references are
+      paragraphs or at least full sentences — ours are four-word headlines, so
+      absolute ROUGE is not comparable. Stated here so Section 7.2 can lean on
+      it without re-arguing.
+      (b) MeanSum and Bražinskas both emit **one fluent paragraph** per
+      product. We emit per-review summaries plus a structured aspect list,
+      because a fluent paragraph is exactly the format in which a minority
+      complaint disappears. That is the difference our arsenic finding depends
+      on.
 
 - [ ] **Session 5 — Method**
       *File:* `sections/04-method.tex`

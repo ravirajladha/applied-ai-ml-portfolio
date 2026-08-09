@@ -1,15 +1,60 @@
 \section{Related Work}
-% STATUS: stub. SESSION 4 (read the PDFs in refs/ first).
-% GOAL: ~0.75 page, three short paragraphs. Do NOT list papers; group them.
-%   P1 Encoder-decoder summarization: \cite{sutskever2014seq2seq},
-%      \cite{bahdanau2015attention}, \cite{vaswani2017attention},
-%      \cite{see2017pointer}. End at: pretraining changed the cost structure.
-%   P2 Pretrained summarizers: \cite{raffel2020t5}, \cite{liu2019bertsum},
-%      \cite{zhang2020pegasus}. Note these are evaluated on news with
-%      multi-sentence references, unlike ours. Sets up our ROUGE argument.
-%   P3 Opinion summarization + evaluation: \cite{chu2019meansum},
-%      \cite{brazinskas2020fewshot} for aggregation; \cite{lin2004rouge},
-%      \cite{zhang2020bertscore}, \cite{fabbri2021summeval} for metric limits;
-%      \cite{maynez2020faithfulness} for dropped-content failures.
+\label{sec:related}
 
-TODO
+\textbf{Encoder--decoder summarization.} Abstractive summarization inherits its
+architecture from neural machine translation. Sutskever et al.
+\cite{sutskever2014seq2seq} showed that a recurrent encoder could compress a
+variable-length input into a fixed-length vector from which a decoder generates
+the output. That fixed-length vector is also the approach's weakness: a single
+state must carry an entire document, and the longer the document the more it
+must discard. Bahdanau et al. \cite{bahdanau2015attention} removed the
+bottleneck by letting the decoder attend over all encoder states, learning a
+soft alignment between output and input positions. Vaswani et al.
+\cite{vaswani2017attention} then discarded recurrence entirely in favour of
+self-attention. Within summarization specifically, See et al.
+\cite{see2017pointer} addressed two failure modes of the recurrent formulation
+--- inability to reproduce rare words, and repetition --- with a pointer
+mechanism that copies from the source and a coverage penalty. Our recurrent
+baseline follows this lineage, using additive attention
+\cite{bahdanau2015attention}, though we did not train it (Section~\ref{sec:limitations}).
+
+\textbf{Pretraining and its benchmarks.} Pretraining changed the cost structure
+of the task: a general model is adapted with comparatively little in-domain
+data. T5 \cite{raffel2020t5} casts every task as text-to-text and selects among
+them with a textual prefix, which is the model and the mechanism we use. Liu
+and Lapata \cite{liu2019bertsum} adapted a pretrained encoder to both
+extractive and abstractive summarization, and PEGASUS \cite{zhang2020pegasus}
+introduced a pretraining objective designed for summarization specifically.
+
+These systems are, with few exceptions, developed and reported on news
+corpora, where a reference summary is a paragraph or --- in the most compressed
+case --- a single sentence. Our references are neither. They are headlines a
+customer typed into a form, averaging four words. This is not a minor
+difference of degree: it changes what the standard metric can measure, which we
+take up in Section~\ref{sec:analysis}. We stress it here because it is the main
+reason absolute ROUGE values in this paper should not be read against the
+numbers those systems report.
+
+\textbf{Opinion summarization.} Summarizing many reviews of one product is a
+distinct problem, and it is usually attacked without reference summaries, since
+no customer writes a summary of everyone else's opinions. MeanSum
+\cite{chu2019meansum} trains an unsupervised model to generate a single review-
+like summary whose encoding stays close to the mean of the input reviews.
+Bra\v{z}inskas et al. \cite{brazinskas2020fewshot} showed that a small number of
+annotated summaries is enough to adapt such a model. Both produce one fluent
+paragraph per product. We differ in output rather than ambition: we combine
+per-review summaries through a map--reduce procedure and pair them with a
+structured list of praised and criticised aspects, because a fluent paragraph
+is precisely the format in which a minority complaint disappears --- the effect
+we document in Section~\ref{sec:analysis}.
+
+\textbf{Evaluation.} ROUGE \cite{lin2004rouge} remains the default and was
+designed against multi-sentence references. Its limits are well documented:
+BERTScore \cite{zhang2020bertscore} replaces surface overlap with contextual
+embedding similarity, and SummEval \cite{fabbri2021summeval} found that
+automatic metrics, ROUGE included, correlate weakly with human judgement.
+Maynez et al. \cite{maynez2020faithfulness} showed further that overlap metrics
+are largely blind to faithfulness, since a summary can score well while
+asserting something the source does not support. We report ROUGE, and
+Section~\ref{sec:analysis} sets out what we believe it does and does not
+establish in our setting.
