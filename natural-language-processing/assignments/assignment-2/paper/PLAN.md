@@ -136,18 +136,27 @@ That is what research is. Most people never get that far.
       consistency across three correlated ROUGE variants is weak evidence. We
       say so rather than letting the reader assume otherwise.
 
-- [ ] **Session 7 — Analysis** ← *the important one*
-      *File:* `sections/07-analysis.tex`
-      *Read first:* `refs/faithfulness-maynez-2020.pdf`, **abstract + section
-      1**, and `refs/summeval-fabbri-2021.pdf`, **abstract only**.
-      *Answer before we write:*
-      1. Our model turned "offensive gas producer!!!" into "a great treat!".
-         Is that a *hallucination*, or a different kind of error? Name it.
-      2. SummEval found ROUGE agrees poorly with human judgement. Does that
-         destroy our result, or not? Defend your answer.
-      3. The baby formula case: why did the star average hide the arsenic
-         complaints?
-      *Budget two sessions if it needs them.* This section is the paper.
+- [x] **Session 7 — Analysis** *(2026-08-09)* ← *the important one*
+      Four subsections: fluency vs task fit, what ROUGE supports here, what
+      per-review summarization hides, and error analysis.
+      **The three arguments, in case they ever need defending:**
+      1. *Why fluent loses.* A 15-word fluent sentence has 15 chances to emit a
+         token the 4-word reference lacks and only 4 to hit one it has.
+         Precision collapses. Lead-1 wins because it draws on the same
+         vocabulary the customer had in mind when writing the headline.
+      2. *The SummEval turn.* Its weak metric–human correlation does **not**
+         sink the result; it clarifies it. We do not claim the un-tuned model
+         writes worse summaries — a human might prefer them. We claim it
+         *scores* worse because ROUGE largely measures form-fit. SummEval says
+         ROUGE and human judgement come apart; we exhibit a mechanism. **The
+         cost we accept:** our own 61.2% gain then shows the model learned the
+         register, not that shoppers would prefer it. No human eval was run.
+      3. *"A great treat!" is not a hallucination.* Every word is entailed by
+         the source; a faithfulness checker passes it. It is faithful to a part
+         and unrepresentative of the whole — lost proportion, not accuracy. And
+         it is systematic: a 4-word summary of a mixed review must pick a
+         polarity, and a model tuned on 78.1% positive data knows which. So it
+         fails precisely on mixed reviews, the informative ones.
 
 - [ ] **Session 8 — Limitations + Conclusion**
       *Files:* `sections/08-limitations.tex`, `sections/09-conclusion.tex`

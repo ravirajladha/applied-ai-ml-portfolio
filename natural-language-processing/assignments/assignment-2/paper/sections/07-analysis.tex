@@ -1,21 +1,139 @@
 \section{Analysis}
 \label{sec:analysis}
-% STATUS: stub. SESSION 7. This is the paper's real contribution -- give it
-%   the most care and the most space (~1.25 pages).
-% 7.1 Why fluency loses. Un-tuned model writes grammatical sentences; the
-%     reference is a 4-word headline. Right content, wrong shape. Use the
-%     qualitative pairs in EXPERIMENT_FACTS.md sec.5.
-% 7.2 What ROUGE can and cannot say here. With ~4-word references there are
-%     very few bigrams, so ROUGE-2 sits near its floor. Absolute values are
-%     NOT comparable to news benchmarks \cite{zhang2020pegasus}. Argue the
-%     comparison between systems is still valid; the absolute number is not.
-%     Concede \cite{fabbri2021summeval}, \cite{zhang2020bertscore}.
-% 7.3 The aggregation finding. Baby formula, 3.13 stars, positive summaries,
-%     yet criticism list = arsenic / health / constipation. Quote the generated
-%     summaries in EXPERIMENT_FACTS.md sec.6. THIS IS THE STRONGEST RESULT.
-% 7.4 Error analysis. "offensive gas producer!!!" -> "a great treat!": the
-%     model keeps praise and drops the complaint. Connect to
-%     \cite{maynez2020faithfulness}. Mixed-polarity reviews are the weak spot,
-%     and they are exactly the informative ones.
 
-TODO
+\subsection{Fluency is not task fit}
+
+The un-tuned model's outputs are not incoherent. They are grammatical, on
+topic, and would be recognised by any reader as summaries of the review they
+came from. They are also, in this evaluation, worse than returning the first
+sentence unchanged.
+
+The explanation is not in the content but in the shape. Pretraining on a large
+and varied corpus teaches a model what a summary looks like in general, and in
+general a summary is a sentence. Our references are what a customer types into
+a one-line form: a mean of 4.1 words, frequently a fragment, often with the
+grammatical subject omitted. A model producing a well-formed sentence of
+fifteen words has, by construction, fifteen chances to introduce a token the
+four-word reference does not contain, and only four chances to hit one it does.
+Precision collapses. The first sentence of the review, by contrast, is drawn
+from the same document and the same vocabulary the customer had in mind when
+writing their headline, and so overlaps with it more often than fluent
+paraphrase does.
+
+What fine-tuning supplies on 4{,}000 examples is not knowledge about food. It
+is the register: short, blunt, often verbless. This distinction is easy to lose
+in applied work, where a pretrained model that emits plausible output invites
+the conclusion that it is working. On this task it was producing the right
+content in a form the task does not reward, and no amount of additional
+pretraining would have fixed that.
+
+\subsection{What ROUGE can support here, and what it cannot}
+\label{sec:rouge-limits}
+
+Section~\ref{sec:data} established that the references average four words. The
+consequence for ROUGE-2 is arithmetic: a four-word reference contains three
+bigrams, so on a single example ROUGE-2 can take only the values $0$, $0.333$,
+$0.667$ and $1$. It is not a fine-grained measurement at this length but a
+four-way vote, and the corpus-level figure of 0.0448 is an average over such
+votes rather than a value any example took. A reference of paragraph length
+contains dozens of bigrams and behaves like a continuous quantity. Reporting
+our 0.0448 beside the ROUGE-2 values reported on news benchmarks would compare
+two different kinds of object.
+
+This also explains an observation we can only report anecdotally: an early
+evaluation on 24 reviews returned ROUGE-1 of 0.234, against 0.174 on the full
+300. A coarse per-example metric averaged over a small sample is a
+high-variance estimator, and the small sample happened to be flattering. We did
+not run this as a controlled sweep, and we do not present it as one.
+
+A reader may reasonably object that if ROUGE is a poor proxy for quality --- as
+SummEval \cite{fabbri2021summeval} found, reporting weak correlation between
+automatic metrics and human judgement --- then a result expressed entirely in
+ROUGE establishes little. We think this objection, taken seriously, does not
+undermine the finding of Section~\ref{sec:results} but clarifies it.
+
+Our claim is not that the un-tuned model writes worse summaries than Lead-1.
+Judged by a human reader, it may well write better ones: they are fluent,
+abstractive, and often capture the review's point, where Lead-1 simply copies a
+sentence that may or may not be the relevant one. The claim is that the
+un-tuned model scores worse, and that it does so because ROUGE is substantially
+measuring conformity to the reference's form. SummEval's result is that ROUGE
+and human judgement come apart; our result is a concrete mechanism by which
+they come apart on short references. The two are consistent, and the second is
+an instance of the first.
+
+The honest cost of accepting this is that it constrains what we may claim about
+our own model. If ROUGE largely measures form-fit, then the fine-tuned model's
+61.2\% improvement demonstrates that it learned the target register --- not
+that a shopper would prefer its summaries. We did not run a human evaluation,
+so we cannot speak to the latter. A metric such as BERTScore
+\cite{zhang2020bertscore}, which compares contextual embeddings rather than
+surface tokens, would be less sensitive to form and would be the natural next
+measurement; we did not run it.
+
+\subsection{What per-review summarization hides}
+
+The second finding concerns the aggregate. For the demonstration product, a
+baby formula with 60 reviews and a mean rating of 3.13 stars, sentence-level
+sentiment classifies 46 reviews positive, 13 negative and 1 neutral, and the
+per-review summaries read accordingly: \emph{``great product for baby''},
+\emph{``safe for my child''}, \emph{``good formula''}.
+
+The contrastive aspect lists tell a second story. The praised aspects are
+unremarkable --- \emph{formula}, \emph{milk}, \emph{earth}, \emph{breast},
+\emph{months}. The criticised aspects are \emph{formulas}, \emph{hard},
+\emph{health}, \emph{levels}, \emph{constipation}. Inspecting the reviews
+behind them, a minority of customers are discussing arsenic contamination, and
+the model's own summaries of those individual reviews state it plainly:
+\emph{``inorganic arsenic levels equal or higher than fda standard for drinking
+water''}.
+
+Every representation a shopper is normally offered conceals this. The star
+average of 3.13 conveys mild dissatisfaction of unspecified kind. The majority
+of per-review summaries are positive and, read in sequence, produce a positive
+impression. Even the reduce step, which compresses the summaries into one
+sentence, is a majority-driven operation: it is asked to summarise sixty
+summaries of which forty-six are favourable. A minority signal survives none of
+these, and it survives none of them for the same reason --- each is an
+averaging operation, and the complaint is a minority.
+
+The aspect list survives it precisely because it is not an averaging operation.
+Selecting terms by how disproportionately they fall on the negative side, and
+not by how often they occur overall, is what allows a complaint made by
+thirteen of sixty customers to appear at all. This is the argument for
+evaluating and designing review summarizers at the aggregate level: the
+information a buyer most needs is, structurally, the information that a
+summary of the majority removes. It is also, we note, the case in which getting
+it wrong matters most --- the minority report here concerns infant health.
+
+We temper this in one respect. The aspect miner is a frequency-and-polarity
+heuristic, and it shows: \emph{formula} heads the praised list while
+\emph{formulas} heads the criticised one, because singular and plural forms are
+collapsed within each list but not across them. A lemmatiser would resolve it.
+The finding does not depend on that defect, but the lists are noisier than they
+should be.
+
+\subsection{Error analysis}
+
+The failure in Table~\ref{tab:examples} --- a review praising a dog treat and
+then complaining at length about the flatulence it caused, summarised as
+\emph{``a great treat!''} --- is worth naming precisely, because it is not the
+error that summarization work usually attends to.
+
+Maynez et al. \cite{maynez2020faithfulness} distinguish hallucinations that
+misrepresent the source from those introducing content absent from it. This is
+neither. Every word of \emph{``a great treat!''} is supported by the review; a
+faithfulness metric checking whether each claim is entailed by the source would
+pass it. The summary is faithful to a part of the source and unrepresentative
+of the whole. What has been lost is not accuracy but proportion.
+
+This failure mode is systematic rather than incidental, and it follows from the
+output length. A four-word summary of a mixed review must choose one polarity,
+and a model fine-tuned on a corpus in which 78.1\% of reviews are positive has
+a clear prior about which to choose. The reviews on which it fails are
+therefore exactly the mixed ones --- which are also the reviews a shopper would
+most want summarised, since a uniformly positive review carries little
+information. It is the same structural problem the
+aggregate analysis exposes, reappearing at the level of a single document: a
+compression that must pick a side will pick the majority one, and the minority
+view is what the reader needed.
