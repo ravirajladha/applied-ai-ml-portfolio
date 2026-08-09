@@ -56,7 +56,9 @@ of rows.
 
 From the filtered pool we draw 4{,}000 training, 300 validation and 500 test
 reviews with seed 42. All reported results are computed on \textbf{300} of the
-held-out test reviews, none of which the model saw during training. We note
-that an earlier check on only 24 reviews gave a ROUGE-1 of 0.234 against 0.174
-on the full 300 --- the small sample was optimistic by roughly a third, which
-is why the smaller evaluation was abandoned.
+held-out test reviews, none of which the model saw during training. We note that during development, a check on only 24 reviews returned a ROUGE-1
+of approximately 0.23 where the full 300 returned approximately 0.17 --- the
+small sample was optimistic by roughly a third, which is why it was abandoned.
+Both figures come from an earlier run than the results in
+Section~\ref{sec:results} and we quote them only to the precision that
+comparison supports.

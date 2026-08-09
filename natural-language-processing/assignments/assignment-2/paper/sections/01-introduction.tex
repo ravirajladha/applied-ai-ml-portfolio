@@ -29,12 +29,13 @@ review's first sentence and nothing else scores 0.126 --- and the
 
 It does not lose because it misunderstands the reviews. Its outputs are fluent,
 on-topic and recognisably summaries. It loses because it writes full sentences
-where the reference is a four-word headline. Pretraining taught it what a
-summary looks like in general; this task rewards a specific and unusual shape,
-and fluency in the wrong shape scores no better than noise. What fine-tuning
-buys here is form, not knowledge. We think this is under-appreciated in
-applied settings, where a pretrained model that produces plausible output is
-easily assumed to be working.
+where the reference is a four-word headline: pretraining taught it what a
+summary looks like in general, and this task rewards a specific and unusual
+shape. What fine-tuning buys here is form, not knowledge.
+Section~\ref{sec:analysis} develops the argument and sets out what it costs us
+--- if the metric largely rewards conformity of form, then our own improvement
+shows the model learned the target register, not that a reader would prefer its
+output.
 
 The second finding concerns what per-review summarization conceals. For a baby
 formula product with a 3.13 star average, the generated per-review summaries

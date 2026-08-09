@@ -165,10 +165,20 @@ That is what research is. Most people never get that far.
       names the two missing measurements as the next steps.
       **First complete draft: all nine sections written, 7 pages.**
 
-- [ ] **Session 9 — Revision pass**
-      Read the whole thing top to bottom out loud. Rewrite the abstract last,
-      once you know what the paper actually says. Check every number against
-      `EXPERIMENT_FACTS.md`. Kill repetition between Results and Analysis.
+- [x] **Session 9 — Revision pass** *(2026-08-09)*
+      **Caught a real contradiction:** three sections quoted the full-300
+      ROUGE-1 as **0.174** while the results table said **0.1751**. The 0.174
+      came from the older run, riding in on the 24-review anecdote. Both
+      anecdote figures now appear as "approximately 0.23 / 0.17" with the run
+      difference stated. `EXPERIMENT_FACTS.md` §4 carries a warning not to
+      restore the precise figures.
+      Trimmed the Introduction where it duplicated Section 7.1, and removed
+      the claim that fluent output "scores no better than noise" — it scores
+      0.109, which is not noise. Overstatement, now cut.
+      Abstract rewritten last, on purpose, and now carries the concession that
+      our gain shows register learning rather than reader preference.
+      Build health: 7 pages, no undefined references, **zero overfull and zero
+      underfull boxes**.
 
 - [ ] **Session 10 — Polish and decide**
       Figures, spacing, column balance, final build. Then decide together:

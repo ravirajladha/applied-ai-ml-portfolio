@@ -111,6 +111,13 @@ An early check on **24** reviews gave ROUGE-1 **0.234**; the full **300** gave
 observation but was not run as a proper sweep — the paper must either present
 it as an anecdote or we run the sweep properly.
 
+**Caution, added session 9.** Both of those figures come from the *earlier* run
+— note that 0.174 is not the 0.1751 in the results table above. Quoting them at
+three decimals next to the table would look like a contradiction. The paper
+therefore says "approximately 0.23" and "approximately 0.17" and states that
+they come from an earlier run. Do not restore the precise figures unless the
+whole comparison is re-run.
+
 ## 5. Qualitative examples (test set, model vs human headline)
 
 | Human headline | Model output |
