@@ -1,14 +1,83 @@
 \section{Method}
-% STATUS: stub. SESSION 5.
-% GOAL: ~1 page, three subsections.
-% 4.1 Per-review summarization: t5-small, "summarize: " prefix, 128 train /
-%     256 inference token asymmetry and WHY (quadratic attention, median review
-%     74 tokens), 4 beams, no_repeat_ngram=2.
-% 4.2 Map-reduce aggregation: encoder reads at most 256 tokens, 50 reviews far
-%     exceed that, so concatenation silently truncates. Summarize each (map),
-%     then summarize the summaries (reduce). Compare to \cite{chu2019meansum}.
-% 4.3 Aspect mining: sentence split -> VADER \cite{hutto2014vader} -> rank
-%     phrases by distinctiveness to one polarity. State it is frequency-based,
-%     NOT a trained ABSA model. Parameters in EXPERIMENT_FACTS.md sec.7.
+\label{sec:method}
 
-TODO
+The system has three parts: a per-review summarizer, a map--reduce procedure
+that extends it to many reviews, and an aspect miner that answers the question
+the summarizer structurally cannot.
+
+\subsection{Per-review summarization}
+
+We fine-tune \texttt{t5-small} \cite{raffel2020t5} on (review, headline) pairs.
+T5 is a multi-task text-to-text model in which the task is selected by a
+textual prefix, so each input is prepended with \texttt{"summarize: "}.
+Decoding uses beam search with four beams and blocks repeated bigrams; without
+the latter the model degenerates into repetition (\emph{``good good good''}) on
+targets this short.
+
+\subsection{Map--reduce aggregation}
+
+A product page carries tens or hundreds of reviews, and the encoder accepts at
+most 256 tokens. Concatenating the reviews and passing them in one call does
+not fail --- it silently truncates, so most reviews never influence the output
+at all. We therefore aggregate in two stages, following the map--reduce shape:
+each review is summarised independently (\emph{map}), the resulting summaries
+are joined into a single pseudo-document, and that document is passed back
+through the same model (\emph{reduce}) with a doubled generation budget.
+
+This raises the ceiling but does not remove it, and we state the consequence
+plainly: the reduce step is itself subject to the 256-token encoder limit. With
+per-review summaries averaging four to six tokens, a single reduce pass
+saturates somewhere around forty to fifty reviews, beyond which the later
+summaries are truncated exactly as the raw reviews would have been. A
+hierarchical reduce --- reducing in batches, then reducing the results ---
+would remove the ceiling entirely. We did not implement it, and the
+demonstration in Section~\ref{sec:analysis} uses sixty reviews, which is inside
+the regime where mild truncation is possible. This is a limitation of our
+implementation, not of the approach.
+
+\subsection{Aspect mining}
+
+Neither a per-review summary nor a reduced summary answers the question the
+task actually poses --- which aspects do customers as a group praise, and which
+do they criticise. That answer is a property of the collection, not of any
+review in it. We compute it separately.
+
+Reviews are split into sentences and each sentence is scored with VADER
+\cite{hutto2014vader}, a rule-based sentiment analyser. Sentences above $+0.2$
+form the positive pool and those below $-0.2$ the negative pool; the stricter
+sentence threshold means only clearly polar sentences contribute aspects. A
+separate, looser threshold of $\pm0.05$ on the whole review is used for the
+positive/negative/neutral counts reported to the user.
+
+Candidate aspects are unigrams and bigrams, with English stop words removed
+along with a hand-built list of \emph{opinion} words. This second list matters:
+terms such as \emph{good}, \emph{love} and \emph{disappointed} carry the
+verdict rather than the topic, and terms such as \emph{product},
+\emph{amazon} and \emph{bought} are true of every review. Neither identifies
+what is being discussed.
+
+Ranking candidates by raw frequency does not work. For a cat toy, \emph{cat}
+and \emph{toy} head both lists, and praise and criticism look identical. We
+instead select \emph{contrastively}: a term is listed on a side only if the
+share of its usage falling on that side, measured as a rate rather than a raw
+count because the two pools differ in size, is at least $0.6$ --- that is,
+mentioned at least $1.5\times$ more often there. Terms with fewer than two
+mentions are dropped as noise. Finally, a unigram is discarded when it is
+dominated by a bigram containing it, so \emph{battery life} is preferred to
+\emph{battery} while a standalone \emph{flavor} survives.
+
+We emphasise what this is not. It is a frequency-and-polarity heuristic, not a
+trained aspect-based sentiment model. It identifies \emph{what} is discussed on
+each side; it cannot resolve a negated aspect inside an otherwise positive
+sentence.
+
+\subsection{The reported verdict}
+
+The paragraph the application shows is assembled from three sources rather
+than generated end to end, and we describe it as such. A mood phrase is chosen
+from the share of \emph{polar} reviews that are positive --- neutral reviews
+are excluded from this ratio deliberately, since counting them drags a
+genuinely mixed product toward ``unhappy'' --- followed by the top five
+praised and criticised aspects, followed by the reduce step's generated
+sentence quoted verbatim. The neural component contributes the summaries and
+the quoted verdict; the structure around it is a template.

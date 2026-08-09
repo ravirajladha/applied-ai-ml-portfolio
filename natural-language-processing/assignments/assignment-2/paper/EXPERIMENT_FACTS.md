@@ -182,6 +182,46 @@ phrases by how *distinctive* they are to the positive vs negative side.
 Limitation to declare: cannot resolve a negated aspect inside an otherwise
 positive sentence.
 
+Details confirmed by reading `aspects.py` (2026-08-09), not previously written
+down anywhere:
+
+- Candidates are **unigrams and bigrams**.
+- Stop words are sklearn's English list **plus a hand-built opinion-word list**
+  (`good`, `love`, `disappointed`, and transaction filler like `product`,
+  `amazon`, `bought`). Without it the "aspects" would be verdicts.
+- Selection is **contrastive by rate, not raw frequency**: a term is listed on
+  a side only if its share of usage there is $\geq 0.6$ (~1.5x more often).
+  Rates rather than counts because the two sentence pools differ in size.
+- A unigram is dropped when a bigram containing it has an equal or higher
+  count, so "battery life" beats "battery".
+- **Two different thresholds:** sentences use $\pm0.2$ (strict — only clearly
+  polar sentences contribute aspects), whole reviews use $\pm0.05$ (loose) for
+  the positive/negative/neutral counts.
+- `polarity_share` **excludes neutral reviews** on purpose. With 3 pos / 3 neg
+  / 2 neutral, including them gives 0.375 and reads as "mostly unhappy"; the
+  correct reading is "mixed".
+- There is a **non-NLTK fallback lexicon** so the app never hard-fails offline
+  — relevant to the OSHA-lab question.
+
+## 7b. Two facts found by reading the code — both belong in the paper
+
+**The map--reduce ceiling is not removed, only raised.** The reduce step joins
+the per-review summaries into one pseudo-document and passes it back through
+the *same* encoder, which still accepts only 256 tokens. At four to six tokens
+per summary, one reduce pass saturates around **40--50 reviews**; past that,
+later summaries are truncated exactly as raw reviews would have been. The demo
+uses **60 reviews**, so it sits just inside the regime where mild truncation is
+possible. A hierarchical reduce (reduce in batches, then reduce the results)
+would fix it. Not implemented. Declare this honestly — a reviewer would find it.
+
+**The reported verdict is a template, not end-to-end generation.** The
+paragraph the app displays is assembled from (a) a mood phrase chosen by
+threshold from `polarity_share`, (b) the top five praised and criticised
+aspects, and (c) the reduce step's generated sentence quoted verbatim. The
+neural model contributes the summaries and the quoted sentence; the sentence
+around them is a fixed template. The paper must not imply the whole paragraph
+was generated.
+
 ## 8. The LSTM baseline — written, never trained
 
 `model_lstm.py` + `attention.py`: bidirectional LSTM encoder, Bahdanau additive

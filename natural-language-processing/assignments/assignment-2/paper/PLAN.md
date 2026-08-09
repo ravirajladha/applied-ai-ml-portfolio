@@ -107,14 +107,18 @@ That is what research is. Most people never get that far.
       complaint disappears. That is the difference our arsenic finding depends
       on.
 
-- [ ] **Session 5 — Method**
-      *File:* `sections/04-method.tex`
-      *Read first:* nothing new. Instead re-read **our own** `aggregate.py` and
-      `aspects.py`. You wrote the paper's method; now describe it.
-      *Answer before we write:*
-      1. Why can we not just paste 50 reviews into the model at once?
-      2. What exactly does VADER give us, and what can it not tell us?
-      3. Why is training truncated to 128 tokens but inference allowed 256?
+- [x] **Session 5 — Method** *(2026-08-09)*
+      Written from a close read of `aggregate.py` and `aspects.py`, which
+      turned up **two facts nobody had written down** (now in
+      `EXPERIMENT_FACTS.md` §7b):
+      1. **The map--reduce ceiling is raised, not removed.** The reduce step
+         re-enters the same 256-token encoder, so it saturates at ~40--50
+         reviews. The demo uses 60. Declared in the paper as an implementation
+         limitation, with hierarchical reduce named as the fix.
+      2. **The displayed verdict is a template**, not end-to-end generation —
+         mood phrase by threshold, plus top-5 aspect lists, plus the reduce
+         step's sentence quoted. The paper says so explicitly.
+      Both were found only by reading the code rather than trusting the docs.
 
 - [ ] **Session 6 — Results + the main figure**
       *File:* `sections/06-results.tex`, plus a plot into `figures/`
