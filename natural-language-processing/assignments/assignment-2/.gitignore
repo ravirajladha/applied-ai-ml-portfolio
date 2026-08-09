@@ -12,9 +12,9 @@ __pycache__/
 # The small demo/test CSVs in data/ ARE tracked on purpose, so the app and
 # the ROUGE evaluation work straight after cloning.
 
-# The portfolio root .gitignore excludes *.pdf and *.html (course material is
-# large and not worth versioning). For this assignment they are the graded
-# deliverable, so re-include them explicitly.
+# These three are the graded deliverable, so they are tracked on purpose.
+# (The portfolio repo that mirrors this project ignores *.pdf and *.html at its
+# root, because course material there is large; these negations override that.)
 !Group140.pdf
 !Group140.html
 !PS-11_Assignment-2.pdf

@@ -3,9 +3,10 @@
 This assignment is maintained in **two** places. This file records which is
 which, which direction changes flow, and what has been synced so far.
 
-> This file is **local to the portfolio repo only**. It is deliberately not
-> pushed to the team repo — it is our own bookkeeping, not something the group
-> needs to read.
+> **For the group:** the canonical copy of this project is maintained inside a
+> personal AI/ML portfolio repo and mirrored here. That is why the git history
+> in this repo arrives in large, squashed chunks rather than commit by commit.
+> Nothing here depends on that — clone this repo and everything works.
 
 ---
 
@@ -46,7 +47,7 @@ git checkout -b <branch-name> main
 # wipe tracked files, then copy our folder's contents over the top
 git rm -r --quiet .
 cp -r "<portfolio>/natural-language-processing/assignments/assignment-2/." .
-rm -rf .venv models __pycache__ .ipynb_checkpoints SYNC.md   # never push these
+rm -rf .venv models __pycache__ .ipynb_checkpoints   # never push these
 
 git add -A && git commit && git push -u origin <branch-name>
 ```
@@ -56,8 +57,7 @@ Then open a PR into `main` so the group can review before it lands.
 ### Never pushed to the team repo
 
 - `.venv/`, `models/`, `__pycache__/`, `.ipynb_checkpoints/` — build artefacts
-  and the 234 MB model, all git-ignored
-- `SYNC.md` — this file
+  and the 234 MB model, all git-ignored. `train.py` rebuilds the model.
 
 ---
 
@@ -66,7 +66,10 @@ Then open a PR into `main` so the group can review before it lands.
 | Date | Ours (`origin/master`) | Team (`team`) | What went across |
 |---|---|---|---|
 | 2026-08-07 | not yet tracked | `main` @ `9ee93dc` | First working end-to-end version, pushed before the portfolio started tracking this folder. Pre-split layout: `train.py`, `summarizer.py`, `app.py`. |
-| 2026-08-09 | see commit below | branch (pending PR) | The by-task/by-owner split, Group 140 details, regenerated `Group140.pdf`/`.html`. |
+| 2026-08-09 | `master` @ `42507f9` | `split-by-task-and-owner` @ `d4b21e0` | The by-task/by-owner split, Group 140 details, regenerated `Group140.pdf`/`.html`. **Branch pushed, PR into `main` not yet opened.** |
+
+Diff of `d4b21e0` against their `main`: 29 files changed, 17 of them new
+modules — `+3130 / -1699`.
 
 ### What changed in the 2026-08-09 sync
 
