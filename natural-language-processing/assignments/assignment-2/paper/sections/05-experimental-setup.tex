@@ -1,11 +1,68 @@
 \section{Experimental Setup}
-% STATUS: stub. SESSION 2 (pairs naturally with Data).
-% GOAL: ~0.5 page. Everything needed to reproduce.
-% Hyperparameters table from EXPERIMENT_FACTS.md sec.3.
-% Baselines and why each: Lead-1 (is the task trivially extractive?),
-%   un-tuned t5-small (does fine-tuning do anything at all?).
-% Hardware: CPU only, ~112 min. NOTE: README says ~50 min for the same run.
-%   RESOLVE THIS before writing. Do not cite a number you have not checked.
-% Metric: ROUGE-1/2/L \cite{lin2004rouge}, HuggingFace evaluate.
+\label{sec:setup}
 
-TODO
+\subsection{Model and training}
+
+We fine-tune \texttt{t5-small} \cite{raffel2020t5}, a 60M-parameter
+encoder--decoder. T5 is trained as a multi-task text-to-text model, so every
+input must declare its task; we prepend the standard \texttt{"summarize: "}
+prefix. Hyperparameters are given in Table~\ref{tab:hyper}.
+
+\begin{table}[t]
+\caption{Training and decoding configuration.}
+\label{tab:hyper}
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Setting} & \textbf{Value} \\
+\midrule
+Base model              & \texttt{t5-small} (60M) \\
+Task prefix             & \texttt{"summarize: "} \\
+Training examples       & 4{,}000 \\
+Epochs                  & 1 \\
+Batch size              & 8 \\
+Learning rate           & $3\times10^{-4}$ \\
+Max input (training)    & 128 tokens \\
+Max input (inference)   & 256 tokens \\
+Max target              & 32 tokens \\
+Beam size               & 4 \\
+No-repeat $n$-gram      & 2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two choices deserve comment. First, the input is truncated harder during
+training (128 tokens) than at inference (256). Attention cost grows with the
+square of sequence length and this model was trained on CPU alone, so halving
+the training sequence roughly halves the cost per example. The median review is
+74 tokens, and reviews tend to state their verdict early, so the truncation
+discards little of what the target depends on. Second, decoding blocks repeated
+bigrams; without it the model is prone to degenerate repetition
+(\emph{``good good good''}) on short targets.
+
+\textbf{Hardware and runtime.} Training ran on CPU only, with no GPU available.
+We deliberately do not report a wall-clock figure: the run was not instrumented
+and no training-state record survives, so the two informal timings recorded in
+our own project notes (approximately 50 and approximately 112 minutes)
+cannot be reconciled after the fact. What matters for the argument is only that
+the entire budget was a single epoch over 4{,}000 examples on commodity CPU
+hardware --- the regime a student or a small team actually works in.
+
+\subsection{Baselines}
+
+We compare against two baselines, each chosen to answer a specific question.
+
+\textbf{Lead-1} returns the first sentence of the review verbatim. It asks
+whether the task is trivially extractive. It is a deceptively strong baseline
+here, because customers frequently reuse their opening words in their headline.
+
+\textbf{Un-tuned \texttt{t5-small}} is the same pretrained checkpoint with the
+same prompt and decoding settings, but no fine-tuning. It isolates the
+contribution of in-domain fine-tuning from the contribution of pretraining.
+
+\subsection{Metric}
+
+We report ROUGE-1, ROUGE-2 and ROUGE-L \cite{lin2004rouge} against the
+customer-written headline, computed with the HuggingFace \texttt{evaluate}
+implementation over the 300 held-out reviews. We report no significance test;
+Section~\ref{sec:limitations} states what that costs us.

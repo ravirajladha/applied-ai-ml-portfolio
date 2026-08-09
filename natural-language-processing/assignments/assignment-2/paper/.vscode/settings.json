@@ -23,6 +23,11 @@
     }
   ],
 
+  // Keep intermediates in .build/, exactly like build.sh. This matters: a
+  // stale main.aux sitting next to main.tex silently shadows the fresh one and
+  // breaks every \ref and \cite in the document.
+  "latex-workshop.latex.outDir": "%DIR%/.build",
+
   // Rebuild every time you save. This is what Overleaf feels like.
   "latex-workshop.latex.autoBuild.run": "onSave",
 

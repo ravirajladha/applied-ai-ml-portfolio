@@ -69,18 +69,18 @@ That is what research is. Most people never get that far.
       configured, `EXPERIMENT_FACTS.md` extracted from the notebook,
       abstract drafted. Builds to 2 pages.
 
-- [ ] **Session 2 — Data + Experimental Setup**
-      *Files:* `sections/03-data.tex`, `sections/05-experimental-setup.tex`
-      *Read first:* `refs/rouge-lin-2004.pdf`, **pages 1–3 only** (sections 1
-      and 2 — the definitions of ROUGE-N and ROUGE-L).
-      *Answer before we write:*
-      1. In your own words, what does ROUGE-2 actually count?
-      2. Our reference summaries are 4 words long on average. How many bigrams
-         does a 4-word summary have? What does that do to ROUGE-2?
-      3. Why did we throw away reviews shorter than 50 characters?
-      *Why start here:* it is the most mechanical section. You will get a real
-      page written on day one, which matters more than starting with the hard
-      part.
+- [x] **Session 2 — Data + Experimental Setup** *(2026-08-09)*
+      Both sections written. Quiz answered: ROUGE-2 counts bigrams, a 4-word
+      reference has 3 of them. Settled both open questions — `TEAM_UPDATE.md`
+      now carries the notebook's ROUGE numbers, and the training wall-clock is
+      **unrecoverable** (no `trainer_state.json`, empty `_checkpoints/`), so
+      the paper reports none. Build hardened: intermediates go to `.build/`
+      after a stale `main.aux` silently broke every `\ref`. Paper is 3 pages.
+
+      *Carried forward into the paper:* a 4-word reference has 3 bigrams, so
+      ROUGE-2 on one example can only be 0, 0.333, 0.667 or 1.0. The metric is
+      four steps, not a smooth ruler. That is the seed of Section 7.2 — it is
+      why our 0.0448 must never be printed beside a news benchmark's 0.20.
 
 - [ ] **Session 3 — Introduction**
       *File:* `sections/01-introduction.tex`
@@ -171,9 +171,10 @@ That is what research is. Most people never get that far.
 
 ## Open questions to settle as we go
 
-- Training time: ~50 min or ~112 min? Two documents disagree. *(Session 6)*
-- ROUGE numbers: `TEAM_UPDATE.md` quotes an older run than the notebook. Fix
-  the docs so the project tells one story. *(Session 2)*
+- ~~Training time: ~50 min or ~112 min?~~ **Closed, Session 2.** Neither is
+  recoverable; the paper reports no wall-clock. See `EXPERIMENT_FACTS.md`.
+- ~~ROUGE numbers: `TEAM_UPDATE.md` quotes an older run.~~ **Closed, Session
+  2.** `TEAM_UPDATE.md` now carries the notebook's numbers, with a note.
 - Do we want a BERTScore run to complement ROUGE? It would strengthen the
   evaluation, but it is a new experiment and we said no new experiments.
   *(Decide at Session 7)*

@@ -86,15 +86,19 @@ pick it up automatically.
 
 | Model | ROUGE-1 | ROUGE-2 | ROUGE-L |
 |---|---|---|---|
-| Lead-1 (just take the first sentence) | 0.1245 | 0.0342 | 0.1144 |
-| `t5-small` **without** fine-tuning | 0.1080 | 0.0261 | 0.0977 |
-| **Ours — fine-tuned `t5-small`** | **0.1744** | **0.0445** | **0.1726** |
+| Lead-1 (just take the first sentence) | 0.1255 | 0.0341 | 0.1145 |
+| `t5-small` **without** fine-tuning | 0.1086 | 0.0266 | 0.0974 |
+| **Ours — fine-tuned `t5-small`** | **0.1751** | **0.0448** | **0.1723** |
+
+> These are the numbers from the executed notebook, i.e. the ones printed in
+> `Group140.pdf`. An earlier draft of this file quoted a slightly different run
+> (0.1744 / 0.1245); if you have that version, discard it. Quote the notebook.
 
 Two things worth noting for the viva:
 - The un-tuned model scores **below** the trivial baseline. It writes fluent
   full sentences when the task wants a terse headline — the right words in the
   wrong shape.
-- Fine-tuning lifted ROUGE-1 by **61%**, and also beat Lead-1, which is a
+- Fine-tuning lifted ROUGE-1 by **61%** over the un-tuned model, and also beat Lead-1, which is a
   deceptively strong baseline because customers often reuse their opening words
   in their headline.
 

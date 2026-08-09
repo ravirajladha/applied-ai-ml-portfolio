@@ -1,10 +1,62 @@
 \section{Data}
-% STATUS: stub. SESSION 2 -- do this first, it is the most mechanical.
-% GOAL: ~0.5 page + one table. All numbers from EXPERIMENT_FACTS.md sec.2.
-% MUST MAKE THE CENTRAL POINT: mean summary length is 4.1 words. The reference
-%   is a headline, not an abstract. Every later argument leans on this.
-% ALSO: 78.1 percent of reviews are 4-5 star (label skew); filter keeps 84.6
-%   percent; splits 4000/300/500 with 300 actually scored; seed 42.
-% CITE: \cite{mcauley2013amazon}.
+\label{sec:data}
 
-TODO
+We use the Amazon Fine Food Reviews corpus \cite{mcauley2013amazon}, 568{,}454
+reviews of grocery products. The corpus is attractive for supervised
+summarization for a practical reason: alongside the review body, every row
+carries the short headline the customer wrote themselves. That headline serves
+as a reference summary, so the dataset supplies hundreds of thousands of
+document--summary pairs at no annotation cost.
+
+That convenience comes with a condition that shapes everything in this paper.
+Table~\ref{tab:lengths} gives the length distribution.
+
+\begin{table}[t]
+\caption{Length statistics of the corpus, in words.}
+\label{tab:lengths}
+\centering
+\begin{tabular}{lrr}
+\toprule
+ & \textbf{Review} & \textbf{Reference summary} \\
+\midrule
+Mean            & 80.3   & 4.1  \\
+Median          & 56.0   & 4.0  \\
+90th percentile & 161.0  & 8.0  \\
+Maximum         & 3{,}432 & 42.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{The reference is a headline, not an abstract.} At a mean of 4.1 words
+and a median of 4, the target is roughly one twentieth the length of the input.
+This is not the regime that summarization benchmarks are usually built for:
+news corpora pair documents with multi-sentence abstracts. The consequence for
+evaluation is severe enough that we return to it in
+Section~\ref{sec:analysis}: a four-word reference contains only three bigrams,
+so ROUGE-2 on a single example can take just four distinct values.
+
+A second property of the corpus is a strong positivity skew --- 78.1\% of
+reviews carry four or five stars. We do not correct for this. It is a genuine
+property of the deployment setting, and it is precisely what makes the
+aggregate analysis of Section~\ref{sec:analysis} interesting: when almost
+everything is positive, the minority signal is easy to lose.
+
+\subsection{Filtering}
+
+A row is kept only if the review body is between 50 and 2{,}000 characters and
+the headline is between 10 and 80 characters. Both bounds remove pairs that
+carry no summarization task rather than pairs that are merely inconvenient. A
+30-character review such as \emph{``Great product, arrived fast.''} paired with
+the headline \emph{``Great product!''} asks the model to copy, not to compress;
+training on such pairs teaches copying. At the other end, a headline longer
+than 80 characters is no longer a headline. The filter retains \textbf{84.6\%}
+of rows.
+
+\subsection{Splits}
+
+From the filtered pool we draw 4{,}000 training, 300 validation and 500 test
+reviews with seed 42. All reported results are computed on \textbf{300} of the
+held-out test reviews, none of which the model saw during training. We note
+that an earlier check on only 24 reviews gave a ROUGE-1 of 0.234 against 0.174
+on the full 300 --- the small sample was optimistic by roughly a third, which
+is why the smaller evaluation was abandoned.

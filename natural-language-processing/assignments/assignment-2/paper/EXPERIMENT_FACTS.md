@@ -65,11 +65,24 @@ Filter retains **84.6%** of rows (3,383 of a 4,000 sample).
 | Beams | 4 |
 | `no_repeat_ngram_size` | 2 |
 | Hardware | CPU only (x64 Anaconda under emulation on Windows ARM64) |
-| Training wall-clock | ~112 min (README also cites ~50 min for the 4k run — **verify before citing**) |
+| Training wall-clock | **Unrecoverable — do not cite a number.** See below. |
 
 Training truncates to 128 tokens while inference allows 256: attention cost is
 quadratic in sequence length, and the median review is 74 tokens, so little is
 lost. This asymmetry is a legitimate methods detail for the paper.
+
+### Training time — resolved 2026-08-09: it cannot be recovered
+
+`README.md` said ~50 min; `TEAM_UPDATE.md` said ~112 min. Checked for evidence:
+`models/_checkpoints/` is **empty**, there is no `trainer_state.json` beside the
+saved model, and no timing is logged anywhere in `train_t5.py` or `train.py`.
+Both figures are unsourced recollections.
+
+**Decision: the paper reports no wall-clock figure.** It states CPU-only, one
+epoch, 4,000 examples, and says explicitly that the run was not instrumented.
+That is honest and costs the argument nothing. If we ever want the number, it
+requires re-running training with timing instrumentation — a new experiment,
+which is out of scope for this paper.
 
 ## 4. Main result — ROUGE on 300 held-out reviews
 
