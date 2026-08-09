@@ -180,10 +180,25 @@ That is what research is. Most people never get that far.
       Build health: 7 pages, no undefined references, **zero overfull and zero
       underfull boxes**.
 
-- [ ] **Session 10 — Polish and decide**
-      Figures, spacing, column balance, final build. Then decide together:
-      does this stay a personal artefact, go on your GitHub, or get cleaned up
-      for a student workshop?
+- [x] **Session 10 — Polish** *(2026-08-09)*
+      **Two problems found only by rendering pages and looking at them** —
+      no automated check reports either:
+      1. **Private `note` fields were printing in the reference list.** Every
+         entry ended with our own remarks ("Our 'what we should have also
+         measured' citation"). IEEEtran prints `note`. All annotations moved
+         to `%` comments in `references.bib`, with a warning at the top of
+         that file never to use `note` again.
+      2. **Last-page columns ended at different heights.** Added the `balance`
+         package and `\balance` before the bibliography.
+      Also verified the paper **builds from tracked files alone** (`git archive`
+      into a clean directory), so a fresh clone works — this is what the
+      tracked `figures/*.pdf` exception in `.gitignore` is for.
+      Final: 7 pages, 15 references, no undefined refs, zero overfull boxes.
+
+- [ ] **Still open — what is this paper for?**
+      Personal artefact / public on GitHub / cleaned up for a student
+      workshop. Only the third changes the work: it would make the untrained
+      LSTM baseline blocking, since the paper repeatedly admits that gap.
 
 ---
 

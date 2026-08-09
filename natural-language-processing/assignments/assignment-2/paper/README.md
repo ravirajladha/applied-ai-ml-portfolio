@@ -57,6 +57,25 @@ It runs four passes, which looks excessive but is how LaTeX works: the first
 pass discovers which sources you cited, `bibtex` formats them, and the last two
 settle the page numbers that the new bibliography just shifted.
 
+## Looking at a page without opening a viewer
+
+Useful when you want to check layout — column balance, a figure's placement, a
+table overflowing:
+
+```bash
+../.venv/Scripts/python.exe -c "import pymupdf; \
+  d=pymupdf.open('.build/main.pdf'); d[6].get_pixmap(dpi=110).save('page7.png')"
+```
+
+`pymupdf` is a development convenience only and is deliberately **not** in
+`requirements.txt` — the assignment does not need it. Install with
+`pip install pymupdf`.
+
+Rendering pages is worth doing before calling the paper finished. It is how we
+caught two problems no automated check reports: private `note` fields from
+`references.bib` printing inside the reference list, and the last page's
+columns ending at different heights.
+
 ## If the build breaks
 
 LaTeX errors are famously unhelpful. The useful line is almost never the last

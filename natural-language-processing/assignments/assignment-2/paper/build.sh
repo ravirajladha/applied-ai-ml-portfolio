@@ -42,7 +42,10 @@ if ! cp "$OUT/main.pdf" main.pdf 2>/dev/null; then
   exit 1
 fi
 
-PAGES=$(grep -c "^\\\\newlabel\|" /dev/null 2>/dev/null; pdfinfo main.pdf 2>/dev/null | awk '/^Pages/{print $2}')
+# pdfinfo ships with poppler and is not always present, so fall back to
+# counting page objects in the PDF itself.
+PAGES=$(pdfinfo main.pdf 2>/dev/null | awk '/^Pages/{print $2}')
+[ -z "$PAGES" ] && PAGES=$(grep -c "/Type[[:space:]]*/Page[^s]" main.pdf 2>/dev/null || true)
 echo
 echo "Built main.pdf ($(du -h main.pdf | cut -f1)${PAGES:+, $PAGES pages})"
 

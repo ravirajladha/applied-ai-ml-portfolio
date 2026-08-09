@@ -16,6 +16,9 @@
 \usepackage{booktabs}
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
+% Equalises the two columns on the final page. IEEEtran's own build message
+% asks for this to be done by hand; \balance does it automatically.
+\usepackage{balance}
 
 % Nicer tables: no vertical rules, a little breathing room.
 \renewcommand{\arraystretch}{1.15}
@@ -54,6 +57,7 @@ mining, aspect extraction, ROUGE, low-resource evaluation
 \input{sections/08-limitations}
 \input{sections/09-conclusion}
 
+\balance
 \bibliographystyle{IEEEtran}
 \bibliography{references}
 
