@@ -120,14 +120,21 @@ That is what research is. Most people never get that far.
          step's sentence quoted. The paper says so explicitly.
       Both were found only by reading the code rather than trusting the docs.
 
-- [ ] **Session 6 — Results + the main figure**
-      *File:* `sections/06-results.tex`, plus a plot into `figures/`
-      *Read first:* nothing. This is a making session.
-      *Task:* build the ROUGE comparison table and one clean figure. Also
-      **resolve the training-time discrepancy** (README says ~50 min,
-      TEAM_UPDATE says ~112 min — we cannot print both).
-      *Also:* delete the `\nocite{*}` line from `main.tex` once real `\cite`
-      commands are live.
+- [x] **Session 6 — Results + the main figure** *(2026-08-09)*
+      Main ROUGE table, a qualitative-examples table, and
+      `figures/rouge_comparison.pdf` built by `figures/make_rouge_figure.py`
+      (numbers hard-coded from `EXPERIMENT_FACTS.md` — if a value changes
+      there, change it in the script too).
+      `\nocite{*}` removed; all 15 references are now genuinely cited, zero
+      bibtex warnings. Training-time discrepancy was already closed in
+      Session 2.
+      *Figure palette* was validated for colour-vision deficiency rather than
+      chosen by eye (worst adjacent pair ΔE 28.0 protan / 20.4 tritan), and
+      every bar is directly labelled so the figure survives greyscale
+      photocopying — identity is never carried by colour alone.
+      *Deliberately stated in the text:* no significance test was run, and
+      consistency across three correlated ROUGE variants is weak evidence. We
+      say so rather than letting the reader assume otherwise.
 
 - [ ] **Session 7 — Analysis** ← *the important one*
       *File:* `sections/07-analysis.tex`
