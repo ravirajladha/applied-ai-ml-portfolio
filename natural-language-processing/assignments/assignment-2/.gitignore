@@ -1,0 +1,20 @@
+# Trained model weights (~234 MB) - regenerate with `python train.py`
+models/
+
+# Virtual environment
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# The small demo/test CSVs in data/ ARE tracked on purpose, so the app and
+# the ROUGE evaluation work straight after cloning.
+
+# The portfolio root .gitignore excludes *.pdf and *.html (course material is
+# large and not worth versioning). For this assignment they are the graded
+# deliverable, so re-include them explicitly.
+!Group140.pdf
+!Group140.html
+!PS-11_Assignment-2.pdf

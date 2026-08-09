@@ -1,0 +1,9 @@
+# Streamlit's auto-reload watcher walks every imported module. PyTorch's
+# custom-class registry (torch._classes) raises when inspected that way, which
+# crashes the rerun triggered by any button click. Turning the watcher off
+# fixes it; we do not need hot-reload to run the app.
+[server]
+fileWatcherType = "none"
+
+[browser]
+gatherUsageStats = false

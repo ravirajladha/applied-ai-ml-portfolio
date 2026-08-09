@@ -1,0 +1,19 @@
+# NLP Assignment 2 (PS-11) - Customer Review Summarization
+# Tested on Windows 11 ARM64 with the x64 Anaconda Python 3.13.
+# Note: torch has no native Windows-ARM64 wheel, so the x64 build is used.
+
+torch>=2.6
+transformers>=5.0
+datasets>=5.0
+evaluate>=0.4
+rouge_score>=0.1.2
+sentencepiece>=0.2
+accelerate>=1.0
+
+streamlit>=1.45
+flask>=3.0
+pandas>=2.2
+numpy>=2.0
+scikit-learn>=1.6
+nltk>=3.9
+matplotlib>=3.10
