@@ -1,0 +1,179 @@
+# The plan — writing this paper across ~10 sessions
+
+## The one command to start every session
+
+Paste exactly this, nothing more:
+
+```
+Continue the review-summarization paper. Read paper/PLAN.md, then
+paper/EXPERIMENT_FACTS.md. Tell me which session we are on and quiz me
+before we write anything.
+```
+
+That is deliberately short. Two files, ~600 lines total, is all the context a
+new session needs. Do **not** paste the notebook, the code, or old chat
+history — that is what burns tokens for no gain. Everything a session needs to
+know is in those two files, and we update them as we go.
+
+---
+
+## The deal (read this part twice)
+
+You said you want to be made to study. Here is what that means in practice, and
+I will hold to it:
+
+**I will not write a section until you have answered its questions.**
+
+Not as a punishment — because it does not work otherwise. If I write the
+Related Work section for you, you will have a nice paragraph and no idea why
+those papers are in it. If you answer three questions first, badly, in your own
+words, then we write it together, you will still know it in a year. The first
+version being wrong is not a problem. Not having a version is the problem.
+
+Rules I am holding myself to:
+- **Small reading.** Never more than ~6 pages of a paper per session, and I
+  will tell you exactly which pages. You do not read papers front to back.
+- **Answer in your own words, badly.** "I think ROUGE counts word overlap and
+  that is bad when summaries are short?" is a *good* answer. It shows me where
+  the gap is. Copy-pasted correctness teaches nothing.
+- **You may say "I do not know."** Then I explain it in plain language with an
+  analogy, and we move on. That is a legitimate answer and costs you nothing.
+- **No session without the gate.** If you skip the reading, tell me and we do a
+  10-minute version of it together. We do not skip it silently.
+
+Why this paper is worth the effort: you have a genuinely interesting result.
+"A pretrained model scored worse than returning the first sentence" is the kind
+of finding people remember, and you found it by accident and then explained it.
+That is what research is. Most people never get that far.
+
+---
+
+## Where things stand
+
+| | |
+|---|---|
+| Branch | `paper/review-summarization` (local only, nothing pushed) |
+| Location | `natural-language-processing/assignments/assignment-2/paper/` |
+| Build | `cd paper && ./build.sh` → `main.pdf` |
+| Editor | VS Code, open the `paper/` folder, save to rebuild |
+| Scope decision | **Write up existing results only.** No new training runs. |
+| Team repo | This folder is **excluded** from the sync to Sumanth's repo |
+
+---
+
+## Session log
+
+- [x] **Session 1 — scaffolding** *(2026-08-09)*
+      Branch, folder, IEEE skeleton, 10 section files, 15 reference PDFs
+      downloaded, `references.bib` written, MiKTeX installed, VS Code
+      configured, `EXPERIMENT_FACTS.md` extracted from the notebook,
+      abstract drafted. Builds to 2 pages.
+
+- [ ] **Session 2 — Data + Experimental Setup**
+      *Files:* `sections/03-data.tex`, `sections/05-experimental-setup.tex`
+      *Read first:* `refs/rouge-lin-2004.pdf`, **pages 1–3 only** (sections 1
+      and 2 — the definitions of ROUGE-N and ROUGE-L).
+      *Answer before we write:*
+      1. In your own words, what does ROUGE-2 actually count?
+      2. Our reference summaries are 4 words long on average. How many bigrams
+         does a 4-word summary have? What does that do to ROUGE-2?
+      3. Why did we throw away reviews shorter than 50 characters?
+      *Why start here:* it is the most mechanical section. You will get a real
+      page written on day one, which matters more than starting with the hard
+      part.
+
+- [ ] **Session 3 — Introduction**
+      *File:* `sections/01-introduction.tex`
+      *Read first:* `refs/t5-raffel-2020.pdf`, **abstract + section 1 only**
+      (~3 pages). Skip everything after.
+      *Answer before we write:*
+      1. What does the "summarize: " prefix in front of our input actually do?
+      2. T5 was trained on a lot of text. So why was it *bad* at our task
+         before we fine-tuned it?
+      3. In one sentence a shopkeeper would understand: what is this paper for?
+
+- [ ] **Session 4 — Related Work**
+      *File:* `sections/02-related-work.tex`
+      *Read first:* **abstracts only** (one page each, five minutes total) of
+      `seq2seq-sutskever-2014`, `attention-bahdanau-2015`,
+      `pointer-generator-see-2017`, `meansum-chu-liu-2019`.
+      *Answer before we write:*
+      1. Before attention, the encoder squeezed a whole sentence into one fixed
+         vector. Why is that a problem for long reviews?
+      2. MeanSum summarises many reviews at once without training on
+         summary labels. How is our map–reduce approach different?
+      3. Which of these four is closest to what we built, and why?
+
+- [ ] **Session 5 — Method**
+      *File:* `sections/04-method.tex`
+      *Read first:* nothing new. Instead re-read **our own** `aggregate.py` and
+      `aspects.py`. You wrote the paper's method; now describe it.
+      *Answer before we write:*
+      1. Why can we not just paste 50 reviews into the model at once?
+      2. What exactly does VADER give us, and what can it not tell us?
+      3. Why is training truncated to 128 tokens but inference allowed 256?
+
+- [ ] **Session 6 — Results + the main figure**
+      *File:* `sections/06-results.tex`, plus a plot into `figures/`
+      *Read first:* nothing. This is a making session.
+      *Task:* build the ROUGE comparison table and one clean figure. Also
+      **resolve the training-time discrepancy** (README says ~50 min,
+      TEAM_UPDATE says ~112 min — we cannot print both).
+      *Also:* delete the `\nocite{*}` line from `main.tex` once real `\cite`
+      commands are live.
+
+- [ ] **Session 7 — Analysis** ← *the important one*
+      *File:* `sections/07-analysis.tex`
+      *Read first:* `refs/faithfulness-maynez-2020.pdf`, **abstract + section
+      1**, and `refs/summeval-fabbri-2021.pdf`, **abstract only**.
+      *Answer before we write:*
+      1. Our model turned "offensive gas producer!!!" into "a great treat!".
+         Is that a *hallucination*, or a different kind of error? Name it.
+      2. SummEval found ROUGE agrees poorly with human judgement. Does that
+         destroy our result, or not? Defend your answer.
+      3. The baby formula case: why did the star average hide the arsenic
+         complaints?
+      *Budget two sessions if it needs them.* This section is the paper.
+
+- [ ] **Session 8 — Limitations + Conclusion**
+      *Files:* `sections/08-limitations.tex`, `sections/09-conclusion.tex`
+      *Answer before we write:*
+      1. Name the single biggest weakness of this paper without looking at
+         `EXPERIMENT_FACTS.md`.
+      2. If a reviewer had one objection, what would it be?
+
+- [ ] **Session 9 — Revision pass**
+      Read the whole thing top to bottom out loud. Rewrite the abstract last,
+      once you know what the paper actually says. Check every number against
+      `EXPERIMENT_FACTS.md`. Kill repetition between Results and Analysis.
+
+- [ ] **Session 10 — Polish and decide**
+      Figures, spacing, column balance, final build. Then decide together:
+      does this stay a personal artefact, go on your GitHub, or get cleaned up
+      for a student workshop?
+
+---
+
+## Rules for keeping sessions cheap
+
+1. **`EXPERIMENT_FACTS.md` is the only source of numbers.** If a number is not
+   in it, do not put it in the paper — add it to the facts file first, with
+   where it came from.
+2. **One section per session.** Sections live in separate files precisely so a
+   session only ever opens one small file.
+3. **Update this file at the end of every session** — tick the box, note
+   anything that changed. This file *is* the memory between sessions.
+4. **Never re-read `assignment2.ipynb`.** It is 200 KB. It has already been
+   distilled into the facts file.
+5. **Commit at the end of each session** so progress is never lost.
+
+---
+
+## Open questions to settle as we go
+
+- Training time: ~50 min or ~112 min? Two documents disagree. *(Session 6)*
+- ROUGE numbers: `TEAM_UPDATE.md` quotes an older run than the notebook. Fix
+  the docs so the project tells one story. *(Session 2)*
+- Do we want a BERTScore run to complement ROUGE? It would strengthen the
+  evaluation, but it is a new experiment and we said no new experiments.
+  *(Decide at Session 7)*

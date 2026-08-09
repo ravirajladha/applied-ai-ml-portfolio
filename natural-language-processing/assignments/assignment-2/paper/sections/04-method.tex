@@ -1,0 +1,14 @@
+\section{Method}
+% STATUS: stub. SESSION 5.
+% GOAL: ~1 page, three subsections.
+% 4.1 Per-review summarization: t5-small, "summarize: " prefix, 128 train /
+%     256 inference token asymmetry and WHY (quadratic attention, median review
+%     74 tokens), 4 beams, no_repeat_ngram=2.
+% 4.2 Map-reduce aggregation: encoder reads at most 256 tokens, 50 reviews far
+%     exceed that, so concatenation silently truncates. Summarize each (map),
+%     then summarize the summaries (reduce). Compare to \cite{chu2019meansum}.
+% 4.3 Aspect mining: sentence split -> VADER \cite{hutto2014vader} -> rank
+%     phrases by distinctiveness to one polarity. State it is frequency-based,
+%     NOT a trained ABSA model. Parameters in EXPERIMENT_FACTS.md sec.7.
+
+TODO

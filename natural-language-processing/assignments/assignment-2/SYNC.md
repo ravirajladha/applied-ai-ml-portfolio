@@ -47,7 +47,7 @@ git checkout -b <branch-name> main
 # wipe tracked files, then copy our folder's contents over the top
 git rm -r --quiet .
 cp -r "<portfolio>/natural-language-processing/assignments/assignment-2/." .
-rm -rf .venv models __pycache__ .ipynb_checkpoints   # never push these
+rm -rf .venv models __pycache__ .ipynb_checkpoints paper   # never push these
 
 git add -A && git commit && git push -u origin <branch-name>
 ```
@@ -58,6 +58,10 @@ Then open a PR into `main` so the group can review before it lands.
 
 - `.venv/`, `models/`, `__pycache__/`, `.ipynb_checkpoints/` — build artefacts
   and the 234 MB model, all git-ignored. `train.py` rebuilds the model.
+- **`paper/`** — a personal research write-up of this experiment. Not part of
+  the assignment, not for the group repo. It lives inside this folder for
+  convenience, so the `rm -rf` step above is what keeps it out. **Check that
+  line before every sync.**
 
 ---
 

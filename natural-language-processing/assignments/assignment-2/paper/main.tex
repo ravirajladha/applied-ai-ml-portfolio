@@ -1,0 +1,66 @@
+%=======================================================================
+%  When Fine-Tuning Beats Fluency
+%  An empirical study of small encoder-decoder summarization of product
+%  reviews, and of what per-review summaries hide.
+%
+%  Build:  ./build.sh        (or see README.md)
+%  Facts:  EXPERIMENT_FACTS.md is the single source of truth for numbers.
+%          Never quote a number that is not in that file.
+%=======================================================================
+
+\documentclass[conference]{IEEEtran}
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+% Nicer tables: no vertical rules, a little breathing room.
+\renewcommand{\arraystretch}{1.15}
+
+\begin{document}
+
+\title{When Fine-Tuning Beats Fluency:\\
+Small Encoder--Decoder Summarization of Product Reviews\\
+and What Per-Review Summaries Hide}
+
+\author{
+\IEEEauthorblockN{Raviraj Ladha}
+\IEEEauthorblockA{M.Tech.\ Artificial Intelligence and Machine Learning\\
+BITS Pilani, Work Integrated Learning Programmes\\
+ravirajladha@gmail.com}
+}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\begin{IEEEkeywords}
+abstractive summarization, encoder--decoder, transfer learning, opinion
+mining, aspect extraction, ROUGE, low-resource evaluation
+\end{IEEEkeywords}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-data}
+\input{sections/04-method}
+\input{sections/05-experimental-setup}
+\input{sections/06-results}
+\input{sections/07-analysis}
+\input{sections/08-limitations}
+\input{sections/09-conclusion}
+
+% TEMPORARY: while the sections are still stubs, no \cite command is actually
+% live, so the bibliography would print empty. \nocite{*} forces every entry in
+% references.bib to appear, which doubles as a reading list.
+% DELETE THIS LINE once the sections cite properly (around session 6).
+\nocite{*}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

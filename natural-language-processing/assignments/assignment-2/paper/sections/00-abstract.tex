@@ -1,0 +1,18 @@
+% STATUS: draft written, session 1. Revisit last, once results are final.
+% LENGTH: 150-200 words.
+Automatic summarization of product reviews is usually framed as a modelling
+problem, but on real e-commerce data it is equally a problem of \emph{form}.
+We fine-tune \texttt{t5-small}, a 60M-parameter encoder--decoder, on 4{,}000
+Amazon food reviews whose reference summaries are the headlines customers
+wrote themselves, and evaluate on 300 held-out reviews. Fine-tuning improves
+ROUGE-1 from 0.109 to 0.175, a relative gain of 61\%. The more instructive
+result is the baseline: the \emph{same pretrained model without fine-tuning}
+scores 0.109, below the 0.126 of a trivial extractive baseline that simply
+returns the first sentence. The un-tuned model is fluent and on-topic, but
+writes full sentences where the task rewards a four-word headline; fluency is
+not task fit. We further show that per-review summarization, while accurate,
+systematically conceals aggregate signal: for a baby-formula product with a
+3.13 star average and predominantly positive summaries, aspect mining over the
+same reviews surfaces sustained complaints about arsenic levels and infant
+health. We argue that review summarization systems should be evaluated at the
+aggregate level, not only per review.

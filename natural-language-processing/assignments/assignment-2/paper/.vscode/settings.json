@@ -1,0 +1,49 @@
+{
+  // Open THIS folder in VS Code (File > Open Folder > paper), not the repo
+  // root, or these settings will not apply.
+
+  // Build the same four passes as build.sh, so the editor and the terminal
+  // can never disagree about what the PDF should look like.
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "pdflatex > bibtex > pdflatex > pdflatex",
+      "tools": ["pdflatex", "bibtex", "pdflatex", "pdflatex"]
+    }
+  ],
+  "latex-workshop.latex.tools": [
+    {
+      "name": "pdflatex",
+      "command": "pdflatex",
+      "args": ["-synctex=1", "-interaction=nonstopmode", "-file-line-error", "main.tex"]
+    },
+    {
+      "name": "bibtex",
+      "command": "bibtex",
+      "args": ["main"]
+    }
+  ],
+
+  // Rebuild every time you save. This is what Overleaf feels like.
+  "latex-workshop.latex.autoBuild.run": "onSave",
+
+  // Show the PDF in a tab beside the source.
+  "latex-workshop.view.pdf.viewer": "tab",
+
+  // Keep the working directory clean: sweep the intermediate files LaTeX
+  // leaves behind, but never the PDF.
+  "latex-workshop.latex.autoClean.run": "onBuilt",
+  "latex-workshop.latex.clean.fileTypes": [
+    "*.aux", "*.bbl", "*.blg", "*.idx", "*.ind", "*.lof", "*.lot",
+    "*.out", "*.toc", "*.fls", "*.fdb_latexmk", "*.synctex.gz"
+  ],
+
+  // Soft-wrap prose and put a ruler where a comfortable line ends. LaTeX does
+  // not care about line breaks in source; keeping lines short makes git diffs
+  // readable, which matters when we work across many sessions.
+  "editor.wordWrap": "bounded",
+  "editor.wordWrapColumn": 78,
+  "editor.rulers": [78],
+
+  // Spell-check prose, not commands.
+  "editor.quickSuggestions": { "comments": false, "strings": false, "other": true }
+}
