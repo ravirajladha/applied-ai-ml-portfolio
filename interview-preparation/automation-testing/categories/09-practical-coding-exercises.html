@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Practical Coding Exercises — Automation Interview Prep (Q231–Q250)</title>
+<meta name="description" content="Twenty write-the-code tasks with full solutions, for the live-coding round.">
+<style>
+:root{
+  --bg:#f6f7fb; --panel:#ffffff; --ink:#161a22; --muted:#5b6478; --line:#e2e6ef;
+  --accent:#4338ca; --accent-soft:#eef0ff; --accent2:#0d9488; --accent2-soft:#e6f7f4;
+  --warn:#b45309; --warn-soft:#fff5e6; --danger:#be123c; --danger-soft:#ffeaf0;
+  --code-bg:#0f172a; --code-ink:#e2e8f0; --code-key:#93c5fd; --code-str:#86efac;
+  --code-com:#94a3b8; --code-num:#fca5a5; --code-fn:#fcd34d;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+  --radius:14px;
+}
+html[data-theme="dark"]{
+  --bg:#0b0f17; --panel:#121826; --ink:#e6eaf2; --muted:#9aa5bb; --line:#232c3d;
+  --accent:#a5b4fc; --accent-soft:#1c2340; --accent2:#5eead4; --accent2-soft:#0e2b28;
+  --warn:#fbbf24; --warn-soft:#33280d; --danger:#fda4af; --danger-soft:#3a1220;
+  --code-bg:#080d16; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- top bar ---------- */
+header.top{
+  position:sticky; top:0; z-index:50; background:var(--panel);
+  border-bottom:1px solid var(--line); box-shadow:0 1px 0 rgba(0,0,0,.02);
+}
+.top-in{max-width:1400px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:15px}
+.brand .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#fff;font-size:13px}
+.tools{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input#search{
+  width:min(360px,46vw); padding:9px 12px; border:1px solid var(--line); border-radius:10px;
+  background:var(--bg); color:var(--ink); font-size:14px; outline:none;
+}
+input#search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+button.btn{
+  padding:9px 13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap
+}
+button.btn:hover{border-color:var(--accent);color:var(--accent)}
+button.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.count{font-size:12px;color:var(--muted);white-space:nowrap}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1400px;margin:0 auto;padding:22px 18px 80px;display:grid;grid-template-columns:262px 1fr;gap:26px}
+@media(max-width:1000px){.wrap{grid-template-columns:1fr}nav.toc{position:static;max-height:none}}
+nav.toc{
+  position:sticky; top:72px; align-self:start; max-height:calc(100vh - 92px); overflow:auto;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow);
+}
+nav.toc h4{margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+nav.toc a{display:block;padding:7px 9px;border-radius:8px;color:var(--ink);font-size:13.5px;line-height:1.35}
+nav.toc a:hover{background:var(--accent-soft);text-decoration:none}
+nav.toc a .n{color:var(--muted);font-size:11.5px;display:block}
+nav.toc .grp{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+
+main{min-width:0}
+
+/* ---------- hero ---------- */
+.hero{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px 28px;box-shadow:var(--shadow);margin-bottom:22px}
+.hero h1{margin:0 0 6px;font-size:30px;letter-spacing:-.03em;line-height:1.2}
+.hero .sub{color:var(--muted);font-size:15px;margin:0 0 16px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:104px}
+.stat b{display:block;font-size:21px;letter-spacing:-.02em}
+.stat span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+/* ---------- sections ---------- */
+section.sec{margin:34px 0 0;scroll-margin-top:80px}
+.sec-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px;padding-bottom:12px;border-bottom:2px solid var(--line)}
+.sec-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-radius:10px;font-weight:800;font-size:13px;padding:7px 11px;white-space:nowrap;margin-top:3px}
+.sec-head h2{margin:0;font-size:23px;letter-spacing:-.02em}
+.sec-head p{margin:3px 0 0;color:var(--muted);font-size:14px}
+
+/* ---------- q cards ---------- */
+.qa{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin:14px 0;box-shadow:var(--shadow);overflow:hidden;
+     content-visibility:auto;contain-intrinsic-size:auto 460px}
+.qa .q{padding:15px 18px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;user-select:none}
+.qa .q:hover{background:var(--accent-soft)}
+.qa .num{background:var(--accent-soft);color:var(--accent);border-radius:8px;font-weight:800;font-size:12.5px;padding:4px 8px;min-width:44px;text-align:center;margin-top:2px;font-variant-numeric:tabular-nums}
+.qa .qt{font-weight:650;font-size:16.5px;letter-spacing:-.01em;flex:1;line-height:1.45}
+.qa .chev{color:var(--muted);font-size:13px;margin-top:5px;transition:transform .18s}
+.qa.closed .a{display:none}
+.qa.closed .chev{transform:rotate(-90deg)}
+.a{padding:2px 18px 18px 74px;border-top:1px solid var(--line);margin-top:-1px}
+@media(max-width:640px){.a{padding-left:18px}}
+.a>p:first-child{margin-top:14px}
+.a p{margin:10px 0}
+.a ul,.a ol{margin:10px 0;padding-left:22px}
+.a li{margin:5px 0}
+.a h5{margin:16px 0 6px;font-size:14px;letter-spacing:.02em;color:var(--accent)}
+
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.tag.core{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.tag.adv{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.tag.trap{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+
+/* ---------- code ---------- */
+pre{background:var(--code-bg);color:var(--code-ink);padding:14px 16px;border-radius:11px;overflow:auto;font-size:13.2px;line-height:1.6;margin:12px 0;border:1px solid rgba(255,255,255,.07)}
+code{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+p code,li code,td code{background:var(--accent-soft);color:var(--accent);padding:1.5px 6px;border-radius:6px;font-size:13px;font-weight:600}
+.k{color:var(--code-key)} .s{color:var(--code-str)} .c{color:var(--code-com);font-style:italic}
+.n{color:var(--code-num)} .f{color:var(--code-fn)}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--bg);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+
+/* ---------- callouts ---------- */
+.note{border-left:4px solid var(--accent2);background:var(--accent2-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.tip{border-left:4px solid var(--warn);background:var(--warn-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.gotcha{border-left:4px solid var(--danger);background:var(--danger-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.note b,.tip b,.gotcha b{letter-spacing:.02em}
+
+/* ---------- figures ---------- */
+figure{margin:18px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+figure svg{width:100%;height:auto;display:block}
+figcaption{margin-top:10px;font-size:13px;color:var(--muted);text-align:center}
+.svg-ink{fill:var(--ink)} .svg-mut{fill:var(--muted)} .svg-line{stroke:var(--line)}
+
+/* ---------- misc ---------- */
+.hidden{display:none !important}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;font-size:12px;font-family:monospace;background:var(--bg)}
+.catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:12px;margin-top:14px}
+.catcard{display:block;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)}
+.catcard:hover{border-color:var(--accent);background:var(--accent-soft);text-decoration:none}
+.catcard b{display:block;font-size:14.5px;letter-spacing:-.01em;margin-bottom:3px}
+.catcard .r{font-size:11.5px;font-weight:700;color:var(--accent);letter-spacing:.04em}
+.catcard .d{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:5px}
+.toTop{position:fixed;right:20px;bottom:20px;z-index:60;border-radius:999px;padding:11px 15px;box-shadow:var(--shadow)}
+
+/* ---------- print ---------- */
+@media print{
+  :root{--bg:#fff;--panel:#fff;--line:#ccc;--ink:#000;--muted:#444;--shadow:none}
+  header.top,nav.toc,.toTop,.noprint{display:none !important}
+  .wrap{display:block;max-width:none;padding:0}
+  .qa{break-inside:avoid;page-break-inside:avoid;border:1px solid #ddd;box-shadow:none;margin:8px 0;
+      content-visibility:visible !important;contain-intrinsic-size:auto !important}
+  .qa.closed .a{display:block !important}
+  .qa .chev{display:none}
+  pre{background:#f4f4f6;color:#111;border:1px solid #ddd;white-space:pre-wrap;font-size:11px}
+  .k,.s,.c,.n,.f{color:#111 !important}
+  figure{break-inside:avoid;page-break-inside:avoid}
+  section.sec{page-break-before:auto}
+  body{font-size:11.5pt}
+  a{color:#000;text-decoration:none}
+}
+
+.crumb{max-width:1400px;margin:0 auto;padding:14px 18px 0;font-size:13.5px;color:var(--muted)}
+.crumb a{font-weight:600}
+.pager{display:flex;justify-content:space-between;gap:12px;margin:34px 0 0;flex-wrap:wrap}
+.pn{display:inline-block;padding:12px 16px;border:1px solid var(--line);border-radius:12px;
+    background:var(--panel);font-weight:600;font-size:14px;box-shadow:var(--shadow)}
+.pn:hover{border-color:var(--accent);text-decoration:none}
+@media print{.crumb,.pager{display:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">QA</span><span>Practical Coding Exercises</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this section…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All 250 questions</a> &nbsp;·&nbsp; Practical Coding Exercises &nbsp;·&nbsp; Q231–Q250 (20 questions)</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+<section class="sec" id="s9">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 9</div>
+    <div>
+      <h2>Practical Coding Exercises</h2>
+      <p>Q231 – Q250 · The live-coding round. Type every one of these by hand at least once — reading them is not the same as producing them under pressure on a shared screen while someone watches.</p>
+    </div>
+  </div>
+
+  <div class="tip" style="margin:16px 0">
+    <b>How to behave in a live-coding round.</b> Say the plan out loud before typing ("I'll find the row by its order id, then scope the button lookup inside that row"). Name your variables properly even under pressure. Handle the empty/not-found case. Add the assertion message. If you blank, say what you'd search for — <i>"I'd check the ExpectedConditions class for the right condition name"</i> — because knowing where to look is a real skill and interviewers accept it.
+  </div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q231</span><span class="qt">Write the reusable wait/interaction helpers for a BasePage.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>public abstract class BasePage {
+    protected final WebDriver driver;
+    protected final WebDriverWait wait;
+
+    protected BasePage(WebDriver driver) {
+        this.driver = driver;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(
+                Config.getInt("timeout.explicit")));
+    }
+
+    protected WebElement visible(By locator) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+    }
+    protected WebElement clickable(By locator) {
+        return wait.until(ExpectedConditions.elementToBeClickable(locator));
+    }
+    protected void click(By locator) { clickable(locator).click(); }
+
+    protected void type(By locator, String text) {
+        WebElement el = visible(locator);
+        el.clear();
+        el.sendKeys(text);
+    }
+    protected String textOf(By locator)   { return visible(locator).getText().trim(); }
+    protected boolean isPresent(By locator) { return !driver.findElements(locator).isEmpty(); }
+
+    protected boolean isVisible(By locator, Duration timeout) {
+        try {
+            new WebDriverWait(driver, timeout)
+                .until(ExpectedConditions.visibilityOfElementLocated(locator));
+            return true;
+        } catch (TimeoutException e) { return false; }
+    }
+
+    protected void waitForSpinnerToClear() {
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(
+                By.cssSelector("[data-testid='loading']")));
+    }
+}</code></pre>
+    <div class="tip">Point out <i>why</i> this class exists: one wait strategy, one place to change a timeout, and tests that never touch the Selenium API. That reasoning is what's being marked, not the syntax.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q232</span><span class="qt">Write a method that returns a table cell value given a row identifier and a column name.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>The single most-asked Selenium coding exercise.</p>
+    <pre><code>/**
+ * Returns the value of {@code columnName} in the row whose any cell equals {@code rowKey}.
+ * Works regardless of column order, so it survives the UI adding a column.
+ */
+public String getCellValue(String rowKey, String columnName) {
+    List&lt;WebElement&gt; headers = driver.findElements(By.cssSelector("#orders thead th"));
+    int columnIndex = -1;
+    for (int i = 0; i &lt; headers.size(); i++) {
+        if (headers.get(i).getText().trim().equalsIgnoreCase(columnName)) {
+            columnIndex = i;
+            break;
+        }
+    }
+    if (columnIndex == -1)
+        throw new IllegalArgumentException("Column not found: " + columnName
+                + ". Available: " + headers.stream().map(WebElement::getText).toList());
+
+    WebElement row = driver.findElements(By.cssSelector("#orders tbody tr")).stream()
+            .filter(r -&gt; r.findElements(By.tagName("td")).stream()
+                          .anyMatch(c -&gt; c.getText().trim().equals(rowKey)))
+            .findFirst()
+            .orElseThrow(() -&gt; new NoSuchElementException("No row containing: " + rowKey));
+
+    return row.findElements(By.tagName("td")).get(columnIndex).getText().trim();
+}
+
+// usage
+assertEquals(getCellValue("ORD-991", "Status"), "Delivered");</code></pre>
+    <div class="tip">The detail that impresses: looking the column up <b>by name</b> instead of hardcoding <code>td[4]</code>. Say it out loud — "if the team inserts a column, index-based code silently asserts the wrong cell; this doesn't."</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q233</span><span class="qt">Write a helper that selects a value from any dropdown — native or custom.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>public void selectDropdownValue(By dropdown, String visibleText) {
+    WebElement el = clickable(dropdown);
+
+    if ("select".equalsIgnoreCase(el.getTagName())) {          // native &lt;select&gt;
+        new Select(el).selectByVisibleText(visibleText);
+        return;
+    }
+
+    el.click();                                                 // custom widget
+    By option = By.xpath("//*[@role='option' or contains(@class,'option')]"
+                       + "[normalize-space()=" + quote(visibleText) + "]");
+    clickable(option).click();
+    wait.until(ExpectedConditions.invisibilityOfElementLocated(
+            By.cssSelector("[role='listbox']")));               // wait for it to close
+}
+
+/** Safely quotes a value for XPath, including values containing an apostrophe. */
+private static String quote(String value) {
+    if (!value.contains("'"))  return "'" + value + "'";
+    if (!value.contains("\"")) return "\"" + value + "\"";
+    return "concat('" + value.replace("'", "',\"'\",'") + "')";
+}</code></pre>
+    <div class="tip">The <code>quote()</code> helper is a genuine senior touch — a customer named <i>O'Brien</i> breaks naive XPath string concatenation, and almost nobody handles it. Mention it even if you don't write the full implementation.</div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q234</span><span class="qt">Write a stale-safe click with retry.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>public void safeClick(By locator) {
+    int attempts = 0;
+    while (attempts &lt; 3) {
+        try {
+            clickable(locator).click();
+            return;
+        } catch (StaleElementReferenceException e) {
+            attempts++;                                   // DOM re-rendered — look it up again
+        } catch (ElementClickInterceptedException e) {
+            // something is covering it: scroll it to the middle and retry once
+            ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].scrollIntoView({block:'center'});",
+                driver.findElement(locator));
+            attempts++;
+        }
+    }
+    throw new FrameworkException("Could not click " + locator + " after 3 attempts. URL="
+            + driver.getCurrentUrl());
+}</code></pre>
+    <div class="gotcha">Interviewers often follow up with "isn't this hiding a problem?" The answer: <i>"It absorbs a genuine race in a re-rendering SPA. It does not silently pass — it fails loudly after three attempts with the URL in the message. And I'd still prefer to fix the root cause by waiting for the re-render to finish."</i></div>
+    <div class="tags"><span class="tag core">core</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q235</span><span class="qt">Write code to scroll an infinite-scroll page until a given item appears (or the page stops growing).</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>public WebElement scrollUntilFound(By locator, int maxScrolls) {
+    JavascriptExecutor js = (JavascriptExecutor) driver;
+    long previousHeight = -1;
+
+    for (int i = 0; i &lt; maxScrolls; i++) {
+        List&lt;WebElement&gt; found = driver.findElements(locator);
+        if (!found.isEmpty()) {
+            js.executeScript("arguments[0].scrollIntoView({block:'center'});", found.get(0));
+            return found.get(0);
+        }
+
+        long height = (Long) js.executeScript("return document.body.scrollHeight");
+        if (height == previousHeight) break;               // nothing new loaded — stop
+        previousHeight = height;
+
+        js.executeScript("window.scrollTo(0, document.body.scrollHeight);");
+        wait.until(d -&gt; (Long) ((JavascriptExecutor) d)
+                .executeScript("return document.body.scrollHeight") != height
+                || !d.findElements(locator).isEmpty());
+    }
+    throw new NoSuchElementException("Not found after scrolling: " + locator);
+}</code></pre>
+    <div class="tip">Two things to say aloud: the <b>maxScrolls guard</b> (never write an unbounded loop in a test) and the <b>height-unchanged break</b> (detects the true end of the list instead of scrolling forever).</div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q236</span><span class="qt">Write code to switch to a browser window by its title, and back.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>public String switchToWindowByTitle(String expectedTitle) {
+    String original = driver.getWindowHandle();
+
+    wait.until(d -&gt; d.getWindowHandles().size() &gt; 1);       // wait for the new window
+
+    for (String handle : driver.getWindowHandles()) {
+        driver.switchTo().window(handle);
+        if (driver.getTitle().contains(expectedTitle)) {
+            return original;                                // caller keeps it to switch back
+        }
+    }
+    driver.switchTo().window(original);                     // nothing matched — restore state
+    throw new NoSuchWindowException("No window with title containing: " + expectedTitle);
+}
+
+// usage
+String parent = switchToWindowByTitle("Terms");
+assertTrue(driver.getPageSource().contains("Privacy Policy"));
+driver.close();
+driver.switchTo().window(parent);</code></pre>
+    <div class="tags"><span class="tag core">core</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q237</span><span class="qt">Write a generic method that verifies a table column is sorted.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>public enum SortOrder { ASC, DESC }
+
+/**
+ * @param parser converts the cell text into something Comparable
+ *               (e.g. Double::parseDouble for prices, LocalDate::parse for dates)
+ */
+public &lt;T extends Comparable&lt;T&gt;&gt; void assertColumnSorted(
+        By cellLocator, Function&lt;String, T&gt; parser, SortOrder order) {
+
+    List&lt;T&gt; actual = driver.findElements(cellLocator).stream()
+            .map(WebElement::getText)
+            .map(String::trim)
+            .filter(s -&gt; !s.isEmpty())
+            .map(parser)
+            .toList();
+
+    if (actual.size() &lt; 2) throw new SkipException("Not enough rows to verify sorting");
+
+    List&lt;T&gt; expected = new ArrayList&lt;&gt;(actual);
+    expected.sort(order == SortOrder.ASC
+            ? Comparator.naturalOrder() : Comparator.reverseOrder());
+
+    Assert.assertEquals(actual, expected,
+            "Column is not sorted " + order + ". Actual order was: " + actual);
+}
+
+// usage
+assertColumnSorted(By.cssSelector("td.price"),
+        s -&gt; Double.parseDouble(s.replaceAll("[^0-9.]", "")), SortOrder.ASC);
+assertColumnSorted(By.cssSelector("td.date"),
+        s -&gt; LocalDate.parse(s, DateTimeFormatter.ofPattern("dd/MM/yyyy")), SortOrder.DESC);</code></pre>
+    <div class="tip">Generics + a parser function is exactly the kind of reusable design a 5-year candidate is expected to reach for, instead of writing <code>verifyPriceSorted()</code>, <code>verifyDateSorted()</code>, <code>verifyNameSorted()</code>.</div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q238</span><span class="qt">Write an Excel reader wired into a TestNG DataProvider.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>public final class ExcelReader {
+    public static List&lt;Map&lt;String,String&gt;&gt; read(String path, String sheetName) {
+        List&lt;Map&lt;String,String&gt;&gt; rows = new ArrayList&lt;&gt;();
+        try (FileInputStream fis = new FileInputStream(path);
+             Workbook wb = new XSSFWorkbook(fis)) {
+
+            Sheet sheet = Optional.ofNullable(wb.getSheet(sheetName))
+                    .orElseThrow(() -&gt; new FrameworkException("No sheet: " + sheetName));
+            Row header = sheet.getRow(0);
+            DataFormatter fmt = new DataFormatter();      // reads any cell type as text
+
+            for (int r = 1; r &lt;= sheet.getLastRowNum(); r++) {
+                Row row = sheet.getRow(r);
+                if (row == null) continue;
+                Map&lt;String,String&gt; map = new LinkedHashMap&lt;&gt;();
+                for (int c = 0; c &lt; header.getLastCellNum(); c++) {
+                    map.put(fmt.formatCellValue(header.getCell(c)),
+                            fmt.formatCellValue(row.getCell(c)));
+                }
+                if (map.values().stream().anyMatch(v -&gt; !v.isBlank())) rows.add(map);
+            }
+        } catch (IOException e) {
+            throw new FrameworkException("Failed reading " + path, e);
+        }
+        return rows;
+    }
+    private ExcelReader() { }
+}
+
+// ---- DataProvider ----
+@DataProvider(name = "checkoutData")
+public Iterator&lt;Object[]&gt; checkoutData() {
+    return ExcelReader.read("src/test/resources/testdata/orders.xlsx", "Checkout")
+            .stream().map(row -&gt; new Object[]{ row }).iterator();
+}
+
+@Test(dataProvider = "checkoutData")
+public void checkout(Map&lt;String,String&gt; data) {
+    checkoutPage.payWith(data.get("paymentMethod"), data.get("cardNumber"));
+    assertEquals(confirmationPage.getTotal(), data.get("expectedTotal"));
+}</code></pre>
+    <div class="tags"><span class="tag core">core</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q239</span><span class="qt">Write a TestNG listener that screenshots on failure and logs to the report.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>public class TestListener implements ITestListener {
+
+    @Override public void onTestStart(ITestResult result) {
+        ExtentManager.set(ExtentManager.report()
+                .createTest(result.getMethod().getMethodName(),
+                            result.getMethod().getDescription()));
+        ExtentManager.test().assignCategory(result.getMethod().getGroups());
+    }
+
+    @Override public void onTestSuccess(ITestResult result) {
+        ExtentManager.test().pass("Passed in "
+                + (result.getEndMillis() - result.getStartMillis()) + " ms");
+        ExtentManager.unload();
+    }
+
+    @Override public void onTestFailure(ITestResult result) {
+        WebDriver driver = DriverFactory.get();
+        if (driver != null) {
+            String base64 = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BASE64);
+            ExtentManager.test().fail(result.getThrowable(),
+                MediaEntityBuilder.createScreenCaptureFromBase64String(base64).build());
+            ExtentManager.test().info("URL at failure: " + driver.getCurrentUrl());
+            driver.manage().logs().get(LogType.BROWSER).getAll().stream()
+                  .filter(e -&gt; e.getLevel() == Level.SEVERE)
+                  .forEach(e -&gt; ExtentManager.test().warning("console: " + e.getMessage()));
+        } else {
+            ExtentManager.test().fail(result.getThrowable());
+        }
+        ExtentManager.unload();
+    }
+
+    @Override public void onTestSkipped(ITestResult result) {
+        ExtentManager.test().skip(result.getThrowable());
+        ExtentManager.unload();
+    }
+
+    @Override public void onFinish(ITestContext context) {
+        ExtentManager.report().flush();
+    }
+}</code></pre>
+    <div class="tip">The null check on the driver matters: if setup itself failed, there is no driver, and a listener that throws an NPE hides the original failure completely. That is a real bug I'd expect a senior candidate to anticipate.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q240</span><span class="qt">Write code that verifies every image on a page has meaningful alt text and actually loads.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>@Test
+public void allImagesHaveAltTextAndLoad() {
+    JavascriptExecutor js = (JavascriptExecutor) driver;
+    List&lt;WebElement&gt; images = driver.findElements(By.tagName("img"));
+    Assert.assertFalse(images.isEmpty(), "No images found — is the page loaded?");
+
+    SoftAssert soft = new SoftAssert();
+    for (WebElement img : images) {
+        String src = img.getAttribute("src");
+        String alt = img.getAttribute("alt");
+
+        // alt="" is VALID for decorative images; a missing attribute is not
+        soft.assertNotNull(alt, "Missing alt attribute on image: " + src);
+
+        // did the image actually render? naturalWidth is 0 for a broken image
+        Long naturalWidth = (Long) js.executeScript(
+                "return arguments[0].naturalWidth;", img);
+        soft.assertTrue(naturalWidth != null &amp;&amp; naturalWidth &gt; 0,
+                "Broken image (failed to load): " + src);
+    }
+    soft.assertAll();
+}</code></pre>
+    <div class="tip"><code>naturalWidth === 0</code> is the standard way to detect a broken image — the <code>&lt;img&gt;</code> element exists and is "visible" to Selenium even when the file 404s, so <code>isDisplayed()</code> tells you nothing. Knowing that distinction is a strong signal.</div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q241</span><span class="qt">Write code to measure page load performance from a test.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>public Map&lt;String, Long&gt; capturePageTimings() {
+    JavascriptExecutor js = (JavascriptExecutor) driver;
+
+    Long navigationStart = (Long) js.executeScript(
+            "return window.performance.timing.navigationStart;");
+    Long domContentLoaded = (Long) js.executeScript(
+            "return window.performance.timing.domContentLoadedEventEnd;");
+    Long loadComplete = (Long) js.executeScript(
+            "return window.performance.timing.loadEventEnd;");
+    Long responseEnd = (Long) js.executeScript(
+            "return window.performance.timing.responseEnd;");
+
+    return Map.of(
+        "serverResponseMs", responseEnd - navigationStart,
+        "domReadyMs",       domContentLoaded - navigationStart,
+        "fullLoadMs",       loadComplete - navigationStart);
+}
+
+@Test
+public void homePageLoadsWithinBudget() {
+    driver.get(Config.get("base.url"));
+    Map&lt;String, Long&gt; timings = capturePageTimings();
+    logger.info("Page timings: {}", timings);
+    Assert.assertTrue(timings.get("fullLoadMs") &lt; 3000,
+            "Home page took " + timings.get("fullLoadMs") + "ms, budget is 3000ms");
+}</code></pre>
+    <p>Playwright equivalent, plus modern Core Web Vitals:</p>
+    <pre><code>const nav = JSON.parse(await page.evaluate(
+  () =&gt; JSON.stringify(performance.getEntriesByType('navigation')[0])));
+expect(nav.loadEventEnd).toBeLessThan(3000);
+
+const lcp = await page.evaluate(() =&gt; new Promise(resolve =&gt; {
+  new PerformanceObserver(list =&gt; {
+    const entries = list.getEntries();
+    resolve(entries[entries.length - 1].startTime);
+  }).observe({ type: 'largest-contentful-paint', buffered: true });
+}));
+expect(lcp).toBeLessThan(2500);          // Google's "good" LCP threshold</code></pre>
+    <div class="gotcha">Be honest about the limit: this is <b>single-user front-end timing</b>, not load testing. It catches a regression where someone ships a 4MB unoptimised hero image; it says nothing about behaviour at 500 concurrent users.</div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q242</span><span class="qt">Write a Playwright page object and a test that uses it.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>// pages/checkout.page.ts
+import { Page, Locator, expect } from '@playwright/test';
+
+export class CheckoutPage {
+  private readonly cardNumber: Locator;
+  private readonly expiry: Locator;
+  private readonly cvv: Locator;
+  private readonly payButton: Locator;
+  private readonly confirmation: Locator;
+  private readonly errorBanner: Locator;
+
+  constructor(private readonly page: Page) {
+    this.cardNumber   = page.getByLabel('Card number');
+    this.expiry       = page.getByLabel('Expiry');
+    this.cvv          = page.getByLabel('CVV');
+    this.payButton    = page.getByRole('button', { name: 'Pay now' });
+    this.confirmation = page.getByRole('heading', { name: 'Order confirmed' });
+    this.errorBanner  = page.getByRole('alert');
+  }
+
+  async goto(orderId: string): Promise&lt;void&gt; {
+    await this.page.goto(`/checkout/${orderId}`);
+    await expect(this.payButton).toBeVisible();
+  }
+
+  async payWithCard(card: { number: string; expiry: string; cvv: string }): Promise&lt;void&gt; {
+    await test.step(`pay with card ending ${card.number.slice(-4)}`, async () =&gt; {
+      await this.cardNumber.fill(card.number);
+      await this.expiry.fill(card.expiry);
+      await this.cvv.fill(card.cvv);
+      await this.payButton.click();
+    });
+  }
+
+  async expectConfirmed(): Promise&lt;void&gt; { await expect(this.confirmation).toBeVisible(); }
+  async expectError(message: string): Promise&lt;void&gt; {
+    await expect(this.errorBanner).toHaveText(message);
+  }
+}</code></pre>
+    <pre><code>// tests/checkout.spec.ts
+import { test } from '../fixtures';
+import { CheckoutPage } from '../pages/checkout.page';
+
+test('declines an expired card with a clear message', async ({ page, testOrder }) =&gt; {
+  const checkout = new CheckoutPage(page);
+  await checkout.goto(testOrder.id);
+  await checkout.payWithCard({ number: '4000000000000069', expiry: '01/20', cvv: '123' });
+  await checkout.expectError('Your card has expired. Please use a different card.');
+});</code></pre>
+    <div class="tags"><span class="tag core">core</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q243</span><span class="qt">Write a Playwright fixture that creates test data and cleans it up.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>// fixtures.ts
+import { test as base, APIRequestContext } from '@playwright/test';
+
+type Order = { id: string; sku: string; total: number };
+
+type Fixtures = {
+  testOrder: Order;
+  api: APIRequestContext;
+};
+
+export const test = base.extend&lt;Fixtures&gt;({
+  api: async ({ playwright }, use) =&gt; {
+    const ctx = await playwright.request.newContext({
+      baseURL: process.env.API_URL,
+      extraHTTPHeaders: { Authorization: `Bearer ${process.env.API_TOKEN}` },
+    });
+    await use(ctx);
+    await ctx.dispose();
+  },
+
+  testOrder: async ({ api }, use, testInfo) =&gt; {
+    // unique per test AND per worker, so parallel runs never collide
+    const ref = `AUTOTEST-${testInfo.workerIndex}-${Date.now()}`;
+
+    const res = await api.post('/api/v1/orders', {
+      data: { reference: ref, sku: 'TSH-001', qty: 1 },
+    });
+    if (!res.ok()) throw new Error(`Order setup failed: ${res.status()} ${await res.text()}`);
+    const order: Order = await res.json();
+
+    await use(order);                              // ← the test body runs here
+
+    // teardown runs even if the test failed
+    await api.delete(`/api/v1/orders/${order.id}`).catch(() =&gt; { /* already gone */ });
+  },
+});
+
+export { expect } from '@playwright/test';</code></pre>
+    <div class="tip">Three things to call out: setup through the <b>API</b> not the UI (fast and stable), a <b>unique reference including the worker index</b> (parallel-safe), and teardown that <b>tolerates already-deleted data</b> so cleanup never masks the real failure.</div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q244</span><span class="qt">Write a Playwright test that mocks an API to test an error state.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>test('shows a friendly message when the orders API is down', async ({ page }) =&gt; {
+  await page.route('**/api/v1/orders**', route =&gt;
+    route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Internal Server Error' }),
+    }));
+
+  await page.goto('/orders');
+
+  await expect(page.getByRole('alert'))
+    .toHaveText("We couldn't load your orders. Please try again.");
+  await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible();
+  // and it must NOT show a raw stack trace or the word "Error 500"
+  await expect(page.locator('body')).not.toContainText('Internal Server Error');
+});
+
+test('shows the empty state when the user has no orders', async ({ page }) =&gt; {
+  await page.route('**/api/v1/orders**', route =&gt;
+    route.fulfill({ status: 200, json: { orders: [], total: 0 } }));
+
+  await page.goto('/orders');
+  await expect(page.getByText('You have no orders yet')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Start shopping' })).toBeVisible();
+});</code></pre>
+    <div class="tip">Empty states and error states are the two things almost nobody tests, because producing them for real is hard. Mocking makes them trivial — say that, and you've explained <i>why</i> mocking earns its place rather than just how to write it.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q245</span><span class="qt">Write a RestAssured test that validates a response fully.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>@Test
+public void createOrderReturnsAValidConfirmedOrder() {
+    String payload = """
+        { "sku": "TSH-001", "qty": 2, "currency": "INR" }
+        """;
+
+    Response response = given()
+            .spec(requestSpec)
+            .body(payload)
+        .when()
+            .post("/api/v1/orders")
+        .then()
+            .statusCode(201)
+            .time(lessThan(2000L))
+            .header("Location", matchesPattern(".*/api/v1/orders/\\d+"))
+            .body(matchesJsonSchemaInClasspath("schemas/order-schema.json"))
+            .body("status",          equalTo("CONFIRMED"))
+            .body("qty",             equalTo(2))
+            .body("total",           greaterThan(0f))
+            .body("createdAt",       notNullValue())
+            .body("items.size()",    equalTo(1))
+            .body("customer.email",  not(emptyString()))
+            .extract().response();
+
+    // chain: the created resource must be readable and consistent
+    String orderId = response.path("id").toString();
+    given().spec(requestSpec).get("/api/v1/orders/" + orderId)
+        .then().statusCode(200)
+        .body("id", equalTo(Integer.parseInt(orderId)))
+        .body("status", equalTo("CONFIRMED"));
+}
+
+@Test
+public void createOrderRejectsANegativeQuantity() {
+    given().spec(requestSpec).body("{\"sku\":\"TSH-001\",\"qty\":-1}")
+      .when().post("/api/v1/orders")
+      .then().statusCode(422)
+        .body("errors[0].field",   equalTo("qty"))
+        .body("errors[0].message", containsStringIgnoringCase("must be greater than 0"));
+}</code></pre>
+    <div class="tip">Schema validation is the line to point at: field-by-field assertions pass happily when the API adds, removes or retypes a field. The schema check catches contract drift that individual assertions miss.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q246</span><span class="qt">Write code that verifies the UI, the API and the database agree.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>@Test
+public void placedOrderIsConsistentAcrossUiApiAndDatabase() {
+    // 1. UI — perform the business action
+    String orderRef = checkoutPage.placeOrder();
+    BigDecimal uiTotal = confirmationPage.getTotalAmount();
+
+    // 2. API — the service agrees
+    Response api = given().spec(requestSpec).get("/api/v1/orders/" + orderRef);
+    api.then().statusCode(200);
+    BigDecimal apiTotal = new BigDecimal(api.path("total").toString());
+
+    // 3. DB — the data was actually persisted, with the audit trail
+    OrderRow db = queryOrder(orderRef);
+
+    SoftAssert soft = new SoftAssert();
+    soft.assertEquals(apiTotal.compareTo(uiTotal), 0,
+            "UI total " + uiTotal + " != API total " + apiTotal);
+    soft.assertEquals(db.total.compareTo(uiTotal), 0,
+            "UI total " + uiTotal + " != DB total " + db.total);
+    soft.assertEquals(db.status, "CONFIRMED");
+    soft.assertNotNull(db.createdAt, "Audit timestamp missing");
+    soft.assertAll();
+}
+
+private OrderRow queryOrder(String ref) {
+    String sql = "SELECT status, total_amount, created_at FROM orders WHERE order_ref = ?";
+    try (Connection con = DriverManager.getConnection(
+                Config.get("db.url"), Config.get("db.user"), Config.get("db.password"));
+         PreparedStatement ps = con.prepareStatement(sql)) {
+        ps.setString(1, ref);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (!rs.next()) throw new AssertionError("No DB row for order " + ref);
+            return new OrderRow(rs.getString("status"),
+                                rs.getBigDecimal("total_amount"),
+                                rs.getTimestamp("created_at"));
+        }
+    } catch (SQLException e) {
+        throw new FrameworkException("DB verification failed for " + ref, e);
+    }
+}</code></pre>
+    <div class="tip">Note <code>BigDecimal.compareTo(…) == 0</code> rather than <code>equals</code>: <code>new BigDecimal("1499.0").equals(new BigDecimal("1499.00"))</code> is <b>false</b> because equals compares scale. That is a real money bug and a superb detail to mention unprompted.</div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q247</span><span class="qt">Write a test-data factory that generates unique, parallel-safe data.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>public final class TestDataFactory {
+    private static final Faker FAKER = new Faker(new Locale("en-IND"));
+    private static final AtomicInteger COUNTER = new AtomicInteger();
+
+    /** Unique across parallel threads AND across re-runs on the same machine. */
+    public static String uniqueEmail() {
+        return String.format("qa_%d_%d_%d@test.example.com",
+                System.currentTimeMillis(),
+                Thread.currentThread().getId(),
+                COUNTER.incrementAndGet());
+    }
+
+    public static User newUser() { return newUser(u -&gt; {}); }
+
+    /** Builder-with-overrides: sensible defaults, override only what the test cares about. */
+    public static User newUser(Consumer&lt;User.Builder&gt; overrides) {
+        User.Builder b = User.builder()
+                .email(uniqueEmail())
+                .name(FAKER.name().fullName())
+                .phone("9" + FAKER.number().digits(9))
+                .role("USER")
+                .active(true);
+        overrides.accept(b);
+        return b.build();
+    }
+
+    /** Dates must be RELATIVE — a hardcoded date expires and the test fails next year. */
+    public static LocalDate futureBookingDate() { return LocalDate.now().plusDays(7); }
+    public static String futureCardExpiry() {
+        return LocalDate.now().plusYears(2).format(DateTimeFormatter.ofPattern("MM/yy"));
+    }
+
+    private TestDataFactory() { }
+}
+
+// usage — the test states only what matters to it
+User admin = TestDataFactory.newUser(u -&gt; u.role("ADMIN"));
+User locked = TestDataFactory.newUser(u -&gt; u.active(false));</code></pre>
+    <div class="tip">The "defaults plus overrides" pattern is worth naming explicitly: the test declares only the attribute under test, so when a new mandatory field is added you change one factory instead of 200 tests.</div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q248</span><span class="qt">Write a utility that masks sensitive data before it reaches logs or reports.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>public final class Mask {
+    private static final Pattern CARD  = Pattern.compile("\\b(?:\\d[ -]*?){13,19}\\b");
+    private static final Pattern EMAIL = Pattern.compile("([\\w.+-]{1,3})[\\w.+-]*@([\\w.-]+)");
+    private static final Pattern PHONE = Pattern.compile("\\b(\\d{2})\\d{6}(\\d{2})\\b");
+    private static final List&lt;String&gt; SECRET_KEYS =
+            List.of("password", "token", "authorization", "secret", "cvv", "otp", "apiKey");
+
+    public static String text(String input) {
+        if (input == null) return null;
+        String out = CARD.matcher(input).replaceAll(m -&gt; keepLast4(m.group()));
+        out = EMAIL.matcher(out).replaceAll("$1***@$2");
+        out = PHONE.matcher(out).replaceAll("$1******$2");
+        return out;
+    }
+
+    /** Masks values of known-sensitive keys in a JSON body before logging it. */
+    public static String json(String body) {
+        String out = body;
+        for (String key : SECRET_KEYS) {
+            out = out.replaceAll("(?i)(\"" + key + "\"\\s*:\\s*\")[^\"]*(\")", "$1***$2");
+        }
+        return out;
+    }
+
+    private static String keepLast4(String digits) {
+        String clean = digits.replaceAll("\\D", "");
+        return clean.length() &lt; 4 ? "****"
+                : "*".repeat(clean.length() - 4) + clean.substring(clean.length() - 4);
+    }
+    private Mask() { }
+}
+
+// usage
+logger.info("Request: {}", Mask.json(payload));
+ExtentManager.test().info("Paying with " + Mask.text(cardNumber));   // **** **** **** 1111</code></pre>
+    <div class="tip">Volunteering this is a strong move: <i>"Test reports get attached to Jira tickets and shared in Slack. A failure screenshot or a logged request body containing a real customer's card number is a data breach, even though it came from a test."</i> Very few candidates think this far.</div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q249</span><span class="qt">Write a driver factory that supports local, headless, remote grid and mobile.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>public final class DriverFactory {
+    private static final ThreadLocal&lt;WebDriver&gt; TL = new ThreadLocal&lt;&gt;();
+
+    public static void init() {
+        String target  = Config.get("run.target");     // local | grid | mobile
+        String browser = Config.get("browser");
+        boolean headless = Config.getBool("headless");
+
+        WebDriver driver = switch (target.toLowerCase()) {
+            case "grid"   -&gt; remote(browser, headless);
+            case "mobile" -&gt; mobile();
+            default       -&gt; local(browser, headless);
+        };
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(45));
+        if (!"mobile".equalsIgnoreCase(target)) driver.manage().window().maximize();
+        TL.set(driver);
+    }
+
+    private static WebDriver local(String browser, boolean headless) {
+        return switch (browser.toLowerCase()) {
+            case "firefox" -&gt; new FirefoxDriver(firefoxOptions(headless));
+            case "edge"    -&gt; new EdgeDriver(new EdgeOptions());
+            case "chrome"  -&gt; new ChromeDriver(chromeOptions(headless));
+            default -&gt; throw new IllegalArgumentException("Unsupported browser: " + browser);
+        };
+    }
+
+    private static WebDriver remote(String browser, boolean headless) {
+        try {
+            AbstractDriverOptions&lt;?&gt; options = "firefox".equalsIgnoreCase(browser)
+                    ? firefoxOptions(headless) : chromeOptions(headless);
+            RemoteWebDriver driver = new RemoteWebDriver(
+                    new URL(Config.get("grid.url")), options);
+            driver.setFileDetector(new LocalFileDetector());   // enables file upload on nodes
+            return driver;
+        } catch (MalformedURLException e) {
+            throw new FrameworkException("Bad grid URL: " + Config.get("grid.url"), e);
+        }
+    }
+
+    private static ChromeOptions chromeOptions(boolean headless) {
+        ChromeOptions o = new ChromeOptions();
+        if (headless) o.addArguments("--headless=new", "--window-size=1920,1080");
+        o.addArguments("--no-sandbox", "--disable-dev-shm-usage", "--disable-notifications");
+        o.setExperimentalOption("prefs",
+                Map.of("profile.default_content_setting_values.notifications", 2));
+        return o;
+    }
+
+    public static WebDriver get() {
+        WebDriver d = TL.get();
+        if (d == null) throw new IllegalStateException(
+                "Driver not initialised on thread " + Thread.currentThread().getName());
+        return d;
+    }
+
+    public static void quit() {
+        WebDriver d = TL.get();
+        if (d != null) {
+            try { d.quit(); } finally { TL.remove(); }   // remove() even if quit() throws
+        }
+    }
+    private DriverFactory() { }
+}</code></pre>
+    <div class="tip">The <code>try { quit(); } finally { TL.remove(); }</code> detail matters: if <code>quit()</code> throws because the browser already crashed, a naive implementation leaks the ThreadLocal and the next test on that pooled thread inherits a dead driver.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q250</span><span class="qt">Live exercise: "Automate this flow on a site you've never seen." How do you approach it?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Many companies now do this instead of theory questions — they open a demo site (saucedemo, the-internet, automationexercise) and ask you to automate a flow while sharing your screen. They are watching your <b>process</b>, not your typing speed.</p>
+    <ol>
+      <li><b>Clarify first.</b> "Should I write this as a full framework or a single script? Do you want me to prioritise structure or coverage in the time we have?" This alone puts you ahead of most candidates.</li>
+      <li><b>Explore the app for two minutes</b> before writing anything. Walk the flow manually, open DevTools, and look at what locators exist. Say what you see: "there are no test ids, but the ids look stable, so I'll use those."</li>
+      <li><b>Write the test first, top-down</b>, as if the page objects already existed:
+        <pre><code>@Test
+public void userCanBuyAProduct() {
+    loginPage.loginAs(user, pass);
+    productsPage.addToCart("Sauce Labs Backpack");
+    cartPage.checkout();
+    checkoutPage.fillDetails("Ravi", "Kumar", "560001");
+    Assert.assertEquals(confirmationPage.getMessage(), "Thank you for your order!");
+}</code></pre>
+        Then implement downwards. It shows design thinking and gives you a working skeleton even if you run out of time.</li>
+      <li><b>Narrate the trade-offs.</b> "I'm using an explicit wait here rather than an implicit one because…" — the commentary is most of your score.</li>
+      <li><b>Add one negative test</b> if time allows. Almost every candidate automates only the happy path; adding "login with a locked-out user" shows a tester's instinct rather than a coder's.</li>
+      <li><b>Finish with what you'd do next</b>: "with more time I'd externalise the test data, add the driver factory for cross-browser, and wire this into CI with a screenshot listener." That turns an unfinished exercise into a demonstration of judgement.</li>
+    </ol>
+    <div class="tip">Practise on <code>saucedemo.com</code> and <code>the-internet.herokuapp.com</code> until you can produce a clean POM-structured login-to-checkout test in 20 minutes from a blank file, talking the whole time. That single rehearsal is worth more than another 50 questions of theory.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+</section>
+
+  <nav class="pager">
+      <a class="pn" href="08-performance-security-nonfunctional.html">&#8592; Performance, Security &amp; Non-Functional</a>
+      <span></span>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script>
+(function(){
+  /* ---- tiny offline syntax highlighter (Java / TS / JS / YAML-ish) ---- */
+  var KW = {};
+  ("abstract assert async await boolean break byte case catch char class const continue default do double else enum export extends final finally float for from function if implements import in instanceof int interface let long new package private protected public readonly return static super switch this throw throws try type typeof var void while yield true false null undefined String Integer List ArrayList Map HashMap Set Optional Thread Exception WebDriver WebElement By Actions Select Alert ChromeDriver ChromeOptions Duration Page Locator Browser BrowserContext expect test describe beforeEach afterEach beforeAll afterAll it Promise void any number string unknown as await").split(" ").forEach(function(w){KW[w]=1;});
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function plain(txt){
+    return esc(txt).replace(/\b([A-Za-z_$][\w$]*)\b|\b(\d+(?:\.\d+)?)\b|(@[A-Za-z]\w*)/g,
+      function(m,word,num,ann){
+        if(ann) return '<span class="f">'+ann+'</span>';
+        if(num) return '<span class="n">'+num+'</span>';
+        if(word && KW[word]) return '<span class="k">'+word+'</span>';
+        return m;
+      });
+  }
+  [].forEach.call(document.querySelectorAll('pre > code'), function(el){
+    var src = el.textContent, out = '', last = 0, m;
+    var re = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|^\s*#[^\n]*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)/gm;
+    while((m = re.exec(src))){
+      out += plain(src.slice(last, m.index));
+      out += m[1] ? '<span class="c">'+esc(m[1])+'</span>' : '<span class="s">'+esc(m[2])+'</span>';
+      last = re.lastIndex;
+    }
+    out += plain(src.slice(last));
+    el.innerHTML = out;
+  });
+
+  var cards = [].slice.call(document.querySelectorAll('.qa'));
+  var countEl = document.getElementById('count');
+
+  /* number every card automatically and build searchable text */
+  cards.forEach(function(c,i){
+    var n = c.querySelector('.num');
+    if(n && !n.textContent.trim()) n.textContent = 'Q' + (i+1);
+    c.dataset.txt = c.textContent.toLowerCase();
+    c.dataset.isq = (n && /^Q\d+$/.test(n.textContent.trim())) ? '1' : '0';
+  });
+
+  var total = cards.filter(function(c){
+    var n = c.querySelector('.num');
+    return n && /^Q\d+$/.test(n.textContent.trim());
+  }).length;
+  function updateCount(v){ countEl.textContent = (v===undefined? total : v) + ' / ' + total + ' questions'; }
+  updateCount();
+
+  /* toggle single card */
+  document.addEventListener('click', function(e){
+    var q = e.target.closest('.q');
+    if(q && q.parentElement.classList.contains('qa')) q.parentElement.classList.toggle('closed');
+  });
+
+  /* quiz mode */
+  var quizOn=false, quizBtn=document.getElementById('quiz');
+  quizBtn.addEventListener('click', function(){
+    quizOn=!quizOn;
+    quizBtn.classList.toggle('on',quizOn);
+    quizBtn.textContent = quizOn? 'Study mode':'Quiz mode';
+    cards.forEach(function(c){ c.classList.toggle('closed',quizOn); });
+  });
+
+  /* expand all */
+  document.getElementById('expand').addEventListener('click', function(){
+    cards.forEach(function(c){ c.classList.remove('closed'); });
+    quizOn=false; quizBtn.classList.remove('on'); quizBtn.textContent='Quiz mode';
+  });
+
+  /* theme */
+  var root=document.documentElement, themeBtn=document.getElementById('theme');
+  function paintTheme(){ themeBtn.textContent = root.getAttribute('data-theme')==='dark' ? 'Light':'Dark'; }
+  var saved = localStorage.getItem('qa-theme'); if(saved) root.setAttribute('data-theme',saved);
+  paintTheme();
+  themeBtn.addEventListener('click', function(){
+    var next = root.getAttribute('data-theme')==='dark' ? 'light':'dark';
+    root.setAttribute('data-theme',next); localStorage.setItem('qa-theme',next); paintTheme();
+  });
+
+  /* search */
+  var box=document.getElementById('search'), t;
+  box.addEventListener('input', function(){
+    clearTimeout(t);
+    t=setTimeout(function(){
+      var q=box.value.trim().toLowerCase(), shown=0;
+      cards.forEach(function(c){
+        var hit = !q || c.dataset.txt.indexOf(q)>-1;
+        c.classList.toggle('hidden',!hit);
+        if(hit && c.dataset.isq === '1') shown++;
+      });
+      document.querySelectorAll('main figure').forEach(function(f){ f.classList.toggle('hidden', !!q); });
+      document.querySelectorAll('section.sec').forEach(function(s){
+        var any = s.querySelector('.qa:not(.hidden)');
+        s.classList.toggle('hidden', !!q && !any);
+      });
+      updateCount(shown);
+    },120);
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='/' && document.activeElement!==box){ e.preventDefault(); box.focus(); }
+    if(e.key==='Escape' && document.activeElement===box){ box.value=''; box.dispatchEvent(new Event('input')); box.blur(); }
+  });
+})();
+</script>
+</body>
+</html>

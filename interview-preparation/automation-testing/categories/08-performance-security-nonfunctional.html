@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Performance, Security &amp; Non-Functional — Automation Interview Prep (Q216–Q230)</title>
+<meta name="description" content="JMeter, load test design, bottleneck analysis, OWASP Top 10, accessibility, contract testing.">
+<style>
+:root{
+  --bg:#f6f7fb; --panel:#ffffff; --ink:#161a22; --muted:#5b6478; --line:#e2e6ef;
+  --accent:#4338ca; --accent-soft:#eef0ff; --accent2:#0d9488; --accent2-soft:#e6f7f4;
+  --warn:#b45309; --warn-soft:#fff5e6; --danger:#be123c; --danger-soft:#ffeaf0;
+  --code-bg:#0f172a; --code-ink:#e2e8f0; --code-key:#93c5fd; --code-str:#86efac;
+  --code-com:#94a3b8; --code-num:#fca5a5; --code-fn:#fcd34d;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+  --radius:14px;
+}
+html[data-theme="dark"]{
+  --bg:#0b0f17; --panel:#121826; --ink:#e6eaf2; --muted:#9aa5bb; --line:#232c3d;
+  --accent:#a5b4fc; --accent-soft:#1c2340; --accent2:#5eead4; --accent2-soft:#0e2b28;
+  --warn:#fbbf24; --warn-soft:#33280d; --danger:#fda4af; --danger-soft:#3a1220;
+  --code-bg:#080d16; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- top bar ---------- */
+header.top{
+  position:sticky; top:0; z-index:50; background:var(--panel);
+  border-bottom:1px solid var(--line); box-shadow:0 1px 0 rgba(0,0,0,.02);
+}
+.top-in{max-width:1400px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:15px}
+.brand .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#fff;font-size:13px}
+.tools{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input#search{
+  width:min(360px,46vw); padding:9px 12px; border:1px solid var(--line); border-radius:10px;
+  background:var(--bg); color:var(--ink); font-size:14px; outline:none;
+}
+input#search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+button.btn{
+  padding:9px 13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap
+}
+button.btn:hover{border-color:var(--accent);color:var(--accent)}
+button.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.count{font-size:12px;color:var(--muted);white-space:nowrap}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1400px;margin:0 auto;padding:22px 18px 80px;display:grid;grid-template-columns:262px 1fr;gap:26px}
+@media(max-width:1000px){.wrap{grid-template-columns:1fr}nav.toc{position:static;max-height:none}}
+nav.toc{
+  position:sticky; top:72px; align-self:start; max-height:calc(100vh - 92px); overflow:auto;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow);
+}
+nav.toc h4{margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+nav.toc a{display:block;padding:7px 9px;border-radius:8px;color:var(--ink);font-size:13.5px;line-height:1.35}
+nav.toc a:hover{background:var(--accent-soft);text-decoration:none}
+nav.toc a .n{color:var(--muted);font-size:11.5px;display:block}
+nav.toc .grp{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+
+main{min-width:0}
+
+/* ---------- hero ---------- */
+.hero{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px 28px;box-shadow:var(--shadow);margin-bottom:22px}
+.hero h1{margin:0 0 6px;font-size:30px;letter-spacing:-.03em;line-height:1.2}
+.hero .sub{color:var(--muted);font-size:15px;margin:0 0 16px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:104px}
+.stat b{display:block;font-size:21px;letter-spacing:-.02em}
+.stat span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+/* ---------- sections ---------- */
+section.sec{margin:34px 0 0;scroll-margin-top:80px}
+.sec-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px;padding-bottom:12px;border-bottom:2px solid var(--line)}
+.sec-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-radius:10px;font-weight:800;font-size:13px;padding:7px 11px;white-space:nowrap;margin-top:3px}
+.sec-head h2{margin:0;font-size:23px;letter-spacing:-.02em}
+.sec-head p{margin:3px 0 0;color:var(--muted);font-size:14px}
+
+/* ---------- q cards ---------- */
+.qa{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin:14px 0;box-shadow:var(--shadow);overflow:hidden;
+     content-visibility:auto;contain-intrinsic-size:auto 460px}
+.qa .q{padding:15px 18px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;user-select:none}
+.qa .q:hover{background:var(--accent-soft)}
+.qa .num{background:var(--accent-soft);color:var(--accent);border-radius:8px;font-weight:800;font-size:12.5px;padding:4px 8px;min-width:44px;text-align:center;margin-top:2px;font-variant-numeric:tabular-nums}
+.qa .qt{font-weight:650;font-size:16.5px;letter-spacing:-.01em;flex:1;line-height:1.45}
+.qa .chev{color:var(--muted);font-size:13px;margin-top:5px;transition:transform .18s}
+.qa.closed .a{display:none}
+.qa.closed .chev{transform:rotate(-90deg)}
+.a{padding:2px 18px 18px 74px;border-top:1px solid var(--line);margin-top:-1px}
+@media(max-width:640px){.a{padding-left:18px}}
+.a>p:first-child{margin-top:14px}
+.a p{margin:10px 0}
+.a ul,.a ol{margin:10px 0;padding-left:22px}
+.a li{margin:5px 0}
+.a h5{margin:16px 0 6px;font-size:14px;letter-spacing:.02em;color:var(--accent)}
+
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.tag.core{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.tag.adv{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.tag.trap{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+
+/* ---------- code ---------- */
+pre{background:var(--code-bg);color:var(--code-ink);padding:14px 16px;border-radius:11px;overflow:auto;font-size:13.2px;line-height:1.6;margin:12px 0;border:1px solid rgba(255,255,255,.07)}
+code{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+p code,li code,td code{background:var(--accent-soft);color:var(--accent);padding:1.5px 6px;border-radius:6px;font-size:13px;font-weight:600}
+.k{color:var(--code-key)} .s{color:var(--code-str)} .c{color:var(--code-com);font-style:italic}
+.n{color:var(--code-num)} .f{color:var(--code-fn)}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--bg);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+
+/* ---------- callouts ---------- */
+.note{border-left:4px solid var(--accent2);background:var(--accent2-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.tip{border-left:4px solid var(--warn);background:var(--warn-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.gotcha{border-left:4px solid var(--danger);background:var(--danger-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.note b,.tip b,.gotcha b{letter-spacing:.02em}
+
+/* ---------- figures ---------- */
+figure{margin:18px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+figure svg{width:100%;height:auto;display:block}
+figcaption{margin-top:10px;font-size:13px;color:var(--muted);text-align:center}
+.svg-ink{fill:var(--ink)} .svg-mut{fill:var(--muted)} .svg-line{stroke:var(--line)}
+
+/* ---------- misc ---------- */
+.hidden{display:none !important}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;font-size:12px;font-family:monospace;background:var(--bg)}
+.catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:12px;margin-top:14px}
+.catcard{display:block;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)}
+.catcard:hover{border-color:var(--accent);background:var(--accent-soft);text-decoration:none}
+.catcard b{display:block;font-size:14.5px;letter-spacing:-.01em;margin-bottom:3px}
+.catcard .r{font-size:11.5px;font-weight:700;color:var(--accent);letter-spacing:.04em}
+.catcard .d{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:5px}
+.toTop{position:fixed;right:20px;bottom:20px;z-index:60;border-radius:999px;padding:11px 15px;box-shadow:var(--shadow)}
+
+/* ---------- print ---------- */
+@media print{
+  :root{--bg:#fff;--panel:#fff;--line:#ccc;--ink:#000;--muted:#444;--shadow:none}
+  header.top,nav.toc,.toTop,.noprint{display:none !important}
+  .wrap{display:block;max-width:none;padding:0}
+  .qa{break-inside:avoid;page-break-inside:avoid;border:1px solid #ddd;box-shadow:none;margin:8px 0;
+      content-visibility:visible !important;contain-intrinsic-size:auto !important}
+  .qa.closed .a{display:block !important}
+  .qa .chev{display:none}
+  pre{background:#f4f4f6;color:#111;border:1px solid #ddd;white-space:pre-wrap;font-size:11px}
+  .k,.s,.c,.n,.f{color:#111 !important}
+  figure{break-inside:avoid;page-break-inside:avoid}
+  section.sec{page-break-before:auto}
+  body{font-size:11.5pt}
+  a{color:#000;text-decoration:none}
+}
+
+.crumb{max-width:1400px;margin:0 auto;padding:14px 18px 0;font-size:13.5px;color:var(--muted)}
+.crumb a{font-weight:600}
+.pager{display:flex;justify-content:space-between;gap:12px;margin:34px 0 0;flex-wrap:wrap}
+.pn{display:inline-block;padding:12px 16px;border:1px solid var(--line);border-radius:12px;
+    background:var(--panel);font-weight:600;font-size:14px;box-shadow:var(--shadow)}
+.pn:hover{border-color:var(--accent);text-decoration:none}
+@media print{.crumb,.pager{display:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">QA</span><span>Performance, Security &amp; Non-Functional</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this section…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All 250 questions</a> &nbsp;·&nbsp; Performance, Security &amp; Non-Functional &nbsp;·&nbsp; Q216–Q230 (15 questions)</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+<section class="sec" id="s8">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 8</div>
+    <div>
+      <h2>Performance, Security &amp; Non-Functional Testing</h2>
+      <p>Q216 – Q230 · You are not applying for a performance-engineer role, so nobody expects mastery. What they check is whether you can <b>design</b> a load test, <b>read</b> a result, and name the OWASP risks — enough to be dangerous and to know when to call a specialist.</p>
+    </div>
+  </div>
+
+<figure>
+<svg viewBox="0 0 900 400" role="img" aria-label="JMeter test plan structure and performance metrics">
+  <text x="450" y="24" text-anchor="middle" class="svg-ink" font-size="16" font-weight="700">A load test: structure on the left, what you read on the right</text>
+  <g font-size="11.5">
+    <g><rect x="24" y="46" width="200" height="30" rx="8" fill="#4338ca"/>
+      <text x="124" y="66" text-anchor="middle" fill="#fff" font-weight="700">Test Plan</text></g>
+    <g><rect x="48" y="88" width="200" height="30" rx="8" fill="#4c39c6"/>
+      <text x="148" y="108" text-anchor="middle" fill="#fff" font-weight="700">Thread Group (users)</text></g>
+    <g><rect x="72" y="130" width="200" height="28" rx="8" fill="#3f5cbf"/>
+      <text x="172" y="149" text-anchor="middle" fill="#fff" font-weight="700">Config: CSV, HTTP defaults</text></g>
+    <g><rect x="72" y="166" width="200" height="28" rx="8" fill="#3f5cbf"/>
+      <text x="172" y="185" text-anchor="middle" fill="#fff" font-weight="700">Logic Controller</text></g>
+    <g><rect x="96" y="202" width="200" height="28" rx="8" fill="#2f7fb0"/>
+      <text x="196" y="221" text-anchor="middle" fill="#fff" font-weight="700">Sampler (HTTP request)</text></g>
+    <g><rect x="120" y="238" width="200" height="28" rx="8" fill="#2489a8"/>
+      <text x="220" y="257" text-anchor="middle" fill="#fff" font-weight="700">Pre / Post Processor</text></g>
+    <g><rect x="120" y="274" width="200" height="28" rx="8" fill="#1c9a9c"/>
+      <text x="220" y="293" text-anchor="middle" fill="#fff" font-weight="700">Assertion</text></g>
+    <g><rect x="96" y="310" width="200" height="28" rx="8" fill="#0d9488"/>
+      <text x="196" y="329" text-anchor="middle" fill="#fff" font-weight="700">Timer (think time)</text></g>
+    <g><rect x="48" y="346" width="200" height="28" rx="8" fill="#059669"/>
+      <text x="148" y="365" text-anchor="middle" fill="#fff" font-weight="700">Listener (results)</text></g>
+  </g>
+
+  <line x1="360" y1="46" x2="360" y2="380" stroke="var(--line)" stroke-width="2"/>
+
+  <g font-size="12">
+    <text x="400" y="62" class="svg-ink" font-weight="700" font-size="13">Read these, in this order</text>
+    <text x="400" y="92" class="svg-ink" font-weight="700">1. Error rate</text>
+    <text x="400" y="110" class="svg-mut">If it is not ~0%, response times are meaningless — fix errors first.</text>
+    <text x="400" y="140" class="svg-ink" font-weight="700">2. Throughput (req/sec)</text>
+    <text x="400" y="158" class="svg-mut">Did it keep rising with load, or flatten? Flat = saturation point found.</text>
+    <text x="400" y="188" class="svg-ink" font-weight="700">3. Response time percentiles</text>
+    <text x="400" y="206" class="svg-mut">p50 / p90 / p95 / p99 — never the average. The average hides the</text>
+    <text x="400" y="222" class="svg-mut">5% of users who are actually suffering.</text>
+    <text x="400" y="252" class="svg-ink" font-weight="700">4. Resource utilisation</text>
+    <text x="400" y="270" class="svg-mut">CPU, memory, GC pauses, DB connection pool, disk I/O, thread count.</text>
+    <text x="400" y="300" class="svg-ink" font-weight="700">5. Correlate the three graphs</text>
+    <text x="400" y="318" class="svg-mut">Response time up + throughput flat + CPU flat = the bottleneck is</text>
+    <text x="400" y="334" class="svg-mut">waiting on something else (usually the database or a downstream API).</text>
+  </g>
+  <rect x="386" y="346" width="498" height="48" rx="8" fill="var(--warn-soft)"/>
+  <text x="635" y="366" text-anchor="middle" class="svg-ink" font-size="11.5" font-weight="700">"Average response time was 1.2s" is a weak answer.</text>
+  <text x="635" y="384" text-anchor="middle" class="svg-ink" font-size="11.5" font-weight="700">"p95 was 3.4s against a 2s SLA" is a strong one.</text>
+</svg>
+<figcaption>Figure 12 — Load test anatomy and the order in which you interpret the results. The reading order matters more than the tool.</figcaption>
+</figure>
+
+<div class="qa">
+  <div class="q"><span class="num">Q216</span><span class="qt">Explain JMeter's main components.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Component</th><th>Purpose</th><th>Example</th></tr>
+      <tr><td><b>Test Plan</b></td><td>The container for everything</td><td>—</td></tr>
+      <tr><td><b>Thread Group</b></td><td>Defines the virtual users: count, ramp-up period, loop count / duration</td><td>200 users, ramp up over 120s, run 30 min</td></tr>
+      <tr><td><b>Sampler</b></td><td>The actual request sent</td><td>HTTP Request, JDBC Request, JMS, FTP</td></tr>
+      <tr><td><b>Logic Controller</b></td><td>Controls flow</td><td>Loop, If, Transaction, Throughput, Once Only</td></tr>
+      <tr><td><b>Config Element</b></td><td>Shared configuration/data</td><td>HTTP Request Defaults, CSV Data Set Config, Cookie/Header Manager</td></tr>
+      <tr><td><b>Pre/Post Processor</b></td><td>Runs before/after a sampler</td><td>JSON Extractor, Regular Expression Extractor (correlation)</td></tr>
+      <tr><td><b>Assertion</b></td><td>Validates the response — without these you are only measuring, not testing</td><td>Response Assertion, JSON Assertion, Duration Assertion</td></tr>
+      <tr><td><b>Timer</b></td><td>Adds think time between requests to model real users</td><td>Constant, Gaussian Random, Uniform Random</td></tr>
+      <tr><td><b>Listener</b></td><td>Collects and displays results</td><td>Summary Report, Aggregate Report, View Results Tree</td></tr>
+    </table>
+    <div class="gotcha"><b>Two things interviewers listen for:</b> (1) you run real tests in <b>non-GUI mode</b> — <code>jmeter -n -t plan.jmx -l results.jtl -e -o report/</code> — because the GUI itself consumes resources and skews results; (2) you <b>disable View Results Tree</b> during the run for the same reason. Candidates who only know the GUI have never run a real load test.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q217</span><span class="qt">What is correlation and parameterisation in performance testing?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Parameterisation</b> — replacing hardcoded input with varied data so every virtual user is different. Without it, 200 users all log in as the same account, all hit the same cached row, and your numbers are fiction.</li>
+      <li><b>Correlation</b> — capturing a <b>dynamic value the server generated</b> (session id, CSRF token, order id, JSESSIONID) from one response and feeding it into the next request. Without it, every request after login fails with 401/403 and you "prove" the system is blazing fast at returning errors.</li>
+    </ul>
+    <pre><code># Parameterisation — CSV Data Set Config
+users.csv:  email,password
+            qa_user_01@test.com,Pass@123
+            qa_user_02@test.com,Pass@123
+Then reference them as  ${email} / ${password}  in the sampler.
+
+# Correlation — JSON Extractor on the login response
+  Variable name : authToken
+  JSON path     : $.access_token
+Then use  ${authToken}  in the Authorization header of every later request.
+
+# Correlation — Regular Expression Extractor (HTML/CSRF)
+  Reference name        : csrf
+  Regular Expression    : name="_csrf" value="(.+?)"
+  Template              : $1$
+  Match No.             : 1</code></pre>
+    <div class="tip">If you have only ever done functional automation, say exactly that and then explain the concepts anyway: <i>"I've supported performance runs rather than owned them — I prepared the data and validated the functional correctness of the scripts. Correlation was the thing that broke most often."</i> Honest scope plus real understanding beats bluffing every time.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q218</span><span class="qt">How would you design a load test for a checkout flow?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ol>
+      <li><b>Get the requirement in numbers.</b> "Fast" is not a requirement. Ask for: expected concurrent users, peak hour transactions, growth headroom, and the SLA — e.g. <i>"p95 &lt; 2s at 500 concurrent users, error rate &lt; 0.1%"</i>. If nobody knows, derive it from production analytics.</li>
+      <li><b>Build a workload model</b> from real traffic, not from imagination: 70% browse, 20% search, 8% add-to-cart, 2% checkout. Model the <i>mix</i>, not just the one flow you care about.</li>
+      <li><b>Add realistic think time</b> — humans pause 3–10 seconds between clicks. Zero think time turns a 500-user test into an unintentional stress test.</li>
+      <li><b>Prepare data</b> — unique users, unique carts, enough product inventory that you don't all collide on one SKU, and a DB seeded to production-like volume (query plans change dramatically between 1k and 10M rows).</li>
+      <li><b>Environment</b> — production-like scale, or a known ratio you can extrapolate from. Document the difference; a test on a half-size environment does not prove full-size behaviour.</li>
+      <li><b>Ramp up gradually</b> and include a steady state; don't slam all users in at second zero unless you are deliberately spike testing.</li>
+      <li><b>Monitor the server side</b>, not just the client: CPU, memory, GC, DB connections, slow query log, downstream API latency. The client only tells you <i>that</i> it was slow, never <i>why</i>.</li>
+      <li><b>Baseline first</b>, then compare every later run to it. A single run without a baseline tells you almost nothing.</li>
+      <li><b>Exclude third parties</b> you don't own, or stub them — you can't fix someone else's payment sandbox, and it will dominate your numbers.</li>
+    </ol>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q219</span><span class="qt">The load test shows response times rising. How do you find the bottleneck?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Work from the outside in, and use the pattern of the three curves.</p>
+    <table>
+      <tr><th>Pattern</th><th>Likely cause</th></tr>
+      <tr><td>Response time ↑, throughput flat, CPU low</td><td>Waiting on something: DB, downstream API, lock contention, thread/connection pool exhaustion</td></tr>
+      <tr><td>Response time ↑, CPU pegged at 100%</td><td>Genuine compute limit or an inefficient algorithm; scale out or optimise the hot path</td></tr>
+      <tr><td>Response time rises <i>gradually</i> over hours</td><td>Memory leak, connection leak, unbounded cache, log disk filling — classic soak-test finding</td></tr>
+      <tr><td>Periodic latency spikes</td><td>Garbage collection pauses, cron/batch jobs, cache expiry stampede</td></tr>
+      <tr><td>Errors start at a specific user count</td><td>A hard limit: connection pool size, thread pool, rate limiter, file descriptors</td></tr>
+      <tr><td>Only one endpoint is slow</td><td>Missing DB index or an N+1 query — check the slow query log first</td></tr>
+    </table>
+    <p>Tools to name: APM (New Relic, Dynatrace, AppDynamics), distributed tracing (Jaeger, Zipkin, OpenTelemetry), <code>EXPLAIN</code> plans and the slow query log, JVM tools (JFR, VisualVM, GC logs), and Grafana dashboards.</p>
+    <div class="tip">Be clear about your role: <i>"I identify and evidence the bottleneck; fixing it is usually a joint call with the backend team. What I own is making sure the finding is reproducible and quantified."</i></div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q220</span><span class="qt">JMeter vs k6 vs Gatling — which would you pick?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th></th><th>JMeter</th><th>k6</th><th>Gatling</th></tr>
+      <tr><td>Script</td><td>XML via GUI (or code)</td><td>JavaScript</td><td>Scala / Java / Kotlin DSL</td></tr>
+      <tr><td>Learning curve</td><td>Easy to start, GUI-driven</td><td>Easy for JS developers</td><td>Steeper</td></tr>
+      <tr><td>Resource use per VU</td><td>Thread-per-user — heavy</td><td>Goroutine-based — very light</td><td>Async — light</td></tr>
+      <tr><td>Version control / diffs</td><td>Painful (large XML)</td><td>Clean (plain code)</td><td>Clean (plain code)</td></tr>
+      <tr><td>Protocols</td><td>Very broad (HTTP, JDBC, JMS, LDAP, FTP…)</td><td>Mostly HTTP, gRPC, WebSocket</td><td>HTTP, WebSocket, JMS</td></tr>
+      <tr><td>CI/CD fit</td><td>Good in non-GUI mode</td><td>Excellent — designed for it</td><td>Excellent</td></tr>
+      <tr><td>Reporting</td><td>HTML dashboard</td><td>Built-in + Grafana</td><td>Very good built-in</td></tr>
+    </table>
+    <p><b>Balanced answer:</b> "JMeter where the team needs breadth of protocols or already has a library of plans; k6 for a modern CI-first setup where performance tests live in the repo next to the code and run on every release. The scripting model is what really decides it — plain code is reviewable and diffable, XML is not."</p>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<figure>
+<svg viewBox="0 0 900 330" role="img" aria-label="OWASP Top 10 and how a tester checks each">
+  <text x="450" y="24" text-anchor="middle" class="svg-ink" font-size="16" font-weight="700">OWASP Top 10 — and the one check a QA can run for each</text>
+  <g font-size="11">
+    <g><rect x="20" y="44" width="425" height="50" rx="9" fill="var(--danger-soft)"/>
+      <text x="34" y="64" class="svg-ink" font-weight="700">A01 Broken Access Control</text>
+      <text x="34" y="82" class="svg-mut">Change an id in the URL/API and see if you get someone else's data (IDOR)</text></g>
+    <g><rect x="20" y="100" width="425" height="50" rx="9" fill="var(--warn-soft)"/>
+      <text x="34" y="120" class="svg-ink" font-weight="700">A02 Cryptographic Failures</text>
+      <text x="34" y="138" class="svg-mut">HTTPS everywhere? Passwords hashed? Card data or tokens in logs/localStorage?</text></g>
+    <g><rect x="20" y="156" width="425" height="50" rx="9" fill="var(--danger-soft)"/>
+      <text x="34" y="176" class="svg-ink" font-weight="700">A03 Injection (SQL / NoSQL / command / XSS)</text>
+      <text x="34" y="194" class="svg-mut">Submit ' OR '1'='1 and &lt;script&gt;alert(1)&lt;/script&gt; into every input</text></g>
+    <g><rect x="20" y="212" width="425" height="50" rx="9" fill="var(--accent-soft)"/>
+      <text x="34" y="232" class="svg-ink" font-weight="700">A04 Insecure Design</text>
+      <text x="34" y="250" class="svg-mut">Threat-model in refinement: what could an attacker do with this feature?</text></g>
+    <g><rect x="20" y="268" width="425" height="50" rx="9" fill="var(--warn-soft)"/>
+      <text x="34" y="288" class="svg-ink" font-weight="700">A05 Security Misconfiguration</text>
+      <text x="34" y="306" class="svg-mut">Default credentials, directory listing, stack traces shown to users, debug on</text></g>
+
+    <g><rect x="460" y="44" width="425" height="50" rx="9" fill="var(--warn-soft)"/>
+      <text x="474" y="64" class="svg-ink" font-weight="700">A06 Vulnerable &amp; Outdated Components</text>
+      <text x="474" y="82" class="svg-mut">npm audit / OWASP Dependency-Check in the pipeline</text></g>
+    <g><rect x="460" y="100" width="425" height="50" rx="9" fill="var(--danger-soft)"/>
+      <text x="474" y="120" class="svg-ink" font-weight="700">A07 Identification &amp; Authentication Failures</text>
+      <text x="474" y="138" class="svg-mut">Session valid after logout? Brute force allowed? Weak password accepted?</text></g>
+    <g><rect x="460" y="156" width="425" height="50" rx="9" fill="var(--accent-soft)"/>
+      <text x="474" y="176" class="svg-ink" font-weight="700">A08 Software &amp; Data Integrity Failures</text>
+      <text x="474" y="194" class="svg-mut">Unsigned updates, untrusted CI plugins, insecure deserialisation</text></g>
+    <g><rect x="460" y="212" width="425" height="50" rx="9" fill="var(--accent2-soft)"/>
+      <text x="474" y="232" class="svg-ink" font-weight="700">A09 Logging &amp; Monitoring Failures</text>
+      <text x="474" y="250" class="svg-mut">Is a failed login attempt logged and alertable? Are logs leaking PII?</text></g>
+    <g><rect x="460" y="268" width="425" height="50" rx="9" fill="var(--warn-soft)"/>
+      <text x="474" y="288" class="svg-ink" font-weight="700">A10 Server-Side Request Forgery (SSRF)</text>
+      <text x="474" y="306" class="svg-mut">Any field taking a URL — can it be pointed at an internal address?</text></g>
+  </g>
+</svg>
+<figcaption>Figure 13 — You are not expected to be a penetration tester. You are expected to know these ten names and one practical check for each.</figcaption>
+</figure>
+
+<div class="qa">
+  <div class="q"><span class="num">Q221</span><span class="qt">Walk me through the OWASP Top 10.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>See Figure 13 for the full list with a practical check for each. Structure your spoken answer as: <b>the risk → what it looks like → how I'd test it</b>. You do not need to recite all ten in order; naming five with a concrete test each scores better than listing ten you cannot explain.</p>
+    <h5>The three to know cold</h5>
+    <ul>
+      <li><b>A01 Broken Access Control</b> — the #1 risk. The test is trivial and finds real bugs: log in as user A, capture an API call like <code>GET /api/orders/1001</code>, change it to <code>1002</code> and see whether you get user B's order. Same for changing a role field in a request body, or hitting an admin URL directly as a normal user.</li>
+      <li><b>A03 Injection</b> — untrusted input reaching an interpreter. SQL injection, and XSS (stored and reflected).</li>
+      <li><b>A07 Authentication failures</b> — session not invalidated on logout, no rate limiting on login, weak password policy, session fixation, tokens that never expire.</li>
+    </ul>
+    <div class="tip">Add the shift-left framing: <i>"I raise these as acceptance criteria during refinement — 'a user must not be able to read another user's order' is a testable requirement, not a security afterthought."</i></div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q222</span><span class="qt">How do you practically test for SQL injection and XSS?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <h5>SQL injection</h5>
+    <pre><code>' OR '1'='1                    -- classic auth bypass in a login field
+admin'--                       -- comment out the password check
+' UNION SELECT null,null--     -- column probing
+'; WAITFOR DELAY '0:0:5'--     -- blind/time-based: did the response take 5s longer?
+1 OR 1=1                       -- numeric parameters, no quotes needed</code></pre>
+    <p>Where to try it: login fields, search boxes, URL query parameters, sort/filter parameters, and <b>API request bodies</b> — which are frequently unprotected because the UI validates but the API does not.</p>
+    <p><b>What "safe" looks like:</b> the input is treated as a literal string, you get a normal "no results" or a validation error — never a database error message, never a different result set, and never a timing difference.</p>
+    <h5>XSS</h5>
+    <pre><code>&lt;script&gt;alert(1)&lt;/script&gt;
+&lt;img src=x onerror=alert(1)&gt;
+"&gt;&lt;svg onload=alert(1)&gt;
+javascript:alert(1)                 -- in any field that becomes a link</code></pre>
+    <ul>
+      <li><b>Reflected</b> — the payload comes back in the same response (e.g. in a search results heading).</li>
+      <li><b>Stored</b> — it is saved and executes for <i>other</i> users later (profile name, review, comment). Far more dangerous.</li>
+      <li><b>DOM-based</b> — the payload never reaches the server; client-side JS writes it into the DOM.</li>
+      <li><b>Pass criteria:</b> the payload is displayed as literal text, HTML-encoded in the response, and no dialog appears.</li>
+    </ul>
+    <div class="gotcha">Say this explicitly, because it matters: <b>only ever run these against systems you are authorised to test</b> — your own QA environment, with the team's knowledge. Never against production, and never against a third party. Interviewers notice when a candidate shows that instinct unprompted.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q223</span><span class="qt">What security tools would you put in the pipeline?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Type</th><th>What it does</th><th>Tools</th><th>When it runs</th></tr>
+      <tr><td><b>SAST</b> (static)</td><td>Scans source code for insecure patterns</td><td>SonarQube, Semgrep, CodeQL</td><td>Every PR</td></tr>
+      <tr><td><b>SCA</b> (dependencies)</td><td>Flags known CVEs in libraries</td><td><code>npm audit</code>, OWASP Dependency-Check, Snyk, Dependabot</td><td>Every build + scheduled</td></tr>
+      <tr><td><b>DAST</b> (dynamic)</td><td>Attacks the running app</td><td>OWASP ZAP (has a CI-friendly baseline scan), Burp Suite</td><td>Nightly against QA</td></tr>
+      <tr><td><b>Secret scanning</b></td><td>Finds committed keys/passwords</td><td>gitleaks, truffleHog, GitHub secret scanning</td><td>Pre-commit + CI</td></tr>
+      <tr><td><b>Container scanning</b></td><td>Vulnerabilities in base images</td><td>Trivy, Grype</td><td>On image build</td></tr>
+      <tr><td><b>Pen test</b></td><td>Human expert, creative attacks</td><td>External specialists</td><td>Per major release / annually</td></tr>
+    </table>
+    <p>The realistic QA role: own the <b>automated</b> layers (SCA, secret scanning, a ZAP baseline scan), include security cases in functional testing (authorisation, session, input validation), and know when to escalate to a specialist. Do not claim to be a penetration tester.</p>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q224</span><span class="qt">How do you test authorisation properly? (The bug class most teams miss.)</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Authentication asks "who are you?"; <b>authorisation</b> asks "are you allowed to do this?" — and it is where the expensive bugs live, because the UI hides the button but the API often still accepts the call.</p>
+    <h5>The matrix I build</h5>
+    <p>Rows = roles (guest, user, premium user, support agent, admin). Columns = protected operations. Every cell is a test: allowed → 200, not allowed → <b>403</b> (not 200, not 500, and not a silent success).</p>
+    <pre><code>// The test that catches it — call the API directly, bypassing the UI
+@Test(dataProvider = "roles")
+public void userCannotReadAnotherUsersOrder(String role, String token) {
+    Response res = given().header("Authorization", "Bearer " + token)
+            .get("/api/v1/orders/" + OTHER_USERS_ORDER_ID);
+    assertEquals(res.statusCode(), 403,
+        role + " was able to read another user's order — broken access control");
+}</code></pre>
+    <h5>Variants to cover</h5>
+    <ul>
+      <li><b>IDOR / BOLA</b> — increment or guess an object id and see whose data comes back.</li>
+      <li><b>Vertical escalation</b> — a normal user calling an admin endpoint directly.</li>
+      <li><b>Horizontal escalation</b> — user A acting on user B's resource at the same privilege level.</li>
+      <li><b>Mass assignment</b> — adding <code>"role":"ADMIN"</code> to a profile-update payload and seeing if it sticks.</li>
+      <li><b>Hidden UI ≠ protected</b> — the button is hidden for this role, but is the endpoint itself protected?</li>
+      <li><b>Token misuse</b> — an expired token, a token from another tenant, a token after logout, a modified JWT payload.</li>
+    </ul>
+    <div class="tip">This single answer can carry an entire interview. It shows API thinking, security awareness, data-driven test design and an understanding of why UI-only testing is insufficient.</div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q225</span><span class="qt">Explain WCAG and how you'd run an accessibility testing programme.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p><b>WCAG</b> (Web Content Accessibility Guidelines) has three conformance levels: <b>A</b> (minimum), <b>AA</b> (the usual legal and contractual target), <b>AAA</b> (rarely required in full). Its four principles are <b>POUR</b>:</p>
+    <ul>
+      <li><b>Perceivable</b> — text alternatives for images, captions for video, sufficient colour contrast (4.5:1 normal text, 3:1 large text), information not conveyed by colour alone.</li>
+      <li><b>Operable</b> — everything reachable and usable by keyboard, no keyboard traps, visible focus, enough time to complete tasks, no flashing content.</li>
+      <li><b>Understandable</b> — predictable navigation, clear labels, helpful error messages that say how to fix the problem, consistent components.</li>
+      <li><b>Robust</b> — valid semantic HTML and correct ARIA so assistive technologies can parse it.</li>
+    </ul>
+    <h5>A realistic three-layer programme</h5>
+    <ol>
+      <li><b>Automated in CI</b> — axe-core in every Playwright/Selenium run. Catches roughly 30–40%: missing labels, contrast, missing alt, heading order.</li>
+      <li><b>Manual keyboard pass</b> — tab through the whole flow with the mouse unplugged. Fast, needs no tooling, and finds what scanners can't: illogical tab order, invisible focus, unreachable modals.</li>
+      <li><b>Screen reader spot checks</b> — NVDA (Windows), VoiceOver (Mac/iOS), TalkBack (Android) on the critical journeys, plus zoom to 200% and a large-font test.</li>
+    </ol>
+    <div class="gotcha">Never claim "we're WCAG compliant because axe passes". Automated tools cannot judge whether alt text is <i>meaningful</i>, whether the reading order makes sense, or whether an error is <i>understandable</i>. Stating that limitation is what makes the answer credible.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q226</span><span class="qt">What is contract testing and when do you need it?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>In a microservices system, full end-to-end tests across every service are slow, flaky and hard to own. <b>Contract testing</b> verifies the agreement between a <i>consumer</i> and a <i>provider</i> independently, without running both together.</p>
+    <ol>
+      <li>The <b>consumer</b> (e.g. the web app) writes a test declaring "when I call <code>GET /orders/1</code>, I expect a 200 with fields <code>id</code>, <code>status</code>, <code>total</code>". Running it produces a <b>pact file</b> and runs the consumer against a local mock built from it.</li>
+      <li>The pact is published to a broker.</li>
+      <li>The <b>provider</b> (the order service) replays every pact against its real implementation in its own pipeline. If a developer renames <code>total</code> to <code>totalAmount</code>, the provider build goes red <b>before</b> the change is deployed.</li>
+    </ol>
+    <p><b>When you need it:</b> multiple independently deployed services, teams releasing on different schedules, and a full E2E suite that is too slow or too flaky to gate every deploy. <b>When you don't:</b> a monolith, or a single team owning both sides where a shared integration test is simpler.</p>
+    <div class="tip">The framing that lands: <i>"Contract tests let me delete most of my cross-service end-to-end tests. I keep a handful of true E2E journeys for confidence, and catch integration breakages at the contract level, where the feedback is in seconds instead of an hour."</i> Tool to name: <b>Pact</b>.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q227</span><span class="qt">How do you approach visual regression testing?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Functional tests pass while the layout is broken — the button works, it's just invisible behind the header. Visual regression catches that by comparing rendered screenshots against approved baselines.</p>
+    <table>
+      <tr><th>Approach</th><th>How it compares</th><th>Trade-off</th></tr>
+      <tr><td>Built-in (<code>toHaveScreenshot</code>)</td><td>Pixel diff with a tolerance</td><td>Free, in-repo; baselines are OS/browser-specific and noisy</td></tr>
+      <tr><td>Applitools / Percy</td><td>AI/perceptual comparison</td><td>Ignores anti-aliasing noise, handles cross-browser baselines; paid</td></tr>
+      <tr><td>Storybook + snapshot tests</td><td>Per-component</td><td>Very stable — the best place to start</td></tr>
+    </table>
+    <h5>Making it survivable</h5>
+    <ul>
+      <li>Generate baselines <b>in the same container CI uses</b>, or every run fails on font rendering alone.</li>
+      <li><b>Mask</b> everything dynamic: dates, avatars, ads, charts, random ids, session-specific text.</li>
+      <li>Freeze animations and hide the caret.</li>
+      <li>Apply it to <b>components and a few key pages</b>, not every screen — otherwise baseline maintenance eats the team.</li>
+      <li>Treat a diff as a <i>question</i>, not a failure: someone must approve whether the change was intended.</li>
+    </ul>
+    <div class="gotcha">The honest risk to state: visual tests have the worst signal-to-noise ratio of any test type. A suite that cries wolf gets ignored within two sprints. Start with 10 high-value screens and grow only if the team is actually acting on the diffs.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q228</span><span class="qt">How do you handle test data privacy and compliance?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Copying a production database into QA is the single most common compliance violation in testing teams — and increasingly illegal under GDPR, India's DPDP Act, HIPAA and PCI-DSS.</p>
+    <ul>
+      <li><b>Anonymisation / masking</b> — irreversibly replace names, emails, phone numbers, card and ID numbers while preserving format and distribution, so the data still behaves realistically.</li>
+      <li><b>Pseudonymisation</b> — replace identifiers with consistent tokens so relationships across tables still work.</li>
+      <li><b>Synthetic data</b> — generate it (Faker, Mockaroo) rather than copying. Safest option; the challenge is realistic edge cases and volume.</li>
+      <li><b>Subsetting</b> — take a referentially-consistent 1–5% slice instead of the whole database.</li>
+      <li><b>Minimisation</b> — don't copy the columns you don't need to test.</li>
+      <li><b>Never log or screenshot PII</b> — mask it in test reports too; a failure screenshot of a real customer's account is still a data breach.</li>
+      <li><b>Access control &amp; retention</b> — restrict who can reach lower environments and delete test data on a schedule.</li>
+      <li><b>Payment data</b> — never real card numbers. Use the gateway's official test cards.</li>
+    </ul>
+    <div class="tip">Mentioning GDPR/DPDP unprompted is a genuine differentiator — it signals you think about risk beyond the feature, which is exactly what a QA lead needs.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q229</span><span class="qt">What is chaos engineering / resilience testing?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Deliberately injecting failure into a system to verify it degrades gracefully instead of collapsing — testing the <i>recovery</i> path, which is the path that is almost never exercised before a real incident.</p>
+    <h5>Experiments</h5>
+    <ul>
+      <li>Kill a service instance / pod — does traffic reroute? Does the user notice?</li>
+      <li>Add latency or drop packets between services — do timeouts, retries and circuit breakers behave, or do they cascade?</li>
+      <li>Take the database read replica down — does it fail over cleanly?</li>
+      <li>Exhaust CPU/memory/disk on a node.</li>
+      <li>Make a third-party dependency (payment gateway, email provider) fail or hang — does the user get a sensible message and is the order left in a recoverable state?</li>
+      <li>Clock skew and expired certificates — an underrated source of real outages.</li>
+    </ul>
+    <p><b>The discipline:</b> form a hypothesis ("if the payment gateway times out, orders stay in PENDING and the customer sees a retry option"), define the blast radius, run the smallest possible experiment, measure, and always have an abort switch. Tools: Chaos Monkey, Gremlin, LitmusChaos, Toxiproxy.</p>
+    <div class="tip">Even without chaos tooling, you can say something true and valuable: <i>"I test the failure paths deliberately — I stub the payment API to return 500 and to hang, and assert the UI message, the retry, and the final data state. Most teams only test the happy path of their error handling."</i></div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q230</span><span class="qt">What is observability, and how does it change a tester's job?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Monitoring tells you <i>that</i> something is wrong against known thresholds. <b>Observability</b> is the ability to ask new questions about system behaviour without shipping new code — built on three pillars:</p>
+    <ul>
+      <li><b>Logs</b> — discrete events with context and a correlation id.</li>
+      <li><b>Metrics</b> — numeric time series (error rate, latency percentiles, throughput, saturation).</li>
+      <li><b>Traces</b> — one request followed across every service, showing where the time went.</li>
+    </ul>
+    <h5>What changes for QA</h5>
+    <ul>
+      <li><b>Testability becomes a requirement you advocate for</b> — correlation ids, structured logs, meaningful error codes. "How will we debug this in production?" is a refinement question.</li>
+      <li><b>Better bug reports</b> — attaching a trace id turns a two-day investigation into a ten-minute one.</li>
+      <li><b>Shift-right testing</b> — synthetic monitoring that reuses your E2E tests against production on a schedule, so you detect breakage before customers report it.</li>
+      <li><b>Data-driven regression scope</b> — production usage data tells you which flows actually matter, so risk-based selection stops being guesswork.</li>
+      <li><b>Release verification</b> — after a deploy, watch error rate and latency rather than only running a smoke suite.</li>
+    </ul>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+</section>
+
+  <nav class="pager">
+      <a class="pn" href="07-appium-mobile.html">&#8592; Appium &amp; Mobile Automation</a>
+      <a class="pn" href="09-practical-coding-exercises.html">Practical Coding Exercises &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script>
+(function(){
+  /* ---- tiny offline syntax highlighter (Java / TS / JS / YAML-ish) ---- */
+  var KW = {};
+  ("abstract assert async await boolean break byte case catch char class const continue default do double else enum export extends final finally float for from function if implements import in instanceof int interface let long new package private protected public readonly return static super switch this throw throws try type typeof var void while yield true false null undefined String Integer List ArrayList Map HashMap Set Optional Thread Exception WebDriver WebElement By Actions Select Alert ChromeDriver ChromeOptions Duration Page Locator Browser BrowserContext expect test describe beforeEach afterEach beforeAll afterAll it Promise void any number string unknown as await").split(" ").forEach(function(w){KW[w]=1;});
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function plain(txt){
+    return esc(txt).replace(/\b([A-Za-z_$][\w$]*)\b|\b(\d+(?:\.\d+)?)\b|(@[A-Za-z]\w*)/g,
+      function(m,word,num,ann){
+        if(ann) return '<span class="f">'+ann+'</span>';
+        if(num) return '<span class="n">'+num+'</span>';
+        if(word && KW[word]) return '<span class="k">'+word+'</span>';
+        return m;
+      });
+  }
+  [].forEach.call(document.querySelectorAll('pre > code'), function(el){
+    var src = el.textContent, out = '', last = 0, m;
+    var re = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|^\s*#[^\n]*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)/gm;
+    while((m = re.exec(src))){
+      out += plain(src.slice(last, m.index));
+      out += m[1] ? '<span class="c">'+esc(m[1])+'</span>' : '<span class="s">'+esc(m[2])+'</span>';
+      last = re.lastIndex;
+    }
+    out += plain(src.slice(last));
+    el.innerHTML = out;
+  });
+
+  var cards = [].slice.call(document.querySelectorAll('.qa'));
+  var countEl = document.getElementById('count');
+
+  /* number every card automatically and build searchable text */
+  cards.forEach(function(c,i){
+    var n = c.querySelector('.num');
+    if(n && !n.textContent.trim()) n.textContent = 'Q' + (i+1);
+    c.dataset.txt = c.textContent.toLowerCase();
+    c.dataset.isq = (n && /^Q\d+$/.test(n.textContent.trim())) ? '1' : '0';
+  });
+
+  var total = cards.filter(function(c){
+    var n = c.querySelector('.num');
+    return n && /^Q\d+$/.test(n.textContent.trim());
+  }).length;
+  function updateCount(v){ countEl.textContent = (v===undefined? total : v) + ' / ' + total + ' questions'; }
+  updateCount();
+
+  /* toggle single card */
+  document.addEventListener('click', function(e){
+    var q = e.target.closest('.q');
+    if(q && q.parentElement.classList.contains('qa')) q.parentElement.classList.toggle('closed');
+  });
+
+  /* quiz mode */
+  var quizOn=false, quizBtn=document.getElementById('quiz');
+  quizBtn.addEventListener('click', function(){
+    quizOn=!quizOn;
+    quizBtn.classList.toggle('on',quizOn);
+    quizBtn.textContent = quizOn? 'Study mode':'Quiz mode';
+    cards.forEach(function(c){ c.classList.toggle('closed',quizOn); });
+  });
+
+  /* expand all */
+  document.getElementById('expand').addEventListener('click', function(){
+    cards.forEach(function(c){ c.classList.remove('closed'); });
+    quizOn=false; quizBtn.classList.remove('on'); quizBtn.textContent='Quiz mode';
+  });
+
+  /* theme */
+  var root=document.documentElement, themeBtn=document.getElementById('theme');
+  function paintTheme(){ themeBtn.textContent = root.getAttribute('data-theme')==='dark' ? 'Light':'Dark'; }
+  var saved = localStorage.getItem('qa-theme'); if(saved) root.setAttribute('data-theme',saved);
+  paintTheme();
+  themeBtn.addEventListener('click', function(){
+    var next = root.getAttribute('data-theme')==='dark' ? 'light':'dark';
+    root.setAttribute('data-theme',next); localStorage.setItem('qa-theme',next); paintTheme();
+  });
+
+  /* search */
+  var box=document.getElementById('search'), t;
+  box.addEventListener('input', function(){
+    clearTimeout(t);
+    t=setTimeout(function(){
+      var q=box.value.trim().toLowerCase(), shown=0;
+      cards.forEach(function(c){
+        var hit = !q || c.dataset.txt.indexOf(q)>-1;
+        c.classList.toggle('hidden',!hit);
+        if(hit && c.dataset.isq === '1') shown++;
+      });
+      document.querySelectorAll('main figure').forEach(function(f){ f.classList.toggle('hidden', !!q); });
+      document.querySelectorAll('section.sec').forEach(function(s){
+        var any = s.querySelector('.qa:not(.hidden)');
+        s.classList.toggle('hidden', !!q && !any);
+      });
+      updateCount(shown);
+    },120);
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='/' && document.activeElement!==box){ e.preventDefault(); box.focus(); }
+    if(e.key==='Escape' && document.activeElement===box){ box.value=''; box.dispatchEvent(new Event('input')); box.blur(); }
+  });
+})();
+</script>
+</body>
+</html>

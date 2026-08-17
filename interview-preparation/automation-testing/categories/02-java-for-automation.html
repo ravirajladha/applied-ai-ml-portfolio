@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Java Essentials for Automation — Automation Interview Prep (Q42–Q65)</title>
+<meta name="description" content="OOP, collections, exceptions, Java 8 streams, generics, ThreadLocal and coding-round questions.">
+<style>
+:root{
+  --bg:#f6f7fb; --panel:#ffffff; --ink:#161a22; --muted:#5b6478; --line:#e2e6ef;
+  --accent:#4338ca; --accent-soft:#eef0ff; --accent2:#0d9488; --accent2-soft:#e6f7f4;
+  --warn:#b45309; --warn-soft:#fff5e6; --danger:#be123c; --danger-soft:#ffeaf0;
+  --code-bg:#0f172a; --code-ink:#e2e8f0; --code-key:#93c5fd; --code-str:#86efac;
+  --code-com:#94a3b8; --code-num:#fca5a5; --code-fn:#fcd34d;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+  --radius:14px;
+}
+html[data-theme="dark"]{
+  --bg:#0b0f17; --panel:#121826; --ink:#e6eaf2; --muted:#9aa5bb; --line:#232c3d;
+  --accent:#a5b4fc; --accent-soft:#1c2340; --accent2:#5eead4; --accent2-soft:#0e2b28;
+  --warn:#fbbf24; --warn-soft:#33280d; --danger:#fda4af; --danger-soft:#3a1220;
+  --code-bg:#080d16; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- top bar ---------- */
+header.top{
+  position:sticky; top:0; z-index:50; background:var(--panel);
+  border-bottom:1px solid var(--line); box-shadow:0 1px 0 rgba(0,0,0,.02);
+}
+.top-in{max-width:1400px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:15px}
+.brand .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#fff;font-size:13px}
+.tools{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input#search{
+  width:min(360px,46vw); padding:9px 12px; border:1px solid var(--line); border-radius:10px;
+  background:var(--bg); color:var(--ink); font-size:14px; outline:none;
+}
+input#search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+button.btn{
+  padding:9px 13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap
+}
+button.btn:hover{border-color:var(--accent);color:var(--accent)}
+button.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.count{font-size:12px;color:var(--muted);white-space:nowrap}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1400px;margin:0 auto;padding:22px 18px 80px;display:grid;grid-template-columns:262px 1fr;gap:26px}
+@media(max-width:1000px){.wrap{grid-template-columns:1fr}nav.toc{position:static;max-height:none}}
+nav.toc{
+  position:sticky; top:72px; align-self:start; max-height:calc(100vh - 92px); overflow:auto;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow);
+}
+nav.toc h4{margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+nav.toc a{display:block;padding:7px 9px;border-radius:8px;color:var(--ink);font-size:13.5px;line-height:1.35}
+nav.toc a:hover{background:var(--accent-soft);text-decoration:none}
+nav.toc a .n{color:var(--muted);font-size:11.5px;display:block}
+nav.toc .grp{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+
+main{min-width:0}
+
+/* ---------- hero ---------- */
+.hero{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px 28px;box-shadow:var(--shadow);margin-bottom:22px}
+.hero h1{margin:0 0 6px;font-size:30px;letter-spacing:-.03em;line-height:1.2}
+.hero .sub{color:var(--muted);font-size:15px;margin:0 0 16px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:104px}
+.stat b{display:block;font-size:21px;letter-spacing:-.02em}
+.stat span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+/* ---------- sections ---------- */
+section.sec{margin:34px 0 0;scroll-margin-top:80px}
+.sec-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px;padding-bottom:12px;border-bottom:2px solid var(--line)}
+.sec-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-radius:10px;font-weight:800;font-size:13px;padding:7px 11px;white-space:nowrap;margin-top:3px}
+.sec-head h2{margin:0;font-size:23px;letter-spacing:-.02em}
+.sec-head p{margin:3px 0 0;color:var(--muted);font-size:14px}
+
+/* ---------- q cards ---------- */
+.qa{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin:14px 0;box-shadow:var(--shadow);overflow:hidden;
+     content-visibility:auto;contain-intrinsic-size:auto 460px}
+.qa .q{padding:15px 18px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;user-select:none}
+.qa .q:hover{background:var(--accent-soft)}
+.qa .num{background:var(--accent-soft);color:var(--accent);border-radius:8px;font-weight:800;font-size:12.5px;padding:4px 8px;min-width:44px;text-align:center;margin-top:2px;font-variant-numeric:tabular-nums}
+.qa .qt{font-weight:650;font-size:16.5px;letter-spacing:-.01em;flex:1;line-height:1.45}
+.qa .chev{color:var(--muted);font-size:13px;margin-top:5px;transition:transform .18s}
+.qa.closed .a{display:none}
+.qa.closed .chev{transform:rotate(-90deg)}
+.a{padding:2px 18px 18px 74px;border-top:1px solid var(--line);margin-top:-1px}
+@media(max-width:640px){.a{padding-left:18px}}
+.a>p:first-child{margin-top:14px}
+.a p{margin:10px 0}
+.a ul,.a ol{margin:10px 0;padding-left:22px}
+.a li{margin:5px 0}
+.a h5{margin:16px 0 6px;font-size:14px;letter-spacing:.02em;color:var(--accent)}
+
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.tag.core{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.tag.adv{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.tag.trap{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+
+/* ---------- code ---------- */
+pre{background:var(--code-bg);color:var(--code-ink);padding:14px 16px;border-radius:11px;overflow:auto;font-size:13.2px;line-height:1.6;margin:12px 0;border:1px solid rgba(255,255,255,.07)}
+code{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+p code,li code,td code{background:var(--accent-soft);color:var(--accent);padding:1.5px 6px;border-radius:6px;font-size:13px;font-weight:600}
+.k{color:var(--code-key)} .s{color:var(--code-str)} .c{color:var(--code-com);font-style:italic}
+.n{color:var(--code-num)} .f{color:var(--code-fn)}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--bg);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+
+/* ---------- callouts ---------- */
+.note{border-left:4px solid var(--accent2);background:var(--accent2-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.tip{border-left:4px solid var(--warn);background:var(--warn-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.gotcha{border-left:4px solid var(--danger);background:var(--danger-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.note b,.tip b,.gotcha b{letter-spacing:.02em}
+
+/* ---------- figures ---------- */
+figure{margin:18px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+figure svg{width:100%;height:auto;display:block}
+figcaption{margin-top:10px;font-size:13px;color:var(--muted);text-align:center}
+.svg-ink{fill:var(--ink)} .svg-mut{fill:var(--muted)} .svg-line{stroke:var(--line)}
+
+/* ---------- misc ---------- */
+.hidden{display:none !important}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;font-size:12px;font-family:monospace;background:var(--bg)}
+.catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:12px;margin-top:14px}
+.catcard{display:block;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)}
+.catcard:hover{border-color:var(--accent);background:var(--accent-soft);text-decoration:none}
+.catcard b{display:block;font-size:14.5px;letter-spacing:-.01em;margin-bottom:3px}
+.catcard .r{font-size:11.5px;font-weight:700;color:var(--accent);letter-spacing:.04em}
+.catcard .d{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:5px}
+.toTop{position:fixed;right:20px;bottom:20px;z-index:60;border-radius:999px;padding:11px 15px;box-shadow:var(--shadow)}
+
+/* ---------- print ---------- */
+@media print{
+  :root{--bg:#fff;--panel:#fff;--line:#ccc;--ink:#000;--muted:#444;--shadow:none}
+  header.top,nav.toc,.toTop,.noprint{display:none !important}
+  .wrap{display:block;max-width:none;padding:0}
+  .qa{break-inside:avoid;page-break-inside:avoid;border:1px solid #ddd;box-shadow:none;margin:8px 0;
+      content-visibility:visible !important;contain-intrinsic-size:auto !important}
+  .qa.closed .a{display:block !important}
+  .qa .chev{display:none}
+  pre{background:#f4f4f6;color:#111;border:1px solid #ddd;white-space:pre-wrap;font-size:11px}
+  .k,.s,.c,.n,.f{color:#111 !important}
+  figure{break-inside:avoid;page-break-inside:avoid}
+  section.sec{page-break-before:auto}
+  body{font-size:11.5pt}
+  a{color:#000;text-decoration:none}
+}
+
+.crumb{max-width:1400px;margin:0 auto;padding:14px 18px 0;font-size:13.5px;color:var(--muted)}
+.crumb a{font-weight:600}
+.pager{display:flex;justify-content:space-between;gap:12px;margin:34px 0 0;flex-wrap:wrap}
+.pn{display:inline-block;padding:12px 16px;border:1px solid var(--line);border-radius:12px;
+    background:var(--panel);font-weight:600;font-size:14px;box-shadow:var(--shadow)}
+.pn:hover{border-color:var(--accent);text-decoration:none}
+@media print{.crumb,.pager{display:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">QA</span><span>Java Essentials for Automation</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this section…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All 250 questions</a> &nbsp;·&nbsp; Java Essentials for Automation &nbsp;·&nbsp; Q42–Q65 (24 questions)</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+<section class="sec" id="s2">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 2</div>
+    <div>
+      <h2>Java Essentials for Automation</h2>
+      <p>Q42 – Q65 · Interviewers test Java to see whether you can <i>design</i> a framework or only <i>use</i> one. Every answer below is anchored to an automation use case, because that is what they want to hear.</p>
+    </div>
+  </div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q42</span><span class="qt">Explain the four pillars of OOP — with examples from your automation framework.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Do not give the textbook definition alone. Give the definition <b>plus where it lives in a Selenium framework</b>.</p>
+    <table>
+      <tr><th>Pillar</th><th>Definition</th><th>Where I use it</th></tr>
+      <tr><td><b>Encapsulation</b></td><td>Bundling data with the methods that operate on it, and hiding internal state behind accessors</td><td>Page Objects: <code>WebElement</code> locators are <code>private</code>; only business methods like <code>login(user, pass)</code> are public. Tests cannot touch locators directly.</td></tr>
+      <tr><td><b>Inheritance</b></td><td>A class acquires the fields/behaviour of a parent class (<code>extends</code>)</td><td><code>BasePage</code> holds the driver, waits and common helpers; every page extends it. <code>BaseTest</code> holds setup/teardown; every test class extends it.</td></tr>
+      <tr><td><b>Polymorphism</b></td><td>One interface, many implementations — compile-time (overloading) and runtime (overriding)</td><td><code>WebDriver driver = new ChromeDriver();</code> — the reference type is the interface, so a factory can return Chrome, Firefox or Edge and the tests never change. Also <code>click(WebElement)</code> / <code>click(By)</code> overloads.</td></tr>
+      <tr><td><b>Abstraction</b></td><td>Exposing <i>what</i> something does while hiding <i>how</i></td><td>A test calls <code>checkoutPage.payWith("UPI")</code>. It has no idea about iframes, waits or retries inside. Implemented with interfaces and abstract classes.</td></tr>
+    </table>
+    <pre><code>public class LoginPage extends BasePage {          // inheritance
+    @FindBy(id = "username") private WebElement user;   // encapsulation
+    @FindBy(id = "password") private WebElement pass;
+    @FindBy(css = "button[type='submit']") private WebElement signIn;
+
+    public LoginPage(WebDriver driver) { super(driver); }
+
+    public HomePage login(String u, String p) {     // abstraction
+        type(user, u);                             // helper from BasePage
+        type(pass, p);
+        click(signIn);
+        return new HomePage(driver);
+    }
+}</code></pre>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q43</span><span class="qt">Abstraction vs Encapsulation — they sound the same. What is the actual difference?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Abstraction</b> solves a problem at <b>design</b> level: <i>what</i> should be exposed. Achieved with interfaces and abstract classes. It hides <b>complexity/implementation</b>.</li>
+      <li><b>Encapsulation</b> solves it at <b>implementation</b> level: <i>how</i> to protect the exposed thing. Achieved with access modifiers and getters/setters. It hides <b>data</b>.</li>
+    </ul>
+    <p>One-liner: <b>abstraction hides the implementation; encapsulation hides the data.</b> A TV remote is abstraction (you press "volume up", not knowing the circuitry). The sealed plastic casing with screws is encapsulation.</p>
+    <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q44</span><span class="qt">Method overloading vs overriding, with the exact rules.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th></th><th>Overloading</th><th>Overriding</th></tr>
+      <tr><td>Also called</td><td>Compile-time / static polymorphism</td><td>Runtime / dynamic polymorphism</td></tr>
+      <tr><td>Where</td><td>Same class (or a subclass)</td><td>Subclass, method inherited from parent</td></tr>
+      <tr><td>Signature</td><td>Must differ: number, type or order of parameters</td><td>Must be identical</td></tr>
+      <tr><td>Return type</td><td>Can differ (but cannot differ <i>only</i> by return type)</td><td>Same, or a <b>covariant</b> subtype</td></tr>
+      <tr><td>Access modifier</td><td>Anything</td><td>Cannot be <b>more restrictive</b> than the parent</td></tr>
+      <tr><td>Exceptions</td><td>Anything</td><td>Cannot throw new/broader <b>checked</b> exceptions (unchecked is fine)</td></tr>
+      <tr><td><code>static</code>/<code>private</code>/<code>final</code></td><td>Can be overloaded</td><td>Cannot be overridden (static is <i>hidden</i>, not overridden)</td></tr>
+      <tr><td>Resolved</td><td>By the compiler, from the reference type</td><td>By the JVM, from the actual object type</td></tr>
+    </table>
+    <pre><code>// Overloading — a reusable click helper
+public void click(WebElement el)        { el.click(); }
+public void click(By locator)           { driver.findElement(locator).click(); }
+public void click(WebElement el, int timeoutSec) { /* wait then click */ }
+
+// Overriding — different wait behaviour for a slow page
+class BasePage        { protected void waitForLoad() { /* 10s */ } }
+class ReportsPage extends BasePage {
+    @Override protected void waitForLoad() { /* 60s, report generation */ }
+}</code></pre>
+    <div class="gotcha"><b>Classic trick question:</b> "Can we override a static method?" No. If you declare the same static method in a subclass it is <b>method hiding</b>, resolved at compile time by the reference type — not polymorphism.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q45</span><span class="qt">Interface vs Abstract class. When do you choose which?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th></th><th>Interface</th><th>Abstract class</th></tr>
+      <tr><td>Multiple inheritance</td><td>A class can implement many</td><td>Only one can be extended</td></tr>
+      <tr><td>Fields</td><td>Only <code>public static final</code> constants</td><td>Any instance fields with any modifier</td></tr>
+      <tr><td>Constructor</td><td>No</td><td>Yes (called via <code>super()</code>)</td></tr>
+      <tr><td>Methods</td><td>abstract; plus <code>default</code> &amp; <code>static</code> (Java 8) and <code>private</code> (Java 9)</td><td>Abstract and concrete, any access level</td></tr>
+      <tr><td>Represents</td><td>A <b>capability / contract</b> ("can do")</td><td>A <b>common base identity</b> ("is a") with shared state</td></tr>
+    </table>
+    <h5>The decision rule</h5>
+    <p>"Do the implementations share <b>state and code</b>? → abstract class. Do unrelated classes need to share a <b>contract</b>? → interface." In practice both are used together: <code>WebDriver</code> is an interface (contract), and <code>RemoteWebDriver</code> is a class implementing it that <code>ChromeDriver</code> extends.</p>
+    <div class="note"><b>Java 8 follow-up:</b> "If interfaces have default methods now, why keep abstract classes?" Because interfaces still cannot hold instance state or constructors. And the <b>diamond problem</b> with two conflicting default methods must be resolved explicitly: <code>InterfaceA.super.method();</code></div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q46</span><span class="qt">What does <code>static</code> mean? Why should the WebDriver <b>not</b> be static?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p><code>static</code> members belong to the <b>class</b>, not to an instance — one copy shared by everyone, loaded when the class is loaded, accessible without creating an object.</p>
+    <ul>
+      <li><b>static variable</b> — shared counter, config values.</li>
+      <li><b>static method</b> — utility functions (<code>ConfigReader.get("url")</code>). Cannot use <code>this</code> or instance members directly.</li>
+      <li><b>static block</b> — runs once when the class loads; used to initialise static config.</li>
+      <li><b>static nested class</b> — used in the Builder pattern.</li>
+    </ul>
+    <div class="gotcha"><b>The important interview answer:</b> a <code>static WebDriver driver;</code> works fine until you run tests in <b>parallel</b>. Then all threads share one browser instance: thread A navigates while thread B is asserting, and you get random <code>NoSuchElementException</code>s and impossible failures. The correct solution is <code>ThreadLocal&lt;WebDriver&gt;</code> — a static holder that gives each thread its own value (see Q61).</div>
+    <pre><code>// WRONG for parallel execution
+public static WebDriver driver;
+
+// RIGHT
+private static final ThreadLocal&lt;WebDriver&gt; DRIVER = new ThreadLocal&lt;&gt;();
+public static WebDriver get()            { return DRIVER.get(); }
+public static void set(WebDriver d)      { DRIVER.set(d); }
+public static void unload()              { DRIVER.remove(); }   // avoid memory leak</code></pre>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q47</span><span class="qt">final vs finally vs finalize.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b><code>final</code></b> — a modifier. <code>final</code> variable = constant (cannot be reassigned; the <i>object</i> it points to can still mutate). <code>final</code> method = cannot be overridden. <code>final</code> class = cannot be extended (e.g. <code>String</code>).</li>
+      <li><b><code>finally</code></b> — a block that always executes after try/catch, whether or not an exception was thrown. Used for cleanup: <code>driver.quit()</code>, closing streams and DB connections. It runs even if the try block has a <code>return</code>. (It does <i>not</i> run if the JVM exits via <code>System.exit()</code> or the thread is killed.)</li>
+      <li><b><code>finalize()</code></b> — a legacy <code>Object</code> method the garbage collector <i>might</i> call before reclaiming an object. Unpredictable, <b>deprecated since Java 9</b>, never rely on it. Use <b>try-with-resources</b> / <code>AutoCloseable</code> instead.</li>
+    </ul>
+    <pre><code>try (BufferedReader br = new BufferedReader(new FileReader("data.csv"))) {
+    return br.readLine();                  // resource auto-closed, no finally needed
+} catch (IOException e) {
+    throw new FrameworkException("Could not read test data", e);
+}</code></pre>
+    <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q48</span><span class="qt">String vs StringBuilder vs StringBuffer. Why is String immutable?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th></th><th>String</th><th>StringBuilder</th><th>StringBuffer</th></tr>
+      <tr><td>Mutable</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Thread-safe</td><td>Yes (because immutable)</td><td>No</td><td>Yes (synchronized)</td></tr>
+      <tr><td>Performance</td><td>Slow for repeated concatenation</td><td>Fastest</td><td>Slower than StringBuilder</td></tr>
+      <tr><td>Use when</td><td>Fixed text, map keys</td><td>Building strings in a loop (single thread) — the normal choice</td><td>Building strings shared across threads (rare)</td></tr>
+    </table>
+    <h5>Why immutable?</h5>
+    <ul>
+      <li><b>String pool</b> — identical literals share one object in the heap's string pool, saving huge memory. That is only safe if nobody can mutate them.</li>
+      <li><b>Security</b> — file paths, DB URLs and credentials are passed as Strings; immutability prevents a reference being changed after a security check.</li>
+      <li><b>Thread safety</b> for free, and a cached <code>hashCode()</code> which makes String an ideal <code>HashMap</code> key.</li>
+    </ul>
+    <pre><code>String a = "qa";            // goes to the string pool
+String b = "qa";            // same pooled object  -> a == b is true
+String c = new String("qa");// new heap object     -> a == c is FALSE
+System.out.println(a.equals(c)); // true — always compare with equals()</code></pre>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q49</span><span class="qt">== vs equals(), and the equals/hashCode contract.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b><code>==</code></b> compares <b>references</b> for objects (do both variables point to the same memory?) and <b>values</b> for primitives.</li>
+      <li><b><code>equals()</code></b> compares <b>content</b>, if the class overrides it. The default <code>Object.equals()</code> is just <code>==</code>.</li>
+    </ul>
+    <h5>The contract</h5>
+    <p>If <code>a.equals(b)</code> is true, then <code>a.hashCode() == b.hashCode()</code> <b>must</b> be true. The reverse is not required (unequal objects may share a hash — a collision). If you override <code>equals()</code> you must override <code>hashCode()</code>, otherwise your object will "disappear" inside a <code>HashMap</code>/<code>HashSet</code>: it is stored in bucket A, and the lookup goes to bucket B.</p>
+    <pre><code>Integer x = 127, y = 127;   System.out.println(x == y); // true  (Integer cache -128..127)
+Integer p = 128, q = 128;   System.out.println(p == q); // false (outside the cache!)</code></pre>
+    <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<figure>
+<svg viewBox="0 0 900 330" role="img" aria-label="Java Collections hierarchy">
+  <text x="450" y="24" text-anchor="middle" class="svg-ink" font-size="16" font-weight="700">Java Collections — what to pick and why</text>
+  <defs><marker id="a3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="var(--muted)"/></marker></defs>
+  <g font-size="12" font-weight="700">
+    <g><rect x="180" y="48" width="140" height="34" rx="9" fill="#4338ca"/><text x="250" y="70" text-anchor="middle" fill="#fff">Collection</text></g>
+    <g><rect x="600" y="48" width="140" height="34" rx="9" fill="#0d9488"/><text x="670" y="70" text-anchor="middle" fill="#fff">Map</text></g>
+    <g><rect x="60" y="122" width="110" height="32" rx="8" fill="#4c39c6"/><text x="115" y="143" text-anchor="middle" fill="#fff">List</text></g>
+    <g><rect x="200" y="122" width="110" height="32" rx="8" fill="#4c39c6"/><text x="255" y="143" text-anchor="middle" fill="#fff">Set</text></g>
+    <g><rect x="340" y="122" width="110" height="32" rx="8" fill="#4c39c6"/><text x="395" y="143" text-anchor="middle" fill="#fff">Queue</text></g>
+  </g>
+  <g stroke="var(--muted)" stroke-width="1.5" fill="none" marker-end="url(#a3)">
+    <path d="M250 82 L250 100 L115 100 L115 118"/>
+    <path d="M250 82 L250 118"/>
+    <path d="M250 82 L250 100 L395 100 L395 118"/>
+  </g>
+  <g font-size="11.5" class="svg-ink">
+    <text x="115" y="182" text-anchor="middle" font-weight="700">ArrayList</text>
+    <text x="115" y="200" text-anchor="middle" class="svg-mut">indexed, O(1) get</text>
+    <text x="115" y="222" text-anchor="middle" font-weight="700">LinkedList</text>
+    <text x="115" y="240" text-anchor="middle" class="svg-mut">O(1) insert/delete</text>
+
+    <text x="255" y="182" text-anchor="middle" font-weight="700">HashSet</text>
+    <text x="255" y="200" text-anchor="middle" class="svg-mut">unique, no order</text>
+    <text x="255" y="222" text-anchor="middle" font-weight="700">LinkedHashSet</text>
+    <text x="255" y="240" text-anchor="middle" class="svg-mut">insertion order</text>
+    <text x="255" y="262" text-anchor="middle" font-weight="700">TreeSet</text>
+    <text x="255" y="280" text-anchor="middle" class="svg-mut">sorted</text>
+
+    <text x="395" y="182" text-anchor="middle" font-weight="700">PriorityQueue</text>
+    <text x="395" y="200" text-anchor="middle" class="svg-mut">ordered by priority</text>
+    <text x="395" y="222" text-anchor="middle" font-weight="700">ArrayDeque</text>
+    <text x="395" y="240" text-anchor="middle" class="svg-mut">stack + queue</text>
+
+    <text x="670" y="122" text-anchor="middle" font-weight="700">HashMap</text>
+    <text x="670" y="140" text-anchor="middle" class="svg-mut">key→value, not thread-safe, 1 null key</text>
+    <text x="670" y="166" text-anchor="middle" font-weight="700">LinkedHashMap</text>
+    <text x="670" y="184" text-anchor="middle" class="svg-mut">keeps insertion order</text>
+    <text x="670" y="210" text-anchor="middle" font-weight="700">TreeMap</text>
+    <text x="670" y="228" text-anchor="middle" class="svg-mut">keys sorted, O(log n)</text>
+    <text x="670" y="254" text-anchor="middle" font-weight="700">ConcurrentHashMap</text>
+    <text x="670" y="272" text-anchor="middle" class="svg-mut">thread-safe, no null key</text>
+  </g>
+  <text x="450" y="312" text-anchor="middle" class="svg-mut" font-size="12">Rule of thumb: List = ordered duplicates · Set = uniqueness · Map = lookup by key</text>
+</svg>
+<figcaption>Figure 4 — Collections cheat sheet. Interviewers usually ask "which one and why", not the full hierarchy.</figcaption>
+</figure>
+
+<div class="qa">
+  <div class="q"><span class="num">Q50</span><span class="qt">Explain the Collections framework — List, Set, Map — and where you use each in automation.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>List</b> — ordered, allows duplicates, index access. Automation use: <code>List&lt;WebElement&gt; rows = driver.findElements(By.cssSelector("table tr"));</code> and collecting all product names to verify sorting.</li>
+      <li><b>Set</b> — no duplicates. Automation use: <code>Set&lt;String&gt; handles = driver.getWindowHandles();</code> (window handles are unique), and detecting duplicate entries in a UI list.</li>
+      <li><b>Map</b> — key→value. Automation use: test data (<code>Map&lt;String,String&gt; row</code> from an Excel/JSON row), request headers, and config properties.</li>
+    </ul>
+    <pre><code>// verify a product list is sorted ascending, without mutating the original
+List&lt;String&gt; actual = driver.findElements(By.cssSelector(".product-name"))
+        .stream().map(WebElement::getText).collect(Collectors.toList());
+List&lt;String&gt; expected = new ArrayList&lt;&gt;(actual);
+Collections.sort(expected);
+Assert.assertEquals(actual, expected, "Products are not sorted A-Z");</code></pre>
+    <table>
+      <tr><th>Need</th><th>Pick</th></tr>
+      <tr><td>Fast random access, mostly reads</td><td><code>ArrayList</code></td></tr>
+      <tr><td>Frequent insert/delete in the middle</td><td><code>LinkedList</code></td></tr>
+      <tr><td>Uniqueness, order irrelevant</td><td><code>HashSet</code></td></tr>
+      <tr><td>Uniqueness + insertion order</td><td><code>LinkedHashSet</code></td></tr>
+      <tr><td>Sorted keys</td><td><code>TreeMap</code> / <code>TreeSet</code></td></tr>
+      <tr><td>Shared across threads</td><td><code>ConcurrentHashMap</code> / <code>CopyOnWriteArrayList</code></td></tr>
+    </table>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q51</span><span class="qt">ArrayList vs LinkedList, and HashMap vs Hashtable vs ConcurrentHashMap.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th></th><th>ArrayList</th><th>LinkedList</th></tr>
+      <tr><td>Structure</td><td>Dynamic array (grows ~1.5×)</td><td>Doubly linked list</td></tr>
+      <tr><td><code>get(i)</code></td><td>O(1)</td><td>O(n)</td></tr>
+      <tr><td>Insert/delete in middle</td><td>O(n) — shifts elements</td><td>O(1) once you are at the node</td></tr>
+      <tr><td>Memory</td><td>Less (just data + spare capacity)</td><td>More (each node stores 2 pointers)</td></tr>
+      <tr><td>Verdict</td><td>Default choice ~95% of the time</td><td>Only for heavy queue/deque style use</td></tr>
+    </table>
+    <table>
+      <tr><th></th><th>HashMap</th><th>Hashtable</th><th>ConcurrentHashMap</th></tr>
+      <tr><td>Thread-safe</td><td>No</td><td>Yes — whole map locked</td><td>Yes — fine-grained locking</td></tr>
+      <tr><td>Performance under threads</td><td>Fast but unsafe</td><td>Very slow</td><td>Fast and safe</td></tr>
+      <tr><td>null key / values</td><td>1 null key, many null values</td><td>None</td><td>None</td></tr>
+      <tr><td>Status</td><td>Standard</td><td>Legacy, avoid</td><td>Use for concurrency</td></tr>
+    </table>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q52</span><span class="qt">How does HashMap work internally?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ol>
+      <li>A HashMap holds an array of buckets (default capacity <b>16</b>, load factor <b>0.75</b>).</li>
+      <li>On <code>put(k,v)</code> it calls <code>k.hashCode()</code>, applies a supplemental hash (spreads the high bits), and computes the index as <code>hash &amp; (n-1)</code>.</li>
+      <li>If the bucket is empty → store a new <code>Node</code>. If occupied (a <b>collision</b>) → walk the chain comparing with <code>hashCode()</code> then <code>equals()</code>. If an equal key exists, the value is <b>replaced</b>; otherwise the node is appended.</li>
+      <li>When a bucket's chain exceeds <b>8</b> nodes (and capacity ≥ 64), Java 8+ converts that chain into a <b>balanced red-black tree</b>, improving worst-case lookup from O(n) to O(log n). It reverts to a list below 6 nodes.</li>
+      <li>When <code>size &gt; capacity × loadFactor</code> (12 for the default 16), the map <b>resizes</b> to double capacity and rehashes all entries — an expensive operation, which is why you pre-size a map when you know the volume.</li>
+    </ol>
+    <div class="gotcha"><b>Follow-up: "What if you use a mutable object as a key and then change it?"</b> Its hashCode changes, so it now maps to a different bucket — the entry becomes unreachable (a memory leak that <code>get()</code> can never find). That is exactly why <code>String</code> is immutable and is the preferred key type.</div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q53</span><span class="qt">Explain exception handling: checked vs unchecked, throw vs throws, and custom exceptions.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Hierarchy: <code>Throwable</code> → <code>Error</code> (JVM problems: <code>OutOfMemoryError</code>, <code>StackOverflowError</code> — do not catch) and <code>Exception</code> → <code>RuntimeException</code> (unchecked) and everything else (checked).</p>
+    <ul>
+      <li><b>Checked</b> — the compiler forces you to handle or declare them. <code>IOException</code>, <code>SQLException</code>, <code>InterruptedException</code>. They represent recoverable, expected external failures.</li>
+      <li><b>Unchecked</b> — <code>NullPointerException</code>, <code>ArrayIndexOutOfBoundsException</code>, <code>IllegalArgumentException</code>, and <b>all Selenium exceptions</b> (they extend <code>WebDriverException</code> → <code>RuntimeException</code>). That's why you are not forced to try/catch <code>findElement</code>.</li>
+      <li><b><code>throw</code></b> — actually throws an instance: <code>throw new FrameworkException("msg");</code>. <b><code>throws</code></b> — declares in the method signature that the caller must deal with it.</li>
+    </ul>
+    <pre><code>public class FrameworkException extends RuntimeException {
+    public FrameworkException(String message, Throwable cause) { super(message, cause); }
+}
+
+// Wrap low-level failures with business context — this is what makes
+// a failed CI run debuggable at 2 a.m.
+public void uploadInvoice(Path file) {
+    try {
+        driver.findElement(By.id("file")).sendKeys(file.toAbsolutePath().toString());
+    } catch (NoSuchElementException e) {
+        throw new FrameworkException("Upload control missing on Invoice page. URL="
+                + driver.getCurrentUrl(), e);   // keep the cause, never swallow it
+    }
+}</code></pre>
+    <div class="gotcha"><b>Never write an empty catch block</b> in a test framework. A swallowed exception turns a real failure into a silent false PASS — which is worse than no test at all. If you must ignore one, log it and comment why.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q54</span><span class="qt">Can you have try without catch? What is multi-catch and try-with-resources? Does finally always run?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>try without catch</b> — yes, if there is a <code>finally</code> (or it is try-with-resources). <code>try { } finally { }</code> is legal.</li>
+      <li><b>Multi-catch</b> (Java 7+): <code>catch (NoSuchElementException | TimeoutException e)</code> — the variable is implicitly final. Catch blocks must go from most specific to most general, or the compiler errors.</li>
+      <li><b>try-with-resources</b> — any object implementing <code>AutoCloseable</code> declared in the parentheses is closed automatically in reverse order, even on exception. Cleaner than a finally block.</li>
+      <li><b>Does <code>finally</code> always run?</b> Almost always — including when <code>try</code> returns. Exceptions: <code>System.exit()</code>, JVM crash, infinite loop or thread kill inside try, or a power failure.</li>
+    </ul>
+    <pre><code>public int demo() {
+    try { return 1; }            // value 1 is computed and held
+    finally { System.out.println("always runs"); }   // prints, then 1 is returned
+}
+// Warning: a `return` inside finally would OVERRIDE the try's return and
+// swallow any pending exception — never do that.</code></pre>
+    <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q55</span><span class="qt">Java 8 features you actually use in automation — lambdas, functional interfaces, streams.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Lambda expression</b> — an anonymous implementation of a functional interface: <code>(a, b) -&gt; a + b</code>. Selenium's <code>ExpectedCondition</code> and <code>FluentWait</code> take one.</li>
+      <li><b>Functional interface</b> — an interface with exactly one abstract method, marked <code>@FunctionalInterface</code>. Built-ins: <code>Predicate&lt;T&gt;</code> (T→boolean), <code>Function&lt;T,R&gt;</code>, <code>Consumer&lt;T&gt;</code> (T→void), <code>Supplier&lt;T&gt;</code> (→T), <code>BiFunction</code>.</li>
+      <li><b>Stream API</b> — declarative processing of collections. <b>Intermediate</b> operations (<code>filter</code>, <code>map</code>, <code>sorted</code>, <code>distinct</code>, <code>limit</code>) are lazy; <b>terminal</b> operations (<code>collect</code>, <code>forEach</code>, <code>count</code>, <code>anyMatch</code>, <code>reduce</code>) trigger execution.</li>
+      <li><b>Method reference</b> — <code>WebElement::getText</code> instead of <code>e -&gt; e.getText()</code>.</li>
+      <li><b>Optional</b>, <b>default methods</b>, <b>new Date/Time API</b> (<code>LocalDate</code>, <code>Duration</code> — used everywhere in modern Selenium waits).</li>
+    </ul>
+    <pre><code>// Real framework usage: extract, filter and assert in one readable block
+List&lt;String&gt; outOfStock = driver.findElements(By.cssSelector(".product-card"))
+        .stream()
+        .filter(card -&gt; card.findElement(By.className("stock")).getText().contains("Out"))
+        .map(card  -&gt; card.findElement(By.className("title")).getText())
+        .sorted()
+        .collect(Collectors.toList());
+
+// Custom wait with a lambda
+new WebDriverWait(driver, Duration.ofSeconds(15))
+        .until(d -&gt; d.findElements(By.cssSelector(".spinner")).isEmpty());
+
+// Grouping test data
+Map&lt;String, List&lt;Order&gt;&gt; byStatus = orders.stream()
+        .collect(Collectors.groupingBy(Order::getStatus));</code></pre>
+    <div class="tip">If asked "difference between <code>map</code> and <code>flatMap</code>": <code>map</code> transforms 1→1; <code>flatMap</code> transforms 1→many and flattens the nested streams into one (useful for a list of lists).</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q56</span><span class="qt">What is <code>Optional</code> and how does it help?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>A container that may or may not hold a non-null value. It makes "this might be absent" part of the <b>type signature</b> instead of an undocumented surprise, which reduces <code>NullPointerException</code>s.</p>
+    <pre><code>Optional&lt;WebElement&gt; banner = driver.findElements(By.id("promo")).stream().findFirst();
+banner.ifPresent(WebElement::click);                       // do only if present
+String text = banner.map(WebElement::getText).orElse("");  // safe default
+WebElement el = banner.orElseThrow(() -&gt; new FrameworkException("Promo banner missing"));</code></pre>
+    <div class="gotcha">Do not call <code>.get()</code> without checking <code>isPresent()</code> — that just recreates the NPE with extra steps. And do not use <code>Optional</code> for method parameters or entity fields; it is designed for <b>return types</b>.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q57</span><span class="qt">What are Generics and why do they matter in a framework?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Generics give <b>compile-time type safety</b> and remove casting. <code>List&lt;String&gt;</code> cannot accidentally receive an <code>Integer</code>. Java implements them via <b>type erasure</b> — the type parameter is removed at compile time, which is why you cannot do <code>new T[]</code> or <code>instanceof List&lt;String&gt;</code>.</p>
+    <pre><code>// A generic page-navigation helper: returns the page object you asked for
+public &lt;T extends BasePage&gt; T navigateTo(Class&lt;T&gt; pageClass) {
+    try {
+        return pageClass.getDeclaredConstructor(WebDriver.class).newInstance(driver);
+    } catch (Exception e) {
+        throw new FrameworkException("Cannot instantiate " + pageClass.getSimpleName(), e);
+    }
+}
+// Usage — fully type-safe, no cast:
+LoginPage login = navigateTo(LoginPage.class);</code></pre>
+    <p>Wildcards: <code>&lt;? extends T&gt;</code> = read-only "producer"; <code>&lt;? super T&gt;</code> = write "consumer". Mnemonic <b>PECS</b> — Producer Extends, Consumer Super.</p>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q58</span><span class="qt">Access modifiers, and what happens if a constructor is private?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Modifier</th><th>Same class</th><th>Same package</th><th>Subclass (other pkg)</th><th>Anywhere</th></tr>
+      <tr><td><code>private</code></td><td>✔</td><td>✘</td><td>✘</td><td>✘</td></tr>
+      <tr><td><i>default</i> (no keyword)</td><td>✔</td><td>✔</td><td>✘</td><td>✘</td></tr>
+      <tr><td><code>protected</code></td><td>✔</td><td>✔</td><td>✔</td><td>✘</td></tr>
+      <tr><td><code>public</code></td><td>✔</td><td>✔</td><td>✔</td><td>✔</td></tr>
+    </table>
+    <p>A <b>private constructor</b> prevents external instantiation. Used for: <b>singletons</b> (DriverManager, ConfigReader), <b>static utility classes</b> (so nobody writes <code>new StringUtils()</code>), and the <b>builder</b> pattern.</p>
+    <pre><code>public final class ConfigReader {
+    private static final Properties PROPS = new Properties();
+    static {                                     // runs once at class load
+        try (InputStream in = ConfigReader.class.getResourceAsStream("/config.properties")) {
+            PROPS.load(in);
+        } catch (IOException e) { throw new ExceptionInInitializerError(e); }
+    }
+    private ConfigReader() { }                   // no instances allowed
+    public static String get(String key) {
+        return System.getProperty(key, PROPS.getProperty(key));  // -D overrides file
+    }
+}</code></pre>
+    <div class="tip">That <code>System.getProperty(key, fileValue)</code> line is worth pointing out in an interview: it lets you override any config from the command line (<code>mvn test -Dbrowser=firefox</code>) without touching the file — essential for CI.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q59</span><span class="qt">Constructor rules, <code>this</code> vs <code>super</code>, and constructor chaining.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li>A constructor has the class's name, <b>no return type</b>, and runs on object creation. If you write none, Java gives a no-arg default — but only if you declared <b>no</b> constructor at all.</li>
+      <li>Constructors can be <b>overloaded</b> but never overridden or inherited.</li>
+      <li><code>this(...)</code> calls another constructor of the same class; <code>super(...)</code> calls the parent's. Either must be the <b>first statement</b>, and you cannot use both.</li>
+      <li>If you don't write <code>super(...)</code>, the compiler inserts an implicit <code>super()</code>. So the parent is always constructed first.</li>
+    </ul>
+    <pre><code>public class BasePage {
+    protected WebDriver driver;
+    protected WebDriverWait wait;
+    public BasePage(WebDriver driver) { this(driver, 20); }        // this()
+    public BasePage(WebDriver driver, int timeoutSec) {
+        this.driver = driver;                                       // shadowing resolved by this.
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(timeoutSec));
+        PageFactory.initElements(driver, this);
+    }
+}
+public class CartPage extends BasePage {
+    public CartPage(WebDriver driver) { super(driver, 45); }        // super()
+}</code></pre>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q60</span><span class="qt">Implement a thread-safe Singleton. Where do you use it in a framework?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Singleton = exactly one instance for the whole JVM, with a global access point. In frameworks: config reader, logger, extent-report manager, DB connection pool.</p>
+    <pre><code>// 1. Bill Pugh (holder idiom) — lazy, thread-safe, no synchronization cost
+public class ExtentManager {
+    private ExtentManager() { }
+    private static class Holder {
+        static final ExtentReports INSTANCE = build();
+    }
+    public static ExtentReports get() { return Holder.INSTANCE; }
+    private static ExtentReports build() { /* configure reporter */ return new ExtentReports(); }
+}
+
+// 2. Double-checked locking — needs `volatile`, or another thread can see
+//    a half-constructed object due to instruction reordering
+public class Config {
+    private static volatile Config instance;
+    private Config() { }
+    public static Config get() {
+        if (instance == null) {
+            synchronized (Config.class) {
+                if (instance == null) instance = new Config();
+            }
+        }
+        return instance;
+    }
+}
+
+// 3. Enum singleton — simplest, serialization- and reflection-safe (Joshua Bloch's pick)
+public enum Env { INSTANCE; public String baseUrl() { return "https://qa.example.com"; } }</code></pre>
+    <div class="gotcha"><b>Very common follow-up: "Should the WebDriver be a singleton?"</b> No. A singleton means one driver for the whole JVM, which breaks parallel execution. Use a <b>ThreadLocal-backed factory</b> instead — conceptually "one instance per thread", not "one per JVM".</div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q61</span><span class="qt">What is ThreadLocal and why is it essential for parallel Selenium execution?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p><code>ThreadLocal&lt;T&gt;</code> gives every thread its own independently initialised copy of a variable. Internally each <code>Thread</code> object carries a <code>ThreadLocalMap</code> keyed by the ThreadLocal instance — so <code>get()</code> returns the calling thread's value.</p>
+    <p>In TestNG parallel mode, each test method runs on its own thread. Each thread must drive its own browser, but the page objects and utilities need to reach "the driver" without passing it through every method signature. ThreadLocal solves exactly that.</p>
+    <pre><code>public final class DriverFactory {
+    private static final ThreadLocal&lt;WebDriver&gt; TL = new ThreadLocal&lt;&gt;();
+
+    public static void init(String browser) {
+        WebDriver driver = switch (browser.toLowerCase()) {
+            case "firefox" -&gt; new FirefoxDriver();
+            case "edge"    -&gt; new EdgeDriver();
+            default        -&gt; new ChromeDriver();
+        };
+        driver.manage().window().maximize();
+        TL.set(driver);
+    }
+    public static WebDriver get() {
+        WebDriver d = TL.get();
+        if (d == null) throw new IllegalStateException("Driver not initialised for thread "
+                + Thread.currentThread().getName());
+        return d;
+    }
+    public static void quit() {
+        WebDriver d = TL.get();
+        if (d != null) { d.quit(); TL.remove(); }   // remove() prevents a memory leak
+    }
+}</code></pre>
+    <div class="gotcha"><b>Always call <code>TL.remove()</code></b> in teardown. Thread pools reuse threads; if you don't remove, the stale driver reference stays attached to the pooled thread and leaks memory (and the next test may grab a dead driver).</div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q62</span><span class="qt">Basic multithreading: thread lifecycle, <code>synchronized</code>, and why <code>Thread.sleep()</code> is bad in tests.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p><b>Lifecycle:</b> New → Runnable → Running → (Blocked / Waiting / Timed-waiting) → Terminated.</p>
+    <ul>
+      <li><b>Creating a thread:</b> extend <code>Thread</code>, or implement <code>Runnable</code>/<code>Callable</code> (preferred — leaves your inheritance slot free) and submit to an <code>ExecutorService</code>.</li>
+      <li><b><code>synchronized</code></b> — a lock ensuring only one thread executes a block/method on that monitor at a time. Prevents race conditions on shared mutable state (e.g. a shared report or a counter).</li>
+      <li><b><code>wait()/notify()</code></b> vs <b><code>sleep()</code></b>: <code>wait()</code> releases the lock, <code>sleep()</code> does not.</li>
+    </ul>
+    <div class="gotcha"><b>Why <code>Thread.sleep()</code> is an anti-pattern in tests:</b> it is a fixed unconditional pause. On a fast run it wastes seconds (a 200-test suite with 3s sleeps wastes 10 minutes per run); on a slow run 3s isn't enough and the test fails anyway. It converts a deterministic wait into a gamble. Use explicit/fluent waits (Selenium) or auto-waiting assertions (Playwright). The only defensible use is a documented workaround for an animation with no observable end state.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q63</span><span class="qt">How do you read test data from Excel, CSV, JSON and properties files in Java?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>// ---- Excel with Apache POI ----
+public static List&lt;Map&lt;String,String&gt;&gt; readSheet(String path, String sheetName) {
+    List&lt;Map&lt;String,String&gt;&gt; rows = new ArrayList&lt;&gt;();
+    try (FileInputStream fis = new FileInputStream(path);
+         Workbook wb = new XSSFWorkbook(fis)) {              // XSSF = .xlsx, HSSF = .xls
+        Sheet sheet = wb.getSheet(sheetName);
+        Row header = sheet.getRow(0);
+        DataFormatter fmt = new DataFormatter();             // reads any cell type as String
+        for (int r = 1; r &lt;= sheet.getLastRowNum(); r++) {
+            Row row = sheet.getRow(r);
+            if (row == null) continue;
+            Map&lt;String,String&gt; map = new LinkedHashMap&lt;&gt;();
+            for (int c = 0; c &lt; header.getLastCellNum(); c++) {
+                map.put(fmt.formatCellValue(header.getCell(c)),
+                        fmt.formatCellValue(row.getCell(c)));
+            }
+            rows.add(map);
+        }
+    } catch (IOException e) { throw new FrameworkException("Excel read failed: " + path, e); }
+    return rows;
+}
+
+// ---- JSON with Jackson ----
+ObjectMapper mapper = new ObjectMapper();
+User user = mapper.readValue(new File("src/test/resources/user.json"), User.class);
+List&lt;User&gt; users = mapper.readValue(file, new TypeReference&lt;List&lt;User&gt;&gt;() {});
+
+// ---- Properties ----
+Properties p = new Properties();
+p.load(new FileInputStream("config.properties"));
+String url = p.getProperty("base.url");</code></pre>
+    <div class="tip"><code>DataFormatter</code> is the detail that shows experience: without it, a numeric mobile number cell comes back as <code>9.87654321E9</code> and your test types garbage into the field.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q64</span><span class="qt">Coding round: string questions they actually ask (reverse, palindrome, duplicates, vowels).</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>// 1. Reverse a string WITHOUT StringBuilder.reverse()
+public static String reverse(String s) {
+    char[] c = s.toCharArray();
+    for (int i = 0, j = c.length - 1; i &lt; j; i++, j--) {
+        char t = c[i]; c[i] = c[j]; c[j] = t;
+    }
+    return new String(c);
+}
+
+// 2. Palindrome check, ignoring case and non-alphanumerics
+public static boolean isPalindrome(String s) {
+    String clean = s.replaceAll("[^A-Za-z0-9]", "").toLowerCase();
+    return clean.equals(new StringBuilder(clean).reverse().toString());
+}
+
+// 3. Reverse the WORDS of a sentence ("I love QA" -> "QA love I")
+public static String reverseWords(String s) {
+    String[] w = s.trim().split("\\s+");
+    Collections.reverse(Arrays.asList(w));
+    return String.join(" ", w);
+}
+
+// 4. First non-repeating character
+public static Character firstUnique(String s) {
+    Map&lt;Character,Integer&gt; count = new LinkedHashMap&lt;&gt;();
+    for (char c : s.toCharArray()) count.merge(c, 1, Integer::sum);
+    return count.entrySet().stream().filter(e -&gt; e.getValue() == 1)
+                .map(Map.Entry::getKey).findFirst().orElse(null);
+}
+
+// 5. Count duplicate characters
+public static Map&lt;Character,Long&gt; duplicates(String s) {
+    return s.chars().mapToObj(c -&gt; (char) c)
+            .collect(Collectors.groupingBy(c -&gt; c, Collectors.counting()))
+            .entrySet().stream().filter(e -&gt; e.getValue() &gt; 1)
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+}
+
+// 6. Count vowels and consonants
+long vowels = s.toLowerCase().chars().filter(c -&gt; "aeiou".indexOf(c) &gt;= 0).count();
+
+// 7. Are two strings anagrams?
+public static boolean isAnagram(String a, String b) {
+    char[] x = a.replaceAll("\\s","").toLowerCase().toCharArray();
+    char[] y = b.replaceAll("\\s","").toLowerCase().toCharArray();
+    Arrays.sort(x); Arrays.sort(y);
+    return Arrays.equals(x, y);
+}</code></pre>
+    <div class="tip">In a coding round, <b>talk while you code</b>: state the approach, the time complexity (O(n), O(n log n)), and the edge cases you're handling (null, empty, single char, mixed case, spaces). Interviewers score the reasoning at least as much as the code.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag">coding round</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q65</span><span class="qt">Coding round: array, collection and number questions.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>// 1. Second largest element in an array (single pass, no sorting)
+public static int secondLargest(int[] a) {
+    int max = Integer.MIN_VALUE, second = Integer.MIN_VALUE;
+    for (int n : a) {
+        if (n &gt; max)            { second = max; max = n; }
+        else if (n &gt; second &amp;&amp; n != max) { second = n; }
+    }
+    if (second == Integer.MIN_VALUE) throw new IllegalArgumentException("No second largest");
+    return second;
+}
+
+// 2. Remove duplicates from a list, preserving order
+List&lt;String&gt; unique = new ArrayList&lt;&gt;(new LinkedHashSet&lt;&gt;(items));
+// or: items.stream().distinct().collect(Collectors.toList());
+
+// 3. Sort a Map by value (descending)
+Map&lt;String,Integer&gt; sorted = map.entrySet().stream()
+        .sorted(Map.Entry.&lt;String,Integer&gt;comparingByValue().reversed())
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                 (a,b) -&gt; a, LinkedHashMap::new));   // LinkedHashMap keeps the order!
+
+// 4. Find duplicate elements in an array
+Set&lt;Integer&gt; seen = new HashSet&lt;&gt;(), dups = new HashSet&lt;&gt;();
+for (int n : arr) if (!seen.add(n)) dups.add(n);
+
+// 5. Fibonacci (iterative — mention recursion is O(2^n) without memoisation)
+public static long fib(int n) {
+    long a = 0, b = 1;
+    for (int i = 0; i &lt; n; i++) { long t = a + b; a = b; b = t; }
+    return a;
+}
+
+// 6. Factorial, prime check, swap without a temp variable
+public static boolean isPrime(int n) {
+    if (n &lt; 2) return false;
+    for (int i = 2; i * i &lt;= n; i++) if (n % i == 0) return false;  // only up to sqrt(n)
+    return true;
+}
+a = a + b; b = a - b; a = a - b;      // swap without temp
+
+// 7. Sort a list of objects by a field
+employees.sort(Comparator.comparing(Employee::getSalary)
+                         .thenComparing(Employee::getName).reversed());</code></pre>
+    <div class="tags"><span class="tag core">core</span><span class="tag">coding round</span></div>
+  </div>
+</div>
+
+</section>
+
+  <nav class="pager">
+      <a class="pn" href="01-manual-testing-qa-fundamentals.html">&#8592; Manual Testing &amp; QA Fundamentals</a>
+      <a class="pn" href="03-selenium-webdriver.html">Selenium WebDriver with Java &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script>
+(function(){
+  /* ---- tiny offline syntax highlighter (Java / TS / JS / YAML-ish) ---- */
+  var KW = {};
+  ("abstract assert async await boolean break byte case catch char class const continue default do double else enum export extends final finally float for from function if implements import in instanceof int interface let long new package private protected public readonly return static super switch this throw throws try type typeof var void while yield true false null undefined String Integer List ArrayList Map HashMap Set Optional Thread Exception WebDriver WebElement By Actions Select Alert ChromeDriver ChromeOptions Duration Page Locator Browser BrowserContext expect test describe beforeEach afterEach beforeAll afterAll it Promise void any number string unknown as await").split(" ").forEach(function(w){KW[w]=1;});
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function plain(txt){
+    return esc(txt).replace(/\b([A-Za-z_$][\w$]*)\b|\b(\d+(?:\.\d+)?)\b|(@[A-Za-z]\w*)/g,
+      function(m,word,num,ann){
+        if(ann) return '<span class="f">'+ann+'</span>';
+        if(num) return '<span class="n">'+num+'</span>';
+        if(word && KW[word]) return '<span class="k">'+word+'</span>';
+        return m;
+      });
+  }
+  [].forEach.call(document.querySelectorAll('pre > code'), function(el){
+    var src = el.textContent, out = '', last = 0, m;
+    var re = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|^\s*#[^\n]*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)/gm;
+    while((m = re.exec(src))){
+      out += plain(src.slice(last, m.index));
+      out += m[1] ? '<span class="c">'+esc(m[1])+'</span>' : '<span class="s">'+esc(m[2])+'</span>';
+      last = re.lastIndex;
+    }
+    out += plain(src.slice(last));
+    el.innerHTML = out;
+  });
+
+  var cards = [].slice.call(document.querySelectorAll('.qa'));
+  var countEl = document.getElementById('count');
+
+  /* number every card automatically and build searchable text */
+  cards.forEach(function(c,i){
+    var n = c.querySelector('.num');
+    if(n && !n.textContent.trim()) n.textContent = 'Q' + (i+1);
+    c.dataset.txt = c.textContent.toLowerCase();
+    c.dataset.isq = (n && /^Q\d+$/.test(n.textContent.trim())) ? '1' : '0';
+  });
+
+  var total = cards.filter(function(c){
+    var n = c.querySelector('.num');
+    return n && /^Q\d+$/.test(n.textContent.trim());
+  }).length;
+  function updateCount(v){ countEl.textContent = (v===undefined? total : v) + ' / ' + total + ' questions'; }
+  updateCount();
+
+  /* toggle single card */
+  document.addEventListener('click', function(e){
+    var q = e.target.closest('.q');
+    if(q && q.parentElement.classList.contains('qa')) q.parentElement.classList.toggle('closed');
+  });
+
+  /* quiz mode */
+  var quizOn=false, quizBtn=document.getElementById('quiz');
+  quizBtn.addEventListener('click', function(){
+    quizOn=!quizOn;
+    quizBtn.classList.toggle('on',quizOn);
+    quizBtn.textContent = quizOn? 'Study mode':'Quiz mode';
+    cards.forEach(function(c){ c.classList.toggle('closed',quizOn); });
+  });
+
+  /* expand all */
+  document.getElementById('expand').addEventListener('click', function(){
+    cards.forEach(function(c){ c.classList.remove('closed'); });
+    quizOn=false; quizBtn.classList.remove('on'); quizBtn.textContent='Quiz mode';
+  });
+
+  /* theme */
+  var root=document.documentElement, themeBtn=document.getElementById('theme');
+  function paintTheme(){ themeBtn.textContent = root.getAttribute('data-theme')==='dark' ? 'Light':'Dark'; }
+  var saved = localStorage.getItem('qa-theme'); if(saved) root.setAttribute('data-theme',saved);
+  paintTheme();
+  themeBtn.addEventListener('click', function(){
+    var next = root.getAttribute('data-theme')==='dark' ? 'light':'dark';
+    root.setAttribute('data-theme',next); localStorage.setItem('qa-theme',next); paintTheme();
+  });
+
+  /* search */
+  var box=document.getElementById('search'), t;
+  box.addEventListener('input', function(){
+    clearTimeout(t);
+    t=setTimeout(function(){
+      var q=box.value.trim().toLowerCase(), shown=0;
+      cards.forEach(function(c){
+        var hit = !q || c.dataset.txt.indexOf(q)>-1;
+        c.classList.toggle('hidden',!hit);
+        if(hit && c.dataset.isq === '1') shown++;
+      });
+      document.querySelectorAll('main figure').forEach(function(f){ f.classList.toggle('hidden', !!q); });
+      document.querySelectorAll('section.sec').forEach(function(s){
+        var any = s.querySelector('.qa:not(.hidden)');
+        s.classList.toggle('hidden', !!q && !any);
+      });
+      updateCount(shown);
+    },120);
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='/' && document.activeElement!==box){ e.preventDefault(); box.focus(); }
+    if(e.key==='Escape' && document.activeElement===box){ box.value=''; box.dispatchEvent(new Event('input')); box.blur(); }
+  });
+})();
+</script>
+</body>
+</html>

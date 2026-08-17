@@ -6,6 +6,10 @@
 
 Prep material for AI/ML interviews — theory-first, written so each answer can be *spoken*, not just read.
 
+> **Also in this folder:** [automation-testing/](automation-testing/) — a separate 250-question guide for
+> **test automation / SDET** interviews (Selenium + Java, Playwright + TypeScript, Appium, framework
+> design, CI/CD and manual QA), split into nine categories with diagrams, code and a PDF.
+
 | File | What it is |
 |------|------------|
 | [JOURNEY.md](JOURNEY.md) | Roadmap and progress tracker — which subject files exist, which are next, and the conventions they follow |

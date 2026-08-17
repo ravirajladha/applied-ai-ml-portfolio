@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Appium &amp; Mobile Automation — Automation Interview Prep (Q201–Q215)</title>
+<meta name="description" content="Appium 2 architecture, mobile locators, gestures, context switching, ADB and device strategy.">
+<style>
+:root{
+  --bg:#f6f7fb; --panel:#ffffff; --ink:#161a22; --muted:#5b6478; --line:#e2e6ef;
+  --accent:#4338ca; --accent-soft:#eef0ff; --accent2:#0d9488; --accent2-soft:#e6f7f4;
+  --warn:#b45309; --warn-soft:#fff5e6; --danger:#be123c; --danger-soft:#ffeaf0;
+  --code-bg:#0f172a; --code-ink:#e2e8f0; --code-key:#93c5fd; --code-str:#86efac;
+  --code-com:#94a3b8; --code-num:#fca5a5; --code-fn:#fcd34d;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+  --radius:14px;
+}
+html[data-theme="dark"]{
+  --bg:#0b0f17; --panel:#121826; --ink:#e6eaf2; --muted:#9aa5bb; --line:#232c3d;
+  --accent:#a5b4fc; --accent-soft:#1c2340; --accent2:#5eead4; --accent2-soft:#0e2b28;
+  --warn:#fbbf24; --warn-soft:#33280d; --danger:#fda4af; --danger-soft:#3a1220;
+  --code-bg:#080d16; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- top bar ---------- */
+header.top{
+  position:sticky; top:0; z-index:50; background:var(--panel);
+  border-bottom:1px solid var(--line); box-shadow:0 1px 0 rgba(0,0,0,.02);
+}
+.top-in{max-width:1400px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:15px}
+.brand .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#fff;font-size:13px}
+.tools{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input#search{
+  width:min(360px,46vw); padding:9px 12px; border:1px solid var(--line); border-radius:10px;
+  background:var(--bg); color:var(--ink); font-size:14px; outline:none;
+}
+input#search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+button.btn{
+  padding:9px 13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap
+}
+button.btn:hover{border-color:var(--accent);color:var(--accent)}
+button.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.count{font-size:12px;color:var(--muted);white-space:nowrap}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1400px;margin:0 auto;padding:22px 18px 80px;display:grid;grid-template-columns:262px 1fr;gap:26px}
+@media(max-width:1000px){.wrap{grid-template-columns:1fr}nav.toc{position:static;max-height:none}}
+nav.toc{
+  position:sticky; top:72px; align-self:start; max-height:calc(100vh - 92px); overflow:auto;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow);
+}
+nav.toc h4{margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+nav.toc a{display:block;padding:7px 9px;border-radius:8px;color:var(--ink);font-size:13.5px;line-height:1.35}
+nav.toc a:hover{background:var(--accent-soft);text-decoration:none}
+nav.toc a .n{color:var(--muted);font-size:11.5px;display:block}
+nav.toc .grp{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+
+main{min-width:0}
+
+/* ---------- hero ---------- */
+.hero{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px 28px;box-shadow:var(--shadow);margin-bottom:22px}
+.hero h1{margin:0 0 6px;font-size:30px;letter-spacing:-.03em;line-height:1.2}
+.hero .sub{color:var(--muted);font-size:15px;margin:0 0 16px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:104px}
+.stat b{display:block;font-size:21px;letter-spacing:-.02em}
+.stat span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+/* ---------- sections ---------- */
+section.sec{margin:34px 0 0;scroll-margin-top:80px}
+.sec-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px;padding-bottom:12px;border-bottom:2px solid var(--line)}
+.sec-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-radius:10px;font-weight:800;font-size:13px;padding:7px 11px;white-space:nowrap;margin-top:3px}
+.sec-head h2{margin:0;font-size:23px;letter-spacing:-.02em}
+.sec-head p{margin:3px 0 0;color:var(--muted);font-size:14px}
+
+/* ---------- q cards ---------- */
+.qa{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin:14px 0;box-shadow:var(--shadow);overflow:hidden;
+     content-visibility:auto;contain-intrinsic-size:auto 460px}
+.qa .q{padding:15px 18px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;user-select:none}
+.qa .q:hover{background:var(--accent-soft)}
+.qa .num{background:var(--accent-soft);color:var(--accent);border-radius:8px;font-weight:800;font-size:12.5px;padding:4px 8px;min-width:44px;text-align:center;margin-top:2px;font-variant-numeric:tabular-nums}
+.qa .qt{font-weight:650;font-size:16.5px;letter-spacing:-.01em;flex:1;line-height:1.45}
+.qa .chev{color:var(--muted);font-size:13px;margin-top:5px;transition:transform .18s}
+.qa.closed .a{display:none}
+.qa.closed .chev{transform:rotate(-90deg)}
+.a{padding:2px 18px 18px 74px;border-top:1px solid var(--line);margin-top:-1px}
+@media(max-width:640px){.a{padding-left:18px}}
+.a>p:first-child{margin-top:14px}
+.a p{margin:10px 0}
+.a ul,.a ol{margin:10px 0;padding-left:22px}
+.a li{margin:5px 0}
+.a h5{margin:16px 0 6px;font-size:14px;letter-spacing:.02em;color:var(--accent)}
+
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.tag.core{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.tag.adv{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.tag.trap{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+
+/* ---------- code ---------- */
+pre{background:var(--code-bg);color:var(--code-ink);padding:14px 16px;border-radius:11px;overflow:auto;font-size:13.2px;line-height:1.6;margin:12px 0;border:1px solid rgba(255,255,255,.07)}
+code{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+p code,li code,td code{background:var(--accent-soft);color:var(--accent);padding:1.5px 6px;border-radius:6px;font-size:13px;font-weight:600}
+.k{color:var(--code-key)} .s{color:var(--code-str)} .c{color:var(--code-com);font-style:italic}
+.n{color:var(--code-num)} .f{color:var(--code-fn)}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--bg);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+
+/* ---------- callouts ---------- */
+.note{border-left:4px solid var(--accent2);background:var(--accent2-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.tip{border-left:4px solid var(--warn);background:var(--warn-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.gotcha{border-left:4px solid var(--danger);background:var(--danger-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.note b,.tip b,.gotcha b{letter-spacing:.02em}
+
+/* ---------- figures ---------- */
+figure{margin:18px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+figure svg{width:100%;height:auto;display:block}
+figcaption{margin-top:10px;font-size:13px;color:var(--muted);text-align:center}
+.svg-ink{fill:var(--ink)} .svg-mut{fill:var(--muted)} .svg-line{stroke:var(--line)}
+
+/* ---------- misc ---------- */
+.hidden{display:none !important}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;font-size:12px;font-family:monospace;background:var(--bg)}
+.catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:12px;margin-top:14px}
+.catcard{display:block;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)}
+.catcard:hover{border-color:var(--accent);background:var(--accent-soft);text-decoration:none}
+.catcard b{display:block;font-size:14.5px;letter-spacing:-.01em;margin-bottom:3px}
+.catcard .r{font-size:11.5px;font-weight:700;color:var(--accent);letter-spacing:.04em}
+.catcard .d{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:5px}
+.toTop{position:fixed;right:20px;bottom:20px;z-index:60;border-radius:999px;padding:11px 15px;box-shadow:var(--shadow)}
+
+/* ---------- print ---------- */
+@media print{
+  :root{--bg:#fff;--panel:#fff;--line:#ccc;--ink:#000;--muted:#444;--shadow:none}
+  header.top,nav.toc,.toTop,.noprint{display:none !important}
+  .wrap{display:block;max-width:none;padding:0}
+  .qa{break-inside:avoid;page-break-inside:avoid;border:1px solid #ddd;box-shadow:none;margin:8px 0;
+      content-visibility:visible !important;contain-intrinsic-size:auto !important}
+  .qa.closed .a{display:block !important}
+  .qa .chev{display:none}
+  pre{background:#f4f4f6;color:#111;border:1px solid #ddd;white-space:pre-wrap;font-size:11px}
+  .k,.s,.c,.n,.f{color:#111 !important}
+  figure{break-inside:avoid;page-break-inside:avoid}
+  section.sec{page-break-before:auto}
+  body{font-size:11.5pt}
+  a{color:#000;text-decoration:none}
+}
+
+.crumb{max-width:1400px;margin:0 auto;padding:14px 18px 0;font-size:13.5px;color:var(--muted)}
+.crumb a{font-weight:600}
+.pager{display:flex;justify-content:space-between;gap:12px;margin:34px 0 0;flex-wrap:wrap}
+.pn{display:inline-block;padding:12px 16px;border:1px solid var(--line);border-radius:12px;
+    background:var(--panel);font-weight:600;font-size:14px;box-shadow:var(--shadow)}
+.pn:hover{border-color:var(--accent);text-decoration:none}
+@media print{.crumb,.pager{display:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">QA</span><span>Appium &amp; Mobile Automation</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this section…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All 250 questions</a> &nbsp;·&nbsp; Appium &amp; Mobile Automation &nbsp;·&nbsp; Q201–Q215 (15 questions)</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+<section class="sec" id="s7">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 7</div>
+    <div>
+      <h2>Appium &amp; Mobile Automation</h2>
+      <p>Q201 – Q215 · Asked in almost every product-company automation interview, even for web-first roles. You are not expected to be an expert — you are expected to know the architecture, the locator strategies, and why mobile is harder than web.</p>
+    </div>
+  </div>
+
+<figure>
+<svg viewBox="0 0 900 340" role="img" aria-label="Appium architecture">
+  <text x="450" y="24" text-anchor="middle" class="svg-ink" font-size="16" font-weight="700">Appium 2 Architecture — one API, many platform drivers</text>
+  <defs><marker id="a8" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="var(--muted)"/></marker></defs>
+  <g font-size="11.5" font-weight="700">
+    <g><rect x="26" y="120" width="140" height="66" rx="11" fill="#4338ca"/>
+      <text x="96" y="146" text-anchor="middle" fill="#fff">Test code</text>
+      <text x="96" y="164" text-anchor="middle" fill="#c7d2fe" font-weight="400" font-size="10.5">Java + TestNG</text>
+      <text x="96" y="178" text-anchor="middle" fill="#c7d2fe" font-weight="400" font-size="10.5">AndroidDriver / IOSDriver</text></g>
+
+    <g><rect x="220" y="120" width="160" height="66" rx="11" fill="#4c39c6"/>
+      <text x="300" y="142" text-anchor="middle" fill="#fff">Appium Server</text>
+      <text x="300" y="160" text-anchor="middle" fill="#c7d2fe" font-weight="400" font-size="10.5">Node.js, port 4723</text>
+      <text x="300" y="174" text-anchor="middle" fill="#c7d2fe" font-weight="400" font-size="10.5">W3C WebDriver endpoints</text></g>
+
+    <g><rect x="435" y="52" width="170" height="56" rx="11" fill="#2f7fb0"/>
+      <text x="520" y="74" text-anchor="middle" fill="#fff">UiAutomator2 driver</text>
+      <text x="520" y="92" text-anchor="middle" fill="#dbeafe" font-weight="400" font-size="10.5">Android</text></g>
+    <g><rect x="435" y="126" width="170" height="56" rx="11" fill="#2f7fb0"/>
+      <text x="520" y="148" text-anchor="middle" fill="#fff">XCUITest driver</text>
+      <text x="520" y="166" text-anchor="middle" fill="#dbeafe" font-weight="400" font-size="10.5">iOS</text></g>
+    <g><rect x="435" y="200" width="170" height="56" rx="11" fill="#2f7fb0"/>
+      <text x="520" y="222" text-anchor="middle" fill="#fff">Espresso / Mac2 / …</text>
+      <text x="520" y="240" text-anchor="middle" fill="#dbeafe" font-weight="400" font-size="10.5">installed as plugins</text></g>
+
+    <g><rect x="665" y="52" width="205" height="56" rx="11" fill="#0d9488"/>
+      <text x="767" y="74" text-anchor="middle" fill="#fff">Android device / emulator</text>
+      <text x="767" y="92" text-anchor="middle" fill="#ccfbf1" font-weight="400" font-size="10.5">bootstrap app via ADB</text></g>
+    <g><rect x="665" y="126" width="205" height="56" rx="11" fill="#0d9488"/>
+      <text x="767" y="148" text-anchor="middle" fill="#fff">iPhone / simulator</text>
+      <text x="767" y="166" text-anchor="middle" fill="#ccfbf1" font-weight="400" font-size="10.5">WebDriverAgent</text></g>
+    <g><rect x="665" y="200" width="205" height="56" rx="11" fill="#0d9488"/>
+      <text x="767" y="222" text-anchor="middle" fill="#fff">Cloud device farm</text>
+      <text x="767" y="240" text-anchor="middle" fill="#ccfbf1" font-weight="400" font-size="10.5">BrowserStack / Sauce</text></g>
+  </g>
+  <g stroke="var(--muted)" stroke-width="1.6" fill="none" marker-end="url(#a8)">
+    <line x1="168" y1="153" x2="216" y2="153"/>
+    <path d="M382 146 L431 80"/><line x1="382" y1="153" x2="431" y2="153"/><path d="M382 160 L431 226"/>
+    <line x1="607" y1="80" x2="661" y2="80"/><line x1="607" y1="154" x2="661" y2="154"/><line x1="607" y1="228" x2="661" y2="228"/>
+  </g>
+  <text x="193" y="112" text-anchor="middle" class="svg-mut" font-size="10.5">HTTP / JSON</text>
+  <text x="450" y="300" text-anchor="middle" class="svg-mut" font-size="12.5">The key idea: Appium speaks the <tspan font-weight="700">same W3C WebDriver protocol as Selenium</tspan>, so your framework,</text>
+  <text x="450" y="318" text-anchor="middle" class="svg-mut" font-size="12.5">page objects, TestNG setup and reporting are reused almost unchanged. Only the driver and locators differ.</text>
+</svg>
+<figcaption>Figure 11 — Appium architecture. If you can say "it's WebDriver for apps, with a platform driver behind it", you have answered 80% of the mobile question.</figcaption>
+</figure>
+
+<div class="qa">
+  <div class="q"><span class="num">Q201</span><span class="qt">What is Appium and how does its architecture work?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Appium is an open-source tool for automating <b>native, hybrid and mobile-web</b> apps on Android and iOS, using the same <b>W3C WebDriver protocol</b> as Selenium.</p>
+    <ol>
+      <li>Your test creates an <code>AndroidDriver</code>/<code>IOSDriver</code> with a set of capabilities.</li>
+      <li>The client sends HTTP/JSON commands to the <b>Appium server</b> (Node.js, default port 4723).</li>
+      <li>The server routes them to the right <b>platform driver</b>: <b>UiAutomator2</b> for Android, <b>XCUITest</b> for iOS.</li>
+      <li>That driver talks to the vendor's own automation framework on the device — via <b>ADB</b> and a bootstrap agent on Android, via <b>WebDriverAgent</b> on iOS.</li>
+      <li>The action executes on the real device or emulator and the result travels back up the same chain.</li>
+    </ol>
+    <h5>Why teams choose it</h5>
+    <ul>
+      <li><b>Cross-platform</b> — one API and often one test codebase for Android and iOS.</li>
+      <li><b>No app modification</b> — you test the <i>same binary</i> you ship; no SDK to embed.</li>
+      <li><b>Any language</b> that has a WebDriver client (Java, Python, JS, C#, Ruby).</li>
+      <li><b>Reuses your Selenium knowledge</b> — waits, page objects, TestNG, reporting all carry over.</li>
+    </ul>
+    <div class="tip">The sentence that lands: <i>"Appium is WebDriver for mobile. My framework layers — driver factory, page objects, waits, listeners, reporting — were reused as-is; I only added a mobile driver factory and mobile locators."</i></div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q202</span><span class="qt">What changed in Appium 2.0 compared to 1.x?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Area</th><th>Appium 1.x</th><th>Appium 2.x</th></tr>
+      <tr><td>Drivers</td><td>Bundled inside the server</td><td><b>Installed separately</b> as plugins — <code>appium driver install uiautomator2</code></td></tr>
+      <tr><td>Versioning</td><td>Server upgrade forced a driver upgrade</td><td>Drivers version independently of the server</td></tr>
+      <tr><td>Protocol</td><td>JSON Wire + W3C</td><td><b>W3C only</b> — JSONWP removed</td></tr>
+      <tr><td>Capabilities</td><td><code>DesiredCapabilities</code>, flat keys</td><td><code>UiAutomator2Options</code>; non-standard keys need the <code>appium:</code> prefix</td></tr>
+      <tr><td>Plugins</td><td>—</td><td>Plugin ecosystem: images, relaxed-caps, execute-driver, device-farm</td></tr>
+      <tr><td>Base path</td><td><code>/wd/hub</code></td><td>Root <code>/</code> by default</td></tr>
+    </table>
+    <pre><code>UiAutomator2Options options = new UiAutomator2Options()
+        .setPlatformName("Android")
+        .setPlatformVersion("14")
+        .setDeviceName("Pixel_7_API_34")
+        .setAutomationName("UiAutomator2")
+        .setApp(System.getProperty("user.dir") + "/apps/shop-qa.apk")
+        .setAppPackage("com.example.shop")
+        .setAppActivity(".ui.MainActivity")
+        .setNoReset(false)                       // fresh app state each run
+        .setAutoGrantPermissions(true)           // skip the OS permission dialogs
+        .setNewCommandTimeout(Duration.ofSeconds(120));
+
+AndroidDriver driver = new AndroidDriver(new URL("http://127.0.0.1:4723"), options);</code></pre>
+    <div class="gotcha">The <code>appium:</code> prefix trips people up constantly. Standard W3C capabilities (<code>platformName</code>, <code>browserName</code>) need no prefix; everything vendor-specific (<code>appium:app</code>, <code>appium:deviceName</code>, <code>appium:automationName</code>) does. The typed <code>Options</code> classes add it for you, which is why they are the recommended approach.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q203</span><span class="qt">What locator strategies does Appium support?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Strategy</th><th>Example</th><th>Notes</th></tr>
+      <tr><td><b>Accessibility ID</b></td><td><code>AppiumBy.accessibilityId("cart_button")</code></td><td><b>Best choice.</b> Maps to <code>content-desc</code> on Android and <code>accessibilityIdentifier</code> on iOS — so one locator works on both platforms, and it doubles as an accessibility check</td></tr>
+      <tr><td><b>ID</b></td><td><code>AppiumBy.id("com.example.shop:id/btn_pay")</code></td><td>Android resource-id; fast and stable</td></tr>
+      <tr><td><b>Class name</b></td><td><code>AppiumBy.className("android.widget.Button")</code></td><td>Rarely unique on its own</td></tr>
+      <tr><td><b>XPath</b></td><td><code>//android.widget.TextView[@text='Checkout']</code></td><td>Works everywhere but is the <b>slowest</b> on mobile — the driver serialises the whole view hierarchy for each query</td></tr>
+      <tr><td><b>Android UiAutomator</b></td><td><code>AppiumBy.androidUIAutomator("new UiSelector().text(\"Pay\")")</code></td><td>Native and fast; supports <code>UiScrollable</code> for scrolling to an element</td></tr>
+      <tr><td><b>iOS Predicate</b></td><td><code>AppiumBy.iOSNsPredicateString("label == 'Pay' AND visible == 1")</code></td><td>Fast, expressive</td></tr>
+      <tr><td><b>iOS Class Chain</b></td><td><code>AppiumBy.iOSClassChain("**/XCUIElementTypeButton[`label == 'Pay'`]")</code></td><td>Between XPath and predicate in power, much faster than XPath</td></tr>
+    </table>
+    <pre><code>// Scroll to an element that is off-screen — the idiomatic Android way
+driver.findElement(AppiumBy.androidUIAutomator(
+    "new UiScrollable(new UiSelector().scrollable(true))"
+  + ".scrollIntoView(new UiSelector().text(\"Order history\"))")).click();</code></pre>
+    <div class="tip">The senior answer to "which do you prefer": <i>"Accessibility ID first, because a single locator works on both platforms and it forces the app to be accessible. XPath last, because on mobile it is genuinely slow — the driver dumps the entire view hierarchy on every lookup, which on a long list can take seconds."</i></div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q204</span><span class="qt">Native vs Hybrid vs Mobile web apps — and how do you switch context?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Native</b> — built with the platform SDK (Kotlin/Java, Swift/Objective-C). Best performance and full device access. Automated entirely through the native context.</li>
+      <li><b>Hybrid</b> — a native shell wrapping a <code>WebView</code> that renders HTML/JS (Cordova, Ionic, Capacitor). Automating it needs <b>context switching</b>.</li>
+      <li><b>Mobile web</b> — a normal website in the phone's browser. Automated with Appium driving Chrome/Safari, using ordinary web locators.</li>
+      <li><i>(Worth naming: <b>React Native / Flutter</b> — they render native components, so they're treated as native, though Flutter needs a dedicated driver.)</i></li>
+    </ul>
+    <pre><code>Set&lt;String&gt; contexts = driver.getContextHandles();
+// [ "NATIVE_APP", "WEBVIEW_com.example.shop" ]
+
+for (String context : contexts) {
+    if (context.contains("WEBVIEW")) {
+        driver.context(context);              // switch into the web view
+        break;
+    }
+}
+driver.findElement(By.cssSelector("#promo-code")).sendKeys("SAVE20");   // web locators now
+
+driver.context("NATIVE_APP");                 // switch back — always switch back</code></pre>
+    <div class="gotcha">Two classic hybrid problems: (1) the WebView context appears only <b>after</b> the web content has loaded, so you must wait for it rather than reading the handles immediately; (2) Android requires the app to be built with <code>setWebContentsDebuggingEnabled(true)</code>, otherwise the WebView is invisible to Appium — a request you have to make to the developers.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q205</span><span class="qt">How do you perform mobile gestures — tap, swipe, scroll, long press, pinch?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Appium 2 uses the <b>W3C Actions API</b> (the old <code>TouchAction</code> class is deprecated). You build a pointer sequence.</p>
+    <pre><code>PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+
+// --- Tap ---
+Sequence tap = new Sequence(finger, 0)
+    .addAction(finger.createPointerMove(Duration.ZERO, viewport(), x, y))
+    .addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()))
+    .addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+driver.perform(List.of(tap));
+
+// --- Swipe up (scroll down the screen) ---
+Dimension size = driver.manage().window().getSize();
+int startX = size.width / 2, startY = (int) (size.height * 0.8), endY = (int) (size.height * 0.2);
+Sequence swipe = new Sequence(finger, 1)
+    .addAction(finger.createPointerMove(Duration.ZERO, viewport(), startX, startY))
+    .addAction(finger.createPointerDown(0))
+    .addAction(finger.createPointerMove(Duration.ofMillis(600), viewport(), startX, endY))
+    .addAction(finger.createPointerUp(0));
+driver.perform(List.of(swipe));
+
+// --- Long press: same as tap, with a pause between down and up ---
+    .addAction(new Pause(finger, Duration.ofSeconds(2)))
+
+// --- The pragmatic shortcut: mobile: commands (fast and readable) ---
+driver.executeScript("mobile: swipe", Map.of("direction", "up"));
+driver.executeScript("mobile: scroll", Map.of("strategy", "accessibility id", "selector", "Pay"));
+driver.executeScript("mobile: longClickGesture", Map.of("elementId",
+        ((RemoteWebElement) el).getId(), "duration", 2000));
+driver.executeScript("mobile: pinchCloseGesture", Map.of("percent", 0.75));</code></pre>
+    <div class="tip">Mention <code>mobile:</code> execute-script commands — they are the modern, driver-native way and far less code than hand-building pointer sequences. Candidates who only know the deprecated <code>TouchAction</code> immediately date themselves.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q206</span><span class="qt">Emulator/simulator vs real device vs cloud device farm — what do you use and when?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th></th><th>Emulator / Simulator</th><th>Real device</th><th>Cloud farm</th></tr>
+      <tr><td>Cost</td><td>Free</td><td>Hardware + maintenance</td><td>Subscription</td></tr>
+      <tr><td>Speed</td><td>Fast to spin up, scriptable in CI</td><td>Fastest execution, slow to provision</td><td>Fast, elastic</td></tr>
+      <tr><td>Coverage</td><td>Any OS version, any screen size</td><td>Only what you own</td><td>Hundreds of real devices</td></tr>
+      <tr><td>Fidelity</td><td>Cannot test camera, GPS accuracy, biometrics, real network, battery, push, performance, or OEM skins</td><td>Full</td><td>Full</td></tr>
+    </table>
+    <p><b>My strategy:</b> emulators for the bulk of functional regression in CI (cheap and parallelisable), a small set of <b>real devices</b> for the release candidate covering the top handsets in our analytics, and a <b>cloud farm</b> for the long tail of OS/OEM combinations plus anything needing real network conditions.</p>
+    <div class="tip">Anchor it in data: <i>"We pulled the device/OS distribution from our analytics and covered the models representing 80% of our users, rather than guessing."</i> That is exactly the risk-based thinking they want.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q207</span><span class="qt">What test scenarios are unique to mobile apps that don't exist on web?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>This is the question that separates people who have really tested mobile from people who have only read about Appium.</p>
+    <ul>
+      <li><b>Interrupts</b> — incoming call, SMS, alarm, push notification, or another app taking focus mid-transaction. Does state survive?</li>
+      <li><b>App lifecycle</b> — background the app, kill it from recents, relaunch. Is the session preserved? Is the cart intact? Is the payment double-charged?</li>
+      <li><b>Install / upgrade / uninstall</b> — upgrading from the previous version must migrate local data, not crash or wipe it. Very commonly missed.</li>
+      <li><b>Permissions</b> — deny camera/location and confirm graceful degradation, then grant it later from OS settings.</li>
+      <li><b>Network transitions</b> — WiFi → 4G → airplane mode → back. Offline mode, retry, and queued requests.</li>
+      <li><b>Device conditions</b> — low battery, low storage, low memory (does the OS kill the app?), device rotation, split screen, foldables.</li>
+      <li><b>Hardware back button</b> (Android) and swipe-back gesture (iOS) at every screen.</li>
+      <li><b>Deep links / push notification taps</b> landing on the right screen, including when the app is cold-started.</li>
+      <li><b>Accessibility &amp; display</b> — large system font, dark mode, TalkBack/VoiceOver, small screens.</li>
+      <li><b>Localisation</b> — RTL layouts, long translated strings overflowing buttons.</li>
+    </ul>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q208</span><span class="qt">Which ADB commands should a mobile tester know?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>adb devices                                 # list connected devices/emulators
+adb -s emulator-5554 shell                  # target a specific device
+
+adb install -r app-qa.apk                   # -r = reinstall, keep data
+adb uninstall com.example.shop
+adb shell pm clear com.example.shop         # wipe app data — a clean-state reset
+
+adb logcat                                  # live device log
+adb logcat *:E                              # errors only
+adb logcat | grep -i "com.example.shop"     # filter to your app — crash stack traces live here
+adb bugreport                               # full diagnostic bundle
+
+adb shell input text "hello"                # type
+adb shell input keyevent 4                  # 4 = BACK, 3 = HOME, 26 = POWER, 82 = MENU
+adb shell input swipe 500 1500 500 300      # swipe
+
+adb push file.pdf /sdcard/Download/         # put a test file on the device
+adb pull /sdcard/report.csv ./              # fetch a file the app produced
+adb shell screencap /sdcard/s.png           # screenshot
+adb shell screenrecord /sdcard/v.mp4        # video
+
+adb shell dumpsys battery set level 5       # simulate low battery
+adb shell svc wifi disable                  # network conditions
+adb shell am start -a android.intent.action.VIEW -d "shopapp://orders/991"   # deep link
+adb shell settings put global window_animation_scale 0     # disable animations = less flaky</code></pre>
+    <div class="tip">That last line is a genuine framework tip: turning off window, transition and animator scales on the device removes a whole class of mobile flakiness. Saying it shows you have actually stabilised a mobile suite.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q209</span><span class="qt">How do you handle waits and flakiness in Appium?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>// Explicit waits work exactly as in Selenium
+WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+wait.until(ExpectedConditions.visibilityOfElementLocated(AppiumBy.accessibilityId("cart_button")));
+
+// Appium-specific: keep the session alive during long operations
+options.setNewCommandTimeout(Duration.ofSeconds(120));</code></pre>
+    <h5>Mobile-specific flakiness causes</h5>
+    <ul>
+      <li><b>Animations and transitions</b> — the element exists but is still sliding in. Fix: disable animation scales via ADB, and wait for a stable state.</li>
+      <li><b>Slow emulator cold start</b> — the app is not ready when the driver session begins. Fix: wait for a known first-screen element, not a fixed sleep.</li>
+      <li><b>Soft keyboard covering elements</b> — <code>driver.hideKeyboard()</code> after typing, or use <code>setDisableWindowAnimation</code>/keyboard capabilities.</li>
+      <li><b>XPath timeouts on long lists</b> — the hierarchy dump is expensive; switch to accessibility id or UiSelector.</li>
+      <li><b>Elements outside the viewport</b> — mobile only exposes what is rendered, so you must scroll before the element even exists in the tree.</li>
+      <li><b>Stale sessions</b> — the device locks or the app is killed by the OS. Fix: <code>newCommandTimeout</code>, keep the screen awake, and reset cleanly between tests.</li>
+      <li><b>Shared device contention</b> in CI — two jobs grabbing the same device. Fix: a device pool/lock, or a cloud farm.</li>
+    </ul>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q210</span><span class="qt">How do you run mobile tests in parallel?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Same principle as web — <code>ThreadLocal</code> driver — plus one extra dimension: each thread needs its <b>own device and its own Appium server port</b>.</p>
+    <pre><code>&lt;suite name="MobileSuite" parallel="tests" thread-count="3"&gt;
+  &lt;test name="Pixel7"&gt;
+    &lt;parameter name="udid"       value="emulator-5554"/&gt;
+    &lt;parameter name="systemPort" value="8200"/&gt;
+    &lt;parameter name="serverPort" value="4723"/&gt;
+    &lt;classes&gt;&lt;class name="tests.CheckoutTest"/&gt;&lt;/classes&gt;
+  &lt;/test&gt;
+  &lt;test name="Pixel5"&gt;
+    &lt;parameter name="udid"       value="emulator-5556"/&gt;
+    &lt;parameter name="systemPort" value="8201"/&gt;
+    &lt;parameter name="serverPort" value="4725"/&gt;
+    &lt;classes&gt;&lt;class name="tests.CheckoutTest"/&gt;&lt;/classes&gt;
+  &lt;/test&gt;
+&lt;/suite&gt;</code></pre>
+    <pre><code>@BeforeMethod
+@Parameters({"udid", "systemPort", "serverPort"})
+public void setUp(String udid, int systemPort, int serverPort) throws MalformedURLException {
+    UiAutomator2Options options = new UiAutomator2Options()
+            .setUdid(udid)
+            .setSystemPort(systemPort)        // MUST be unique per device, or sessions collide
+            .setApp(appPath);
+    MobileDriverFactory.set(new AndroidDriver(
+            new URL("http://127.0.0.1:" + serverPort), options));
+}</code></pre>
+    <div class="gotcha">The mistake almost everyone makes: forgetting <code>systemPort</code> (Android) or <code>wdaLocalPort</code> (iOS). Without a unique port per device, the second session hijacks the first one's bridge and you get bizarre cross-device failures that look like application bugs.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q211</span><span class="qt">How do you structure a mobile automation framework? Can you share code with the web suite?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Yes — and saying how is a strong senior answer.</p>
+    <pre><code>src/main/java/
+  core/
+    DriverFactory.java        // returns WebDriver: Chrome, Firefox, AndroidDriver, IOSDriver
+    BasePage.java             // click/type/waitFor — written against WebDriver, not ChromeDriver
+  pages/
+    web/     LoginPage.java   CheckoutPage.java
+    mobile/  LoginScreen.java CheckoutScreen.java
+  utils/                      // SHARED: ApiClient, DbClient, DataFactory, ExcelReader, Logger</code></pre>
+    <p>What is shared: the driver factory pattern, the wait helpers, config layering, test data creation via API, reporting/listeners, and the whole build/CI setup. What is platform-specific: locators, gestures, and app lifecycle handling.</p>
+    <h5>Cross-platform page objects (Android + iOS from one class)</h5>
+    <pre><code>public class LoginScreen extends BaseScreen {
+    private final By email = isAndroid()
+            ? AppiumBy.id("com.example.shop:id/email")
+            : AppiumBy.accessibilityId("emailField");
+
+    // …or better: ask developers for the SAME accessibility id on both platforms,
+    // and then a single locator serves both:
+    private final By password = AppiumBy.accessibilityId("passwordField");
+}</code></pre>
+    <div class="tip">Push the <b>shared accessibility id</b> convention as a team practice. It removes platform branching from your locators <i>and</i> improves the app's accessibility. That "one change, two benefits" framing is exactly how a senior engineer argues for testability.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q212</span><span class="qt">How do you find locators in a mobile app?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Appium Inspector</b> — the standard tool. Connect to a running session, tap an element in the mirrored screen and it shows the id, accessibility id, class, XPath and a suggested locator.</li>
+      <li><b>uiautomatorviewer</b> (legacy Android SDK tool) and <b>Android Studio's Layout Inspector</b>.</li>
+      <li><b>Xcode Accessibility Inspector</b> for iOS.</li>
+      <li><code>driver.getPageSource()</code> — dumps the XML view hierarchy; useful for scripting and for CI debugging where no GUI exists.</li>
+      <li>Ask the developers to add <code>contentDescription</code> (Android) / <code>accessibilityIdentifier</code> (iOS) — the mobile equivalent of <code>data-testid</code>.</li>
+    </ul>
+    <div class="gotcha">A trap: elements that look identical on screen can have different hierarchies on the two platforms, so a locator verified in the Inspector on Android may not exist on iOS. Always verify both, and prefer the shared accessibility id so you only maintain one.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q213</span><span class="qt">How do you get logs, screenshots and crash information from a device?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>// Device logs through Appium (no ADB needed)
+LogEntries logs = driver.manage().logs().get("logcat");     // Android
+logs.forEach(e -&gt; logger.info("{} {}", e.getLevel(), e.getMessage()));
+driver.manage().logs().getAvailableLogTypes();              // logcat, bugreport, server, syslog…
+
+// Screenshot — identical API to Selenium
+File shot = driver.getScreenshotAs(OutputType.FILE);
+
+// Screen recording — invaluable for CI-only mobile failures
+driver.startRecordingScreen(new AndroidStartScreenRecordingOptions()
+        .withTimeLimit(Duration.ofMinutes(3)));
+// ... run the test ...
+String base64Video = driver.stopRecordingScreen();
+Files.write(Paths.get("videos/test.mp4"), Base64.getDecoder().decode(base64Video));
+
+// Device state helpers
+driver.runAppInBackground(Duration.ofSeconds(5));   // simulate an interruption
+driver.activateApp("com.example.shop");
+driver.terminateApp("com.example.shop");
+driver.installApp(path);  driver.removeApp("com.example.shop");
+driver.rotate(ScreenOrientation.LANDSCAPE);
+driver.toggleAirplaneMode();
+driver.setLocation(new Location(12.9716, 77.5946, 0));</code></pre>
+    <div class="tip">Attaching the <b>logcat output around the failure timestamp</b> to your report is the single most useful thing for mobile debugging — a screenshot shows the symptom, logcat shows the stack trace of the crash.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q214</span><span class="qt">What are the biggest challenges in mobile automation?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Device fragmentation</b> — thousands of Android device/OS/OEM-skin combinations. Mitigate with analytics-driven device selection and a cloud farm.</li>
+      <li><b>Slow, unstable infrastructure</b> — emulator boot times, WebDriverAgent rebuilds on iOS, devices disconnecting, ports colliding. Mobile CI needs far more babysitting than web CI.</li>
+      <li><b>iOS friction</b> — signing certificates, provisioning profiles, needing a Mac build agent, Xcode upgrades breaking WebDriverAgent.</li>
+      <li><b>Slow feedback</b> — a mobile suite is inherently slower than a web suite; you have to be ruthless about what belongs at the UI level.</li>
+      <li><b>Locator instability</b> in cross-platform frameworks (React Native/Flutter) where the rendered tree changes between versions.</li>
+      <li><b>App state management</b> — deciding between <code>noReset</code> (fast, dirty) and full reset (slow, clean) per suite.</li>
+      <li><b>Things you simply cannot automate</b> — biometrics, real payments (NFC), camera scanning, OS-level dialogs on some versions, push notification delivery.</li>
+    </ul>
+    <div class="tip">End with the mitigation, not the complaint: <i>"Because mobile UI tests are expensive, we kept the mobile UI layer to the top 15 user journeys and pushed everything else to API tests and unit tests on the app side. That kept the mobile pipeline under 25 minutes."</i></div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q215</span><span class="qt">How would you test a mobile app end to end, if asked in an open question?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Answer in layers, exactly as with the login page question — categories, not a random list.</p>
+    <ol>
+      <li><b>Functional</b> — install, onboarding, signup/login, core journeys (search → cart → pay), logout, edge cases and validations.</li>
+      <li><b>App lifecycle</b> — background/foreground, kill and relaunch, upgrade from the previous version, uninstall/reinstall, cold vs warm start.</li>
+      <li><b>Interrupts</b> — call, SMS, notification, alarm, another app, screen lock during a transaction.</li>
+      <li><b>Connectivity</b> — offline behaviour, slow 2G/3G, network switching, request retry, sync on reconnect.</li>
+      <li><b>Device &amp; OS matrix</b> — screen sizes, OS versions, OEM skins, tablets, foldables, notches, dark mode, large fonts.</li>
+      <li><b>Performance</b> — cold start time, screen render time, memory and battery usage, APK/IPA size, ANRs and crash-free rate.</li>
+      <li><b>Security</b> — data at rest not stored in plain text, no sensitive data in logs, certificate pinning, root/jailbreak handling, session expiry, screenshot blocking on sensitive screens.</li>
+      <li><b>Accessibility</b> — TalkBack/VoiceOver, touch target sizes, contrast, dynamic type.</li>
+      <li><b>Store readiness</b> — permissions declared, privacy policy, store metadata, and compliance rules.</li>
+    </ol>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+</section>
+
+  <nav class="pager">
+      <a class="pn" href="06-api-database-behavioural.html">&#8592; API, Database, Scenario &amp; Behavioural</a>
+      <a class="pn" href="08-performance-security-nonfunctional.html">Performance, Security &amp; Non-Functional &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script>
+(function(){
+  /* ---- tiny offline syntax highlighter (Java / TS / JS / YAML-ish) ---- */
+  var KW = {};
+  ("abstract assert async await boolean break byte case catch char class const continue default do double else enum export extends final finally float for from function if implements import in instanceof int interface let long new package private protected public readonly return static super switch this throw throws try type typeof var void while yield true false null undefined String Integer List ArrayList Map HashMap Set Optional Thread Exception WebDriver WebElement By Actions Select Alert ChromeDriver ChromeOptions Duration Page Locator Browser BrowserContext expect test describe beforeEach afterEach beforeAll afterAll it Promise void any number string unknown as await").split(" ").forEach(function(w){KW[w]=1;});
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function plain(txt){
+    return esc(txt).replace(/\b([A-Za-z_$][\w$]*)\b|\b(\d+(?:\.\d+)?)\b|(@[A-Za-z]\w*)/g,
+      function(m,word,num,ann){
+        if(ann) return '<span class="f">'+ann+'</span>';
+        if(num) return '<span class="n">'+num+'</span>';
+        if(word && KW[word]) return '<span class="k">'+word+'</span>';
+        return m;
+      });
+  }
+  [].forEach.call(document.querySelectorAll('pre > code'), function(el){
+    var src = el.textContent, out = '', last = 0, m;
+    var re = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|^\s*#[^\n]*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)/gm;
+    while((m = re.exec(src))){
+      out += plain(src.slice(last, m.index));
+      out += m[1] ? '<span class="c">'+esc(m[1])+'</span>' : '<span class="s">'+esc(m[2])+'</span>';
+      last = re.lastIndex;
+    }
+    out += plain(src.slice(last));
+    el.innerHTML = out;
+  });
+
+  var cards = [].slice.call(document.querySelectorAll('.qa'));
+  var countEl = document.getElementById('count');
+
+  /* number every card automatically and build searchable text */
+  cards.forEach(function(c,i){
+    var n = c.querySelector('.num');
+    if(n && !n.textContent.trim()) n.textContent = 'Q' + (i+1);
+    c.dataset.txt = c.textContent.toLowerCase();
+    c.dataset.isq = (n && /^Q\d+$/.test(n.textContent.trim())) ? '1' : '0';
+  });
+
+  var total = cards.filter(function(c){
+    var n = c.querySelector('.num');
+    return n && /^Q\d+$/.test(n.textContent.trim());
+  }).length;
+  function updateCount(v){ countEl.textContent = (v===undefined? total : v) + ' / ' + total + ' questions'; }
+  updateCount();
+
+  /* toggle single card */
+  document.addEventListener('click', function(e){
+    var q = e.target.closest('.q');
+    if(q && q.parentElement.classList.contains('qa')) q.parentElement.classList.toggle('closed');
+  });
+
+  /* quiz mode */
+  var quizOn=false, quizBtn=document.getElementById('quiz');
+  quizBtn.addEventListener('click', function(){
+    quizOn=!quizOn;
+    quizBtn.classList.toggle('on',quizOn);
+    quizBtn.textContent = quizOn? 'Study mode':'Quiz mode';
+    cards.forEach(function(c){ c.classList.toggle('closed',quizOn); });
+  });
+
+  /* expand all */
+  document.getElementById('expand').addEventListener('click', function(){
+    cards.forEach(function(c){ c.classList.remove('closed'); });
+    quizOn=false; quizBtn.classList.remove('on'); quizBtn.textContent='Quiz mode';
+  });
+
+  /* theme */
+  var root=document.documentElement, themeBtn=document.getElementById('theme');
+  function paintTheme(){ themeBtn.textContent = root.getAttribute('data-theme')==='dark' ? 'Light':'Dark'; }
+  var saved = localStorage.getItem('qa-theme'); if(saved) root.setAttribute('data-theme',saved);
+  paintTheme();
+  themeBtn.addEventListener('click', function(){
+    var next = root.getAttribute('data-theme')==='dark' ? 'light':'dark';
+    root.setAttribute('data-theme',next); localStorage.setItem('qa-theme',next); paintTheme();
+  });
+
+  /* search */
+  var box=document.getElementById('search'), t;
+  box.addEventListener('input', function(){
+    clearTimeout(t);
+    t=setTimeout(function(){
+      var q=box.value.trim().toLowerCase(), shown=0;
+      cards.forEach(function(c){
+        var hit = !q || c.dataset.txt.indexOf(q)>-1;
+        c.classList.toggle('hidden',!hit);
+        if(hit && c.dataset.isq === '1') shown++;
+      });
+      document.querySelectorAll('main figure').forEach(function(f){ f.classList.toggle('hidden', !!q); });
+      document.querySelectorAll('section.sec').forEach(function(s){
+        var any = s.querySelector('.qa:not(.hidden)');
+        s.classList.toggle('hidden', !!q && !any);
+      });
+      updateCount(shown);
+    },120);
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='/' && document.activeElement!==box){ e.preventDefault(); box.focus(); }
+    if(e.key==='Escape' && document.activeElement===box){ box.value=''; box.dispatchEvent(new Event('input')); box.blur(); }
+  });
+})();
+</script>
+</body>
+</html>

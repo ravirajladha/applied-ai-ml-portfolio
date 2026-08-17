@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual Testing &amp; QA Fundamentals — Automation Interview Prep (Q1–Q41)</title>
+<meta name="description" content="Test design techniques, STLC, defect life cycle, severity vs priority, Agile and risk-based testing.">
+<style>
+:root{
+  --bg:#f6f7fb; --panel:#ffffff; --ink:#161a22; --muted:#5b6478; --line:#e2e6ef;
+  --accent:#4338ca; --accent-soft:#eef0ff; --accent2:#0d9488; --accent2-soft:#e6f7f4;
+  --warn:#b45309; --warn-soft:#fff5e6; --danger:#be123c; --danger-soft:#ffeaf0;
+  --code-bg:#0f172a; --code-ink:#e2e8f0; --code-key:#93c5fd; --code-str:#86efac;
+  --code-com:#94a3b8; --code-num:#fca5a5; --code-fn:#fcd34d;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+  --radius:14px;
+}
+html[data-theme="dark"]{
+  --bg:#0b0f17; --panel:#121826; --ink:#e6eaf2; --muted:#9aa5bb; --line:#232c3d;
+  --accent:#a5b4fc; --accent-soft:#1c2340; --accent2:#5eead4; --accent2-soft:#0e2b28;
+  --warn:#fbbf24; --warn-soft:#33280d; --danger:#fda4af; --danger-soft:#3a1220;
+  --code-bg:#080d16; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- top bar ---------- */
+header.top{
+  position:sticky; top:0; z-index:50; background:var(--panel);
+  border-bottom:1px solid var(--line); box-shadow:0 1px 0 rgba(0,0,0,.02);
+}
+.top-in{max-width:1400px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:15px}
+.brand .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#fff;font-size:13px}
+.tools{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input#search{
+  width:min(360px,46vw); padding:9px 12px; border:1px solid var(--line); border-radius:10px;
+  background:var(--bg); color:var(--ink); font-size:14px; outline:none;
+}
+input#search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+button.btn{
+  padding:9px 13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap
+}
+button.btn:hover{border-color:var(--accent);color:var(--accent)}
+button.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.count{font-size:12px;color:var(--muted);white-space:nowrap}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1400px;margin:0 auto;padding:22px 18px 80px;display:grid;grid-template-columns:262px 1fr;gap:26px}
+@media(max-width:1000px){.wrap{grid-template-columns:1fr}nav.toc{position:static;max-height:none}}
+nav.toc{
+  position:sticky; top:72px; align-self:start; max-height:calc(100vh - 92px); overflow:auto;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow);
+}
+nav.toc h4{margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+nav.toc a{display:block;padding:7px 9px;border-radius:8px;color:var(--ink);font-size:13.5px;line-height:1.35}
+nav.toc a:hover{background:var(--accent-soft);text-decoration:none}
+nav.toc a .n{color:var(--muted);font-size:11.5px;display:block}
+nav.toc .grp{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+
+main{min-width:0}
+
+/* ---------- hero ---------- */
+.hero{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px 28px;box-shadow:var(--shadow);margin-bottom:22px}
+.hero h1{margin:0 0 6px;font-size:30px;letter-spacing:-.03em;line-height:1.2}
+.hero .sub{color:var(--muted);font-size:15px;margin:0 0 16px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:104px}
+.stat b{display:block;font-size:21px;letter-spacing:-.02em}
+.stat span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+/* ---------- sections ---------- */
+section.sec{margin:34px 0 0;scroll-margin-top:80px}
+.sec-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px;padding-bottom:12px;border-bottom:2px solid var(--line)}
+.sec-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-radius:10px;font-weight:800;font-size:13px;padding:7px 11px;white-space:nowrap;margin-top:3px}
+.sec-head h2{margin:0;font-size:23px;letter-spacing:-.02em}
+.sec-head p{margin:3px 0 0;color:var(--muted);font-size:14px}
+
+/* ---------- q cards ---------- */
+.qa{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin:14px 0;box-shadow:var(--shadow);overflow:hidden;
+     content-visibility:auto;contain-intrinsic-size:auto 460px}
+.qa .q{padding:15px 18px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;user-select:none}
+.qa .q:hover{background:var(--accent-soft)}
+.qa .num{background:var(--accent-soft);color:var(--accent);border-radius:8px;font-weight:800;font-size:12.5px;padding:4px 8px;min-width:44px;text-align:center;margin-top:2px;font-variant-numeric:tabular-nums}
+.qa .qt{font-weight:650;font-size:16.5px;letter-spacing:-.01em;flex:1;line-height:1.45}
+.qa .chev{color:var(--muted);font-size:13px;margin-top:5px;transition:transform .18s}
+.qa.closed .a{display:none}
+.qa.closed .chev{transform:rotate(-90deg)}
+.a{padding:2px 18px 18px 74px;border-top:1px solid var(--line);margin-top:-1px}
+@media(max-width:640px){.a{padding-left:18px}}
+.a>p:first-child{margin-top:14px}
+.a p{margin:10px 0}
+.a ul,.a ol{margin:10px 0;padding-left:22px}
+.a li{margin:5px 0}
+.a h5{margin:16px 0 6px;font-size:14px;letter-spacing:.02em;color:var(--accent)}
+
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.tag.core{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.tag.adv{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.tag.trap{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+
+/* ---------- code ---------- */
+pre{background:var(--code-bg);color:var(--code-ink);padding:14px 16px;border-radius:11px;overflow:auto;font-size:13.2px;line-height:1.6;margin:12px 0;border:1px solid rgba(255,255,255,.07)}
+code{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+p code,li code,td code{background:var(--accent-soft);color:var(--accent);padding:1.5px 6px;border-radius:6px;font-size:13px;font-weight:600}
+.k{color:var(--code-key)} .s{color:var(--code-str)} .c{color:var(--code-com);font-style:italic}
+.n{color:var(--code-num)} .f{color:var(--code-fn)}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--bg);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+
+/* ---------- callouts ---------- */
+.note{border-left:4px solid var(--accent2);background:var(--accent2-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.tip{border-left:4px solid var(--warn);background:var(--warn-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.gotcha{border-left:4px solid var(--danger);background:var(--danger-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.note b,.tip b,.gotcha b{letter-spacing:.02em}
+
+/* ---------- figures ---------- */
+figure{margin:18px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+figure svg{width:100%;height:auto;display:block}
+figcaption{margin-top:10px;font-size:13px;color:var(--muted);text-align:center}
+.svg-ink{fill:var(--ink)} .svg-mut{fill:var(--muted)} .svg-line{stroke:var(--line)}
+
+/* ---------- misc ---------- */
+.hidden{display:none !important}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;font-size:12px;font-family:monospace;background:var(--bg)}
+.catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:12px;margin-top:14px}
+.catcard{display:block;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)}
+.catcard:hover{border-color:var(--accent);background:var(--accent-soft);text-decoration:none}
+.catcard b{display:block;font-size:14.5px;letter-spacing:-.01em;margin-bottom:3px}
+.catcard .r{font-size:11.5px;font-weight:700;color:var(--accent);letter-spacing:.04em}
+.catcard .d{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:5px}
+.toTop{position:fixed;right:20px;bottom:20px;z-index:60;border-radius:999px;padding:11px 15px;box-shadow:var(--shadow)}
+
+/* ---------- print ---------- */
+@media print{
+  :root{--bg:#fff;--panel:#fff;--line:#ccc;--ink:#000;--muted:#444;--shadow:none}
+  header.top,nav.toc,.toTop,.noprint{display:none !important}
+  .wrap{display:block;max-width:none;padding:0}
+  .qa{break-inside:avoid;page-break-inside:avoid;border:1px solid #ddd;box-shadow:none;margin:8px 0;
+      content-visibility:visible !important;contain-intrinsic-size:auto !important}
+  .qa.closed .a{display:block !important}
+  .qa .chev{display:none}
+  pre{background:#f4f4f6;color:#111;border:1px solid #ddd;white-space:pre-wrap;font-size:11px}
+  .k,.s,.c,.n,.f{color:#111 !important}
+  figure{break-inside:avoid;page-break-inside:avoid}
+  section.sec{page-break-before:auto}
+  body{font-size:11.5pt}
+  a{color:#000;text-decoration:none}
+}
+
+.crumb{max-width:1400px;margin:0 auto;padding:14px 18px 0;font-size:13.5px;color:var(--muted)}
+.crumb a{font-weight:600}
+.pager{display:flex;justify-content:space-between;gap:12px;margin:34px 0 0;flex-wrap:wrap}
+.pn{display:inline-block;padding:12px 16px;border:1px solid var(--line);border-radius:12px;
+    background:var(--panel);font-weight:600;font-size:14px;box-shadow:var(--shadow)}
+.pn:hover{border-color:var(--accent);text-decoration:none}
+@media print{.crumb,.pager{display:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">QA</span><span>Manual Testing &amp; QA Fundamentals</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this section…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All 250 questions</a> &nbsp;·&nbsp; Manual Testing &amp; QA Fundamentals &nbsp;·&nbsp; Q1–Q41 (41 questions)</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+<section class="sec" id="s1">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 1</div>
+    <div>
+      <h2>Manual Testing &amp; QA Fundamentals</h2>
+      <p>Q1 – Q41 · Even for a pure automation role, the first 15 minutes are usually manual/process questions. This is where interviewers decide whether you <i>think</i> like a tester or only <i>code</i> like one.</p>
+    </div>
+  </div>
+
+<figure>
+<svg viewBox="0 0 900 340" role="img" aria-label="SDLC and STLC mapped as a V-model">
+  <text x="450" y="24" text-anchor="middle" class="svg-ink" font-size="16" font-weight="700">The V-Model — every development phase has a matching test phase</text>
+  <g stroke="var(--line)" stroke-width="2" fill="none">
+    <path d="M90 60 L330 290" stroke="#4338ca" stroke-width="3"/>
+    <path d="M330 290 L570 60" stroke="#0d9488" stroke-width="3"/>
+  </g>
+  <g font-size="12.5">
+    <g><rect x="30" y="46" width="150" height="34" rx="8" fill="var(--accent-soft)"/><text x="105" y="68" text-anchor="middle" class="svg-ink" font-weight="700">Requirements</text></g>
+    <g><rect x="90" y="106" width="150" height="34" rx="8" fill="var(--accent-soft)"/><text x="165" y="128" text-anchor="middle" class="svg-ink" font-weight="700">High-level design</text></g>
+    <g><rect x="150" y="166" width="150" height="34" rx="8" fill="var(--accent-soft)"/><text x="225" y="188" text-anchor="middle" class="svg-ink" font-weight="700">Low-level design</text></g>
+    <g><rect x="255" y="296" width="150" height="34" rx="8" fill="#4338ca"/><text x="330" y="318" text-anchor="middle" fill="#fff" font-weight="700">Coding</text></g>
+    <g><rect x="420" y="166" width="170" height="34" rx="8" fill="var(--accent2-soft)"/><text x="505" y="188" text-anchor="middle" class="svg-ink" font-weight="700">Unit testing</text></g>
+    <g><rect x="480" y="106" width="170" height="34" rx="8" fill="var(--accent2-soft)"/><text x="565" y="128" text-anchor="middle" class="svg-ink" font-weight="700">Integration testing</text></g>
+    <g><rect x="540" y="46" width="170" height="34" rx="8" fill="var(--accent2-soft)"/><text x="625" y="68" text-anchor="middle" class="svg-ink" font-weight="700">System / UAT</text></g>
+  </g>
+  <g stroke="var(--muted)" stroke-dasharray="4 4" stroke-width="1.4">
+    <line x1="180" y1="63" x2="540" y2="63"/><line x1="240" y1="123" x2="480" y2="123"/><line x1="300" y1="183" x2="420" y2="183"/>
+  </g>
+  <text x="740" y="63" class="svg-mut" font-size="11.5">verifies</text>
+  <text x="740" y="230" class="svg-mut" font-size="11.5" font-style="italic">Test design starts on the</text>
+  <text x="740" y="248" class="svg-mut" font-size="11.5" font-style="italic">LEFT, not after coding.</text>
+</svg>
+<figcaption>Figure 1 — The V-model. Use it to explain "shift-left": test artefacts are written in parallel with design, so defects are caught in documents (cheap) instead of in production (expensive).</figcaption>
+</figure>
+
+<div class="qa">
+  <div class="q"><span class="num">Q1</span><span class="qt">What is software testing, and what is its real objective?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Software testing is the process of evaluating a system to find the difference between <b>expected</b> and <b>actual</b> behaviour, and to give stakeholders information about the quality and risk of releasing it.</p>
+    <h5>The objective is not "to find all bugs"</h5>
+    <p>Exhaustive testing is impossible — a single form with 10 text fields has effectively infinite input combinations. The real objectives are:</p>
+    <ul>
+      <li><b>Find defects early</b>, when they are cheapest to fix (a requirement defect costs ~1x to fix in analysis, ~100x in production).</li>
+      <li><b>Reduce risk</b> to an acceptable level and provide evidence for a go/no-go decision.</li>
+      <li><b>Prevent defects</b> — reviewing a requirement and asking "what happens if the amount is negative?" prevents a bug from ever being coded.</li>
+      <li><b>Build confidence</b> that the product meets business and user needs.</li>
+    </ul>
+    <div class="tip"><b>Say this in the interview:</b> "Testing shows the presence of defects, not their absence." It is one of the seven ISTQB testing principles and instantly signals you know the fundamentals.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag">opening question</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q2</span><span class="qt">Difference between Verification and Validation?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Aspect</th><th>Verification</th><th>Validation</th></tr>
+      <tr><td>Question answered</td><td>"Are we building the product <b>right</b>?"</td><td>"Are we building the <b>right</b> product?"</td></tr>
+      <tr><td>Focus</td><td>Conformance to specification / design / standards</td><td>Fitness for the user's actual need</td></tr>
+      <tr><td>Techniques</td><td>Reviews, walkthroughs, inspections, static analysis</td><td>Functional, system, UAT, exploratory testing</td></tr>
+      <tr><td>Code executed?</td><td>No (static)</td><td>Yes (dynamic)</td></tr>
+      <tr><td>Who</td><td>Author, peers, QA, architects</td><td>QA team and end users / product owner</td></tr>
+    </table>
+    <h5>Concrete example</h5>
+    <p>A requirement says "the OTP must expire in 30 seconds". <b>Verification</b> = reviewing the design doc and confirming the timer is specified as 30s and the code implements 30s. <b>Validation</b> = actually waiting 31 seconds in the app and confirming the OTP is rejected — and also raising that users on a slow 2G network can never complete it in 30 seconds, so the <i>requirement itself</i> is wrong. That last part is validation catching a specification defect.</p>
+    <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q3</span><span class="qt">QA vs QC vs Testing — how are they different?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Quality Assurance (QA)</b> — <i>process oriented, preventive.</i> Defining and improving the process so defects do not get created: definition of done, code review standards, branching strategy, CI gates, test entry/exit criteria, audits. QA is proactive.</li>
+      <li><b>Quality Control (QC)</b> — <i>product oriented, corrective.</i> Checking the actual built product against requirements to detect defects. Reactive.</li>
+      <li><b>Testing</b> — a <i>subset of QC</i>: the concrete activity of executing the system with inputs to observe behaviour.</li>
+    </ul>
+    <p>Relationship: <code>QA ⊃ QC ⊃ Testing</code>.</p>
+    <div class="note"><b>Interview angle:</b> "In my team QA is when I insist that no story is 'done' without automated regression coverage and a passing pipeline; QC is when I execute that regression suite on the release build."</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q4</span><span class="qt">Explain SDLC and the common models (Waterfall, V-Model, Agile).</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p><b>SDLC</b> = Software Development Life Cycle: Requirement gathering → Analysis → Design → Implementation → Testing → Deployment → Maintenance.</p>
+    <table>
+      <tr><th>Model</th><th>How it works</th><th>Use when</th><th>Weakness</th></tr>
+      <tr><td><b>Waterfall</b></td><td>Strictly sequential; each phase completes before the next starts</td><td>Requirements are frozen and well understood (e.g. regulated hardware firmware)</td><td>Testing happens at the very end; change is expensive</td></tr>
+      <tr><td><b>V-Model</b></td><td>Same sequence, but each dev phase is paired with a test phase planned in parallel</td><td>Safety-critical / compliance projects (medical, avionics)</td><td>Still rigid about changing requirements</td></tr>
+      <tr><td><b>Iterative / Spiral</b></td><td>Build in repeated cycles with risk analysis each loop</td><td>Large, high-risk, evolving systems</td><td>Heavy process overhead</td></tr>
+      <tr><td><b>Agile / Scrum</b></td><td>Short sprints (1–3 weeks) delivering potentially shippable increments; continuous feedback</td><td>Most modern product development</td><td>Needs discipline; regression load grows every sprint → automation becomes mandatory</td></tr>
+      <tr><td><b>DevOps / CD</b></td><td>Agile extended into automated build-test-deploy pipelines, many releases per day</td><td>Cloud / SaaS products</td><td>Requires very high automation maturity and observability</td></tr>
+    </table>
+    <div class="tip">Close with the automation link: <i>"In Agile the regression suite grows every sprint, so without automation the team's testing capacity becomes the release bottleneck by about sprint 6. That's the business case for my automation framework."</i></div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q5</span><span class="qt">What is STLC? Walk me through its phases and deliverables.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p><b>STLC</b> (Software Testing Life Cycle) is the testing-side counterpart of SDLC. Six phases:</p>
+    <table>
+      <tr><th>#</th><th>Phase</th><th>Activity</th><th>Deliverable</th></tr>
+      <tr><td>1</td><td>Requirement analysis</td><td>Study requirements, identify testable requirements, raise ambiguities, decide automation feasibility</td><td>RTM (draft), list of clarifications</td></tr>
+      <tr><td>2</td><td>Test planning</td><td>Scope, approach, effort estimation, resources, schedule, risk, tools</td><td>Test Plan, effort estimate</td></tr>
+      <tr><td>3</td><td>Test case design</td><td>Write cases and scripts, prepare test data, peer review</td><td>Test cases, test data, automation scripts, updated RTM</td></tr>
+      <tr><td>4</td><td>Environment setup</td><td>Set up test env, builds, DB, stubs/mocks, smoke check</td><td>Ready environment + smoke test results</td></tr>
+      <tr><td>5</td><td>Test execution</td><td>Execute, log defects, retest, regress, track</td><td>Execution report, defect reports</td></tr>
+      <tr><td>6</td><td>Test closure</td><td>Exit criteria evaluation, metrics, lessons learned, archive artefacts</td><td>Test Summary Report, RCA/retrospective notes</td></tr>
+    </table>
+    <p>Each phase has its own <b>entry criteria</b>, <b>activities</b>, and <b>exit criteria</b> — say that sentence, it is exactly what the interviewer is listening for.</p>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q6</span><span class="qt">What are entry and exit criteria? Give real examples.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p><b>Entry criteria</b> = conditions that must be true before a test phase can start. <b>Exit criteria</b> = conditions that must be true before it can be declared complete.</p>
+    <h5>Example — System Test phase</h5>
+    <ul>
+      <li><b>Entry:</b> requirements signed off; test cases reviewed and approved; test environment available and stable; build deployed and smoke test passed; unit &amp; integration tests green.</li>
+      <li><b>Exit:</b> 100% of planned test cases executed; ≥ 95% pass rate; zero open Critical/High defects; all Medium defects triaged with an agreed fix or deferral; regression suite green; test summary report signed off.</li>
+    </ul>
+    <div class="gotcha"><b>Trap follow-up: "What if the deadline arrives and exit criteria are not met?"</b> Correct answer: you do <i>not</i> silently pass it. You escalate with data — which criteria failed, the open defect list with severity, the risk of releasing anyway — and the business owner takes the go/no-go decision. QA's job is to expose risk, not to own the release decision alone.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q7</span><span class="qt">Test Plan vs Test Strategy — what is the difference, and what goes into a test plan?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th></th><th>Test Strategy</th><th>Test Plan</th></tr>
+      <tr><td>Level</td><td>Organisation / programme level</td><td>Project or release level</td></tr>
+      <tr><td>Content</td><td>Overall approach, standards, tools, test levels, automation policy, defect management process</td><td>Scope, schedule, resources, deliverables, environment, entry/exit, risks for <i>this</i> release</td></tr>
+      <tr><td>Changes</td><td>Rarely (static)</td><td>Frequently (living document)</td></tr>
+      <tr><td>Author</td><td>QA Manager / Head of Quality</td><td>Test Lead / senior QA</td></tr>
+    </table>
+    <h5>IEEE 829 Test Plan sections (know at least 8)</h5>
+    <ol>
+      <li>Test plan identifier &amp; introduction</li>
+      <li>Scope — features to be tested / <b>not</b> to be tested (this one is asked a lot)</li>
+      <li>Test approach &amp; levels</li>
+      <li>Item pass/fail criteria, entry/exit &amp; suspension-resumption criteria</li>
+      <li>Test deliverables</li>
+      <li>Environment needs</li>
+      <li>Roles, responsibilities, staffing &amp; training</li>
+      <li>Schedule &amp; estimation</li>
+      <li>Risks and mitigations</li>
+      <li>Approvals</li>
+    </ol>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q8</span><span class="qt">Test Scenario vs Test Case vs Test Script?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Test Scenario</b> — a one-line statement of <i>what</i> to test, from the user's point of view. "Verify user can log in." It answers "what areas must we cover?"</li>
+      <li><b>Test Case</b> — a detailed, repeatable set of steps with preconditions, test data, and an expected result for <i>one</i> condition. "Login with valid username and invalid password."</li>
+      <li><b>Test Script</b> — the automated/coded implementation of a test case.</li>
+    </ul>
+    <p>One scenario typically explodes into 8–15 test cases (valid, invalid, empty, locked account, case sensitivity, SQL injection, session behaviour, remember-me, etc.).</p>
+    <div class="note"><b>Why interviewers ask:</b> they want to see that you go from a vague requirement to a structured set of conditions. If they say "give me test scenarios for a login page", answer in <i>categories</i>: functional positive, functional negative, boundary, security, UI/usability, performance, compatibility, accessibility. Categories score far higher than a random list.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q9</span><span class="qt">What makes a good test case? Write one for a login page.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>A good test case is <b>atomic</b> (tests one thing), <b>independent</b> (does not depend on another case having run), <b>repeatable</b> (same result every time), <b>traceable</b> (linked to a requirement), and written so that <b>anyone</b> can execute it without asking you questions.</p>
+    <table>
+      <tr><th>Field</th><th>Value</th></tr>
+      <tr><td>Test Case ID</td><td>TC_LOGIN_007</td></tr>
+      <tr><td>Requirement ID</td><td>REQ-AUTH-03 (account lockout)</td></tr>
+      <tr><td>Title</td><td>Account locks after 3 consecutive invalid password attempts</td></tr>
+      <tr><td>Priority / Severity</td><td>High</td></tr>
+      <tr><td>Preconditions</td><td>An active user <code>qa.user@test.com</code> exists, is not currently locked, failed-attempt counter = 0</td></tr>
+      <tr><td>Test data</td><td>Valid user, wrong password <code>Wrong@123</code></td></tr>
+      <tr><td>Steps</td><td>1. Open <code>/login</code><br>2. Enter valid email + wrong password, click Sign in <br>3. Repeat step 2 two more times<br>4. Enter valid email + <b>correct</b> password, click Sign in</td></tr>
+      <tr><td>Expected result</td><td>Steps 2–3 show "Invalid credentials" with attempts remaining. After the 3rd failure the account is locked; step 4 shows "Your account is locked. Try after 30 minutes or reset your password" and the user is <b>not</b> logged in. An audit entry is written.</td></tr>
+      <tr><td>Post-condition</td><td>Unlock the account / reset counter (cleanup)</td></tr>
+    </table>
+    <div class="tip">Notice the expected result covers UI message <b>and</b> back-end state (audit entry, not logged in). Mentioning back-end verification separates a 5-year candidate from a fresher.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag">hands-on</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q10</span><span class="qt">Explain Equivalence Partitioning with an example.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Divide the input domain into <b>classes where the system is expected to behave identically</b>, then test one representative value from each class. Rationale: if one value in a class fails, all of them will — so testing 1 value instead of 1000 gives the same defect-finding power for 0.1% of the effort.</p>
+    <h5>Example — "Age must be between 18 and 60"</h5>
+    <table>
+      <tr><th>Partition</th><th>Range</th><th>Representative</th><th>Expected</th></tr>
+      <tr><td>Invalid (low)</td><td>&lt; 18</td><td>10</td><td>Reject</td></tr>
+      <tr><td>Valid</td><td>18 – 60</td><td>35</td><td>Accept</td></tr>
+      <tr><td>Invalid (high)</td><td>&gt; 60</td><td>75</td><td>Reject</td></tr>
+      <tr><td>Invalid (type)</td><td>non-numeric / empty / negative / decimal</td><td>"abc", "", -5, 22.5</td><td>Reject with proper message</td></tr>
+    </table>
+    <p>4 tests instead of hundreds. It applies to outputs and to non-numeric data too (e.g. user roles: admin / manager / guest are three partitions).</p>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q11</span><span class="qt">Explain Boundary Value Analysis. Why is it more effective than EP alone?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Defects cluster at the <b>edges</b> of partitions because that is where developers write <code>&gt;</code> instead of <code>&gt;=</code> or use <code>&lt;= size</code> instead of <code>&lt; size</code>. BVA tests the values <i>at and around</i> each boundary.</p>
+    <h5>For "Age 18 to 60"</h5>
+    <ul>
+      <li><b>2-value BVA</b> (each boundary ± 1): 17, 18 &nbsp;|&nbsp; 60, 61</li>
+      <li><b>3-value BVA</b> (min-1, min, min+1, max-1, max, max+1): 17, 18, 19, 59, 60, 61</li>
+    </ul>
+    <p>EP and BVA are used <b>together</b>: EP tells you which classes exist, BVA tells you which specific values inside/around them to pick.</p>
+    <div class="note">Other boundaries people forget: string length limits (0, 1, max, max+1 characters), file upload size, pagination (page 0, page 1, last page, last+1), dates (leap year 29-Feb, month-end 31st, year rollover 31-Dec 23:59:59), and empty/one/many for lists.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q12</span><span class="qt">What is Decision Table testing? When do you use it?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Used when the output depends on a <b>combination of conditions</b> (business rules), not on a single input range. You enumerate all condition combinations and their expected actions, which guarantees no rule is missed.</p>
+    <h5>Example — discount rule: "Premium members get 20% off; orders above ₹5000 get 10% off; they do not stack — the higher applies."</h5>
+    <table>
+      <tr><th>Rule</th><th>R1</th><th>R2</th><th>R3</th><th>R4</th></tr>
+      <tr><td>Premium member?</td><td>Y</td><td>Y</td><td>N</td><td>N</td></tr>
+      <tr><td>Order &gt; ₹5000?</td><td>Y</td><td>N</td><td>Y</td><td>N</td></tr>
+      <tr><td><b>Expected discount</b></td><td>20%</td><td>20%</td><td>10%</td><td>0%</td></tr>
+    </table>
+    <p>With <code>n</code> binary conditions you get <code>2^n</code> rules. For large tables you collapse impossible/irrelevant combinations using "–" (don't care) entries.</p>
+    <div class="tip">This is the technique to name when asked "how would you test a loan eligibility / insurance premium / pricing engine?" — combination logic is exactly what decision tables are for.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q13</span><span class="qt">What is State Transition testing?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Used when the system's response depends on its <b>current state and history</b>, not just the current input. You model states, events, transitions and actions, then design tests that cover valid transitions — and importantly, attempt <b>invalid</b> ones.</p>
+    <h5>Example — ATM card / login states</h5>
+    <p><code>Active → (1 wrong PIN) → Active(1 fail) → (2nd wrong) → Active(2 fails) → (3rd wrong) → Blocked → (admin unblock) → Active</code></p>
+    <ul>
+      <li><b>Valid transition tests:</b> each arrow above.</li>
+      <li><b>Invalid transition tests (high value):</b> can a Blocked card be used with the <i>correct</i> PIN? Can a cancelled order be shipped? Can a submitted-and-approved leave request be edited? These find the most bugs.</li>
+      <li><b>Coverage levels:</b> 0-switch = every single transition once; 1-switch = every valid pair of consecutive transitions.</li>
+    </ul>
+    <p>Great real-world fits: order lifecycle (Created → Paid → Shipped → Delivered → Returned), ticket workflow, subscription (Trial → Active → Past-due → Cancelled).</p>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q14</span><span class="qt">What is pairwise (all-pairs) / orthogonal array testing?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>A combinatorial reduction technique. Research shows most defects are triggered by a single parameter or an interaction between just <b>two</b> parameters. So instead of testing all combinations, you generate the smallest set of tests in which <b>every pair of parameter values appears at least once</b>.</p>
+    <h5>Example</h5>
+    <p>Browser (Chrome, Firefox, Safari) × OS (Windows, macOS, Linux) × Payment (Card, UPI, Wallet) × Language (EN, HI) = 3×3×3×2 = <b>54</b> full combinations. Pairwise reduces this to roughly <b>9–10</b> tests while still covering every browser-OS, browser-payment, OS-payment and language pair.</p>
+    <p>Tools: <b>PICT</b> (Microsoft), <b>ACTS</b> (NIST), <code>pairwise</code> npm/pip libraries, or Hexawise.</p>
+    <div class="gotcha"><b>Caveat to mention:</b> pairwise will not catch a bug that only appears with a specific 3-way combination, and it is blind to business-critical combinations. So you always <i>seed</i> the must-test combinations (e.g. Chrome + Windows + Card) and let the tool fill in the rest.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q15</span><span class="qt">Error guessing and exploratory testing — are they just "random testing"?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>No. Both are <b>experience-based</b> techniques with structure.</p>
+    <ul>
+      <li><b>Error guessing</b> — deliberately trying inputs that historically break systems: empty submit, whitespace-only, very long strings, special characters <code>&lt;script&gt;</code> / <code>'--</code>, 0 and negative numbers, duplicate submit (double click), browser back after submit, session timeout mid-flow, network drop mid-payment, copy-paste with trailing spaces, emoji in a name field.</li>
+      <li><b>Exploratory testing</b> — simultaneous learning, test design and execution, time-boxed and charter-driven. This is <i>Session-Based Test Management</i>: a 60–90 minute session with a written charter ("Explore checkout with expired coupons to discover pricing errors"), notes taken during the session, and a debrief afterwards. That is what makes it auditable rather than random.</li>
+      <li><b>Monkey/random testing</b> is the truly unstructured one — random inputs, no oracle beyond "did it crash".</li>
+    </ul>
+    <div class="tip">Strong line: "Automation checks what we already know; exploratory testing discovers what we didn't think of. I reserve one timeboxed exploratory session per sprint for the newly built feature and it consistently finds defects my scripted cases miss."</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q16</span><span class="qt">Black box vs White box vs Grey box testing.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th></th><th>Black box</th><th>White box</th><th>Grey box</th></tr>
+      <tr><td>Knowledge of code</td><td>None — works from requirements</td><td>Full internal structure</td><td>Partial (schema, APIs, architecture)</td></tr>
+      <tr><td>Done by</td><td>QA / users</td><td>Developers / SDET</td><td>SDET</td></tr>
+      <tr><td>Techniques</td><td>EP, BVA, decision table, state transition, use case</td><td>Statement, branch/decision, condition, path coverage, mutation testing</td><td>Matrix testing, DB validation, API + UI combined</td></tr>
+      <tr><td>Example</td><td>Submitting the order form and checking the confirmation page</td><td>Unit test that forces the <code>catch</code> branch of a payment gateway timeout</td><td>Placing an order in the UI then asserting the <code>orders</code> table row and the Kafka event</td></tr>
+    </table>
+    <h5>White box coverage types worth naming</h5>
+    <ul>
+      <li><b>Statement coverage</b> — every line executed at least once (weakest).</li>
+      <li><b>Branch/decision coverage</b> — every <code>if</code> takes both true and false.</li>
+      <li><b>Condition coverage</b> — every boolean sub-expression takes both values. 100% branch coverage does <i>not</i> imply 100% condition coverage.</li>
+      <li><b>Path coverage</b> — every independent path (usually impractical; measured via cyclomatic complexity).</li>
+    </ul>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q17</span><span class="qt">List the main functional and non-functional testing types.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <h5>Functional (does it do the right thing?)</h5>
+    <p>Unit → Integration → System → Acceptance (UAT/alpha/beta); plus Smoke, Sanity, Regression, Retesting, Interface/API, Database, Localisation/Internationalisation.</p>
+    <h5>Non-functional (how well does it do it?)</h5>
+    <table>
+      <tr><th>Type</th><th>Checks</th><th>Typical tool</th></tr>
+      <tr><td>Performance / Load</td><td>Response time &amp; throughput at expected load</td><td>JMeter, k6, Gatling</td></tr>
+      <tr><td>Stress</td><td>Behaviour beyond capacity; does it fail gracefully?</td><td>JMeter, Locust</td></tr>
+      <tr><td>Scalability</td><td>Does adding resources increase capacity linearly?</td><td>k6 + cloud autoscaling</td></tr>
+      <tr><td>Security</td><td>OWASP Top 10, authZ/authN, injection, XSS</td><td>OWASP ZAP, Burp Suite</td></tr>
+      <tr><td>Usability</td><td>Learnability, efficiency, error recovery</td><td>Heuristic review, user studies</td></tr>
+      <tr><td>Accessibility</td><td>WCAG 2.1 AA, screen readers, keyboard-only</td><td>axe-core, Lighthouse, NVDA</td></tr>
+      <tr><td>Compatibility</td><td>Browsers, OS, devices, resolutions</td><td>BrowserStack, LambdaTest</td></tr>
+      <tr><td>Reliability / Recovery</td><td>Failover, restart, data integrity after crash</td><td>Chaos tooling</td></tr>
+      <tr><td>Maintainability / Portability</td><td>Ease of change, install/uninstall/migrate</td><td>Static analysis (SonarQube)</td></tr>
+    </table>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q18</span><span class="qt">Smoke vs Sanity testing.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th></th><th>Smoke</th><th>Sanity</th></tr>
+      <tr><td>Purpose</td><td>Is this build <b>stable enough to test</b>?</td><td>Is this specific fix/change <b>working</b>?</td></tr>
+      <tr><td>Breadth vs depth</td><td>Wide and shallow — all critical paths</td><td>Narrow and deep — one module/feature</td></tr>
+      <tr><td>When</td><td>On every new build, before the QA cycle starts</td><td>After a bug fix or minor change on a stable build</td></tr>
+      <tr><td>Scripted?</td><td>Usually scripted &amp; automated (build verification test)</td><td>Often unscripted / ad-hoc</td></tr>
+      <tr><td>Failure means</td><td>Build rejected, sent back to dev</td><td>Fix rejected, defect reopened</td></tr>
+    </table>
+    <p>Memory hook: <b>Smoke = "does the machine turn on without catching fire?"</b> (from hardware — power it up and see if smoke comes out). <b>Sanity = "is this one change sane?"</b></p>
+    <div class="tip">Automation connection: your smoke suite should be tagged (<code>@smoke</code> in TestNG groups or <code>@smoke</code> tag in Playwright) and run on every deployment in under 5–10 minutes. Say that number — interviewers like concrete SLAs.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q19</span><span class="qt">Regression vs Retesting (confirmation testing).</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Retesting</b> — re-executing the <i>exact failed test case</i> with the <i>same data</i> on a new build to confirm the defect is fixed. Always uses the defect's reproduction steps. Cannot be planned in advance (you don't know which tests will fail). Priority: done first.</li>
+      <li><b>Regression</b> — re-executing <i>previously passing</i> tests to confirm the fix or new feature did not break anything else. Can be planned and is the #1 candidate for automation.</li>
+    </ul>
+    <h5>Regression selection strategy (asked as a follow-up)</h5>
+    <p>You rarely run everything. Selection approaches:</p>
+    <ol>
+      <li><b>Full regression</b> — before a major release or after a framework/infra change.</li>
+      <li><b>Regional / impact-based</b> — analyse the changed module and its dependencies (talk to the dev, read the PR diff) and run those areas.</li>
+      <li><b>Risk-based</b> — always include revenue-critical flows (login, checkout, payment) regardless of what changed.</li>
+      <li><b>Test-impact analysis</b> — modern tooling maps code changes to the tests that cover them and runs only those.</li>
+    </ol>
+    <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q20</span><span class="qt">Explain the integration testing approaches.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Big Bang</b> — integrate everything at once, then test. Simple but fault isolation is a nightmare. Only for very small systems.</li>
+      <li><b>Top-down</b> — test high-level modules first, using <b>stubs</b> (dummy called-modules) for the not-yet-built lower ones. Advantage: the main control flow / UI is validated early.</li>
+      <li><b>Bottom-up</b> — test low-level modules first using <b>drivers</b> (dummy calling-modules). Advantage: core utilities are proven early; disadvantage: no working product to demo until late.</li>
+      <li><b>Sandwich / Hybrid</b> — both directions meeting in the middle. Most common in practice.</li>
+      <li><b>Incremental / continuous</b> — in modern microservices, integration is verified continuously using <b>contract testing</b> (Pact) and service virtualisation (WireMock, MockServer).</li>
+    </ul>
+    <div class="note"><b>Stub vs Driver in one line:</b> a <i>stub</i> replaces the module being <b>called</b> (used in top-down); a <i>driver</i> replaces the module that <b>calls</b> (used in bottom-up). Mnemonic: <b>S</b>tub is <b>S</b>ubordinate, <b>D</b>river <b>D</b>rives from above.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q21</span><span class="qt">System testing vs UAT. What are alpha and beta testing?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>System testing</b> — QA validates the complete, integrated system against the <b>specified requirements</b> in a QA environment. Includes functional + non-functional.</li>
+      <li><b>UAT</b> — the business/end user validates against <b>business needs and real-world workflows</b> in a UAT/pre-prod environment with production-like data. Passing system tests does not guarantee passing UAT: the software can match the spec and still not fit how the business actually works.</li>
+      <li><b>Alpha testing</b> — done by internal staff (often non-QA employees) at the developer's site, in a controlled environment, before release.</li>
+      <li><b>Beta testing</b> — done by real external users in their own environment, uncontrolled. Feedback is collected, not scripted. Also called field testing.</li>
+    </ul>
+    <p>Related modern practices worth mentioning: <b>canary release</b> (roll out to 1% of production traffic), <b>feature flags / dark launch</b>, and <b>A/B testing</b> — these have largely replaced long beta phases in SaaS.</p>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<figure>
+<svg viewBox="0 0 900 400" role="img" aria-label="Test automation pyramid">
+  <text x="450" y="26" text-anchor="middle" class="svg-ink" font-size="16" font-weight="700">The Test Automation Pyramid</text>
+  <g>
+    <polygon points="450,54 560,140 340,140" fill="#be123c" opacity=".85"/>
+    <polygon points="340,140 560,140 640,236 260,236" fill="#b45309" opacity=".85"/>
+    <polygon points="260,236 640,236 740,340 160,340" fill="#0d9488" opacity=".85"/>
+  </g>
+  <text x="450" y="112" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">UI / E2E</text>
+  <text x="450" y="130" text-anchor="middle" fill="#fff" font-size="10.5">~10%</text>
+  <text x="450" y="192" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Service / API / Integration</text>
+  <text x="450" y="212" text-anchor="middle" fill="#fff" font-size="10.5">~20-30%</text>
+  <text x="450" y="292" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Unit tests</text>
+  <text x="450" y="312" text-anchor="middle" fill="#fff" font-size="10.5">~60-70%</text>
+
+  <g class="svg-mut" font-size="12">
+    <text x="770" y="100">Slow, brittle,</text><text x="770" y="116">expensive, high</text><text x="770" y="132">confidence</text>
+    <text x="770" y="300">Fast, stable,</text><text x="770" y="316">cheap, narrow</text><text x="770" y="332">confidence</text>
+  </g>
+  <path d="M755 150 L755 285" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#ar)"/>
+  <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="var(--muted)"/></marker></defs>
+  <g class="svg-mut" font-size="12">
+    <text x="130" y="100" text-anchor="end">Cost per test ↑</text>
+    <text x="130" y="120" text-anchor="end">Execution time ↑</text>
+    <text x="130" y="300" text-anchor="end">Number of tests ↑</text>
+    <text x="130" y="320" text-anchor="end">Feedback speed ↑</text>
+  </g>
+  <text x="450" y="374" text-anchor="middle" class="svg-mut" font-size="12">Anti-pattern: the "ice-cream cone" — mostly manual + UI tests, almost no unit tests.</text>
+</svg>
+<figcaption>Figure 2 — Push tests down to the cheapest level that can still find the defect. If a bug can be caught by an API test, do not write a UI test for it.</figcaption>
+</figure>
+
+<div class="qa">
+  <div class="q"><span class="num">Q22</span><span class="qt">Explain the test automation pyramid. Do you agree with it?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Mike Cohn's pyramid says the bulk of automated tests should be fast unit tests, a smaller layer of service/API tests, and a thin layer of UI end-to-end tests. The reasoning is economics: as you go up, tests get slower, more brittle, more expensive to maintain, and harder to debug — but each one gives more end-user confidence.</p>
+    <h5>The right answer to "do you agree?"</h5>
+    <p>"Directionally yes — the principle is <b>push every check to the lowest layer that can still catch the defect</b>. But I treat the ratios as guidance, not law. On a micro-services back-end I lean heavily on contract and API tests, and the 'trophy' shape (heavy integration layer) fits better. What I do defend strictly is: the UI layer only covers <b>critical user journeys</b> — login, search, add-to-cart, checkout, payment — not field-level validations, which belong in unit/component tests."</p>
+    <div class="gotcha"><b>Anti-patterns to name:</b> the <b>ice-cream cone</b> (huge manual + UI layer, no unit tests → 4-hour suites, constant flakiness) and the <b>cupcake</b> (dev, QA and business each build their own duplicated layers).</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q23</span><span class="qt">What is shift-left testing? What about shift-right?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p><b>Shift-left</b> = moving testing activities earlier in the lifecycle instead of treating testing as a phase after coding.</p>
+    <ul>
+      <li>QA joins requirement refinement and challenges acceptance criteria (the "three amigos": BA + Dev + QA).</li>
+      <li>Static testing: requirement reviews, design reviews, code reviews, linting, SAST.</li>
+      <li>Developers write unit &amp; component tests; QA writes API tests before UI exists (against contracts/mocks).</li>
+      <li>TDD / BDD / ATDD — tests written before the code.</li>
+      <li>CI gates: no merge without passing tests and coverage thresholds.</li>
+    </ul>
+    <p><b>Shift-right</b> = continuing to test in production, because no pre-prod environment fully models reality: synthetic monitoring, canary releases, feature flags, A/B tests, real-user monitoring, chaos engineering, and observability-based alerting on error rates.</p>
+    <div class="tip">A modern QA answer covers both: "Shift left to prevent defects, shift right to detect what escaped. I owned the synthetic monitoring checks that re-used our Playwright login and checkout tests against production every 15 minutes."</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<figure>
+<svg viewBox="0 0 900 330" role="img" aria-label="Defect life cycle state diagram">
+  <text x="450" y="24" text-anchor="middle" class="svg-ink" font-size="16" font-weight="700">Defect / Bug Life Cycle</text>
+  <defs><marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="var(--muted)"/></marker></defs>
+  <g font-size="12.5" font-weight="700">
+    <g><rect x="30" y="70" width="104" height="38" rx="9" fill="#4338ca"/><text x="82" y="94" text-anchor="middle" fill="#fff">New</text></g>
+    <g><rect x="180" y="70" width="104" height="38" rx="9" fill="#4c39c6"/><text x="232" y="94" text-anchor="middle" fill="#fff">Assigned</text></g>
+    <g><rect x="330" y="70" width="104" height="38" rx="9" fill="#3f5cbf"/><text x="382" y="94" text-anchor="middle" fill="#fff">Open / In&nbsp;fix</text></g>
+    <g><rect x="480" y="70" width="104" height="38" rx="9" fill="#2f7fb0"/><text x="532" y="94" text-anchor="middle" fill="#fff">Fixed</text></g>
+    <g><rect x="630" y="70" width="104" height="38" rx="9" fill="#1c9a9c"/><text x="682" y="94" text-anchor="middle" fill="#fff">Retest</text></g>
+    <g><rect x="780" y="70" width="94" height="38" rx="9" fill="#0d9488"/><text x="827" y="94" text-anchor="middle" fill="#fff">Closed</text></g>
+    <g><rect x="600" y="190" width="104" height="38" rx="9" fill="#be123c"/><text x="652" y="214" text-anchor="middle" fill="#fff">Reopened</text></g>
+    <g><rect x="140" y="190" width="120" height="38" rx="9" fill="#b45309"/><text x="200" y="214" text-anchor="middle" fill="#fff">Rejected</text></g>
+    <g><rect x="290" y="190" width="120" height="38" rx="9" fill="#b45309"/><text x="350" y="214" text-anchor="middle" fill="#fff">Duplicate</text></g>
+    <g><rect x="440" y="190" width="120" height="38" rx="9" fill="#b45309"/><text x="500" y="214" text-anchor="middle" fill="#fff">Deferred</text></g>
+  </g>
+  <g stroke="var(--muted)" stroke-width="1.6" fill="none" marker-end="url(#a2)">
+    <line x1="134" y1="89" x2="176" y2="89"/><line x1="284" y1="89" x2="326" y2="89"/>
+    <line x1="434" y1="89" x2="476" y2="89"/><line x1="584" y1="89" x2="626" y2="89"/>
+    <line x1="734" y1="89" x2="776" y2="89"/>
+    <path d="M682 108 L682 150 L652 150 L652 186"/>
+    <path d="M652 190 L652 160 L382 160 L382 112"/>
+    <path d="M82 108 L82 209 L136 209"/>
+    <path d="M232 108 L232 150 L350 150 L350 186"/>
+    <path d="M382 108 L382 150 L500 150 L500 186"/>
+  </g>
+  <text x="620" y="146" class="svg-mut" font-size="11">still failing</text>
+  <text x="750" y="60" class="svg-mut" font-size="11">verified</text>
+  <text x="88" y="250" class="svg-mut" font-size="11">not a bug /</text><text x="88" y="264" class="svg-mut" font-size="11">works as designed</text>
+  <text x="450" y="300" text-anchor="middle" class="svg-mut" font-size="12">Only the <tspan font-weight="700">tester who raised it</tspan> should close a defect — never the developer.</text>
+</svg>
+<figcaption>Figure 3 — Defect life cycle. Learn the terminal states (Closed, Rejected, Duplicate, Deferred) and who moves the bug at each step.</figcaption>
+</figure>
+
+<div class="qa">
+  <div class="q"><span class="num">Q24</span><span class="qt">Walk me through the defect life cycle.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ol>
+      <li><b>New</b> — tester logs the defect.</li>
+      <li><b>Assigned</b> — triage/lead assigns it to a developer.</li>
+      <li><b>Open / In Progress</b> — developer accepts and starts working. From here it can also go to Rejected, Duplicate or Deferred.</li>
+      <li><b>Fixed</b> — code change done and merged to the test branch.</li>
+      <li><b>Retest / Ready for QA</b> — deployed to QA; tester re-executes the original steps.</li>
+      <li><b>Closed</b> — verified fixed by the tester. If it still fails → <b>Reopened</b> and back to the developer.</li>
+    </ol>
+    <h5>Terminal / side states</h5>
+    <ul>
+      <li><b>Rejected / Not a bug</b> — behaviour matches the requirement. Your response: re-read the spec; if you still disagree, take it to the BA/PO as a possible <i>requirement</i> defect.</li>
+      <li><b>Duplicate</b> — already reported; link to the original.</li>
+      <li><b>Deferred / Postponed</b> — genuine bug, but fixed in a later release (low severity, low priority, or high fix risk near a release).</li>
+      <li><b>Cannot reproduce</b> — usually missing environment/data/version detail in the report. Add logs, video, network HAR, exact build number and re-open.</li>
+    </ul>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q25</span><span class="qt">Severity vs Priority — with examples of all four combinations.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p><b>Severity</b> = technical impact of the defect on the system's functionality. Set by the <b>tester</b>. <b>Priority</b> = urgency of fixing it from a business perspective. Set by the <b>PO / product manager / triage</b> (though the tester proposes it).</p>
+    <table>
+      <tr><th>Combination</th><th>Example</th></tr>
+      <tr><td><b>High severity, High priority</b></td><td>Payment gateway fails for all users — the app crashes on checkout. Blocks revenue entirely.</td></tr>
+      <tr><td><b>High severity, Low priority</b></td><td>The application crashes when a user sets the system date to the year 2099, or on a legacy browser used by 0.01% of users. Technically fatal, commercially irrelevant.</td></tr>
+      <tr><td><b>Low severity, High priority</b></td><td>The company name is misspelt on the home page banner, or the logo is a competitor's. Nothing breaks, but it must ship today — brand/legal impact.</td></tr>
+      <tr><td><b>Low severity, Low priority</b></td><td>Tooltip text on a rarely-used admin screen has a typo or wrong alignment.</td></tr>
+    </table>
+    <h5>Typical severity scale</h5>
+    <p>S1 Critical (system down / data loss, no workaround) · S2 Major (major feature broken, workaround is painful) · S3 Minor (feature partially works, easy workaround) · S4 Trivial (cosmetic).</p>
+    <div class="gotcha"><b>The trap:</b> many candidates say "severity is set by the tester and priority by the developer." Priority is a <b>business</b> decision — PO/manager/triage board, not the developer.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q26</span><span class="qt">What does a good defect report contain?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>The goal is that a developer can reproduce it in under 2 minutes without messaging you.</p>
+    <ul>
+      <li><b>ID</b> and a <b>title</b> that states the problem, not the symptom vaguely: ✅ "Checkout: order total excludes GST when a coupon is applied" ❌ "Total wrong".</li>
+      <li><b>Environment</b>: build/version number, environment (QA2), browser + version, OS, device, user role, tenant.</li>
+      <li><b>Preconditions</b> and <b>test data</b> (the actual account/order ID used).</li>
+      <li><b>Steps to reproduce</b> — numbered, minimal, deterministic. Strip out irrelevant steps.</li>
+      <li><b>Expected result</b> — with the requirement/AC reference that says so.</li>
+      <li><b>Actual result</b>.</li>
+      <li><b>Evidence</b>: screenshot with the issue highlighted, screen recording for timing bugs, browser console errors, network HAR, application/server log snippet with timestamp and correlation ID.</li>
+      <li><b>Severity</b>, proposed <b>priority</b>, <b>reproducibility</b> (always / 3 out of 5 / once), and whether it is a <b>regression</b> (worked in build N-1).</li>
+      <li>Link to the user story / requirement.</li>
+    </ul>
+    <div class="tip">Saying "I always state whether it is a regression and which build last worked" is a strong senior signal — it immediately tells the developer where to bisect.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q27</span><span class="qt">What is defect triage, defect leakage, defect age and DRE?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Defect triage</b> — a recurring meeting (QA lead, dev lead, PO, sometimes support) to review new defects and agree severity, priority, owner and target release. Its purpose is to make sure limited dev capacity is spent on the highest-risk defects.</li>
+      <li><b>Defect leakage</b> — defects that escaped a phase and were found later, especially in production. <code>Leakage % = (defects found in prod / total defects) × 100</code>.</li>
+      <li><b>Defect removal efficiency (DRE)</b> — <code>DRE = defects found before release / (defects found before release + defects found after release) × 100</code>. Above 90% is generally considered healthy. This is <i>the</i> metric to quote when asked "how do you measure your testing effectiveness?"</li>
+      <li><b>Defect age</b> — time between defect detection and closure (or between injection and detection). High age points to triage/process bottlenecks.</li>
+      <li><b>Defect density</b> — defects per KLOC or per module; used to find the risky modules that deserve more testing.</li>
+      <li><b>Defect clustering</b> — the Pareto observation that ~80% of defects come from ~20% of modules. Use it to target regression effort.</li>
+    </ul>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag">metrics</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q28</span><span class="qt">A critical bug escaped to production. Walk me through what you do.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>This is a behavioural + process question. Answer in a structured order and never blame a person.</p>
+    <ol>
+      <li><b>Contain first.</b> Confirm and reproduce it on prod, assess blast radius (how many users, is data being corrupted, is money at risk), and push for the fastest mitigation — feature flag off, rollback, or hotfix. Communicate to stakeholders immediately with facts.</li>
+      <li><b>Fix and verify.</b> Write the failing test <i>first</i>, then verify the hotfix on staging with production-like data, then verify on prod after deployment.</li>
+      <li><b>Root cause analysis (blameless).</b> Use the <b>5 Whys</b>. Why did it happen (code)? Why wasn't it caught (missing test / missing requirement / environment difference / test data gap)? Why wasn't it caught in review?</li>
+      <li><b>Close the gap permanently.</b> Add the regression test to the automated suite, tag it, and make sure it runs in CI. If it was an environment/data difference, fix the environment parity. If a requirement was ambiguous, add it to the acceptance criteria checklist.</li>
+      <li><b>Share the learning.</b> Post-mortem doc, and update the risk-based regression selection so that area gets more coverage.</li>
+    </ol>
+    <div class="tip">The closing sentence that scores: <i>"Every production escape becomes a permanent automated test. That's how a suite earns its value — it encodes every mistake the team has already made once."</i></div>
+    <div class="tags"><span class="tag core">core</span><span class="tag">behavioural</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q29</span><span class="qt">What is a Requirement Traceability Matrix (RTM) and why does it matter?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>A document mapping each requirement to the test cases (and defects) that validate it.</p>
+    <table>
+      <tr><th>Req ID</th><th>Requirement</th><th>Test cases</th><th>Status</th><th>Defects</th></tr>
+      <tr><td>REQ-AUTH-01</td><td>User logs in with email + password</td><td>TC_01, TC_02, TC_03</td><td>Pass</td><td>—</td></tr>
+      <tr><td>REQ-AUTH-03</td><td>Lock account after 3 failures</td><td>TC_07, TC_08</td><td>Fail</td><td>BUG-412</td></tr>
+    </table>
+    <h5>Three directions of traceability</h5>
+    <ul>
+      <li><b>Forward</b> — requirement → test case. Proves nothing is untested (<b>coverage gaps</b>).</li>
+      <li><b>Backward</b> — test case → requirement. Exposes tests that map to nothing (<b>scope creep / gold plating</b>).</li>
+      <li><b>Bi-directional</b> — both, which is what teams actually maintain.</li>
+    </ul>
+    <p>Practical value: instant impact analysis ("requirement 12 changed — which tests do I re-run?"), audit/compliance evidence, and objective coverage reporting to management. In modern tools this lives in Jira + Xray/Zephyr rather than in Excel.</p>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q30</span><span class="qt">Test coverage vs code coverage. Is 100% coverage a good goal?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Code coverage</b> — a white-box, tool-measured metric: what percentage of lines/branches were executed by tests (JaCoCo, Istanbul/nyc). It measures <i>execution</i>, not <i>verification</i>.</li>
+      <li><b>Test coverage</b> — a broader, qualitative measure of how much of the requirements, risks, platforms, and user journeys are covered.</li>
+    </ul>
+    <div class="gotcha"><b>Why 100% code coverage is a misleading goal:</b> a test can execute every line and assert nothing. Coverage tells you what is <i>definitely untested</i>; it never tells you what is well tested. I use it as a <b>gap-finder</b> (which files have 0%?) and a <b>ratchet</b> (coverage must not drop in a PR), not as a target to chase. The technique that actually measures assertion quality is <b>mutation testing</b> (PIT for Java, Stryker for JS/TS): it changes the code and checks whether your tests fail.</div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q31</span><span class="qt">Describe Agile/Scrum ceremonies and the QA role in each.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Ceremony</th><th>Purpose</th><th>What QA does</th></tr>
+      <tr><td>Backlog refinement / grooming</td><td>Clarify and size upcoming stories</td><td>Challenge acceptance criteria, ask edge-case questions, flag testability and test-data needs, estimate test effort</td></tr>
+      <tr><td>Sprint planning</td><td>Commit to sprint scope</td><td>Confirm each story has AC + a definition of done that includes automation; raise environment/dependency risks</td></tr>
+      <tr><td>Daily stand-up</td><td>Sync &amp; unblock</td><td>Report progress, raise blockers early (build not deployed, data missing), highlight risky areas</td></tr>
+      <tr><td>Sprint review / demo</td><td>Show the increment to stakeholders</td><td>Demo tested functionality, report known limitations honestly</td></tr>
+      <tr><td>Retrospective</td><td>Improve the process</td><td>Bring data: escaped defects, flaky tests, build failures, and propose one concrete improvement</td></tr>
+    </table>
+    <p>Also mention the <b>Three Amigos</b> session (BA/PO + Dev + QA before development starts) — it is the single highest-ROI shift-left practice and interviewers love hearing it.</p>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q32</span><span class="qt">What is a user story, acceptance criteria, Definition of Ready and Definition of Done?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p><b>User story</b> — "As a &lt;role&gt;, I want &lt;goal&gt;, so that &lt;benefit&gt;." It captures intent, not implementation. Good stories follow <b>INVEST</b>: Independent, Negotiable, Valuable, Estimable, Small, Testable. As QA, the "T" is your veto: if you cannot describe how you'd verify it, it is not ready.</p>
+    <p><b>Acceptance criteria</b> — the conditions that make the story acceptable, often in Given/When/Then form:</p>
+    <pre><code>Given I am a registered user on the login page
+When I enter a valid email and an incorrect password three times
+Then my account is locked
+And I see "Your account is locked. Try again after 30 minutes"</code></pre>
+    <p><b>Definition of Ready</b> — a checklist a story must satisfy before it enters a sprint: AC written, dependencies known, designs attached, test data identified, estimable.</p>
+    <p><b>Definition of Done</b> — a checklist before it is "done": code merged, unit tests written, code reviewed, functional testing passed, automation added to the regression suite, no open critical/high defects, documentation updated, deployed to QA/staging.</p>
+    <div class="tip">Say: <i>"On my team, 'automated regression test added and green in CI' is part of the Definition of Done — that's how we prevented the suite from lagging behind development."</i></div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q33</span><span class="qt">How do you estimate testing effort?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Name at least three techniques and say which you use:</p>
+    <ul>
+      <li><b>Work Breakdown Structure (WBS)</b> — decompose into tasks (analysis, design, data setup, execution, automation, reporting) and estimate each. Most defensible.</li>
+      <li><b>Three-point / PERT</b> — <code>E = (Optimistic + 4×Most-likely + Pessimistic) / 6</code>. Good when uncertainty is high; it gives you a number you can justify.</li>
+      <li><b>Planning poker / story points</b> — relative sizing in Scrum, using Fibonacci (1,2,3,5,8,13). The team estimates the <i>whole</i> story including testing, not dev and QA separately.</li>
+      <li><b>Test case point / function point</b> — formal, used in fixed-bid services projects.</li>
+      <li><b>Analogy-based</b> — "this module is like the one we did last release, which took 8 days."</li>
+    </ul>
+    <p>Always add a <b>buffer for retesting and regression</b> (a defect isn't done when it's found — it must be retested, often twice) and a contingency of 10–20% for environment downtime.</p>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q34</span><span class="qt">What is risk-based testing? How do you prioritise when there is no time to test everything?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Risk-based testing allocates test effort proportional to risk, where <code>Risk = Likelihood of failure × Business impact of failure</code>.</p>
+    <h5>How I do it practically</h5>
+    <ol>
+      <li>List the features/modules in scope.</li>
+      <li>Score <b>likelihood</b> (1–5): code churn in this area, complexity, new vs mature, number of past defects, whether a new/junior dev wrote it, number of integrations.</li>
+      <li>Score <b>impact</b> (1–5): revenue, legal/compliance, data integrity, number of users affected, reputational damage.</li>
+      <li>Multiply → risk score → sort. Test the top band deeply (all techniques), the middle band normally, the bottom band with a smoke check only.</li>
+      <li>Explicitly write down what you are <b>not</b> testing and get the PO to acknowledge it. That converts a hidden gamble into an accepted business decision.</li>
+    </ol>
+    <div class="tip">When they ask "you have 2 days to test a release that needs 5 — what do you do?", this is the answer. Never say "I'll work overtime and test everything." Say: risk-ranking, critical path first, communicate residual risk in writing, propose a phased/canary release.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q35</span><span class="qt">Which test cases should be automated, and which should not?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <h5>Automate</h5>
+    <ul>
+      <li>Repetitive regression tests that run every release.</li>
+      <li>Critical business flows (login, search, cart, checkout, payment) — the smoke suite.</li>
+      <li>Data-driven tests with many input combinations.</li>
+      <li>Tests that are tedious/error-prone manually (long calculations, large data verification).</li>
+      <li>Cross-browser / cross-device matrices.</li>
+      <li>Tests needed as CI gates for fast feedback (API + unit level especially).</li>
+      <li>Stable features whose requirements are not changing.</li>
+    </ul>
+    <h5>Do not automate</h5>
+    <ul>
+      <li>Tests that run once (one-off migration verification).</li>
+      <li>Features still under heavy UI/requirement churn — the script will be rewritten every sprint.</li>
+      <li>Exploratory, usability, look-and-feel and "does this feel right" testing — human judgement.</li>
+      <li>Tests needing physical interaction (scanning, printing, biometric hardware) unless real device farms exist.</li>
+      <li>Anything with very low risk and very high automation cost — check the ROI first.</li>
+      <li>CAPTCHA / OTP flows (bypass them in test environments instead — that is the correct answer, not "automate the OTP email").</li>
+    </ul>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q36</span><span class="qt">How do you calculate and justify the ROI of test automation?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Simple, defensible model:</p>
+    <pre><code>Manual cost per cycle      = Tm  (hours to run the suite manually)
+Automation build cost      = Ta  (one-time hours to script it)
+Automation maintenance     = Tmt (hours per cycle to keep it green)
+Automated execution cost   = Te  (near zero, runs on CI)
+
+Break-even cycles  N  =  Ta / (Tm - Tmt - Te)
+ROI after n cycles    =  (n × Tm - (Ta + n × (Tmt + Te))) / (Ta + n × (Tmt + Te))</code></pre>
+    <p><b>Worked example:</b> the regression suite takes 40 hours manually. Scripting it costs 200 hours, maintenance is 4 hours per cycle. Break-even = 200 / (40 − 4) ≈ <b>5.6 cycles</b>. With fortnightly releases, it pays for itself in about 3 months.</p>
+    <h5>Benefits you cannot put in that formula — mention them</h5>
+    <ul>
+      <li>Feedback in 20 minutes instead of 3 days → cheaper defect fixes.</li>
+      <li>Enables CI/CD and more frequent releases (a business capability, not a cost saving).</li>
+      <li>Frees manual testers for exploratory testing, which finds different (often more severe) defects.</li>
+      <li>Consistency — no human step-skipping at 6pm on a Friday.</li>
+    </ul>
+    <div class="gotcha">Do <b>not</b> claim automation reduces headcount. Experienced interviewers see that as naive. Claim it changes what the team spends its time on.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q37</span><span class="qt">How do you manage test data?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Test data is the #1 cause of flaky and unmaintainable suites, so this question separates real practitioners from theory.</p>
+    <ul>
+      <li><b>Self-sufficient tests</b> — each test creates the data it needs (preferably through an <b>API</b> in setup, which is 10–50× faster and more reliable than doing it through the UI) and cleans it up afterwards. This is my default.</li>
+      <li><b>Unique data generation</b> — never hardcode <code>test@test.com</code>. Use <code>user_" + System.currentTimeMillis()</code> or a Faker library so parallel runs don't collide.</li>
+      <li><b>Externalised static data</b> — reference data (product codes, tax rates) in JSON/CSV/Excel, read by the data provider, never in the code.</li>
+      <li><b>Seeded/reset environments</b> — a known DB snapshot restored before a suite run, or a Docker/Testcontainers database per run.</li>
+      <li><b>Masked production data</b> — realistic volumes and shapes for performance/UAT, with PII anonymised. Mention <b>GDPR/DPDP compliance</b> here; it is a strong senior signal.</li>
+      <li><b>Never depend on data another test created</b> — that creates execution-order coupling and kills parallelism.</li>
+    </ul>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q38</span><span class="qt">What is a test environment, and what problems have you faced with environments?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>A test environment = application build + configuration + database + dependent services + network + test data + access credentials, mirroring production as closely as budget allows.</p>
+    <h5>Common real problems (talk about these — it shows experience)</h5>
+    <ul>
+      <li><b>Environment drift</b> — QA has a different config/version than prod, so "works in QA, fails in prod". Fix: infrastructure as code, containerisation, config in version control.</li>
+      <li><b>Shared environment contention</b> — two teams testing on the same env corrupt each other's data. Fix: ephemeral per-branch environments, or namespaced/tenant-isolated data.</li>
+      <li><b>Third-party dependency downtime</b> — the payment sandbox is down. Fix: service virtualisation with WireMock/MockServer plus a small suite of real-integration tests run less often.</li>
+      <li><b>Data reset breaking overnight runs</b> — schedule a data seed step as part of the pipeline, not manually.</li>
+    </ul>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q39</span><span class="qt">Explain performance test types: load, stress, soak, spike, volume.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Type</th><th>What you do</th><th>What it finds</th></tr>
+      <tr><td><b>Load</b></td><td>Apply the expected concurrent user load for a normal period</td><td>Whether response-time SLAs hold at expected traffic</td></tr>
+      <tr><td><b>Stress</b></td><td>Increase load beyond capacity until the system breaks</td><td>The breaking point and whether it degrades gracefully or corrupts data</td></tr>
+      <tr><td><b>Soak / Endurance</b></td><td>Sustain a moderate load for 8–72 hours</td><td>Memory leaks, connection-pool exhaustion, log-disk filling, gradual degradation</td></tr>
+      <tr><td><b>Spike</b></td><td>Sudden jump from 100 to 10,000 users and back</td><td>Auto-scaling behaviour, queue overflow, recovery time</td></tr>
+      <tr><td><b>Volume</b></td><td>Very large data sets (10M rows, 500MB uploads)</td><td>Query timeouts, pagination, index problems, batch job runtimes</td></tr>
+      <tr><td><b>Scalability</b></td><td>Measure capacity as you add nodes/resources</td><td>Whether scaling is linear; where the bottleneck moves to</td></tr>
+    </table>
+    <p>Key metrics to name: <b>response time percentiles (p90/p95/p99, not average)</b>, throughput (req/s), error rate, concurrent users, CPU/memory/GC, DB connection pool usage.</p>
+    <div class="tip">Saying "I look at p95, not average" is a small phrase that signals real performance exposure — averages hide the users who are actually suffering.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q40</span><span class="qt">What do you know about accessibility and security testing basics?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <h5>Accessibility (WCAG 2.1, level AA is the usual legal target)</h5>
+    <p>Four principles — <b>POUR</b>: Perceivable, Operable, Understandable, Robust. Practical checks:</p>
+    <ul>
+      <li>All images have meaningful <code>alt</code> text; decorative images have <code>alt=""</code>.</li>
+      <li>Colour contrast ratio ≥ 4.5:1 for normal text.</li>
+      <li>Full keyboard navigation, visible focus indicator, logical tab order, no keyboard traps.</li>
+      <li>Form inputs have associated <code>&lt;label&gt;</code>; errors are announced, not only shown in red.</li>
+      <li>Correct heading hierarchy and ARIA roles; screen-reader testing with NVDA/VoiceOver.</li>
+      <li>Automatable with <b>axe-core</b> — integrates into both Selenium (<code>axe-selenium-java</code>) and Playwright (<code>@axe-core/playwright</code>). Note that automated tools catch only ~30–40% of issues; the rest needs manual checking.</li>
+    </ul>
+    <h5>Security — OWASP Top 10 awareness</h5>
+    <p>Broken access control (test by changing an ID in the URL — IDOR), injection (SQL/NoSQL/command), XSS (stored and reflected), broken authentication (session fixation, weak password policy, token not invalidated on logout), security misconfiguration, sensitive data exposure (PII in URLs, logs or local storage), CSRF, SSRF, vulnerable dependencies (<code>npm audit</code>, OWASP Dependency-Check), insufficient logging.</p>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q41</span><span class="qt">How would you test a login page? (the classic open-ended question)</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Answer in <b>categories</b>, out loud, and ask clarifying questions first ("is there SSO? MFA? is this web only or mobile too?"). Categories beat a random list.</p>
+    <h5>1. Functional — positive</h5>
+    <p>Valid credentials log in and land on the right page; "Remember me" persists the session; redirect back to the originally requested page after login; SSO/social login; MFA/OTP happy path.</p>
+    <h5>2. Functional — negative</h5>
+    <p>Wrong password, non-existent user, empty fields, only spaces, correct password wrong case, deactivated/locked/expired account, expired password, account lockout after N attempts and its reset, generic error message (must not reveal whether the email exists).</p>
+    <h5>3. Field-level / boundary</h5>
+    <p>Min/max lengths, leading/trailing spaces trimmed, email format validation, special characters, Unicode/emoji, copy-paste, autofill, password masking + show/hide toggle, tab order, Enter key submits.</p>
+    <h5>4. Security</h5>
+    <p>SQL injection <code>' OR '1'='1</code>, XSS payload in the username, password never sent in the URL/query string, HTTPS enforced, password not in local storage or logs, session token regenerated after login (session fixation), token invalidated on logout, back button after logout must not restore the session, brute-force rate limiting, CAPTCHA after N failures, concurrent-session policy.</p>
+    <h5>5. UI / usability / accessibility</h5>
+    <p>Labels, placeholder vs label, error message placement, keyboard-only flow, screen reader announces errors, contrast, responsive layout at 320px, zoom to 200%.</p>
+    <h5>6. Compatibility &amp; performance</h5>
+    <p>Chrome/Firefox/Safari/Edge, iOS/Android, slow 3G, login API response time under load, behaviour when the auth service is down (graceful error, not a stack trace).</p>
+    <div class="tip">Finish with: <i>"I'd automate the positive path plus lockout and session-invalidation as regression, keep the CAPTCHA path manual or bypassed in test config, and run the accessibility scan with axe in CI."</i> That closing line ties manual thinking to automation strategy — exactly the profile they're hiring.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+</section>
+
+  <nav class="pager">
+      <span></span>
+      <a class="pn" href="02-java-for-automation.html">Java Essentials for Automation &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script>
+(function(){
+  /* ---- tiny offline syntax highlighter (Java / TS / JS / YAML-ish) ---- */
+  var KW = {};
+  ("abstract assert async await boolean break byte case catch char class const continue default do double else enum export extends final finally float for from function if implements import in instanceof int interface let long new package private protected public readonly return static super switch this throw throws try type typeof var void while yield true false null undefined String Integer List ArrayList Map HashMap Set Optional Thread Exception WebDriver WebElement By Actions Select Alert ChromeDriver ChromeOptions Duration Page Locator Browser BrowserContext expect test describe beforeEach afterEach beforeAll afterAll it Promise void any number string unknown as await").split(" ").forEach(function(w){KW[w]=1;});
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function plain(txt){
+    return esc(txt).replace(/\b([A-Za-z_$][\w$]*)\b|\b(\d+(?:\.\d+)?)\b|(@[A-Za-z]\w*)/g,
+      function(m,word,num,ann){
+        if(ann) return '<span class="f">'+ann+'</span>';
+        if(num) return '<span class="n">'+num+'</span>';
+        if(word && KW[word]) return '<span class="k">'+word+'</span>';
+        return m;
+      });
+  }
+  [].forEach.call(document.querySelectorAll('pre > code'), function(el){
+    var src = el.textContent, out = '', last = 0, m;
+    var re = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|^\s*#[^\n]*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)/gm;
+    while((m = re.exec(src))){
+      out += plain(src.slice(last, m.index));
+      out += m[1] ? '<span class="c">'+esc(m[1])+'</span>' : '<span class="s">'+esc(m[2])+'</span>';
+      last = re.lastIndex;
+    }
+    out += plain(src.slice(last));
+    el.innerHTML = out;
+  });
+
+  var cards = [].slice.call(document.querySelectorAll('.qa'));
+  var countEl = document.getElementById('count');
+
+  /* number every card automatically and build searchable text */
+  cards.forEach(function(c,i){
+    var n = c.querySelector('.num');
+    if(n && !n.textContent.trim()) n.textContent = 'Q' + (i+1);
+    c.dataset.txt = c.textContent.toLowerCase();
+    c.dataset.isq = (n && /^Q\d+$/.test(n.textContent.trim())) ? '1' : '0';
+  });
+
+  var total = cards.filter(function(c){
+    var n = c.querySelector('.num');
+    return n && /^Q\d+$/.test(n.textContent.trim());
+  }).length;
+  function updateCount(v){ countEl.textContent = (v===undefined? total : v) + ' / ' + total + ' questions'; }
+  updateCount();
+
+  /* toggle single card */
+  document.addEventListener('click', function(e){
+    var q = e.target.closest('.q');
+    if(q && q.parentElement.classList.contains('qa')) q.parentElement.classList.toggle('closed');
+  });
+
+  /* quiz mode */
+  var quizOn=false, quizBtn=document.getElementById('quiz');
+  quizBtn.addEventListener('click', function(){
+    quizOn=!quizOn;
+    quizBtn.classList.toggle('on',quizOn);
+    quizBtn.textContent = quizOn? 'Study mode':'Quiz mode';
+    cards.forEach(function(c){ c.classList.toggle('closed',quizOn); });
+  });
+
+  /* expand all */
+  document.getElementById('expand').addEventListener('click', function(){
+    cards.forEach(function(c){ c.classList.remove('closed'); });
+    quizOn=false; quizBtn.classList.remove('on'); quizBtn.textContent='Quiz mode';
+  });
+
+  /* theme */
+  var root=document.documentElement, themeBtn=document.getElementById('theme');
+  function paintTheme(){ themeBtn.textContent = root.getAttribute('data-theme')==='dark' ? 'Light':'Dark'; }
+  var saved = localStorage.getItem('qa-theme'); if(saved) root.setAttribute('data-theme',saved);
+  paintTheme();
+  themeBtn.addEventListener('click', function(){
+    var next = root.getAttribute('data-theme')==='dark' ? 'light':'dark';
+    root.setAttribute('data-theme',next); localStorage.setItem('qa-theme',next); paintTheme();
+  });
+
+  /* search */
+  var box=document.getElementById('search'), t;
+  box.addEventListener('input', function(){
+    clearTimeout(t);
+    t=setTimeout(function(){
+      var q=box.value.trim().toLowerCase(), shown=0;
+      cards.forEach(function(c){
+        var hit = !q || c.dataset.txt.indexOf(q)>-1;
+        c.classList.toggle('hidden',!hit);
+        if(hit && c.dataset.isq === '1') shown++;
+      });
+      document.querySelectorAll('main figure').forEach(function(f){ f.classList.toggle('hidden', !!q); });
+      document.querySelectorAll('section.sec').forEach(function(s){
+        var any = s.querySelector('.qa:not(.hidden)');
+        s.classList.toggle('hidden', !!q && !any);
+      });
+      updateCount(shown);
+    },120);
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='/' && document.activeElement!==box){ e.preventDefault(); box.focus(); }
+    if(e.key==='Escape' && document.activeElement===box){ box.value=''; box.dispatchEvent(new Event('input')); box.blur(); }
+  });
+})();
+</script>
+</body>
+</html>

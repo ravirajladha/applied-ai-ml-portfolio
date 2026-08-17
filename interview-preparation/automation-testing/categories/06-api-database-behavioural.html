@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API, Database, Scenario &amp; Behavioural — Automation Interview Prep (Q191–Q200)</title>
+<meta name="description" content="HTTP methods and status codes, auth, SQL for testers, and the behavioural questions that decide offers.">
+<style>
+:root{
+  --bg:#f6f7fb; --panel:#ffffff; --ink:#161a22; --muted:#5b6478; --line:#e2e6ef;
+  --accent:#4338ca; --accent-soft:#eef0ff; --accent2:#0d9488; --accent2-soft:#e6f7f4;
+  --warn:#b45309; --warn-soft:#fff5e6; --danger:#be123c; --danger-soft:#ffeaf0;
+  --code-bg:#0f172a; --code-ink:#e2e8f0; --code-key:#93c5fd; --code-str:#86efac;
+  --code-com:#94a3b8; --code-num:#fca5a5; --code-fn:#fcd34d;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+  --radius:14px;
+}
+html[data-theme="dark"]{
+  --bg:#0b0f17; --panel:#121826; --ink:#e6eaf2; --muted:#9aa5bb; --line:#232c3d;
+  --accent:#a5b4fc; --accent-soft:#1c2340; --accent2:#5eead4; --accent2-soft:#0e2b28;
+  --warn:#fbbf24; --warn-soft:#33280d; --danger:#fda4af; --danger-soft:#3a1220;
+  --code-bg:#080d16; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- top bar ---------- */
+header.top{
+  position:sticky; top:0; z-index:50; background:var(--panel);
+  border-bottom:1px solid var(--line); box-shadow:0 1px 0 rgba(0,0,0,.02);
+}
+.top-in{max-width:1400px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:15px}
+.brand .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#fff;font-size:13px}
+.tools{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input#search{
+  width:min(360px,46vw); padding:9px 12px; border:1px solid var(--line); border-radius:10px;
+  background:var(--bg); color:var(--ink); font-size:14px; outline:none;
+}
+input#search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+button.btn{
+  padding:9px 13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap
+}
+button.btn:hover{border-color:var(--accent);color:var(--accent)}
+button.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.count{font-size:12px;color:var(--muted);white-space:nowrap}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1400px;margin:0 auto;padding:22px 18px 80px;display:grid;grid-template-columns:262px 1fr;gap:26px}
+@media(max-width:1000px){.wrap{grid-template-columns:1fr}nav.toc{position:static;max-height:none}}
+nav.toc{
+  position:sticky; top:72px; align-self:start; max-height:calc(100vh - 92px); overflow:auto;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow);
+}
+nav.toc h4{margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+nav.toc a{display:block;padding:7px 9px;border-radius:8px;color:var(--ink);font-size:13.5px;line-height:1.35}
+nav.toc a:hover{background:var(--accent-soft);text-decoration:none}
+nav.toc a .n{color:var(--muted);font-size:11.5px;display:block}
+nav.toc .grp{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+
+main{min-width:0}
+
+/* ---------- hero ---------- */
+.hero{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px 28px;box-shadow:var(--shadow);margin-bottom:22px}
+.hero h1{margin:0 0 6px;font-size:30px;letter-spacing:-.03em;line-height:1.2}
+.hero .sub{color:var(--muted);font-size:15px;margin:0 0 16px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:104px}
+.stat b{display:block;font-size:21px;letter-spacing:-.02em}
+.stat span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+/* ---------- sections ---------- */
+section.sec{margin:34px 0 0;scroll-margin-top:80px}
+.sec-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px;padding-bottom:12px;border-bottom:2px solid var(--line)}
+.sec-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-radius:10px;font-weight:800;font-size:13px;padding:7px 11px;white-space:nowrap;margin-top:3px}
+.sec-head h2{margin:0;font-size:23px;letter-spacing:-.02em}
+.sec-head p{margin:3px 0 0;color:var(--muted);font-size:14px}
+
+/* ---------- q cards ---------- */
+.qa{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin:14px 0;box-shadow:var(--shadow);overflow:hidden;
+     content-visibility:auto;contain-intrinsic-size:auto 460px}
+.qa .q{padding:15px 18px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;user-select:none}
+.qa .q:hover{background:var(--accent-soft)}
+.qa .num{background:var(--accent-soft);color:var(--accent);border-radius:8px;font-weight:800;font-size:12.5px;padding:4px 8px;min-width:44px;text-align:center;margin-top:2px;font-variant-numeric:tabular-nums}
+.qa .qt{font-weight:650;font-size:16.5px;letter-spacing:-.01em;flex:1;line-height:1.45}
+.qa .chev{color:var(--muted);font-size:13px;margin-top:5px;transition:transform .18s}
+.qa.closed .a{display:none}
+.qa.closed .chev{transform:rotate(-90deg)}
+.a{padding:2px 18px 18px 74px;border-top:1px solid var(--line);margin-top:-1px}
+@media(max-width:640px){.a{padding-left:18px}}
+.a>p:first-child{margin-top:14px}
+.a p{margin:10px 0}
+.a ul,.a ol{margin:10px 0;padding-left:22px}
+.a li{margin:5px 0}
+.a h5{margin:16px 0 6px;font-size:14px;letter-spacing:.02em;color:var(--accent)}
+
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.tag.core{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.tag.adv{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.tag.trap{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+
+/* ---------- code ---------- */
+pre{background:var(--code-bg);color:var(--code-ink);padding:14px 16px;border-radius:11px;overflow:auto;font-size:13.2px;line-height:1.6;margin:12px 0;border:1px solid rgba(255,255,255,.07)}
+code{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+p code,li code,td code{background:var(--accent-soft);color:var(--accent);padding:1.5px 6px;border-radius:6px;font-size:13px;font-weight:600}
+.k{color:var(--code-key)} .s{color:var(--code-str)} .c{color:var(--code-com);font-style:italic}
+.n{color:var(--code-num)} .f{color:var(--code-fn)}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--bg);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+
+/* ---------- callouts ---------- */
+.note{border-left:4px solid var(--accent2);background:var(--accent2-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.tip{border-left:4px solid var(--warn);background:var(--warn-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.gotcha{border-left:4px solid var(--danger);background:var(--danger-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.note b,.tip b,.gotcha b{letter-spacing:.02em}
+
+/* ---------- figures ---------- */
+figure{margin:18px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+figure svg{width:100%;height:auto;display:block}
+figcaption{margin-top:10px;font-size:13px;color:var(--muted);text-align:center}
+.svg-ink{fill:var(--ink)} .svg-mut{fill:var(--muted)} .svg-line{stroke:var(--line)}
+
+/* ---------- misc ---------- */
+.hidden{display:none !important}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;font-size:12px;font-family:monospace;background:var(--bg)}
+.catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:12px;margin-top:14px}
+.catcard{display:block;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)}
+.catcard:hover{border-color:var(--accent);background:var(--accent-soft);text-decoration:none}
+.catcard b{display:block;font-size:14.5px;letter-spacing:-.01em;margin-bottom:3px}
+.catcard .r{font-size:11.5px;font-weight:700;color:var(--accent);letter-spacing:.04em}
+.catcard .d{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:5px}
+.toTop{position:fixed;right:20px;bottom:20px;z-index:60;border-radius:999px;padding:11px 15px;box-shadow:var(--shadow)}
+
+/* ---------- print ---------- */
+@media print{
+  :root{--bg:#fff;--panel:#fff;--line:#ccc;--ink:#000;--muted:#444;--shadow:none}
+  header.top,nav.toc,.toTop,.noprint{display:none !important}
+  .wrap{display:block;max-width:none;padding:0}
+  .qa{break-inside:avoid;page-break-inside:avoid;border:1px solid #ddd;box-shadow:none;margin:8px 0;
+      content-visibility:visible !important;contain-intrinsic-size:auto !important}
+  .qa.closed .a{display:block !important}
+  .qa .chev{display:none}
+  pre{background:#f4f4f6;color:#111;border:1px solid #ddd;white-space:pre-wrap;font-size:11px}
+  .k,.s,.c,.n,.f{color:#111 !important}
+  figure{break-inside:avoid;page-break-inside:avoid}
+  section.sec{page-break-before:auto}
+  body{font-size:11.5pt}
+  a{color:#000;text-decoration:none}
+}
+
+.crumb{max-width:1400px;margin:0 auto;padding:14px 18px 0;font-size:13.5px;color:var(--muted)}
+.crumb a{font-weight:600}
+.pager{display:flex;justify-content:space-between;gap:12px;margin:34px 0 0;flex-wrap:wrap}
+.pn{display:inline-block;padding:12px 16px;border:1px solid var(--line);border-radius:12px;
+    background:var(--panel);font-weight:600;font-size:14px;box-shadow:var(--shadow)}
+.pn:hover{border-color:var(--accent);text-decoration:none}
+@media print{.crumb,.pager{display:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">QA</span><span>API, Database, Scenario &amp; Behavioural</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this section…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All 250 questions</a> &nbsp;·&nbsp; API, Database, Scenario &amp; Behavioural &nbsp;·&nbsp; Q191–Q200 (10 questions)</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+<section class="sec" id="s6">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 6</div>
+    <div>
+      <h2>API, Database, Scenario &amp; Behavioural</h2>
+      <p>Q191 – Q200 · The last 15 minutes of the interview. These decide whether they can imagine working with you — and they are the easiest marks to win, because most candidates prepare only the technical part.</p>
+    </div>
+  </div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q191</span><span class="qt">API fundamentals: HTTP methods, status codes and what you test.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Method</th><th>Purpose</th><th>Safe?</th><th>Idempotent?</th></tr>
+      <tr><td>GET</td><td>Read a resource</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>POST</td><td>Create a resource / trigger an action</td><td>No</td><td><b>No</b></td></tr>
+      <tr><td>PUT</td><td>Replace a resource entirely</td><td>No</td><td>Yes</td></tr>
+      <tr><td>PATCH</td><td>Partially update</td><td>No</td><td>Usually not guaranteed</td></tr>
+      <tr><td>DELETE</td><td>Remove</td><td>No</td><td>Yes</td></tr>
+      <tr><td>HEAD / OPTIONS</td><td>Headers only / supported methods (CORS preflight)</td><td>Yes</td><td>Yes</td></tr>
+    </table>
+    <p><b>Idempotent</b> = calling it 5 times has the same effect as calling it once. That is exactly why a double-clicked "Place order" button (POST) can create two orders — a great real bug to mention.</p>
+    <table>
+      <tr><th>Code</th><th>Meaning</th></tr>
+      <tr><td>200 / 201 / 202 / 204</td><td>OK / Created / Accepted (async) / No Content</td></tr>
+      <tr><td>301 / 302 / 304</td><td>Moved permanently / Found / Not Modified (cache)</td></tr>
+      <tr><td>400</td><td>Bad request — malformed payload</td></tr>
+      <tr><td><b>401 vs 403</b></td><td><b>401 = not authenticated</b> (who are you?) · <b>403 = authenticated but not authorised</b> (I know you, you can't do this). This distinction is asked constantly.</td></tr>
+      <tr><td>404 / 405 / 409</td><td>Not found / Method not allowed / Conflict (duplicate)</td></tr>
+      <tr><td>415 / 422 / 429</td><td>Unsupported media type / Unprocessable entity (validation) / Too many requests (rate limit)</td></tr>
+      <tr><td>500 / 502 / 503 / 504</td><td>Server error / Bad gateway / Service unavailable / Gateway timeout</td></tr>
+    </table>
+    <h5>What I actually test on an API</h5>
+    <p>Happy path + status code; response schema and data types; field-level validation (missing, null, wrong type, too long, boundary); authentication and — critically — <b>authorisation</b> (user A must get 403 when reading user B's order); pagination and sorting; idempotency and duplicate submission; rate limiting; error message quality and that stack traces are not leaked; response time; and backward compatibility of the contract.</p>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q192</span><span class="qt">Explain API authentication types and how you handle tokens in tests.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Basic auth</b> — <code>Authorization: Basic base64(user:pass)</code>. Simple, must be over HTTPS.</li>
+      <li><b>API key</b> — a static key in a header or query param. Identifies the app, not the user.</li>
+      <li><b>Bearer token / JWT</b> — <code>Authorization: Bearer eyJhbGci…</code>. A JWT has three dot-separated parts: <b>header.payload.signature</b>. The payload is only Base64-encoded, <i>not encrypted</i> — so you can decode it in a test to assert claims (<code>sub</code>, <code>exp</code>, <code>role</code>), and you should verify the app never puts sensitive data in it.</li>
+      <li><b>OAuth 2.0</b> — token issued by an authorisation server. Grant types: authorization code (+PKCE) for user-facing apps, client credentials for machine-to-machine (the one you usually automate).</li>
+      <li><b>Session cookie</b> — traditional server-side session.</li>
+    </ul>
+    <h5>Handling tokens in a test framework</h5>
+    <pre><code>// Fetch once, cache, and refresh when it expires — not per test
+public static synchronized String token() {
+    if (cached == null || Instant.now().isAfter(expiry.minusSeconds(60))) {
+        Response r = given().contentType(JSON)
+            .body(Map.of("client_id", id, "client_secret", secret,
+                         "grant_type", "client_credentials"))
+            .post(authUrl + "/oauth/token");
+        cached = r.jsonPath().getString("access_token");
+        expiry = Instant.now().plusSeconds(r.jsonPath().getInt("expires_in"));
+    }
+    return cached;
+}</code></pre>
+    <p><b>Security tests to mention:</b> expired token → 401; tampered signature → 401; token from user A used on user B's resource → 403; token still valid after logout (it shouldn't be); token visible in URL or browser logs (it shouldn't be).</p>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q193</span><span class="qt">SQL a tester must know — joins, aggregates, and the classic puzzle questions.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>-- JOINS
+SELECT o.order_ref, c.name, o.total
+FROM orders o
+INNER JOIN customers c ON c.id = o.customer_id      -- only matching rows
+LEFT  JOIN payments  p ON p.order_id = o.id         -- all orders, payment if it exists
+WHERE p.id IS NULL;                                  -- orders with NO payment (a real bug hunt)
+
+-- Aggregation:  WHERE filters rows BEFORE grouping, HAVING filters groups AFTER
+SELECT status, COUNT(*) AS cnt, SUM(total) AS revenue
+FROM orders
+WHERE created_at &gt;= CURRENT_DATE - INTERVAL '7 days'
+GROUP BY status
+HAVING COUNT(*) &gt; 10
+ORDER BY revenue DESC;
+
+-- Find duplicates (a data-integrity test)
+SELECT email, COUNT(*) FROM customers GROUP BY email HAVING COUNT(*) &gt; 1;
+
+-- 2nd highest salary — the classic interview question, three ways
+SELECT MAX(salary) FROM employees WHERE salary &lt; (SELECT MAX(salary) FROM employees);
+
+SELECT DISTINCT salary FROM employees ORDER BY salary DESC LIMIT 1 OFFSET 1;
+
+SELECT salary FROM (
+  SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk FROM employees
+) t WHERE rnk = 2;
+
+-- Nth highest per department (window function)
+SELECT * FROM (
+  SELECT e.*, DENSE_RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC) rnk
+  FROM employees e
+) x WHERE rnk &lt;= 3;
+
+-- Useful for test data
+SELECT * FROM orders WHERE status IN ('NEW','PAID') AND total BETWEEN 100 AND 500;
+SELECT * FROM customers WHERE email LIKE '%@test.com';
+SELECT COALESCE(nickname, name) FROM customers;      -- NULL handling
+DELETE FROM orders WHERE order_ref LIKE 'AUTOTEST-%';  -- cleanup</code></pre>
+    <div class="gotcha"><b>Two things interviewers check:</b> (1) <code>WHERE</code> vs <code>HAVING</code> — filtering before vs after <code>GROUP BY</code>; (2) that you understand <code>NULL</code> never equals anything, so <code>WHERE col = NULL</code> returns nothing — you need <code>IS NULL</code>. Also: use a read-only account, and never run an <code>UPDATE</code>/<code>DELETE</code> without a <code>WHERE</code> on a shared environment.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q194</span><span class="qt">"Tell me about yourself." How do you structure the answer and your project introduction?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>This is the highest-leverage 3 minutes of the interview and the one candidates prepare least. Use <b>Present → Past → Why here</b>, and end on your strongest technical asset.</p>
+    <h5>Template (adapt with your own numbers)</h5>
+    <p><i>"I'm a test automation engineer with about five years' experience, currently working on [domain — e.g. an e-commerce platform] at [company]. I own the UI and API automation for the [checkout and payments] modules.</i></p>
+    <p><i>Day to day I work in a Scrum team of [8]: I join refinement to shape acceptance criteria, write and automate the regression tests, and maintain our framework — Java, Selenium 4, TestNG, Maven, Page Object Model, running in parallel on a Docker Grid through Jenkins. Over the last year I've also built out our Playwright/TypeScript suite for the new front end.</i></p>
+    <p><i>The thing I'm proudest of is [cutting regression from 3h40 to 34 minutes by introducing parallel execution and replacing UI logins with API-based authentication] — that let the team move from weekly to twice-weekly releases.</i></p>
+    <p><i>Before this I was at [X] doing [manual + automation], which is where I learned [test design, domain]. I'm looking to move because [I want to work on a product with a stronger engineering culture / deeper CI-CD maturity / a bigger scale challenge], and this role stood out because [specific thing about their job description]."</i></p>
+    <h5>Rules</h5>
+    <ul>
+      <li>Two to three minutes. Practise it out loud until it needs no thinking.</li>
+      <li>Include at least one <b>number</b> — runtime, coverage, defects caught, release frequency.</li>
+      <li>Only mention technologies you can defend for ten minutes. Everything you name is a licence for them to dig.</li>
+      <li>Do not narrate your CV chronologically from college. Start from now.</li>
+      <li>End by connecting to <i>their</i> role — it shows you read the job description.</li>
+    </ul>
+    <div class="tags"><span class="tag core">core</span><span class="tag">behavioural</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q195</span><span class="qt">"Tell me about the biggest challenge you faced." How do you structure behavioural answers?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Use <b>STAR</b>: <b>S</b>ituation (context, 2 sentences) → <b>T</b>ask (your specific responsibility) → <b>A</b>ction (what <i>you</i> did — most of the answer) → <b>R</b>esult (measurable outcome + what you learned).</p>
+    <h5>Worked example</h5>
+    <p><b>Situation:</b> "Our regression suite had a 60% pass rate on any given night. The team had stopped looking at the results, so failures were being ignored and two real regressions reached production in one quarter."</p>
+    <p><b>Task:</b> "I took ownership of suite reliability for that quarter, alongside my sprint work."</p>
+    <p><b>Action:</b> "I started by measuring instead of guessing — I ran the suite 20 times and classified every failure: 40% were fixed sleeps and presence-only waits, 30% were test-data collisions between parallel threads, 20% were a shared static WebDriver, and 10% were genuine product bugs. I fixed them in that order: replaced every sleep with condition-based explicit waits, moved data creation into each test through the API with unique identifiers, and moved the driver to a ThreadLocal factory. I also introduced a quarantine policy — a test that fails twice for non-product reasons leaves the blocking pipeline with a named owner and a deadline."</p>
+    <p><b>Result:</b> "Pass rate went from 60% to 98%, and because the team trusted it again we were able to make the smoke suite a merge gate. Escaped regressions dropped to zero over the following two quarters. What I took away is that <b>trust is the real product of a test suite</b> — coverage means nothing if nobody believes the result."</p>
+    <div class="tip">Prepare <b>three</b> STAR stories in advance: a technical challenge, a conflict/collaboration story, and a failure/mistake story. Almost every behavioural question is a variation of one of those three.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag">behavioural</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q196</span><span class="qt">"A developer rejects your bug saying it works on their machine." What do you do?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>They are testing your <b>collaboration and evidence discipline</b>, not your debugging skill. Never answer with "I escalate to my manager" as the first step.</p>
+    <ol>
+      <li><b>Assume good faith and check yourself first.</b> Re-read the requirement — is my expected result actually right? Re-run on a clean environment with the exact build.</li>
+      <li><b>Strengthen the evidence.</b> Exact build number, environment, browser and version, user role, test data, timestamp, screenshot/video, browser console error, network HAR, server log with the correlation ID. Most "works on my machine" disputes die the moment you attach a request/response pair.</li>
+      <li><b>Reproduce together.</b> A 10-minute screen share resolves more than a day of ticket comments. Often it turns out to be an environment, data, cache or feature-flag difference — which is itself a finding worth fixing.</li>
+      <li><b>Separate the fact from the judgement.</b> "The behaviour is X, the requirement says Y" is a fact. Whether it's a defect or a requirement gap is a decision — take that to the BA/PO, not to a debate.</li>
+      <li><b>Escalate only with data</b>, and framed as risk to the release, never as a personal complaint.</li>
+    </ol>
+    <div class="tip">Close with: <i>"I try to make the bug report so complete that there's nothing left to argue about. If I'm proven wrong, I say so quickly — that's how I keep the credibility I need for the times I'm right."</i></div>
+    <div class="tags"><span class="tag core">core</span><span class="tag">behavioural</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q197</span><span class="qt">"The release is tomorrow, testing isn't complete, and there are open bugs. What do you do?"</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>The wrong answers: "I'd work overnight and finish everything" (unrealistic, and signals poor planning) or "I'd block the release" (QA doesn't own that decision).</p>
+    <ol>
+      <li><b>Re-prioritise by risk immediately.</b> Cover the critical revenue paths and the areas that actually changed. Explicitly deprioritise low-risk, unchanged areas.</li>
+      <li><b>Present the facts, not feelings.</b> A short written summary: what was tested, what wasn't, the open defect list with severity and workaround status, and the specific risk of shipping each one. "If we ship, users on Safari cannot complete UPI payments — that's roughly 12% of transactions."</li>
+      <li><b>Offer options rather than a veto:</b> ship with the feature behind a flag / disabled; ship to a canary segment first; ship without the risky module; delay 24 hours; ship with a documented known-issue and a hotfix plan.</li>
+      <li><b>Let the business decide, and record the decision.</b> The PO owns go/no-go. My job is to make sure they decide with full information, and that the decision is written down.</li>
+      <li><b>Follow up after release</b> — monitor error rates, be ready with the rollback, and raise the underlying planning problem in the retro so it doesn't repeat.</li>
+    </ol>
+    <div class="tip">Say the principle out loud: <b>"QA's job is to make risk visible, not to make the release decision alone."</b> That single sentence is what a hiring manager is listening for.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag">behavioural</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q198</span><span class="qt">"How do you keep your skills current?" and "What's your weakness?"</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <h5>Keeping current — be specific, not generic</h5>
+    <p>Name actual sources and actual outputs: the official Selenium and Playwright release notes and docs, the Ministry of Testing community, specific newsletters/blogs, conference talks, and — most importantly — <b>something you built</b>. "I maintain a personal GitHub repo where I rebuild our framework patterns from scratch; last month I added CDP network mocking and a Playwright visual-regression pilot." A public repo is worth more than a list of blogs you read.</p>
+    <h5>Weakness — the honest formula</h5>
+    <p>Pick a <b>real</b> weakness that is not core to the job, then show the concrete action you're taking and the progress made. Avoid the fake ones ("I'm a perfectionist", "I work too hard") — experienced interviewers discount them immediately.</p>
+    <p>Good examples: <i>"My performance-testing depth is shallower than my functional automation. I've been working through JMeter and k6 on a side project and ran our first baseline load test last quarter, but I'd still ask for support on a serious performance programme."</i> Or: <i>"Early on I over-automated — I built UI tests for things that belonged at the API layer, and I paid for it in maintenance. Now I consciously ask 'what is the cheapest layer that can catch this bug?' before writing a test."</i></p>
+    <div class="tags"><span class="tag">behavioural</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q199</span><span class="qt">"Why are you leaving?", "Where do you see yourself in 5 years?", and salary questions.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <h5>Why are you leaving?</h5>
+    <p><b>Never criticise your current employer, manager or colleagues</b> — it is the fastest way to lose an offer. Frame it as moving <i>towards</i> something: "I've automated our regression to a good level and the work has become steady maintenance. I'm looking for a role with more scale and more CI/CD depth, where I can also mentor — which is what attracted me to this position."</p>
+    <h5>Five years</h5>
+    <p>Show ambition in the direction of the role, not away from it. "I'd like to grow into an SDET/lead position — owning quality strategy across teams, mentoring juniors, and being more involved in architecture and shift-left practices. I want to stay technical rather than move into pure people management." Avoid "I want to become a manager in 2 years" if the role has no such path, and avoid "I want to move into development" — it tells them you'll leave.</p>
+    <h5>Salary</h5>
+    <ul>
+      <li>Research the market range for your years, stack and city before the interview.</li>
+      <li>If asked early, deflect politely once: "I'd like to understand the role and responsibilities a bit better first — but I'm confident we can align if the fit is right. Could you share the band for this position?"</li>
+      <li>If pressed, give a <b>range</b> anchored to research, with the bottom of the range being a number you'd genuinely accept.</li>
+      <li>Speak in <b>total compensation</b> (fixed + variable + benefits), and never inflate your current salary — offer letters get verified.</li>
+    </ul>
+    <div class="tags"><span class="tag">behavioural</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q200</span><span class="qt">Rapid-fire scenario questions — practise these out loud.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Scenario</th><th>Key points in a strong answer</th></tr>
+      <tr><td>"How would you test a pen / a lift / an ATM?"</td><td>Ask clarifying questions first, then answer in categories: functional, usability, boundary/limits, safety/security, performance, environment, accessibility, negative. They're testing your <b>structure</b>, not the pen.</td></tr>
+      <tr><td>"You have 100 test cases and 1 hour."</td><td>Risk-rank; run critical business paths and the areas that changed; communicate what wasn't covered in writing.</td></tr>
+      <tr><td>"Requirements are missing/unclear. How do you test?"</td><td>Talk to the PO/BA and users; use the existing behaviour, comparable products and domain knowledge as an oracle; do exploratory sessions; document assumptions and get them confirmed; log requirement gaps as defects.</td></tr>
+      <tr><td>"A test that passed for months suddenly fails."</td><td>Check first whether it's a genuine product regression (most likely), then environment/data change, dependency upgrade, or a hidden timing assumption that finally lost the race. Bisect against the last good build.</td></tr>
+      <tr><td>"How would you test an application with no UI?"</td><td>API/contract testing, DB validation, message queue/event verification, log assertions, scheduled-job outputs, CLI-level testing.</td></tr>
+      <tr><td>"Would you automate 100% of tests?"</td><td>No — explain ROI, exploratory/usability value, churn cost, and the "what can't be automated" list (Q34).</td></tr>
+      <tr><td>"How do you test a payment flow safely?"</td><td>Sandbox gateway with test card numbers, never real cards; test decline/timeout/3DS/partial refund; verify idempotency on double submit; check that no PAN/CVV is logged; reconcile against the DB and the gateway's report.</td></tr>
+      <tr><td>"Your manager asks you to mark a failing test as skipped to make the build green."</td><td>Push back with data and offer the alternative: quarantine with an owner and a ticket, or a documented known-issue. Never silently disable. Escalate transparently, not confrontationally.</td></tr>
+      <tr><td>"How do you onboard a junior tester?"</td><td>Pair on real tickets; give them a small, safe area to own; code review with explanations rather than corrections; a written framework README and a "first week" checklist.</td></tr>
+      <tr><td>"What would you improve about your current framework?"</td><td>Have a real, specific answer ready — it shows self-awareness. E.g. "test data is still partly shared; I'd move fully to per-test API seeding" or "our reporting has no historical trend; I'd add Allure or a dashboard."</td></tr>
+    </table>
+    <div class="tip">For every scenario question: <b>ask a clarifying question first, then answer in a structure, then state a trade-off.</b> That three-part shape works for anything they invent.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag">behavioural</span></div>
+  </div>
+</div>
+
+</section>
+
+  <nav class="pager">
+      <a class="pn" href="05-playwright-typescript.html">&#8592; Playwright with TypeScript / JS</a>
+      <a class="pn" href="07-appium-mobile.html">Appium &amp; Mobile Automation &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script>
+(function(){
+  /* ---- tiny offline syntax highlighter (Java / TS / JS / YAML-ish) ---- */
+  var KW = {};
+  ("abstract assert async await boolean break byte case catch char class const continue default do double else enum export extends final finally float for from function if implements import in instanceof int interface let long new package private protected public readonly return static super switch this throw throws try type typeof var void while yield true false null undefined String Integer List ArrayList Map HashMap Set Optional Thread Exception WebDriver WebElement By Actions Select Alert ChromeDriver ChromeOptions Duration Page Locator Browser BrowserContext expect test describe beforeEach afterEach beforeAll afterAll it Promise void any number string unknown as await").split(" ").forEach(function(w){KW[w]=1;});
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function plain(txt){
+    return esc(txt).replace(/\b([A-Za-z_$][\w$]*)\b|\b(\d+(?:\.\d+)?)\b|(@[A-Za-z]\w*)/g,
+      function(m,word,num,ann){
+        if(ann) return '<span class="f">'+ann+'</span>';
+        if(num) return '<span class="n">'+num+'</span>';
+        if(word && KW[word]) return '<span class="k">'+word+'</span>';
+        return m;
+      });
+  }
+  [].forEach.call(document.querySelectorAll('pre > code'), function(el){
+    var src = el.textContent, out = '', last = 0, m;
+    var re = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|^\s*#[^\n]*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)/gm;
+    while((m = re.exec(src))){
+      out += plain(src.slice(last, m.index));
+      out += m[1] ? '<span class="c">'+esc(m[1])+'</span>' : '<span class="s">'+esc(m[2])+'</span>';
+      last = re.lastIndex;
+    }
+    out += plain(src.slice(last));
+    el.innerHTML = out;
+  });
+
+  var cards = [].slice.call(document.querySelectorAll('.qa'));
+  var countEl = document.getElementById('count');
+
+  /* number every card automatically and build searchable text */
+  cards.forEach(function(c,i){
+    var n = c.querySelector('.num');
+    if(n && !n.textContent.trim()) n.textContent = 'Q' + (i+1);
+    c.dataset.txt = c.textContent.toLowerCase();
+    c.dataset.isq = (n && /^Q\d+$/.test(n.textContent.trim())) ? '1' : '0';
+  });
+
+  var total = cards.filter(function(c){
+    var n = c.querySelector('.num');
+    return n && /^Q\d+$/.test(n.textContent.trim());
+  }).length;
+  function updateCount(v){ countEl.textContent = (v===undefined? total : v) + ' / ' + total + ' questions'; }
+  updateCount();
+
+  /* toggle single card */
+  document.addEventListener('click', function(e){
+    var q = e.target.closest('.q');
+    if(q && q.parentElement.classList.contains('qa')) q.parentElement.classList.toggle('closed');
+  });
+
+  /* quiz mode */
+  var quizOn=false, quizBtn=document.getElementById('quiz');
+  quizBtn.addEventListener('click', function(){
+    quizOn=!quizOn;
+    quizBtn.classList.toggle('on',quizOn);
+    quizBtn.textContent = quizOn? 'Study mode':'Quiz mode';
+    cards.forEach(function(c){ c.classList.toggle('closed',quizOn); });
+  });
+
+  /* expand all */
+  document.getElementById('expand').addEventListener('click', function(){
+    cards.forEach(function(c){ c.classList.remove('closed'); });
+    quizOn=false; quizBtn.classList.remove('on'); quizBtn.textContent='Quiz mode';
+  });
+
+  /* theme */
+  var root=document.documentElement, themeBtn=document.getElementById('theme');
+  function paintTheme(){ themeBtn.textContent = root.getAttribute('data-theme')==='dark' ? 'Light':'Dark'; }
+  var saved = localStorage.getItem('qa-theme'); if(saved) root.setAttribute('data-theme',saved);
+  paintTheme();
+  themeBtn.addEventListener('click', function(){
+    var next = root.getAttribute('data-theme')==='dark' ? 'light':'dark';
+    root.setAttribute('data-theme',next); localStorage.setItem('qa-theme',next); paintTheme();
+  });
+
+  /* search */
+  var box=document.getElementById('search'), t;
+  box.addEventListener('input', function(){
+    clearTimeout(t);
+    t=setTimeout(function(){
+      var q=box.value.trim().toLowerCase(), shown=0;
+      cards.forEach(function(c){
+        var hit = !q || c.dataset.txt.indexOf(q)>-1;
+        c.classList.toggle('hidden',!hit);
+        if(hit && c.dataset.isq === '1') shown++;
+      });
+      document.querySelectorAll('main figure').forEach(function(f){ f.classList.toggle('hidden', !!q); });
+      document.querySelectorAll('section.sec').forEach(function(s){
+        var any = s.querySelector('.qa:not(.hidden)');
+        s.classList.toggle('hidden', !!q && !any);
+      });
+      updateCount(shown);
+    },120);
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='/' && document.activeElement!==box){ e.preventDefault(); box.focus(); }
+    if(e.key==='Escape' && document.activeElement===box){ box.value=''; box.dispatchEvent(new Event('input')); box.blur(); }
+  });
+})();
+</script>
+</body>
+</html>

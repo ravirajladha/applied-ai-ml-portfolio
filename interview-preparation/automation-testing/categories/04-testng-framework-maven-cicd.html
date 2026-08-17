@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TestNG, Framework, Maven, Git &amp; CI/CD — Automation Interview Prep (Q116–Q150)</title>
+<meta name="description" content="Annotations, data providers, listeners, Page Object Model, design patterns, Jenkins, Docker and BDD.">
+<style>
+:root{
+  --bg:#f6f7fb; --panel:#ffffff; --ink:#161a22; --muted:#5b6478; --line:#e2e6ef;
+  --accent:#4338ca; --accent-soft:#eef0ff; --accent2:#0d9488; --accent2-soft:#e6f7f4;
+  --warn:#b45309; --warn-soft:#fff5e6; --danger:#be123c; --danger-soft:#ffeaf0;
+  --code-bg:#0f172a; --code-ink:#e2e8f0; --code-key:#93c5fd; --code-str:#86efac;
+  --code-com:#94a3b8; --code-num:#fca5a5; --code-fn:#fcd34d;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+  --radius:14px;
+}
+html[data-theme="dark"]{
+  --bg:#0b0f17; --panel:#121826; --ink:#e6eaf2; --muted:#9aa5bb; --line:#232c3d;
+  --accent:#a5b4fc; --accent-soft:#1c2340; --accent2:#5eead4; --accent2-soft:#0e2b28;
+  --warn:#fbbf24; --warn-soft:#33280d; --danger:#fda4af; --danger-soft:#3a1220;
+  --code-bg:#080d16; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- top bar ---------- */
+header.top{
+  position:sticky; top:0; z-index:50; background:var(--panel);
+  border-bottom:1px solid var(--line); box-shadow:0 1px 0 rgba(0,0,0,.02);
+}
+.top-in{max-width:1400px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:15px}
+.brand .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#fff;font-size:13px}
+.tools{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input#search{
+  width:min(360px,46vw); padding:9px 12px; border:1px solid var(--line); border-radius:10px;
+  background:var(--bg); color:var(--ink); font-size:14px; outline:none;
+}
+input#search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+button.btn{
+  padding:9px 13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap
+}
+button.btn:hover{border-color:var(--accent);color:var(--accent)}
+button.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.count{font-size:12px;color:var(--muted);white-space:nowrap}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1400px;margin:0 auto;padding:22px 18px 80px;display:grid;grid-template-columns:262px 1fr;gap:26px}
+@media(max-width:1000px){.wrap{grid-template-columns:1fr}nav.toc{position:static;max-height:none}}
+nav.toc{
+  position:sticky; top:72px; align-self:start; max-height:calc(100vh - 92px); overflow:auto;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow);
+}
+nav.toc h4{margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+nav.toc a{display:block;padding:7px 9px;border-radius:8px;color:var(--ink);font-size:13.5px;line-height:1.35}
+nav.toc a:hover{background:var(--accent-soft);text-decoration:none}
+nav.toc a .n{color:var(--muted);font-size:11.5px;display:block}
+nav.toc .grp{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+
+main{min-width:0}
+
+/* ---------- hero ---------- */
+.hero{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px 28px;box-shadow:var(--shadow);margin-bottom:22px}
+.hero h1{margin:0 0 6px;font-size:30px;letter-spacing:-.03em;line-height:1.2}
+.hero .sub{color:var(--muted);font-size:15px;margin:0 0 16px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:104px}
+.stat b{display:block;font-size:21px;letter-spacing:-.02em}
+.stat span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+/* ---------- sections ---------- */
+section.sec{margin:34px 0 0;scroll-margin-top:80px}
+.sec-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px;padding-bottom:12px;border-bottom:2px solid var(--line)}
+.sec-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-radius:10px;font-weight:800;font-size:13px;padding:7px 11px;white-space:nowrap;margin-top:3px}
+.sec-head h2{margin:0;font-size:23px;letter-spacing:-.02em}
+.sec-head p{margin:3px 0 0;color:var(--muted);font-size:14px}
+
+/* ---------- q cards ---------- */
+.qa{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin:14px 0;box-shadow:var(--shadow);overflow:hidden;
+     content-visibility:auto;contain-intrinsic-size:auto 460px}
+.qa .q{padding:15px 18px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;user-select:none}
+.qa .q:hover{background:var(--accent-soft)}
+.qa .num{background:var(--accent-soft);color:var(--accent);border-radius:8px;font-weight:800;font-size:12.5px;padding:4px 8px;min-width:44px;text-align:center;margin-top:2px;font-variant-numeric:tabular-nums}
+.qa .qt{font-weight:650;font-size:16.5px;letter-spacing:-.01em;flex:1;line-height:1.45}
+.qa .chev{color:var(--muted);font-size:13px;margin-top:5px;transition:transform .18s}
+.qa.closed .a{display:none}
+.qa.closed .chev{transform:rotate(-90deg)}
+.a{padding:2px 18px 18px 74px;border-top:1px solid var(--line);margin-top:-1px}
+@media(max-width:640px){.a{padding-left:18px}}
+.a>p:first-child{margin-top:14px}
+.a p{margin:10px 0}
+.a ul,.a ol{margin:10px 0;padding-left:22px}
+.a li{margin:5px 0}
+.a h5{margin:16px 0 6px;font-size:14px;letter-spacing:.02em;color:var(--accent)}
+
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.tag.core{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.tag.adv{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.tag.trap{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+
+/* ---------- code ---------- */
+pre{background:var(--code-bg);color:var(--code-ink);padding:14px 16px;border-radius:11px;overflow:auto;font-size:13.2px;line-height:1.6;margin:12px 0;border:1px solid rgba(255,255,255,.07)}
+code{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+p code,li code,td code{background:var(--accent-soft);color:var(--accent);padding:1.5px 6px;border-radius:6px;font-size:13px;font-weight:600}
+.k{color:var(--code-key)} .s{color:var(--code-str)} .c{color:var(--code-com);font-style:italic}
+.n{color:var(--code-num)} .f{color:var(--code-fn)}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--bg);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+
+/* ---------- callouts ---------- */
+.note{border-left:4px solid var(--accent2);background:var(--accent2-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.tip{border-left:4px solid var(--warn);background:var(--warn-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.gotcha{border-left:4px solid var(--danger);background:var(--danger-soft);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:14.5px}
+.note b,.tip b,.gotcha b{letter-spacing:.02em}
+
+/* ---------- figures ---------- */
+figure{margin:18px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+figure svg{width:100%;height:auto;display:block}
+figcaption{margin-top:10px;font-size:13px;color:var(--muted);text-align:center}
+.svg-ink{fill:var(--ink)} .svg-mut{fill:var(--muted)} .svg-line{stroke:var(--line)}
+
+/* ---------- misc ---------- */
+.hidden{display:none !important}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;font-size:12px;font-family:monospace;background:var(--bg)}
+.catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:12px;margin-top:14px}
+.catcard{display:block;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)}
+.catcard:hover{border-color:var(--accent);background:var(--accent-soft);text-decoration:none}
+.catcard b{display:block;font-size:14.5px;letter-spacing:-.01em;margin-bottom:3px}
+.catcard .r{font-size:11.5px;font-weight:700;color:var(--accent);letter-spacing:.04em}
+.catcard .d{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:5px}
+.toTop{position:fixed;right:20px;bottom:20px;z-index:60;border-radius:999px;padding:11px 15px;box-shadow:var(--shadow)}
+
+/* ---------- print ---------- */
+@media print{
+  :root{--bg:#fff;--panel:#fff;--line:#ccc;--ink:#000;--muted:#444;--shadow:none}
+  header.top,nav.toc,.toTop,.noprint{display:none !important}
+  .wrap{display:block;max-width:none;padding:0}
+  .qa{break-inside:avoid;page-break-inside:avoid;border:1px solid #ddd;box-shadow:none;margin:8px 0;
+      content-visibility:visible !important;contain-intrinsic-size:auto !important}
+  .qa.closed .a{display:block !important}
+  .qa .chev{display:none}
+  pre{background:#f4f4f6;color:#111;border:1px solid #ddd;white-space:pre-wrap;font-size:11px}
+  .k,.s,.c,.n,.f{color:#111 !important}
+  figure{break-inside:avoid;page-break-inside:avoid}
+  section.sec{page-break-before:auto}
+  body{font-size:11.5pt}
+  a{color:#000;text-decoration:none}
+}
+
+.crumb{max-width:1400px;margin:0 auto;padding:14px 18px 0;font-size:13.5px;color:var(--muted)}
+.crumb a{font-weight:600}
+.pager{display:flex;justify-content:space-between;gap:12px;margin:34px 0 0;flex-wrap:wrap}
+.pn{display:inline-block;padding:12px 16px;border:1px solid var(--line);border-radius:12px;
+    background:var(--panel);font-weight:600;font-size:14px;box-shadow:var(--shadow)}
+.pn:hover{border-color:var(--accent);text-decoration:none}
+@media print{.crumb,.pager{display:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">QA</span><span>TestNG, Framework, Maven, Git &amp; CI/CD</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this section…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All 250 questions</a> &nbsp;·&nbsp; TestNG, Framework, Maven, Git &amp; CI/CD &nbsp;·&nbsp; Q116–Q150 (35 questions)</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+<section class="sec" id="s4">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 4</div>
+    <div>
+      <h2>TestNG, Framework Design, Maven, Git &amp; CI/CD</h2>
+      <p>Q116 – Q150 · "Explain your framework" is the single most important question in a 5-year automation interview. Everything here feeds into that one answer.</p>
+    </div>
+  </div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q116</span><span class="qt">TestNG vs JUnit — why did you choose TestNG?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Feature</th><th>TestNG</th><th>JUnit 5</th></tr>
+      <tr><td>Suite configuration</td><td><code>testng.xml</code> — grouping, parameters, parallelism declaratively</td><td>No XML; uses tags + Maven config / <code>@Suite</code></td></tr>
+      <tr><td>Parallel execution</td><td>Built in: methods / classes / tests / instances</td><td>Available since 5 via <code>junit-platform.properties</code></td></tr>
+      <tr><td>Data-driven</td><td><code>@DataProvider</code> (can be parallel, can take Method/ITestContext)</td><td><code>@ParameterizedTest</code> with sources</td></tr>
+      <tr><td>Dependencies</td><td><code>dependsOnMethods</code>, <code>dependsOnGroups</code></td><td>Not supported by design (tests should be independent)</td></tr>
+      <tr><td>Grouping</td><td><code>groups = {"smoke","regression"}</code></td><td><code>@Tag</code></td></tr>
+      <tr><td>Retry on failure</td><td><code>IRetryAnalyzer</code> built in</td><td>Needs an extension</td></tr>
+      <tr><td>Soft assertions</td><td><code>SoftAssert</code> included</td><td>Needs AssertJ / <code>assertAll</code></td></tr>
+      <tr><td>Setup scopes</td><td>Suite / Test / Class / Method / Group</td><td>All / Each</td></tr>
+    </table>
+    <p><b>Honest answer:</b> "TestNG's suite XML, native parallelism and flexible data providers fit UI automation better, which is why it dominates Selenium projects. JUnit 5 has closed most of the gap and is the standard for unit tests, so I'm comfortable with both — the choice depends on the team's existing stack, not dogma."</p>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q117</span><span class="qt">List the TestNG annotations and their exact execution order.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>@BeforeSuite      → once, before everything in the &lt;suite&gt;
+  @BeforeTest     → once per &lt;test&gt; tag
+    @BeforeClass  → once per test class
+      @BeforeMethod → before EVERY @Test method
+        @Test
+      @AfterMethod
+    @AfterClass
+  @AfterTest
+@AfterSuite</code></pre>
+    <p>Plus <code>@BeforeGroups</code> / <code>@AfterGroups</code> (run around methods belonging to a named group), <code>@DataProvider</code>, <code>@Parameters</code>, <code>@Factory</code>, <code>@Listeners</code>.</p>
+    <pre><code>public class BaseTest {
+    @BeforeSuite(alwaysRun = true)
+    public void startReport() { ExtentManager.init(); }
+
+    @BeforeMethod(alwaysRun = true)
+    @Parameters({"browser"})
+    public void setUp(@Optional("chrome") String browser, Method m) {
+        DriverFactory.init(browser);
+        DriverFactory.get().get(Config.get("base.url"));
+        logger.info("Starting test: {}", m.getName());
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(ITestResult result) {
+        if (result.getStatus() == ITestResult.FAILURE) Screenshot.capture(result);
+        DriverFactory.quit();
+    }
+
+    @AfterSuite(alwaysRun = true)
+    public void flushReport() { ExtentManager.get().flush(); }
+}</code></pre>
+    <div class="tip"><code>alwaysRun = true</code> matters: without it, a <code>@Before</code>/<code>@After</code> method is <b>skipped</b> if a method it depends on fails — which means your driver is never quit and the process leaks. Always set it on teardown methods.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q118</span><span class="qt">Explain the structure of testng.xml.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd"&gt;
+&lt;suite name="RegressionSuite" parallel="methods" thread-count="5"
+       verbose="1" preserve-order="true" configfailurepolicy="continue"&gt;
+
+  &lt;parameter name="env"     value="qa"/&gt;
+  &lt;parameter name="browser" value="chrome"/&gt;
+
+  &lt;listeners&gt;
+    &lt;listener class-name="listeners.TestListener"/&gt;
+    &lt;listener class-name="listeners.RetryTransformer"/&gt;
+  &lt;/listeners&gt;
+
+  &lt;test name="SmokeTests"&gt;
+    &lt;groups&gt;
+      &lt;run&gt;
+        &lt;include name="smoke"/&gt;
+        &lt;exclude name="wip"/&gt;
+      &lt;/run&gt;
+    &lt;/groups&gt;
+    &lt;packages&gt;&lt;package name="tests.smoke.*"/&gt;&lt;/packages&gt;
+  &lt;/test&gt;
+
+  &lt;test name="CheckoutTests"&gt;
+    &lt;classes&gt;
+      &lt;class name="tests.CheckoutTest"&gt;
+        &lt;methods&gt;
+          &lt;include name="placeOrderWithCard"/&gt;
+          &lt;exclude name="placeOrderWithWallet"/&gt;
+        &lt;/methods&gt;
+      &lt;/class&gt;
+    &lt;/classes&gt;
+  &lt;/test&gt;
+&lt;/suite&gt;</code></pre>
+    <p>Hierarchy: <code>&lt;suite&gt;</code> → <code>&lt;test&gt;</code> → <code>&lt;classes&gt;</code>/<code>&lt;packages&gt;</code> → <code>&lt;methods&gt;</code>. Parameters can be set at suite or test level (test level wins).</p>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q119</span><span class="qt">Explain the @Test attributes: priority, dependsOnMethods, invocationCount, timeOut, enabled, expectedExceptions.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>@Test(priority = 1)                       // lower number runs first; default 0
+@Test(priority = 2, description = "Verify checkout with a saved card")
+@Test(enabled = false)                    // skip this test entirely
+@Test(groups = {"smoke", "checkout"})
+@Test(dependsOnMethods = {"login"})       // runs only if login PASSED; else SKIPPED
+@Test(dependsOnGroups = {"setup"})
+@Test(alwaysRun = true, dependsOnMethods = {"login"})   // runs even if login failed
+@Test(invocationCount = 5)                // run 5 times
+@Test(invocationCount = 10, threadPoolSize = 3)         // 10 times across 3 threads
+@Test(timeOut = 5000)                     // fail if it exceeds 5000 ms
+@Test(expectedExceptions = NoSuchElementException.class)
+@Test(retryAnalyzer = RetryAnalyzer.class)
+@Test(dataProvider = "loginData", dataProviderClass = TestData.class)</code></pre>
+    <h5>Ordering rules — a favourite trap</h5>
+    <ul>
+      <li>Without <code>priority</code>, TestNG runs methods in <b>alphabetical order</b>, not the order written in the file.</li>
+      <li><code>priority</code> is honoured only <i>within</i> the same class/test tag; dependencies take precedence over priority.</li>
+      <li>Two methods with the same priority run alphabetically.</li>
+      <li>If a method with <code>dependsOnMethods</code> has its dependency <b>fail</b>, the dependent is marked <b>SKIPPED</b> (not failed).</li>
+    </ul>
+    <div class="gotcha"><b>Opinion worth stating:</b> "I avoid <code>dependsOnMethods</code> for chaining business steps. It creates order-dependent tests that cannot run in parallel and produce cascading skips that hide the real failure count. I use it only for genuine environment prerequisites."</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q120</span><span class="qt">How do TestNG groups work and how do you use them in CI?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>@Test(groups = {"smoke", "regression", "checkout"})
+public void placeOrder() { }
+
+@Test(groups = {"regression"})
+public void applyExpiredCoupon() { }
+
+@BeforeGroups("checkout")
+public void seedCatalogue() { }</code></pre>
+    <pre><code>&lt;!-- run smoke only, excluding known-broken --&gt;
+&lt;groups&gt;&lt;run&gt;
+  &lt;include name="smoke"/&gt;
+  &lt;exclude name="flaky"/&gt;
+&lt;/run&gt;&lt;/groups&gt;
+
+&lt;!-- group of groups --&gt;
+&lt;groups&gt;
+  &lt;define name="release-gate"&gt;
+     &lt;include name="smoke"/&gt;&lt;include name="payments"/&gt;
+  &lt;/define&gt;
+  &lt;run&gt;&lt;include name="release-gate"/&gt;&lt;/run&gt;
+&lt;/groups&gt;</code></pre>
+    <pre><code># from the command line (Maven Surefire)
+mvn test -Dgroups=smoke
+mvn test -DexcludedGroups=flaky
+mvn test -DsuiteXmlFile=testng-regression.xml -Dbrowser=firefox -Denv=staging</code></pre>
+    <p>Typical grouping scheme I use: <code>smoke</code> (≤10 min, every commit), <code>regression</code> (nightly), <code>e2e</code> (pre-release), plus feature groups (<code>payments</code>, <code>search</code>) so a developer can run just the area they changed.</p>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q121</span><span class="qt">What is a @DataProvider? Show data-driven testing done well.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>@DataProvider(name = "loginData")
+public Object[][] loginData() {
+    return new Object[][] {
+        {"valid@test.com",   "Correct@123", true,  ""},
+        {"valid@test.com",   "Wrong@123",   false, "Invalid credentials"},
+        {"unknown@test.com", "Correct@123", false, "Invalid credentials"},
+        {"",                 "Correct@123", false, "Email is required"},
+    };
+}
+
+@Test(dataProvider = "loginData")
+public void login(String email, String pwd, boolean success, String error) {
+    LoginPage page = new LoginPage(driver);
+    page.login(email, pwd);
+    if (success) Assert.assertTrue(new HomePage(driver).isLoaded());
+    else         Assert.assertEquals(page.getError(), error);
+}
+
+// ---- Reading from Excel/CSV/JSON instead of hardcoding ----
+@DataProvider(name = "orders")
+public Iterator&lt;Object[]&gt; orders() {                 // Iterator = lazy, memory friendly
+    return ExcelReader.readSheet("testdata/orders.xlsx", "Checkout")
+            .stream().map(row -&gt; new Object[]{row}).iterator();
+}
+@Test(dataProvider = "orders")
+public void checkout(Map&lt;String,String&gt; data) { ... }
+
+// ---- Data provider aware of the test method &amp; suite context ----
+@DataProvider(name = "byMethod")
+public Object[][] byMethod(Method m, ITestContext ctx) {
+    String env = ctx.getCurrentXmlTest().getParameter("env");
+    return TestData.forMethod(m.getName(), env);
+}
+
+// ---- Parallel data provider ----
+@DataProvider(name = "users", parallel = true)
+public Object[][] users() { ... }</code></pre>
+    <div class="tip">Two things to add: (1) each data row appears as a <b>separate test result</b>, so failures are precise; (2) implement <code>ITestListener.onTestStart</code> or override <code>toString()</code> in your data object so reports show meaningful names instead of "login[0], login[1]".</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q122</span><span class="qt">@Parameters vs @DataProvider — when do you use each?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th></th><th><code>@Parameters</code></th><th><code>@DataProvider</code></th></tr>
+      <tr><td>Source</td><td><code>testng.xml</code> or Maven <code>-D</code></td><td>A Java method (so: Excel, DB, API, JSON, Faker)</td></tr>
+      <tr><td>Data type</td><td>Strings only</td><td>Any object type</td></tr>
+      <tr><td>Runs the test</td><td>Once per configuration</td><td>Once <b>per data row</b></td></tr>
+      <tr><td>Typical use</td><td>Environment config: browser, env, URL</td><td>Test data: multiple input combinations</td></tr>
+    </table>
+    <p>They are complementary: <code>@Parameters</code> tells you <i>where</i> to run; <code>@DataProvider</code> tells you <i>what</i> data to run with. A cross-browser data-driven suite uses both.</p>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q123</span><span class="qt">How does parallel execution work in TestNG? What are the prerequisites?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>&lt;suite name="S" parallel="methods"   thread-count="5"&gt;  &lt;!-- every @Test in its own thread --&gt;
+&lt;suite name="S" parallel="classes"   thread-count="5"&gt;  &lt;!-- each class in one thread --&gt;
+&lt;suite name="S" parallel="tests"     thread-count="3"&gt;  &lt;!-- each &lt;test&gt; tag --&gt;
+&lt;suite name="S" parallel="instances" thread-count="4"&gt;  &lt;!-- each @Factory instance --&gt;</code></pre>
+    <h5>Prerequisites — this is what they're really asking</h5>
+    <ol>
+      <li><b>ThreadLocal WebDriver</b> — no static/shared driver (Q61).</li>
+      <li><b>Independent tests</b> — no <code>dependsOnMethods</code>, no shared mutable state, no assumption about execution order.</li>
+      <li><b>Isolated test data</b> — unique users/records per test, or per-thread data pools. Two threads updating the same record is the classic parallel bug.</li>
+      <li><b>Thread-safe reporting</b> — ExtentTest also needs a ThreadLocal, otherwise logs from different tests interleave.</li>
+      <li><b>Capacity</b> — thread count matched to CPU/RAM and grid nodes. Too many threads makes everything slow and flaky; I usually start at (cores) and tune from measurements.</li>
+    </ol>
+    <pre><code>// Thread-safe Extent reporting
+public class ExtentManager {
+    private static final ThreadLocal&lt;ExtentTest&gt; TEST = new ThreadLocal&lt;&gt;();
+    public static void set(ExtentTest t) { TEST.set(t); }
+    public static ExtentTest getTest()   { return TEST.get(); }
+    public static void unload()          { TEST.remove(); }
+}</code></pre>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q124</span><span class="qt">What are TestNG listeners? Which ones have you implemented?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Interface</th><th>Purpose</th></tr>
+      <tr><td><code>ITestListener</code></td><td>Hooks on test start/success/failure/skip — screenshots, report logging</td></tr>
+      <tr><td><code>ISuiteListener</code></td><td>onStart/onFinish of the whole suite — init &amp; flush reports</td></tr>
+      <tr><td><code>IInvokedMethodListener</code></td><td>Before/after <b>every</b> method including configuration methods</td></tr>
+      <tr><td><code>IRetryAnalyzer</code></td><td>Retry failed tests</td></tr>
+      <tr><td><code>IAnnotationTransformer</code></td><td>Modify annotations at runtime — the clean way to apply a retry analyzer to all tests</td></tr>
+      <tr><td><code>IReporter</code></td><td>Generate a custom report after the suite</td></tr>
+      <tr><td><code>IExecutionListener</code></td><td>Before/after the whole TestNG run (across suites)</td></tr>
+    </table>
+    <pre><code>public class TestListener implements ITestListener {
+    @Override public void onTestStart(ITestResult r) {
+        ExtentManager.set(ExtentManager.get().createTest(
+            r.getMethod().getMethodName(), r.getMethod().getDescription()));
+    }
+    @Override public void onTestSuccess(ITestResult r) {
+        ExtentManager.getTest().pass("Passed in " +
+            (r.getEndMillis() - r.getStartMillis()) + " ms");
+    }
+    @Override public void onTestFailure(ITestResult r) {
+        String b64 = ((TakesScreenshot) DriverFactory.get()).getScreenshotAs(OutputType.BASE64);
+        ExtentManager.getTest().fail(r.getThrowable(),
+            MediaEntityBuilder.createScreenCaptureFromBase64String(b64).build());
+        ExtentManager.getTest().info("URL at failure: " + DriverFactory.get().getCurrentUrl());
+    }
+    @Override public void onTestSkipped(ITestResult r) {
+        ExtentManager.getTest().skip(r.getThrowable());
+    }
+}</code></pre>
+    <p>Register via <code>@Listeners(TestListener.class)</code> on the base class, in <code>testng.xml</code>, or globally through the <code>ServiceLoader</code> (<code>META-INF/services</code>) — the last option means nobody can forget it.</p>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q125</span><span class="qt">Implement a retry mechanism for failed tests.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>public class RetryAnalyzer implements IRetryAnalyzer {
+    private int count = 0;
+    private static final int MAX = 2;                 // 1 original + 2 retries
+
+    @Override public boolean retry(ITestResult result) {
+        if (count &lt; MAX) {
+            count++;
+            result.setAttribute("retried", count);    // so the report can show it
+            LoggerFactory.getLogger(getClass()).warn(
+                "Retrying {} — attempt {}/{}", result.getName(), count, MAX);
+            return true;
+        }
+        return false;
+    }
+}
+
+// Apply it to EVERY test automatically — no annotation needed on each method
+public class RetryTransformer implements IAnnotationTransformer {
+    @Override public void transform(ITestAnnotation ann, Class&lt;?&gt; c, Constructor&lt;?&gt; m,
+                                    Method testMethod) {
+        ann.setRetryAnalyzer(RetryAnalyzer.class);
+    }
+}</code></pre>
+    <div class="gotcha"><b>The judgement question that follows:</b> "Isn't retrying just hiding flakiness?" Yes — if used blindly. My policy: retries exist to absorb genuine <b>infrastructure</b> noise (a grid node hiccup, a network blip), not product bugs. So I (a) cap retries at 2, (b) report retried tests as a distinct category rather than a clean pass, and (c) track a flaky-test list that must be fixed, not tolerated. Saying this converts a naive answer into a senior one.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q126</span><span class="qt">Hard assertion vs soft assertion. When do you use each?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>// HARD — stops the test at the first failure (default)
+Assert.assertEquals(actual, expected, "Order total mismatch");
+Assert.assertTrue(page.isLoaded(), "Dashboard did not load");
+Assert.assertNotNull(orderId);
+Assert.assertThrows(NoSuchElementException.class, () -&gt; driver.findElement(gone));
+
+// SOFT — collects failures and reports them all at the end
+SoftAssert soft = new SoftAssert();
+soft.assertEquals(invoice.getCustomerName(), "Ravi Kumar",   "Name");
+soft.assertEquals(invoice.getGst(),          "18%",          "GST");
+soft.assertEquals(invoice.getTotal(),        "₹1,499.00",    "Total");
+soft.assertEquals(invoice.getInvoiceDate(),  today,          "Date");
+soft.assertAll();      // MUST be called or failures are silently swallowed</code></pre>
+    <p><b>Rule I use:</b> hard assert for anything that makes the rest of the test meaningless (the page didn't load, the order wasn't created). Soft assert for independent field-level verifications on the same screen, where I want one run to report all mismatches instead of five debug cycles.</p>
+    <div class="gotcha"><b>The classic bug:</b> forgetting <code>soft.assertAll()</code> — the test passes green while every assertion failed. Some teams put <code>assertAll()</code> in an <code>@AfterMethod</code> with a per-thread SoftAssert to make it impossible to forget.</div>
+    <div class="tip">Always pass the <b>message</b> parameter. "expected [true] but found [false]" costs 20 minutes of debugging; "Dashboard did not load after login for user qa_01" costs zero.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q127</span><span class="qt">How do you skip a test conditionally at runtime?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>// 1. Statically
+@Test(enabled = false)
+
+// 2. At runtime — throw SkipException (marks SKIP, not FAIL)
+@Test
+public void upiPayment() {
+    if (!FeatureFlags.isEnabled("upi")) {
+        throw new SkipException("UPI feature flag is off in " + Config.get("env"));
+    }
+    ...
+}
+
+// 3. Conditionally in a @BeforeMethod — skips the test it precedes
+@BeforeMethod
+public void checkEnv() {
+    if (!"staging".equals(Config.get("env")))
+        throw new SkipException("Runs on staging only");
+}
+
+// 4. Via groups / exclusion in testng.xml, or IAnnotationTransformer to disable
+//    tests dynamically based on environment, browser or a Jira flag.</code></pre>
+    <div class="note">Prefer <code>SkipException</code> over silently returning: a skipped test is <b>visible</b> in the report, a <code>return</code> produces a false pass. Same principle as never swallowing exceptions.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<figure>
+<svg viewBox="0 0 900 420" role="img" aria-label="Layered automation framework architecture">
+  <text x="450" y="24" text-anchor="middle" class="svg-ink" font-size="16" font-weight="700">Hybrid Framework Architecture (Selenium + TestNG + Maven)</text>
+  <g font-size="11.5">
+    <g><rect x="60" y="46" width="780" height="48" rx="10" fill="#4338ca"/>
+      <text x="450" y="68" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">TEST LAYER — src/test/java/tests</text>
+      <text x="450" y="86" text-anchor="middle" fill="#c7d2fe">Business scenarios only. No locators, no waits, no driver code. Readable by a BA.</text></g>
+
+    <g><rect x="60" y="110" width="780" height="48" rx="10" fill="#4c39c6"/>
+      <text x="450" y="132" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">PAGE OBJECT LAYER — src/main/java/pages</text>
+      <text x="450" y="150" text-anchor="middle" fill="#c7d2fe">LoginPage · CheckoutPage · BasePage — locators + business methods, return page objects</text></g>
+
+    <g><rect x="60" y="174" width="780" height="48" rx="10" fill="#3f5cbf"/>
+      <text x="450" y="196" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">COMPONENT / UTILITY LAYER</text>
+      <text x="450" y="214" text-anchor="middle" fill="#dbeafe">WaitUtils · JSUtils · TableUtils · FileUtils · DateUtils · ApiClient · DbClient</text></g>
+
+    <g><rect x="60" y="238" width="380" height="48" rx="10" fill="#2f7fb0"/>
+      <text x="250" y="260" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">CORE / DRIVER LAYER</text>
+      <text x="250" y="278" text-anchor="middle" fill="#dbeafe">DriverFactory (ThreadLocal) · BrowserOptions · Grid</text></g>
+    <g><rect x="460" y="238" width="380" height="48" rx="10" fill="#2f7fb0"/>
+      <text x="650" y="260" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">CONFIG &amp; DATA LAYER</text>
+      <text x="650" y="278" text-anchor="middle" fill="#dbeafe">config.properties · qa/stage/prod · Excel · JSON · Faker</text></g>
+
+    <g><rect x="60" y="302" width="250" height="48" rx="10" fill="#1c9a9c"/>
+      <text x="185" y="324" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">REPORTING</text>
+      <text x="185" y="342" text-anchor="middle" fill="#ccfbf1">Extent / Allure · Log4j2 · screenshots</text></g>
+    <g><rect x="325" y="302" width="250" height="48" rx="10" fill="#1c9a9c"/>
+      <text x="450" y="324" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">LISTENERS</text>
+      <text x="450" y="342" text-anchor="middle" fill="#ccfbf1">ITestListener · IRetryAnalyzer</text></g>
+    <g><rect x="590" y="302" width="250" height="48" rx="10" fill="#1c9a9c"/>
+      <text x="715" y="324" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">BUILD &amp; CI</text>
+      <text x="715" y="342" text-anchor="middle" fill="#ccfbf1">Maven · testng.xml · Jenkins · Docker</text></g>
+  </g>
+  <text x="450" y="382" text-anchor="middle" class="svg-mut" font-size="12.5">Golden rule: a change to the UI should touch exactly ONE file — the page object.</text>
+  <text x="450" y="402" text-anchor="middle" class="svg-mut" font-size="12.5">A change to the test data or environment should touch ZERO Java files.</text>
+</svg>
+<figcaption>Figure 8 — Draw this when asked "explain your framework". Then walk top to bottom, naming one class per layer.</figcaption>
+</figure>
+
+<div class="qa">
+  <div class="q"><span class="num">Q128</span><span class="qt">What is the Page Object Model and why use it?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>POM is a design pattern where every page (or significant component) of the application gets a class that holds its <b>locators</b> and exposes its <b>business actions</b> as methods. Tests call those methods and never see a locator.</p>
+    <h5>Benefits</h5>
+    <ul>
+      <li><b>Single point of maintenance</b> — the login button's id changes, you edit one line in one file, not 40 tests.</li>
+      <li><b>Readable tests</b> — <code>loginPage.login(user, pass)</code> reads like the requirement.</li>
+      <li><b>Reusability</b> — the same page methods serve dozens of scenarios.</li>
+      <li><b>Separation of concerns</b> — test logic (what) vs page interaction (how).</li>
+    </ul>
+    <pre><code>public class LoginPage extends BasePage {
+    // locators — private, By-based (not cached WebElements)
+    private final By email  = By.id("email");
+    private final By pwd    = By.id("password");
+    private final By signIn = By.cssSelector("[data-testid='signin']");
+    private final By error  = By.cssSelector(".alert-danger");
+
+    public LoginPage(WebDriver driver) { super(driver); }
+
+    public DashboardPage loginAs(String user, String pass) {
+        type(email, user);
+        type(pwd, pass);
+        click(signIn);
+        return new DashboardPage(driver);       // return the NEXT page = fluent navigation
+    }
+    public LoginPage loginExpectingFailure(String user, String pass) {
+        type(email, user); type(pwd, pass); click(signIn);
+        return this;                            // stay on the same page
+    }
+    public String getError() { return visible(error).getText(); }
+}
+
+// The test — clean, business-readable, zero Selenium API
+@Test
+public void invalidPasswordShowsError() {
+    String msg = new LoginPage(driver)
+            .loginExpectingFailure("valid@test.com", "Wrong@123")
+            .getError();
+    Assert.assertEquals(msg, "Invalid credentials");
+}</code></pre>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q129</span><span class="qt">What is PageFactory? Explain @FindBy, @FindAll, @FindBys and @CacheLookup.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>public class HomePage {
+    @FindBy(id = "search")                       private WebElement searchBox;
+    @FindBy(css = "[data-testid='cart']")        private WebElement cart;
+    @FindBy(xpath = "//div[@class='product']")   private List&lt;WebElement&gt; products;
+
+    // OR — matches EITHER locator (union)
+    @FindAll({ @FindBy(id = "submit"), @FindBy(name = "submit") })
+    private WebElement submit;
+
+    // AND — chained/nested (intersection): find .cart, then inside it find button
+    @FindBys({ @FindBy(className = "cart"), @FindBy(tagName = "button") })
+    private WebElement cartButton;
+
+    @FindBy(id = "logo") @CacheLookup private WebElement logo;   // cached — see warning
+
+    public HomePage(WebDriver driver) {
+        PageFactory.initElements(driver, this);
+        // or: PageFactory.initElements(new AjaxElementLocatorFactory(driver, 15), this);
+    }
+}</code></pre>
+    <p><b>How it works:</b> <code>initElements</code> replaces each annotated field with a <b>dynamic proxy</b>. The element is not located at construction time — it is located lazily each time you call a method on it, which is why PageFactory naturally resists stale elements.</p>
+    <div class="gotcha"><b><code>@CacheLookup</code></b> stores the located element after the first use. It is faster, but if the element is re-rendered you get <code>StaleElementReferenceException</code>. Only use it on genuinely static elements (a logo, a static header) — and honestly, in modern SPAs, almost never.</div>
+    <div class="note"><b>Should you use PageFactory at all?</b> A defensible senior answer: "PageFactory is fine, but I often prefer plain <code>By</code> locators. They're explicit, easier to parameterise (<code>String.format</code> for dynamic rows), can be passed to explicit-wait conditions directly, and produce clearer failure messages. PageFactory is also no longer actively developed. Both are acceptable — I stay consistent within a project."</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q130</span><span class="qt">What are Page Object best practices — and what should NOT go in a page object?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <h5>Do</h5>
+    <ul>
+      <li>Model <b>business actions</b>, not UI mechanics: <code>searchAndOpenFirstResult("laptop")</code>, not <code>clickSearchButton()</code>.</li>
+      <li>Return the next page object so navigation is expressed in the type system.</li>
+      <li>Keep locators <code>private</code>; expose only methods.</li>
+      <li>Extract reusable widgets into <b>component objects</b> (HeaderComponent, DataTableComponent, DatePickerComponent) and compose them — a page object per URL is not enough for a modern SPA.</li>
+      <li>Put common helpers (<code>click</code>, <code>type</code>, <code>visible</code>, <code>selectDropdown</code>) in <code>BasePage</code>.</li>
+      <li>Expose <b>state getters</b> (<code>getErrorMessage()</code>, <code>isLoaded()</code>) so the test can assert.</li>
+    </ul>
+    <h5>Do NOT</h5>
+    <ul>
+      <li><b>No assertions inside page objects.</b> A page object describes the page; the test decides what is correct. (One tolerated exception: an <code>isLoaded()</code> self-check.) Assertions inside pages make them unreusable for negative tests.</li>
+      <li><b>No test data</b> hardcoded in pages.</li>
+      <li><b>No <code>Thread.sleep()</code></b>, no raw driver management, no report/log formatting.</li>
+      <li>No giant "god page" with 80 methods — split by component.</li>
+      <li>Don't expose <code>WebElement</code> from public methods; that leaks Selenium into the test layer.</li>
+    </ul>
+    <div class="tip">If they ask "how do you keep page objects from becoming unmaintainable?", answer: component objects + a strict rule that tests never import <code>org.openqa.selenium.*</code>. That import rule can even be enforced with ArchUnit or a Checkstyle rule — a great detail to mention.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q131</span><span class="qt">What types of automation frameworks are there?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Type</th><th>Idea</th><th>Reality check</th></tr>
+      <tr><td><b>Linear / record-playback</b></td><td>Sequential scripts, no structure</td><td>Fast to create, impossible to maintain. Prototype only.</td></tr>
+      <tr><td><b>Modular</b></td><td>Break the app into modules with reusable functions</td><td>Better reuse; the ancestor of POM</td></tr>
+      <tr><td><b>Data-driven</b></td><td>Same script, data from Excel/CSV/DB/JSON</td><td>Essential for input-combination coverage</td></tr>
+      <tr><td><b>Keyword-driven</b></td><td>Actions written as keywords in a spreadsheet, interpreted by an engine</td><td>Sold as "non-programmers can automate"; in practice the engine becomes a project of its own. Rare in modern teams.</td></tr>
+      <tr><td><b>Hybrid</b></td><td>POM + data-driven + modular + reporting</td><td><b>What almost everyone actually builds.</b> Say this one.</td></tr>
+      <tr><td><b>BDD</b></td><td>Gherkin feature files bound to step definitions (Cucumber, SpecFlow)</td><td>Great when business people genuinely read the scenarios; overhead if they don't</td></tr>
+    </table>
+    <p><b>Answer template:</b> "Mine is a hybrid framework — Page Object Model as the structural backbone, data-driven through TestNG DataProviders reading Excel/JSON, a driver factory with ThreadLocal for parallel execution, Extent reports with screenshots on failure, and Maven + Jenkins for execution."</p>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q132</span><span class="qt">Explain your automation framework end to end. (The most important question in the interview.)</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Structure the answer: <b>tech stack → folder structure → execution flow → what makes it good → a problem you solved</b>. Aim for 3–4 minutes.</p>
+    <h5>1. Stack</h5>
+    <p>"Java 17, Selenium 4, TestNG, Maven, Page Object Model, Extent Reports, Log4j2, Apache POI + Jackson for data, RestAssured for API setup and verification, Docker Grid, Jenkins for CI, Git/GitHub with PR reviews."</p>
+    <h5>2. Structure</h5>
+    <pre><code>src/main/java/
+  ├─ core/        DriverFactory (ThreadLocal), BrowserOptions, BasePage
+  ├─ pages/       LoginPage, ProductPage, CartPage, CheckoutPage
+  ├─ components/  HeaderComponent, DataTable, DatePicker
+  ├─ utils/       WaitUtils, JSUtils, ExcelReader, JsonReader, ApiClient, DbClient
+  ├─ config/      ConfigReader, Environment
+  └─ constants/   Endpoints, Timeouts, Messages
+src/test/java/
+  ├─ base/        BaseTest (setup/teardown)
+  ├─ tests/       smoke/, regression/, e2e/
+  ├─ listeners/   TestListener, RetryAnalyzer, AnnotationTransformer
+  └─ dataproviders/
+src/test/resources/
+  ├─ config/      qa.properties, staging.properties
+  ├─ testdata/    users.xlsx, orders.json
+  ├─ suites/      testng-smoke.xml, testng-regression.xml
+  └─ log4j2.xml
+pom.xml · Jenkinsfile · docker-compose.yml · README.md</code></pre>
+    <h5>3. Execution flow</h5>
+    <p>"Jenkins triggers <code>mvn clean test -Dsuite=smoke -Denv=qa -Dbrowser=chrome</code>. Surefire reads the testng.xml. <code>@BeforeSuite</code> initialises the Extent report; <code>@BeforeMethod</code> asks DriverFactory for a ThreadLocal driver configured from the properties file and navigates to the base URL. The test calls page-object methods; assertions live in the test. The <code>ITestListener</code> logs every step and, on failure, embeds a Base64 screenshot plus the current URL and browser console log. <code>@AfterMethod</code> quits the driver and clears the ThreadLocal. <code>@AfterSuite</code> flushes the report, which Jenkins publishes and emails to the team with a Slack notification."</p>
+    <h5>4. Design decisions worth calling out</h5>
+    <ul>
+      <li>Config is layered: <code>-D</code> system property → environment variable → properties file, so CI can override anything without a code change.</li>
+      <li>Login is done once via API + cookie injection; only one dedicated test exercises the login UI.</li>
+      <li>Test data is created per test via API and cleaned up in teardown — no shared fixtures.</li>
+      <li>Zero implicit waits; a single wait strategy in <code>BasePage</code>.</li>
+      <li>Tests may not import Selenium classes — enforced in code review.</li>
+    </ul>
+    <h5>5. Finish with a story</h5>
+    <p>"The biggest improvement I made was cutting regression from 3h40m to 34 minutes — parallelising with ThreadLocal, replacing every sleep with explicit waits, and moving 120 field validations from UI to API tests."</p>
+    <div class="tip">Rehearse this out loud until it is smooth. Interviewers form their opinion of you during this answer, and every later question is drawn from what you said here — so only mention things you can defend in depth.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q133</span><span class="qt">Which design patterns have you used in your framework?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Page Object</b> — structural backbone (already covered).</li>
+      <li><b>Factory</b> — <code>DriverFactory.create(browser)</code> returns the right WebDriver without the caller knowing the concrete class.</li>
+      <li><b>Singleton</b> — ConfigReader, ExtentManager, DB connection pool.</li>
+      <li><b>Fluent / method chaining</b> — page methods return page objects: <code>home.search("x").openFirst().addToCart()</code>.</li>
+      <li><b>Builder</b> — constructing complex test data objects readably:
+        <pre><code>User u = User.builder().name("Ravi").role("ADMIN").active(true).build();</code></pre></li>
+      <li><b>Strategy</b> — pluggable behaviour: different payment strategies, different locator strategies, different report backends behind one interface.</li>
+      <li><b>Facade</b> — <code>ApiClient</code> hiding RestAssured details from the tests.</li>
+      <li><b>Decorator</b> — Selenium's own <code>EventFiringDecorator</code>/<code>WebDriverListener</code> to log or screenshot every command:
+        <pre><code>WebDriver decorated = new EventFiringDecorator&lt;&gt;(new LoggingListener()).decorate(driver);</code></pre></li>
+      <li><b>Dependency Injection</b> — Picocontainer/Spring in Cucumber to share state between step-definition classes.</li>
+    </ul>
+    <div class="tip">Don't list all nine. Name three or four you can genuinely explain with your own code — depth beats breadth, and interviewers probe whichever one you mention.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q134</span><span class="qt">How do you manage configuration for multiple environments (QA, staging, prod)?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code># src/test/resources/config/qa.properties
+base.url=https://qa.shop.example.com
+api.url=https://qa-api.shop.example.com
+db.url=jdbc:postgresql://qa-db:5432/shop
+browser=chrome
+headless=false
+timeout.explicit=20</code></pre>
+    <pre><code>public final class Config {
+    private static final Properties PROPS = load();
+
+    private static Properties load() {
+        String env = System.getProperty("env",
+                     System.getenv().getOrDefault("TEST_ENV", "qa"));
+        Properties p = new Properties();
+        try (InputStream in = Config.class.getResourceAsStream("/config/" + env + ".properties")) {
+            if (in == null) throw new FrameworkException("No config for env: " + env);
+            p.load(in);
+        } catch (IOException e) { throw new FrameworkException("Config load failed", e); }
+        return p;
+    }
+
+    /** Precedence: -D system property  →  environment variable  →  properties file */
+    public static String get(String key) {
+        String v = System.getProperty(key);
+        if (v == null) v = System.getenv(key.toUpperCase().replace('.', '_'));
+        if (v == null) v = PROPS.getProperty(key);
+        if (v == null) throw new FrameworkException("Missing config key: " + key);
+        return v;
+    }
+    public static int getInt(String key)      { return Integer.parseInt(get(key)); }
+    public static boolean getBool(String key) { return Boolean.parseBoolean(get(key)); }
+}</code></pre>
+    <pre><code>mvn clean test -Denv=staging -Dbrowser=firefox -Dheadless=true</code></pre>
+    <div class="gotcha"><b>Secrets never go in the repo.</b> Passwords, API keys and DB credentials come from environment variables injected by Jenkins credentials, HashiCorp Vault or AWS Secrets Manager. If they ask "where do you store the test user's password?", the wrong answer is "config.properties in Git". Say: environment variable from the CI credential store, with a local <code>.env</code> that is git-ignored.</div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q135</span><span class="qt">How do you do logging and reporting? Extent vs Allure.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <h5>Logging — Log4j2</h5>
+    <pre><code>private static final Logger log = LogManager.getLogger(CheckoutTest.class);
+log.info("Placing order for user {}", user);
+log.debug("Cart contents: {}", cart);
+log.error("Payment failed", exception);</code></pre>
+    <p>Levels: TRACE &lt; DEBUG &lt; INFO &lt; WARN &lt; ERROR &lt; FATAL. Configure two appenders — console (INFO) and a rolling file (DEBUG) — in <code>log4j2.xml</code>. Include the thread name in the pattern (<code>%t</code>) so parallel runs stay readable.</p>
+    <h5>Reporting</h5>
+    <table>
+      <tr><th></th><th>Extent Reports</th><th>Allure</th></tr>
+      <tr><td>Output</td><td>Self-contained HTML — easy to email/attach</td><td>Results JSON + a generated static site</td></tr>
+      <tr><td>Setup</td><td>Code-driven (create tests, log steps manually)</td><td>Annotation-driven (<code>@Step</code>, <code>@Severity</code>, <code>@Issue</code>, <code>@Description</code>)</td></tr>
+      <tr><td>History/trends</td><td>Limited (Extent Klov for history)</td><td>Excellent — trends, retries, flakiness, categories</td></tr>
+      <tr><td>CI integration</td><td>Publish HTML artifact</td><td>Jenkins/GitLab Allure plugin</td></tr>
+      <tr><td>Best for</td><td>Quick, pretty, stakeholder-friendly single report</td><td>Long-running suites where trend analysis matters</td></tr>
+    </table>
+    <pre><code>// Allure — minimal and expressive
+@Test @Severity(SeverityLevel.CRITICAL)
+@Description("User can pay with a saved card")
+@Link(name = "JIRA-1234", url = "https://jira/browse/JIRA-1234")
+public void payWithSavedCard() { ... }
+
+@Step("Login as {user}")
+public void login(String user, String pass) { ... }
+
+Allure.addAttachment("Screenshot", new ByteArrayInputStream(pngBytes));</code></pre>
+    <div class="tip">Whichever you use, the report must answer three questions instantly: <b>what failed</b>, <b>what the screen looked like</b>, and <b>which build/environment it ran on</b>. Say that — it shows you think about the consumer of the report, not just the tooling.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q136</span><span class="qt">Explain Maven — pom.xml, the build lifecycle, and Surefire vs Failsafe.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Maven is a build and dependency management tool driven by <code>pom.xml</code> (Project Object Model). It downloads dependencies from a repository into your local <code>~/.m2</code> cache and runs a standard lifecycle.</p>
+    <h5>Lifecycle phases (each runs all previous ones)</h5>
+    <p><code>validate → compile → test → package → verify → install → deploy</code>, plus <code>clean</code> (a separate lifecycle).</p>
+    <ul>
+      <li><code>mvn clean test</code> — the usual command for a test project.</li>
+      <li><code>mvn clean install -DskipTests</code> — build and put the artifact in the local repo without running tests.</li>
+    </ul>
+    <pre><code>&lt;build&gt;&lt;plugins&gt;
+  &lt;plugin&gt;
+    &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+    &lt;artifactId&gt;maven-surefire-plugin&lt;/artifactId&gt;
+    &lt;version&gt;3.2.5&lt;/version&gt;
+    &lt;configuration&gt;
+      &lt;suiteXmlFiles&gt;
+        &lt;suiteXmlFile&gt;src/test/resources/suites/${suite}.xml&lt;/suiteXmlFile&gt;
+      &lt;/suiteXmlFiles&gt;
+      &lt;systemPropertyVariables&gt;
+        &lt;env&gt;${env}&lt;/env&gt;
+        &lt;browser&gt;${browser}&lt;/browser&gt;
+      &lt;/systemPropertyVariables&gt;
+      &lt;testFailureIgnore&gt;false&lt;/testFailureIgnore&gt;
+    &lt;/configuration&gt;
+  &lt;/plugin&gt;
+&lt;/plugins&gt;&lt;/build&gt;
+
+&lt;properties&gt;
+  &lt;maven.compiler.source&gt;17&lt;/maven.compiler.source&gt;
+  &lt;maven.compiler.target&gt;17&lt;/maven.compiler.target&gt;
+  &lt;suite&gt;testng-smoke&lt;/suite&gt;
+  &lt;env&gt;qa&lt;/env&gt;
+  &lt;browser&gt;chrome&lt;/browser&gt;
+&lt;/properties&gt;</code></pre>
+    <table>
+      <tr><th></th><th>Surefire</th><th>Failsafe</th></tr>
+      <tr><td>Runs in phase</td><td><code>test</code></td><td><code>integration-test</code> / <code>verify</code></td></tr>
+      <tr><td>Default pattern</td><td><code>*Test.java</code>, <code>Test*.java</code></td><td><code>*IT.java</code>, <code>IT*.java</code></td></tr>
+      <tr><td>On failure</td><td>Fails the build immediately</td><td>Fails at <code>verify</code>, so post-integration cleanup still runs</td></tr>
+      <tr><td>Use for</td><td>Unit tests</td><td>Integration/UI tests that need a deployed app</td></tr>
+    </table>
+    <div class="tip">Gradle is the common alternative — say you're comfortable with both and that the concepts (dependency coordinates, lifecycle, plugins) map directly.</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q137</span><span class="qt">What are Maven dependency scopes, and which dependencies are in your pom?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Scope</th><th>Available at</th><th>Packaged?</th></tr>
+      <tr><td><code>compile</code> (default)</td><td>compile, test, runtime</td><td>Yes</td></tr>
+      <tr><td><code>provided</code></td><td>compile, test</td><td>No — the container supplies it (e.g. servlet-api)</td></tr>
+      <tr><td><code>runtime</code></td><td>test, runtime (not compile)</td><td>Yes — e.g. a JDBC driver</td></tr>
+      <tr><td><code>test</code></td><td>test only</td><td>No — TestNG, Selenium in a test-only project</td></tr>
+      <tr><td><code>system</code> / <code>import</code></td><td>Legacy / BOM management</td><td>—</td></tr>
+    </table>
+    <pre><code>&lt;!-- typical automation pom dependencies --&gt;
+org.seleniumhq.selenium : selenium-java        : 4.x
+org.testng              : testng               : 7.x
+io.rest-assured         : rest-assured         : 5.x
+com.aventstack          : extentreports        : 5.x
+io.qameta.allure        : allure-testng        : 2.x
+org.apache.logging.log4j: log4j-core           : 2.x
+org.apache.poi          : poi-ooxml            : 5.x
+com.fasterxml.jackson.core : jackson-databind  : 2.x
+net.datafaker           : datafaker            : 2.x
+org.projectlombok       : lombok               : (optional, provided)
+org.postgresql          : postgresql           : (runtime)</code></pre>
+    <p>Useful commands: <code>mvn dependency:tree</code> (find version conflicts), <code>mvn versions:display-dependency-updates</code>, <code>mvn -o</code> (offline). Mention <b>dependencyManagement</b> for centralising versions in a multi-module project.</p>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q138</span><span class="qt">Git: what branching strategy do you follow, and which commands do you use daily?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>git clone &lt;url&gt;                     git status
+git checkout -b feature/JIRA-1234-checkout-tests
+git add .                           git commit -m "JIRA-1234: add checkout regression tests"
+git pull --rebase origin main       git push -u origin feature/JIRA-1234-checkout-tests
+git log --oneline --graph --decorate -10
+git diff / git diff --staged
+git stash / git stash pop           # park work to switch branches
+git reset --soft HEAD~1             # undo the commit, keep changes staged
+git reset --hard HEAD~1             # DANGEROUS — discards changes
+git revert &lt;sha&gt;                    # safe undo on a shared branch (new commit)
+git cherry-pick &lt;sha&gt;               # bring one commit to another branch
+git branch -d &lt;branch&gt;              git remote -v</code></pre>
+    <h5>Branching strategies</h5>
+    <ul>
+      <li><b>GitFlow</b> — <code>main</code>, <code>develop</code>, <code>feature/*</code>, <code>release/*</code>, <code>hotfix/*</code>. Heavier; suits scheduled releases.</li>
+      <li><b>GitHub Flow / trunk-based</b> — short-lived feature branches off <code>main</code>, PR + CI + review, merge and deploy. Most common today for CI/CD.</li>
+    </ul>
+    <p><b>How test code fits:</b> the automation code lives in the <b>same repository and the same PR</b> as the feature wherever possible, so the tests are reviewed and merged with the change. If tests are in a separate repo, the branch name still references the same Jira ticket. PRs must have a green pipeline before merge.</p>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q139</span><span class="qt">Merge vs rebase, and how do you resolve a conflict?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Merge</b> creates a merge commit joining two histories. Non-destructive, preserves exactly what happened, but the graph gets noisy.</li>
+      <li><b>Rebase</b> replays your commits on top of the target branch, producing a linear history. Cleaner log, but it <b>rewrites commit hashes</b>.</li>
+      <li><b>The golden rule:</b> never rebase a branch that other people have already pulled — you rewrite shared history and force everyone to recover. Rebase your own local feature branch; merge into <code>main</code>.</li>
+    </ul>
+    <h5>Resolving a conflict</h5>
+    <pre><code>git pull --rebase origin main
+# CONFLICT (content): Merge conflict in src/test/java/tests/CheckoutTest.java
+
+# 1. Open the file — Git marks the regions:
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+   your version
+=======
+   incoming version
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; origin/main
+
+# 2. Edit to the correct final content, remove ALL markers
+# 3. git add &lt;file&gt;
+# 4. git rebase --continue      (or git commit, if merging)
+# 5. Re-run the tests before pushing — a syntactically clean merge can still be
+#    semantically wrong.
+git rebase --abort              # bail out and start again</code></pre>
+    <div class="tip">Add the practical point: "Conflicts in a test framework usually happen in shared files — <code>BasePage</code>, <code>testng.xml</code>, <code>pom.xml</code>. We reduced them by keeping page objects small and single-purpose, and by having each person own a module."</div>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<figure>
+<svg viewBox="0 0 900 300" role="img" aria-label="CI CD pipeline for test automation">
+  <text x="450" y="24" text-anchor="middle" class="svg-ink" font-size="16" font-weight="700">Where automated tests sit in a CI/CD pipeline</text>
+  <defs><marker id="a6" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="var(--muted)"/></marker></defs>
+  <g font-size="11" font-weight="700">
+    <g><rect x="16" y="92" width="112" height="58" rx="10" fill="#4338ca"/>
+      <text x="72" y="116" text-anchor="middle" fill="#fff">Commit / PR</text>
+      <text x="72" y="134" text-anchor="middle" fill="#c7d2fe" font-weight="400" font-size="10">Git push</text></g>
+    <g><rect x="152" y="92" width="112" height="58" rx="10" fill="#4a3ac7"/>
+      <text x="208" y="112" text-anchor="middle" fill="#fff">Build</text>
+      <text x="208" y="128" text-anchor="middle" fill="#c7d2fe" font-weight="400" font-size="10">compile + lint</text>
+      <text x="208" y="142" text-anchor="middle" fill="#c7d2fe" font-weight="400" font-size="10">SonarQube</text></g>
+    <g><rect x="288" y="92" width="112" height="58" rx="10" fill="#4159c2"/>
+      <text x="344" y="112" text-anchor="middle" fill="#fff">Unit tests</text>
+      <text x="344" y="128" text-anchor="middle" fill="#dbeafe" font-weight="400" font-size="10">&lt; 3 min</text>
+      <text x="344" y="142" text-anchor="middle" fill="#dbeafe" font-weight="400" font-size="10">coverage gate</text></g>
+    <g><rect x="424" y="92" width="112" height="58" rx="10" fill="#3576b4"/>
+      <text x="480" y="112" text-anchor="middle" fill="#fff">Deploy to QA</text>
+      <text x="480" y="128" text-anchor="middle" fill="#dbeafe" font-weight="400" font-size="10">Docker /</text>
+      <text x="480" y="142" text-anchor="middle" fill="#dbeafe" font-weight="400" font-size="10">Kubernetes</text></g>
+    <g><rect x="560" y="92" width="112" height="58" rx="10" fill="#1f92a6"/>
+      <text x="616" y="112" text-anchor="middle" fill="#fff">API + Smoke</text>
+      <text x="616" y="128" text-anchor="middle" fill="#ccfbf1" font-weight="400" font-size="10">UI smoke suite</text>
+      <text x="616" y="142" text-anchor="middle" fill="#ccfbf1" font-weight="400" font-size="10">&lt; 10 min · GATE</text></g>
+    <g><rect x="696" y="92" width="112" height="58" rx="10" fill="#0d9488"/>
+      <text x="752" y="112" text-anchor="middle" fill="#fff">Regression</text>
+      <text x="752" y="128" text-anchor="middle" fill="#ccfbf1" font-weight="400" font-size="10">parallel on Grid</text>
+      <text x="752" y="142" text-anchor="middle" fill="#ccfbf1" font-weight="400" font-size="10">nightly</text></g>
+    <g><rect x="828" y="92" width="60" height="58" rx="10" fill="#059669"/>
+      <text x="858" y="116" text-anchor="middle" fill="#fff" font-size="10.5">Release</text>
+      <text x="858" y="132" text-anchor="middle" fill="#ccfbf1" font-weight="400" font-size="9.5">canary</text></g>
+  </g>
+  <g stroke="var(--muted)" stroke-width="1.6" fill="none" marker-end="url(#a6)">
+    <line x1="130" y1="121" x2="148" y2="121"/><line x1="266" y1="121" x2="284" y2="121"/>
+    <line x1="402" y1="121" x2="420" y2="121"/><line x1="538" y1="121" x2="556" y2="121"/>
+    <line x1="674" y1="121" x2="692" y2="121"/><line x1="810" y1="121" x2="824" y2="121"/>
+  </g>
+  <g stroke="#be123c" stroke-width="1.6" fill="none" marker-end="url(#a6)" stroke-dasharray="5 4">
+    <path d="M616 158 L616 196 L72 196 L72 156"/>
+  </g>
+  <text x="344" y="214" text-anchor="middle" fill="#be123c" font-size="11.5" font-weight="700">FAIL FAST → build red, PR blocked, team notified in Slack</text>
+  <g class="svg-mut" font-size="12">
+    <text x="450" y="252" text-anchor="middle">Every stage publishes artifacts: Extent/Allure HTML, screenshots, videos, logs.</text>
+    <text x="450" y="272" text-anchor="middle">Feedback target: developer knows within 10 minutes of pushing whether they broke something.</text>
+  </g>
+</svg>
+<figcaption>Figure 9 — The key interview point: automation is only valuable if it <b>gates</b> the pipeline. Tests that run but never block a release are decoration.</figcaption>
+</figure>
+
+<div class="qa">
+  <div class="q"><span class="num">Q140</span><span class="qt">What is CI/CD and how is your automation integrated into it?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Continuous Integration</b> — every commit is merged to the mainline and automatically built and tested, so integration problems surface in minutes rather than at the end of a sprint.</li>
+      <li><b>Continuous Delivery</b> — every change that passes the pipeline is <i>deployable</i> at the push of a button.</li>
+      <li><b>Continuous Deployment</b> — it deploys automatically, with no manual gate.</li>
+    </ul>
+    <h5>How I plug automation in</h5>
+    <ol>
+      <li><b>On every PR:</b> compile + unit tests + a &lt;10-minute UI/API smoke suite. Red build blocks the merge.</li>
+      <li><b>On merge to main / after deploy to QA:</b> the extended smoke + critical journeys.</li>
+      <li><b>Nightly:</b> the full regression in parallel on a Docker Grid, plus cross-browser.</li>
+      <li><b>Weekly:</b> performance and accessibility scans.</li>
+      <li><b>Always:</b> publish the HTML report as a build artifact, notify Slack/Teams/email with a pass rate and a link, and auto-create a Jira bug for a new failure if the team wants it.</li>
+    </ol>
+    <div class="tip">The strongest thing you can say here: <b>"The suite has to be trustworthy before it can gate anything. If the team learns that a red build might be flakiness, they stop looking at it — and then the automation is worthless. So I treat suite reliability as a first-class deliverable."</b></div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q141</span><span class="qt">Write a Jenkins pipeline for running the automation suite.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>pipeline {
+  agent any
+  tools { maven 'Maven-3.9'; jdk 'JDK-17' }
+
+  parameters {
+    choice(name: 'SUITE',   choices: ['testng-smoke','testng-regression'], description: '')
+    choice(name: 'BROWSER', choices: ['chrome','firefox','edge'],          description: '')
+    choice(name: 'ENV',     choices: ['qa','staging'],                     description: '')
+    booleanParam(name: 'HEADLESS', defaultValue: true)
+  }
+
+  triggers { cron('H 1 * * *') }             // nightly regression ~1 a.m.
+
+  options {
+    timeout(time: 90, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '30'))
+    timestamps()
+  }
+
+  environment {
+    TEST_USER_PWD = credentials('qa-test-user-password')   // never hardcode secrets
+  }
+
+  stages {
+    stage('Checkout') { steps { checkout scm } }
+
+    stage('Start Grid') {
+      steps { sh 'docker compose -f docker-compose-grid.yml up -d --scale chrome=5' }
+    }
+
+    stage('Test') {
+      steps {
+        sh """mvn clean test \
+              -Dsuite=${params.SUITE} \
+              -Dbrowser=${params.BROWSER} \
+              -Denv=${params.ENV} \
+              -Dheadless=${params.HEADLESS}"""
+      }
+    }
+  }
+
+  post {
+    always {
+      sh 'docker compose -f docker-compose-grid.yml down'
+      junit 'target/surefire-reports/*.xml'
+      archiveArtifacts artifacts: 'test-output/**, screenshots/**', allowEmptyArchive: true
+      publishHTML([reportDir: 'test-output', reportFiles: 'ExtentReport.html',
+                   reportName: 'Automation Report', keepAll: true])
+      allure includeProperties: false, results: [[path: 'target/allure-results']]
+    }
+    failure {
+      slackSend channel: '#qa-alerts', color: 'danger',
+        message: "FAILED ${env.JOB_NAME} #${env.BUILD_NUMBER} (${params.ENV}/${params.BROWSER}) ${env.BUILD_URL}"
+      emailext to: 'qa-team@example.com', subject: "Regression failed: ${env.JOB_NAME}",
+        body: "See ${env.BUILD_URL}Automation_Report/", attachLog: true
+    }
+  }
+}</code></pre>
+    <p>Also know: <b>declarative vs scripted</b> pipelines, <code>agent { docker { image '...' } }</code>, parallel stages for sharding, and that the same concepts map to GitHub Actions / GitLab CI / Azure DevOps if that's their stack.</p>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q142</span><span class="qt">How do you use Docker in test automation?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code># docker-compose-grid.yml
+services:
+  selenium-hub:
+    image: selenium/hub:4.20
+    ports: ["4442:4442", "4443:4443", "4444:4444"]
+  chrome:
+    image: selenium/node-chrome:4.20
+    shm_size: 2gb                       # prevents Chrome crashes in containers
+    depends_on: [selenium-hub]
+    environment:
+      SE_EVENT_BUS_HOST: selenium-hub
+      SE_EVENT_BUS_PUBLISH_PORT: 4442
+      SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
+      SE_NODE_MAX_SESSIONS: 5
+      SE_NODE_OVERRIDE_MAX_SESSIONS: "true"
+  firefox:
+    image: selenium/node-firefox:4.20
+    shm_size: 2gb
+    depends_on: [selenium-hub]
+    environment: { SE_EVENT_BUS_HOST: selenium-hub, ... }</code></pre>
+    <pre><code>docker compose up -d --scale chrome=5
+# selenium/node-chrome:*-debug images expose VNC on 5900 so you can WATCH the tests run
+# selenium/video records each session to mp4 — invaluable for debugging CI-only failures</code></pre>
+    <h5>Why it matters</h5>
+    <ul>
+      <li><b>Identical environments</b> — no "works on my machine"; the browser and driver versions are pinned in the image.</li>
+      <li><b>Elastic scale</b> — spin up 20 nodes for a nightly run, tear them down after.</li>
+      <li><b>Clean state</b> per run — no cookie/profile contamination.</li>
+      <li><b>Testcontainers</b> deserves a mention: it can start a real PostgreSQL/Kafka/WireMock container per test run from Java code, which makes integration tests reliable and self-contained.</li>
+    </ul>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q143</span><span class="qt">Explain BDD and Cucumber — feature files, step definitions, runner and hooks.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p><b>BDD</b> (Behaviour-Driven Development) is a collaboration practice: business, dev and QA agree on behaviour <i>before</i> coding, expressed in plain-language <b>Gherkin</b> scenarios that then become executable tests.</p>
+    <pre><code># src/test/resources/features/checkout.feature
+@checkout @regression
+Feature: Checkout
+  As a registered shopper
+  I want to pay for my cart
+  So that my order is placed
+
+  Background:
+    Given I am logged in as "shopper@test.com"
+
+  @smoke
+  Scenario: Successful card payment
+    Given I have 2 items in my cart
+    When I checkout and pay with a valid card
+    Then I should see the order confirmation
+    And the order status should be "CONFIRMED"</code></pre>
+    <pre><code>public class CheckoutSteps {
+    private final World world;                      // shared state via DI
+    public CheckoutSteps(World world) { this.world = world; }
+
+    @Given("I have {int} items in my cart")
+    public void addItems(int count) { world.cart().addRandomItems(count); }
+
+    @When("I checkout and pay with a valid card")
+    public void payWithCard() { world.checkout().payWith(Card.valid()); }
+
+    @Then("the order status should be {string}")
+    public void verifyStatus(String expected) {
+        Assert.assertEquals(world.api().getOrder(world.orderId()).status(), expected);
+    }
+}</code></pre>
+    <pre><code>@CucumberOptions(
+    features = "src/test/resources/features",
+    glue     = {"steps", "hooks"},
+    tags     = "@smoke and not @wip",
+    plugin   = {"pretty", "html:target/cucumber.html",
+                "json:target/cucumber.json",
+                "io.qameta.allure.cucumber7jvm.AllureCucumber7Jvm"},
+    monochrome = true)
+public class TestRunner extends AbstractTestNGCucumberTests {
+    @Override @DataProvider(parallel = true)          // parallel scenarios
+    public Object[][] scenarios() { return super.scenarios(); }
+}</code></pre>
+    <pre><code>public class Hooks {
+    @Before(order = 0) public void setUp()  { DriverFactory.init(Config.get("browser")); }
+    @Before("@api")    public void apiOnly() { /* tag-specific setup */ }
+    @After(order = 1)  public void tearDown(Scenario s) {
+        if (s.isFailed()) s.attach(((TakesScreenshot) DriverFactory.get())
+                .getScreenshotAs(OutputType.BYTES), "image/png", s.getName());
+        DriverFactory.quit();
+    }
+    @BeforeStep / @AfterStep                          // per-step hooks
+}</code></pre>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q144</span><span class="qt">Cucumber: Scenario Outline, Data Tables, Background and tags.</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>  # Scenario Outline = data-driven scenario
+  Scenario Outline: Login validation
+    When I login with "&lt;email&gt;" and "&lt;password&gt;"
+    Then I should see "&lt;message&gt;"
+
+    Examples:
+      | email            | password    | message              |
+      | valid@test.com   | Correct@123 | Welcome back         |
+      | valid@test.com   | Wrong@123   | Invalid credentials  |
+      | notauser@test.com| Correct@123 | Invalid credentials  |
+
+  # Data Table = structured data for ONE step
+  Scenario: Add multiple products
+    When I add the following products to my cart:
+      | sku      | qty | size |
+      | TSH-001  | 2   | M    |
+      | JNS-455  | 1   | 32   |
+    Then the cart total should be "₹3,498.00"</code></pre>
+    <pre><code>@When("I add the following products to my cart:")
+public void addProducts(DataTable table) {
+    List&lt;Map&lt;String,String&gt;&gt; rows = table.asMaps(String.class, String.class);
+    rows.forEach(r -&gt; cartPage.add(r.get("sku"),
+                                   Integer.parseInt(r.get("qty")), r.get("size")));
+}</code></pre>
+    <ul>
+      <li><b>Background</b> — steps that run before <i>every</i> scenario in the feature. Keep it to 2–3 lines; a long Background makes scenarios unreadable.</li>
+      <li><b>Tags</b> — <code>@smoke</code>, <code>@regression</code>, <code>@wip</code>. Filter with <code>-Dcucumber.filter.tags="@smoke and not @wip"</code>. Tags can be on the Feature (inherited by all scenarios) or a single Scenario/Examples block.</li>
+      <li><b>Parameter types</b> — <code>{int}</code>, <code>{string}</code>, <code>{word}</code>, <code>{float}</code>, plus custom <code>@ParameterType</code> for domain objects.</li>
+      <li><b>Sharing state</b> between step classes — use dependency injection (PicoContainer/Spring), never <code>static</code> fields, which break parallel runs.</li>
+    </ul>
+    <div class="tags"><span class="tag core">core</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q145</span><span class="qt">What are BDD best practices — and when should you NOT use BDD?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <h5>Best practices</h5>
+    <ul>
+      <li>Write scenarios in <b>business language</b>, describing behaviour and outcome — not UI mechanics. ✅ "When I pay with an expired card" ❌ "When I click the button with id 'pay'".</li>
+      <li>One scenario = one behaviour. If it has 15 steps and three <i>Thens</i>, split it.</li>
+      <li>Declarative over imperative: "When I log in as an admin" rather than five steps of typing and clicking.</li>
+      <li>Reuse step definitions; keep them thin — a step should call one page-object or API method, with all logic in the layers below.</li>
+      <li>Keep the feature files in the same repo, reviewed by the PO.</li>
+    </ul>
+    <h5>When NOT to use BDD — an honest, senior answer</h5>
+    <p>"BDD's value is the <b>conversation</b> with the business, not the Gherkin syntax. If the product owner never reads the feature files, you're paying a real cost — an extra glue layer, regex-matched steps, harder refactoring and debugging — for zero collaboration benefit. In that case plain TestNG with well-named methods is better. I've used Cucumber where business analysts genuinely reviewed the scenarios, and plain TestNG where they didn't."</p>
+    <div class="tip">This is a differentiator answer. Most candidates recite Cucumber syntax; very few can say <i>when the tool is the wrong choice</i>. That is what a lead wants to hear.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q146</span><span class="qt">How do you automate API tests with RestAssured?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <pre><code>// Given / When / Then — the BDD-style DSL
+given()
+    .baseUri("https://qa-api.example.com")
+    .header("Authorization", "Bearer " + token)
+    .contentType(ContentType.JSON)
+    .body(Map.of("sku", "TSH-001", "qty", 2))
+.when()
+    .post("/api/v1/cart/items")
+.then()
+    .statusCode(201)
+    .time(lessThan(1500L))                                  // response-time assertion
+    .body("itemId", notNullValue())
+    .body("qty", equalTo(2))
+    .body("price.currency", equalTo("INR"))
+    .body("items.size()", greaterThan(0))
+    .header("Content-Type", containsString("application/json"));
+
+// Extract a value for the next call
+String orderId = given().spec(reqSpec).body(payload)
+        .post("/api/v1/orders").then().statusCode(201)
+        .extract().path("orderId");
+
+// Deserialise into a POJO and assert with normal Java
+Order order = given().spec(reqSpec).get("/api/v1/orders/" + orderId)
+        .then().statusCode(200).extract().as(Order.class);
+Assert.assertEquals(order.getStatus(), "CONFIRMED");
+
+// Reusable specifications — keeps tests clean
+RequestSpecification reqSpec = new RequestSpecBuilder()
+        .setBaseUri(Config.get("api.url"))
+        .addHeader("Authorization", "Bearer " + token)
+        .setContentType(ContentType.JSON)
+        .addFilter(new AllureRestAssured())                 // logs request/response in the report
+        .build();
+
+// JSON schema validation — catches contract breaks the field assertions miss
+.then().body(matchesJsonSchemaInClasspath("schemas/order-schema.json"));</code></pre>
+    <h5>What to test at the API layer</h5>
+    <p>Status codes (200/201/400/401/403/404/409/422/500), response body and data types, schema/contract, headers, authentication and <b>authorisation</b> (user A must not read user B's order — the most commonly missed test), pagination, rate limiting, idempotency, error message quality, and response time.</p>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q147</span><span class="qt">What metrics do you report, and how do you show automation's value to management?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <table>
+      <tr><th>Metric</th><th>What it tells you</th></tr>
+      <tr><td>Automation coverage %</td><td>Automated test cases / total test cases — but qualify it: coverage of <i>critical journeys</i> matters more than a raw percentage</td></tr>
+      <tr><td>Pass rate &amp; trend</td><td>Suite health over the last N runs</td></tr>
+      <tr><td>Flaky-test rate</td><td>Tests with inconsistent results — the trust metric</td></tr>
+      <tr><td>Execution time</td><td>Feedback speed; the number developers feel</td></tr>
+      <tr><td>Defect Removal Efficiency</td><td>How much escapes to production</td></tr>
+      <tr><td>Defects found by automation</td><td>The direct value evidence</td></tr>
+      <tr><td>Mean time to detect / to fix</td><td>How quickly a regression is caught</td></tr>
+      <tr><td>Manual effort saved</td><td>Hours per cycle × cycles — the CFO-friendly number</td></tr>
+      <tr><td>Requirement coverage</td><td>From the RTM — are all requirements verified?</td></tr>
+    </table>
+    <div class="gotcha"><b>Metrics to be careful with:</b> "number of test cases written" and "number of bugs found" are vanity metrics that can be gamed and can create the wrong incentives (splitting one test into five, logging trivial cosmetic bugs). Say that — it shows maturity.</div>
+    <p><b>How to present:</b> a one-page dashboard (Allure trends / Grafana) with pass rate, duration, flaky count and top failing areas, plus a short narrative: what broke, what we fixed, what we're doing next. Management wants risk and trend, not a list of test names.</p>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q148</span><span class="qt">What do you look for when reviewing someone's automation code?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <ul>
+      <li><b>Does the test assert something meaningful?</b> A test with no assertion, or one that only checks the page title, is theatre.</li>
+      <li><b>No <code>Thread.sleep()</code></b>, no implicit+explicit mixing, no swallowed exceptions, no empty catch.</li>
+      <li><b>Locators</b> — no absolute XPath, no index-based selectors, no hardcoded generated ids.</li>
+      <li><b>Layering</b> — no Selenium API in the test class, no assertions in page objects, no test data hardcoded in pages.</li>
+      <li><b>Independence</b> — could this test run alone, in any order, in parallel? Does it clean up after itself?</li>
+      <li><b>Naming</b> — the method name should state the behaviour and the expectation: <code>orderFailsWhenCardIsExpired()</code>, not <code>test3()</code>.</li>
+      <li><b>Failure quality</b> — will the failure message tell me what went wrong without a debugger? Are assertion messages present?</li>
+      <li><b>Duplication</b> — is this the fourth copy of the same login helper?</li>
+      <li><b>Secrets</b> — no credentials, tokens or PII committed.</li>
+      <li><b>Determinism</b> — no dependence on today's date, on record ordering, or on data another test created.</li>
+    </ul>
+    <div class="tip">Say the underlying principle: <b>"Test code is production code."</b> It gets reviewed, refactored, versioned and held to the same standards — because the whole team depends on it to make release decisions.</div>
+    <div class="tags"><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q149</span><span class="qt">A test passes locally but fails in Jenkins. How do you debug it?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>Work through the differences systematically — say them in this order:</p>
+    <ol>
+      <li><b>Get evidence first.</b> Screenshot at failure, page source, browser console log, the video (Selenium/video container), and the exact stack trace. Never guess.</li>
+      <li><b>Timing</b> — CI agents are slower and more loaded. Fixed waits that were "just enough" locally now fail. Fix: condition-based waits, and CI-specific timeout values.</li>
+      <li><b>Headless vs headed</b> — different viewport (headless has no default window size!), no hover states, different font rendering. Fix: set an explicit window size; reproduce locally with <code>-Dheadless=true</code>.</li>
+      <li><b>Screen resolution / responsive layout</b> — elements may be behind a hamburger menu at the CI viewport.</li>
+      <li><b>Environment &amp; data</b> — different DB state, feature flags off, the record the test expects doesn't exist, another parallel job mutated shared data.</li>
+      <li><b>Parallelism</b> — it passes alone but fails with 5 threads → shared state, static driver, or data collision.</li>
+      <li><b>Version drift</b> — different browser/driver/JDK version on the agent.</li>
+      <li><b>Network</b> — CI may be behind a proxy or firewall; third-party scripts time out.</li>
+      <li><b>Reproduce in the same conditions</b> — run the Docker image locally, or use the Grid's VNC/debug image to watch it live.</li>
+    </ol>
+    <div class="tip">Strong closing line: <i>"I treat 'passes locally, fails in CI' as a defect in the test, not an excuse. CI is the source of truth, because it's the environment the release decision is based on."</i></div>
+    <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q"><span class="num">Q150</span><span class="qt">You join a project with zero automation. What is your 90-day plan?</span><span class="chev">&#9660;</span></div>
+  <div class="a">
+    <p>A classic senior/lead question. Answer in phases, and lead with <b>learning and value</b>, not with tools.</p>
+    <h5>Days 1–15 — understand before building</h5>
+    <ul>
+      <li>Learn the product and the business-critical flows (which ones lose money if broken?).</li>
+      <li>Review existing manual test cases, the defect history (where do bugs cluster?), and the release process.</li>
+      <li>Assess testability with developers: are there stable attributes, an API, test environments, seedable data, feature flags?</li>
+      <li>Understand the team's language/skills — do not impose Java on a JavaScript team.</li>
+    </ul>
+    <h5>Days 15–30 — prove value fast</h5>
+    <ul>
+      <li>Pick the <b>top 5–10 critical journeys</b> and automate them as a smoke suite.</li>
+      <li>Set up the framework skeleton properly from day one: POM, driver factory with ThreadLocal, config layering, reporting, Git repo, README.</li>
+      <li>Get it running in CI on every deploy, even if it starts non-blocking. A visible green/red signal changes the conversation.</li>
+    </ul>
+    <h5>Days 30–60 — expand and stabilise</h5>
+    <ul>
+      <li>Grow regression coverage by risk priority, not alphabetically.</li>
+      <li>Add API-level tests for logic that doesn't need the UI — faster and more stable.</li>
+      <li>Introduce parallel execution and get the suite under the feedback-time target.</li>
+      <li>Drive the suite's pass rate to a level where a red build is believed. Make it a merge gate.</li>
+    </ul>
+    <h5>Days 60–90 — embed it in the team</h5>
+    <ul>
+      <li>Add "automated test written" to the Definition of Done.</li>
+      <li>Train developers and manual testers to write and run tests; do pairing sessions.</li>
+      <li>Establish the flaky-test policy, code review standards for tests, and the metrics dashboard.</li>
+      <li>Present measured results: time saved, defects caught pre-release, feedback time.</li>
+    </ul>
+    <div class="tip">The line that lands: <i>"I'd rather have 15 rock-solid tests the team trusts and that gate every release, than 400 tests everyone ignores."</i></div>
+    <div class="tags"><span class="tag adv">advanced</span><span class="tag">behavioural</span></div>
+  </div>
+</div>
+
+</section>
+
+  <nav class="pager">
+      <a class="pn" href="03-selenium-webdriver.html">&#8592; Selenium WebDriver with Java</a>
+      <a class="pn" href="05-playwright-typescript.html">Playwright with TypeScript / JS &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script>
+(function(){
+  /* ---- tiny offline syntax highlighter (Java / TS / JS / YAML-ish) ---- */
+  var KW = {};
+  ("abstract assert async await boolean break byte case catch char class const continue default do double else enum export extends final finally float for from function if implements import in instanceof int interface let long new package private protected public readonly return static super switch this throw throws try type typeof var void while yield true false null undefined String Integer List ArrayList Map HashMap Set Optional Thread Exception WebDriver WebElement By Actions Select Alert ChromeDriver ChromeOptions Duration Page Locator Browser BrowserContext expect test describe beforeEach afterEach beforeAll afterAll it Promise void any number string unknown as await").split(" ").forEach(function(w){KW[w]=1;});
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function plain(txt){
+    return esc(txt).replace(/\b([A-Za-z_$][\w$]*)\b|\b(\d+(?:\.\d+)?)\b|(@[A-Za-z]\w*)/g,
+      function(m,word,num,ann){
+        if(ann) return '<span class="f">'+ann+'</span>';
+        if(num) return '<span class="n">'+num+'</span>';
+        if(word && KW[word]) return '<span class="k">'+word+'</span>';
+        return m;
+      });
+  }
+  [].forEach.call(document.querySelectorAll('pre > code'), function(el){
+    var src = el.textContent, out = '', last = 0, m;
+    var re = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|^\s*#[^\n]*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)/gm;
+    while((m = re.exec(src))){
+      out += plain(src.slice(last, m.index));
+      out += m[1] ? '<span class="c">'+esc(m[1])+'</span>' : '<span class="s">'+esc(m[2])+'</span>';
+      last = re.lastIndex;
+    }
+    out += plain(src.slice(last));
+    el.innerHTML = out;
+  });
+
+  var cards = [].slice.call(document.querySelectorAll('.qa'));
+  var countEl = document.getElementById('count');
+
+  /* number every card automatically and build searchable text */
+  cards.forEach(function(c,i){
+    var n = c.querySelector('.num');
+    if(n && !n.textContent.trim()) n.textContent = 'Q' + (i+1);
+    c.dataset.txt = c.textContent.toLowerCase();
+    c.dataset.isq = (n && /^Q\d+$/.test(n.textContent.trim())) ? '1' : '0';
+  });
+
+  var total = cards.filter(function(c){
+    var n = c.querySelector('.num');
+    return n && /^Q\d+$/.test(n.textContent.trim());
+  }).length;
+  function updateCount(v){ countEl.textContent = (v===undefined? total : v) + ' / ' + total + ' questions'; }
+  updateCount();
+
+  /* toggle single card */
+  document.addEventListener('click', function(e){
+    var q = e.target.closest('.q');
+    if(q && q.parentElement.classList.contains('qa')) q.parentElement.classList.toggle('closed');
+  });
+
+  /* quiz mode */
+  var quizOn=false, quizBtn=document.getElementById('quiz');
+  quizBtn.addEventListener('click', function(){
+    quizOn=!quizOn;
+    quizBtn.classList.toggle('on',quizOn);
+    quizBtn.textContent = quizOn? 'Study mode':'Quiz mode';
+    cards.forEach(function(c){ c.classList.toggle('closed',quizOn); });
+  });
+
+  /* expand all */
+  document.getElementById('expand').addEventListener('click', function(){
+    cards.forEach(function(c){ c.classList.remove('closed'); });
+    quizOn=false; quizBtn.classList.remove('on'); quizBtn.textContent='Quiz mode';
+  });
+
+  /* theme */
+  var root=document.documentElement, themeBtn=document.getElementById('theme');
+  function paintTheme(){ themeBtn.textContent = root.getAttribute('data-theme')==='dark' ? 'Light':'Dark'; }
+  var saved = localStorage.getItem('qa-theme'); if(saved) root.setAttribute('data-theme',saved);
+  paintTheme();
+  themeBtn.addEventListener('click', function(){
+    var next = root.getAttribute('data-theme')==='dark' ? 'light':'dark';
+    root.setAttribute('data-theme',next); localStorage.setItem('qa-theme',next); paintTheme();
+  });
+
+  /* search */
+  var box=document.getElementById('search'), t;
+  box.addEventListener('input', function(){
+    clearTimeout(t);
+    t=setTimeout(function(){
+      var q=box.value.trim().toLowerCase(), shown=0;
+      cards.forEach(function(c){
+        var hit = !q || c.dataset.txt.indexOf(q)>-1;
+        c.classList.toggle('hidden',!hit);
+        if(hit && c.dataset.isq === '1') shown++;
+      });
+      document.querySelectorAll('main figure').forEach(function(f){ f.classList.toggle('hidden', !!q); });
+      document.querySelectorAll('section.sec').forEach(function(s){
+        var any = s.querySelector('.qa:not(.hidden)');
+        s.classList.toggle('hidden', !!q && !any);
+      });
+      updateCount(shown);
+    },120);
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='/' && document.activeElement!==box){ e.preventDefault(); box.focus(); }
+    if(e.key==='Escape' && document.activeElement===box){ box.value=''; box.dispatchEvent(new Event('input')); box.blur(); }
+  });
+})();
+</script>
+</body>
+</html>
