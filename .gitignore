@@ -7,11 +7,28 @@
 !interview-preparation/*.html
 !interview-preparation/automation-testing/*.html
 !interview-preparation/automation-testing/categories/*.html
-!interview-preparation/application-development/*.html
-!interview-preparation/application-development/categories/*.html
+# The application-development guide keeps its private interview notes in the same folder as
+# the published pages, so this list is deliberately explicit: every publishable file is named
+# here and anything else in that folder stays local. Do not replace it with a wildcard.
+!interview-preparation/application-development/index.html
+!interview-preparation/application-development/categories/01-foundations.html
+!interview-preparation/application-development/categories/02-python.html
+!interview-preparation/application-development/categories/03-javascript-typescript-frontend.html
+!interview-preparation/application-development/categories/04-csharp-dotnet-java.html
+!interview-preparation/application-development/categories/05-api-design.html
+!interview-preparation/application-development/categories/06-microservices-cloud-native.html
+!interview-preparation/application-development/categories/07-azure.html
+!interview-preparation/application-development/categories/08-devops-cicd.html
+!interview-preparation/application-development/categories/09-databases-data-engineering.html
+!interview-preparation/application-development/categories/10-ml-ai-integration.html
+!interview-preparation/application-development/categories/11-system-design.html
+# same rule for markdown in that folder: private unless named
+interview-preparation/application-development/*.md
+!interview-preparation/application-development/README.md
 *.pdf
 # ...except the printable build of the automation guide (regenerated rarely, on purpose)
 !interview-preparation/automation-testing/Automation-Interview-Prep.pdf
+*.zip
 .DS_Store
 __pycache__/
 .env

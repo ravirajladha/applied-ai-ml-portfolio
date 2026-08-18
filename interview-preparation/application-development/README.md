@@ -45,11 +45,11 @@ Tags mark each question: **core** (know it cold), **advanced** (senior different
 **trap** (commonly answered wrong), **new** (new territory coming from a testing background),
 **bridge** (already familiar under a different name).
 
-## Generated
+## Files
 
-These pages are generated from a working set that also contains personal interview notes, which
-are not published. Regenerate with:
+No build step and no dependencies — every page is a plain HTML file that opens straight from
+disk. `assets/style.css` and `assets/app.js` provide the search, quiz mode, dark mode and print
+styles shared by all pages.
 
-```bash
-node build-public.js <outputDir>
-```
+This folder also holds private interview notes that are not published; they are excluded by an
+explicit allow-list in the repository's `.gitignore`.
