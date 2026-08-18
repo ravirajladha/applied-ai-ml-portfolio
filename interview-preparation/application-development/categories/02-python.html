@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 · Python for Application Development — Interview Prep</title>
+<meta name="description" content="Python from zero for a Java/TypeScript developer: data structures, comprehensions, OOP, decorators, type hints, asyncio, FastAPI, SQLAlchemy, pytest, packaging and the traps that get asked.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">AD</span><span>02 · Python</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this page…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All categories</a> &nbsp;·&nbsp; 02 · Python for application development</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+
+<section class="sec" id="s1">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 1</div>
+    <div>
+      <h2>Python for someone who already writes Java and TypeScript</h2>
+      <p>The JD lists Python first. This is the biggest genuine gap, and also the fastest one to
+         close — you are not learning to program, only learning a different set of habits.</p>
+    </div>
+  </div>
+
+  <div class="primer">
+    <h3><span class="pill">Primer</span>What is actually different from Java</h3>
+
+    <p>You already know loops, objects, exceptions and interfaces. Python changes four things about
+    how you express them, and almost every mistake a Java developer makes in Python comes from one
+    of these four.</p>
+
+    <h4>1. Indentation is the syntax</h4>
+    <p>No braces, no semicolons. A colon opens a block and indentation defines it. Four spaces,
+    consistently. This feels alarming for a week and then becomes invisible.</p>
+    <pre><code>def classify(score):
+    if score &gt;= 80:
+        return "good"
+    elif score &gt;= 50:
+        return "fair"
+    return "poor"</code></pre>
+
+    <h4>2. Types are dynamic, but annotations are expected</h4>
+    <p>A variable has no declared type and can be reassigned to anything. But modern professional
+    Python is <b>annotated</b> — you write the types, and tools like <code>mypy</code> check them.
+    The annotations are not enforced at runtime; they are documentation the tooling can verify.
+    Write them. Unannotated Python in an interview reads as hobby code.</p>
+    <pre><code>def average_score(scores: list[float]) -&gt; float:
+    return sum(scores) / len(scores)</code></pre>
+
+    <h4>3. Functions are objects, and that unlocks a lot</h4>
+    <p>You can pass a function, return one, and store one in a dict. That is what makes
+    <b>decorators</b> possible — and decorators are everywhere in Python frameworks
+    (<code>@app.get(...)</code>, <code>@pytest.fixture</code>). Conceptually a decorator is Java's
+    annotation plus the interceptor that reads it, collapsed into one mechanism you can write
+    yourself.</p>
+
+    <h4>4. There is one obvious way to do it, and it is called "Pythonic"</h4>
+    <p>Python has strong idiom. Writing correct-but-Java-shaped Python is the most visible tell in
+    an interview. The three that matter most:</p>
+    <table>
+      <tr><th>Java habit</th><th>Pythonic</th></tr>
+      <tr><td><code>for (int i = 0; i &lt; list.size(); i++)</code></td><td><code>for item in items:</code> — and <code>enumerate(items)</code> if you need the index</td></tr>
+      <tr><td>Build a list with a loop and <code>.add()</code></td><td><code>[f(x) for x in items if cond(x)]</code></td></tr>
+      <tr><td>Open a resource, use it, close it in <code>finally</code></td><td><code>with open(path) as f:</code> — the context manager closes it for you</td></tr>
+    </table>
+
+    <h4>The project layout you should be able to describe</h4>
+    <pre><code>asset-api/
+├── pyproject.toml          # dependencies + build config (modern replacement for setup.py)
+├── .venv/                  # virtual environment, never committed
+├── src/asset_api/
+│   ├── __init__.py
+│   ├── main.py             # FastAPI app, wiring only
+│   ├── api/routes.py       # HTTP layer
+│   ├── services/           # business logic, no HTTP or SQL
+│   ├── repositories/       # data access
+│   ├── models.py           # Pydantic schemas / ORM entities
+│   └── config.py           # settings read from environment
+└── tests/
+    ├── conftest.py         # shared fixtures
+    └── test_assets.py</code></pre>
+
+    <h4>The three commands you must not fumble</h4>
+    <pre><code>python -m venv .venv                  # create an isolated environment
+.venv\Scripts\activate                # activate it (Windows); source .venv/bin/activate on Unix
+pip install -r requirements.txt       # install pinned dependencies</code></pre>
+    <p>Why the virtual environment exists: without it, every project on the machine shares one set
+    of package versions and they conflict. Same problem Maven and npm solve per-project by default;
+    Python needs you to opt in.</p>
+
+    <div class="tip"><b>How to prepare this in a week.</b> Do not read a Python book. Build one
+    small FastAPI service that stores something in a database and has three endpoints and a few
+    tests. Every question below will then have your own code behind it, which is the only thing
+    that makes an answer sound real.</div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q1</span><span class="qt">List, tuple, set, dict — when do you use each?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Type</th><th>Literal</th><th>Properties</th><th>Use for</th></tr>
+        <tr><td><b>list</b></td><td><code>[1, 2, 3]</code></td><td>Ordered, mutable, duplicates allowed. Index O(1), <code>in</code> is O(n)</td><td>An ordered collection you will change</td></tr>
+        <tr><td><b>tuple</b></td><td><code>(1, 2)</code></td><td>Ordered, <b>immutable</b>, hashable</td><td>A fixed record; returning several values; a dict key</td></tr>
+        <tr><td><b>set</b></td><td><code>{1, 2}</code></td><td>Unordered, unique, <code>in</code> is O(1)</td><td>Membership tests and de-duplication</td></tr>
+        <tr><td><b>dict</b></td><td><code>{"a": 1}</code></td><td>Key→value, O(1) lookup, insertion-ordered since 3.7</td><td>Lookups by key; JSON-shaped data</td></tr>
+      </table>
+      <div class="tip"><b>The performance answer they are fishing for:</b> checking membership
+      against a list is O(n). If you are doing it inside a loop, convert to a set first and the
+      whole thing goes from O(n·m) to O(n+m). This is one of the most common real Python
+      performance bugs.</div>
+      <pre><code>valid_ids = {row.id for row in reference_rows}   # set, built once
+missing = [a for a in assets if a.id not in valid_ids]</code></pre>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q2</span><span class="qt">Comprehensions, and when a generator is better</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>names   = [a.name for a in assets if a.active]        # list comprehension
+by_id   = {a.id: a for a in assets}                   # dict comprehension
+sites   = {a.site_id for a in assets}                 # set comprehension
+lazy    = (a.name for a in assets if a.active)        # generator — nothing computed yet</code></pre>
+      <p>A <b>list comprehension</b> builds the whole list in memory immediately. A <b>generator
+      expression</b> (round brackets) produces items one at a time, on demand, holding one at a
+      time in memory.</p>
+      <p>Use a generator when the source is large or infinite, when you only need to iterate once,
+      or when you are streaming — reading a multi-gigabyte CSV, for instance. Use a list when you
+      need to index it, take its length, or iterate more than once.</p>
+      <pre><code>def read_rows(path):
+    with open(path) as f:
+        for line in f:                 # the file object is itself a generator
+            yield parse(line)          # yield makes this a generator function
+
+total = sum(r.volume for r in read_rows("huge.csv"))   # constant memory</code></pre>
+      <div class="gotcha"><b>Trap:</b> a generator is exhausted after one pass. Iterating it a
+      second time yields nothing — silently, with no error. If you need it twice, materialise it
+      with <code>list()</code>.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q3</span><span class="qt">The mutable default argument — Python's most famous trap</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>def add_tag(tag, tags=[]):      # WRONG
+    tags.append(tag)
+    return tags
+
+add_tag("a")   # ['a']
+add_tag("b")   # ['a', 'b']  — the same list, still there</code></pre>
+      <p>Default arguments are evaluated <b>once, when the function is defined</b>, not on each
+      call. So every call shares one list. In a long-running web application this is a data leak
+      between requests.</p>
+      <pre><code>def add_tag(tag, tags: list[str] | None = None):   # right
+    tags = [] if tags is None else tags
+    tags.append(tag)
+    return tags</code></pre>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q4</span><span class="qt">is vs ==, and shallow vs deep copy</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><code>==</code> compares <b>value</b> (it calls <code>__eq__</code>). <code>is</code>
+      compares <b>identity</b> — are these the same object in memory. Use <code>is</code> only for
+      <code>None</code>, <code>True</code> and <code>False</code>.</p>
+      <div class="bridgebox"><b>From your Java world →</b> exactly the <code>equals()</code> vs
+      <code>==</code> distinction, with the operators swapped round. In Java <code>==</code> is
+      identity; in Python <code>==</code> is value. Easy to get backwards under pressure.</div>
+      <pre><code>import copy
+shallow = copy.copy(original)        # new outer object, same nested objects
+deep    = copy.deepcopy(original)    # everything recursively duplicated
+sliced  = original[:]                # shallow copy of a list</code></pre>
+      <p>A shallow copy of a list of dicts gives you a new list pointing at the <i>same</i> dicts —
+      mutating one still affects the original. That surprises people in tests especially.</p>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q5</span><span class="qt">*args and **kwargs</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><code>*args</code> collects extra positional arguments into a tuple;
+      <code>**kwargs</code> collects extra keyword arguments into a dict. The asterisks are the
+      syntax; the names are convention.</p>
+      <pre><code>def log_event(name, *tags, **fields):
+    print(name, tags, fields)
+
+log_event("deploy", "prod", "api", duration=12.4, user="ravi")
+# deploy ('prod', 'api') {'duration': 12.4, 'user': 'ravi'}</code></pre>
+      <p>You will meet them most often when writing a decorator that must forward whatever
+      arguments the wrapped function takes.</p>
+      <div class="tip"><b>Also know keyword-only arguments:</b> anything after a bare <code>*</code>
+      in the signature <i>must</i> be passed by name. Good API design for booleans —
+      <code>def export(data, *, include_archived=False)</code> forces callers to write
+      <code>include_archived=True</code> instead of a mystery <code>True</code>.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q6</span><span class="qt">Decorators — what they are and how to write one</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>A decorator is a function that takes a function and returns a replacement for it.
+      <code>@timed</code> above a definition is just sugar for
+      <code>my_func = timed(my_func)</code>.</p>
+      <pre><code>import functools, time
+
+def timed(func):
+    @functools.wraps(func)                # preserves __name__ and docstring
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        try:
+            return func(*args, **kwargs)
+        finally:
+            elapsed = (time.perf_counter() - start) * 1000
+            logger.info("call.timed", extra={"fn": func.__name__, "ms": elapsed})
+    return wrapper
+
+@timed
+def score_asset(asset_id: int) -&gt; float:
+    ...</code></pre>
+      <p>Why frameworks use them: cross-cutting concerns — routing, caching, retries, authorisation,
+      transactions — attach to a function without editing its body.</p>
+      <div class="gotcha"><b>Always use <code>functools.wraps</code>.</b> Without it the wrapper
+      replaces the function's name, docstring and signature, which breaks introspection — and in
+      FastAPI it breaks the generated OpenAPI documentation. This is a genuine "have you actually
+      written one?" tell.</div>
+      <div class="bridgebox"><b>From your Java world →</b> a decorator is the same concept as a
+      Spring AOP aspect or a TestNG listener, expressed in the language rather than by the
+      container.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q7</span><span class="qt">Classes, self, inheritance and the dunder methods worth knowing</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>class Asset:
+    def __init__(self, asset_id: int, name: str, score: float = 0.0):
+        self.asset_id = asset_id          # instance attributes; no declarations needed
+        self.name = name
+        self._score = score               # single underscore = "internal by convention"
+
+    @property                             # exposes a method as an attribute
+    def condition(self) -&gt; str:
+        return "good" if self._score &gt;= 80 else "needs review"
+
+    def __repr__(self) -&gt; str:            # what you see in logs and the debugger
+        return f"Asset(id={self.asset_id}, name={self.name!r})"
+
+    def __eq__(self, other) -&gt; bool:
+        return isinstance(other, Asset) and self.asset_id == other.asset_id</code></pre>
+      <ul>
+        <li><b><code>self</code></b> is the explicit receiver — Java's implicit <code>this</code>,
+        written out. It is always the first parameter of an instance method.</li>
+        <li><b>No <code>private</code>.</b> A leading underscore is a convention meaning "do not
+        touch"; a double underscore triggers name-mangling but is still reachable. Python's
+        position is that consenting adults do not need enforcement.</li>
+        <li><b><code>@property</code></b> turns a method into a computed attribute, so
+        <code>asset.condition</code> reads like a field. This is why Python does not need
+        boilerplate getters.</li>
+        <li><b><code>@staticmethod</code></b> takes no receiver; <b><code>@classmethod</code></b>
+        takes the class and is the idiomatic way to write alternative constructors.</li>
+      </ul>
+      <div class="tip"><b>If asked about multiple inheritance:</b> Python allows it and resolves
+      the order with the <b>MRO</b> (method resolution order, C3 linearisation), inspectable via
+      <code>Class.__mro__</code>. In application code, prefer composition; mixins are the one
+      genuinely common use.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q8</span><span class="qt">dataclass vs Pydantic model vs plain class</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>from dataclasses import dataclass
+from pydantic import BaseModel, Field
+
+@dataclass
+class AssetRecord:                      # internal data holder
+    asset_id: int
+    name: str
+    score: float = 0.0                  # gets __init__, __repr__, __eq__ for free
+
+class AssetIn(BaseModel):               # data crossing a boundary
+    name: str = Field(min_length=1, max_length=120)
+    site_id: int
+    score: float = Field(ge=0, le=100)</code></pre>
+      <table>
+        <tr><th>Use</th><th>When</th></tr>
+        <tr><td><b>dataclass</b></td><td>Internal structure. No validation — the annotations are hints only.</td></tr>
+        <tr><td><b>Pydantic model</b></td><td><b>Anything from outside</b>: request bodies, config, third-party responses. It coerces and validates at runtime and raises a clear error.</td></tr>
+        <tr><td><b>Plain class</b></td><td>When there is real behaviour, not just fields.</td></tr>
+      </table>
+      <div class="note"><b>The principle worth stating:</b> validate at the boundary, then trust
+      your types inside. Pydantic is what makes FastAPI's automatic 422 responses and OpenAPI
+      schema work — the model is the contract.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q9</span><span class="qt">Exceptions, and the with statement</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>class AssetNotFound(Exception):
+    """Raised when an asset id does not exist."""
+
+try:
+    asset = repo.get(asset_id)
+except AssetNotFound:
+    raise HTTPException(status_code=404, detail="asset not found")
+except (TimeoutError, ConnectionError) as exc:
+    logger.warning("upstream.unavailable", exc_info=exc)
+    raise
+else:
+    audit.record(asset)        # runs only if no exception was raised
+finally:
+    metrics.increment("asset.lookup")   # always runs</code></pre>
+      <p>Python's culture is <b>EAFP</b> — "easier to ask forgiveness than permission". Try the
+      operation and catch the failure, rather than checking preconditions first. It avoids a race
+      between the check and the use.</p>
+      <h5>Context managers</h5>
+      <pre><code>with open(path) as f, session.begin():     # both cleaned up, in reverse order
+    process(f)</code></pre>
+      <p><code>with</code> guarantees cleanup even on an exception — the equivalent of Java's
+      try-with-resources. Anything with <code>__enter__</code> and <code>__exit__</code> works,
+      including database sessions, locks and temporary directories, and you can write your own
+      in four lines with <code>@contextlib.contextmanager</code>.</p>
+      <div class="gotcha"><b>Never write a bare <code>except:</code></b> — it swallows
+      <code>KeyboardInterrupt</code> and <code>SystemExit</code> too, making the process
+      un-killable. Use <code>except Exception:</code> at worst.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q10</span><span class="qt">Type hints in practice</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>from typing import Protocol, TypeVar, Generic
+
+def find_assets(
+    site_id: int,
+    min_score: float | None = None,       # 3.10+ union syntax; was Optional[float]
+    tags: list[str] | None = None,
+) -&gt; list[Asset]:
+    ...
+
+class Repository(Protocol):               # structural typing — no inheritance needed
+    def get(self, id: int) -&gt; Asset | None: ...
+    def save(self, asset: Asset) -&gt; None: ...</code></pre>
+      <ul>
+        <li>Hints are <b>not enforced at runtime</b>. <code>mypy</code> or <code>pyright</code> in
+        CI is what makes them real. Saying "we run mypy in the pipeline" is the answer that matters.</li>
+        <li><code>X | None</code> is the modern <code>Optional[X]</code>.</li>
+        <li><b><code>Protocol</code></b> gives you interface-like checking without an inheritance
+        hierarchy — Python's answer to Go's implicit interfaces, and very useful for defining a
+        repository contract you can fake in tests.</li>
+      </ul>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q11</span><span class="qt">The GIL: threading vs multiprocessing vs asyncio</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>The <b>Global Interpreter Lock</b> means only one thread executes Python bytecode at a
+      time in a CPython process. Threads still help with I/O, because the lock is released while
+      waiting on the network or disk — but they give you no CPU parallelism.</p>
+      <table>
+        <tr><th>Workload</th><th>Use</th><th>Why</th></tr>
+        <tr><td>I/O-bound (HTTP calls, database, files)</td><td><b>asyncio</b>, or threads</td><td>The waiting is the cost, and asyncio waits thousands of things on one thread cheaply</td></tr>
+        <tr><td>CPU-bound (parsing, numeric work)</td><td><b>multiprocessing</b></td><td>Separate processes have separate interpreters, so true parallelism</td></tr>
+        <tr><td>Numeric arrays</td><td><b>NumPy / pandas</b></td><td>The heavy loop runs in C and releases the GIL anyway</td></tr>
+        <tr><td>Web serving</td><td>Multiple worker processes</td><td>Uvicorn/Gunicorn run N workers; each has its own GIL</td></tr>
+      </table>
+      <div class="note"><b>The mature framing:</b> "In a web application the GIL is rarely the
+      constraint, because we scale with processes and containers rather than threads, and the
+      workload is I/O-bound anyway. It matters the moment you put CPU-heavy work — like model
+      inference or a big transformation — on the request thread."</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q12</span><span class="qt">asyncio: async, await, and the mistake everyone makes</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>import asyncio, httpx
+
+async def fetch_site(client, site_id: int) -&gt; dict:
+    r = await client.get(f"/sites/{site_id}")
+    return r.json()
+
+async def fetch_all(site_ids: list[int]) -&gt; list[dict]:
+    async with httpx.AsyncClient(base_url=BASE, timeout=5.0) as client:
+        # concurrent — all requests in flight at once
+        return await asyncio.gather(*(fetch_site(client, i) for i in site_ids))</code></pre>
+      <div class="gotcha"><b>The mistake:</b> awaiting inside a loop.
+      <code>for i in ids: await fetch_site(client, i)</code> is fully sequential — you have written
+      async code that behaves synchronously. Twenty calls at 200 ms each take four seconds instead
+      of 200 ms. This is the single most likely async follow-up question.</div>
+      <div class="gotcha"><b>The second mistake:</b> calling a blocking library inside an
+      <code>async def</code>. One synchronous <code>requests.get()</code> or a heavy CPU loop blocks
+      the entire event loop and every other request the process is serving. Use an async client, or
+      push the blocking work to a thread with <code>asyncio.to_thread(...)</code>.</div>
+      <div class="bridgebox"><b>From your TypeScript world →</b> the model is identical to Node's
+      event loop, and <code>asyncio.gather</code> is <code>Promise.all</code>. You already
+      understand this; only the keywords change.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q13</span><span class="qt">Modules, packages, imports and <code>if __name__ == "__main__"</code></span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>A <b>module</b> is a <code>.py</code> file. A <b>package</b> is a directory of modules
+      (traditionally with an <code>__init__.py</code>). Imports are resolved against
+      <code>sys.path</code>.</p>
+      <pre><code>from asset_api.services.scoring import score_asset   # absolute — always prefer this
+from .scoring import score_asset                     # relative — within a package only
+
+if __name__ == "__main__":
+    main()</code></pre>
+      <p>That last idiom exists because importing a module <b>executes it</b>. Without the guard,
+      importing a file would run its script body as a side effect. The check means "only run this
+      when the file is executed directly, not when it is imported."</p>
+      <div class="gotcha"><b>Circular imports</b> are the common failure: A imports B and B imports
+      A. Usually a design smell — the shared thing belongs in a third module. If you truly need it,
+      move the import inside the function.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q14</span><span class="qt">Virtual environments, pip, and how dependencies are pinned</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>A <b>virtual environment</b> is a private copy of the interpreter and its packages for one
+      project, so two projects can need incompatible versions of the same library.</p>
+      <pre><code>python -m venv .venv
+.venv\Scripts\activate
+pip install fastapi uvicorn sqlalchemy
+pip freeze &gt; requirements.txt      # exact pinned versions</code></pre>
+      <p><b>pyproject.toml</b> is the modern standard, declaring dependencies plus build and tool
+      configuration in one file; <b>Poetry</b> and <b>uv</b> add a resolver and a
+      <b>lock file</b> that records the exact resolved tree so every machine and the CI agent build
+      the same thing.</p>
+      <table>
+        <tr><th>Python</th><th>Java equivalent</th><th>Node equivalent</th></tr>
+        <tr><td><code>pyproject.toml</code></td><td><code>pom.xml</code></td><td><code>package.json</code></td></tr>
+        <tr><td><code>poetry.lock</code></td><td>dependency lock in the build</td><td><code>package-lock.json</code></td></tr>
+        <tr><td><code>.venv</code></td><td>the local Maven repository, per project</td><td><code>node_modules</code></td></tr>
+      </table>
+      <div class="tip"><b>Say this:</b> "I pin dependencies and commit the lock file, so a build is
+      reproducible and a CVE fix is a deliberate change rather than something that arrives on its
+      own." That is a supply-chain answer and it lands well.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="s2">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 2</div>
+    <div>
+      <h2>Building a real service: FastAPI, SQLAlchemy, pytest</h2>
+      <p>The part that turns "I know Python syntax" into "I have built a Python application".</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q15</span><span class="qt">FastAPI vs Flask vs Django — which and why?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Framework</th><th>Shape</th><th>Choose when</th></tr>
+        <tr><td><b>FastAPI</b></td><td>Async-first, type-driven, automatic validation and OpenAPI docs</td><td>Building an API — which is what this JD describes. The default modern choice.</td></tr>
+        <tr><td><b>Flask</b></td><td>Minimal, synchronous, you assemble everything</td><td>Small services, or a codebase that already uses it. Very little is given to you.</td></tr>
+        <tr><td><b>Django</b></td><td>Batteries included: ORM, admin, auth, migrations, templates</td><td>A full web application with a database-backed admin interface. Heavier, more opinionated.</td></tr>
+      </table>
+      <div class="say">"For a new API I'd reach for FastAPI — the Pydantic models give you request
+      validation and an OpenAPI contract from the same declaration, so the documentation cannot
+      drift from the code. If the project needed a full admin back office and content management,
+      Django would save more time than it costs."</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q16</span><span class="qt">A FastAPI service you can write on a whiteboard</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>from fastapi import FastAPI, Depends, HTTPException, status
+from pydantic import BaseModel, Field
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    database_url: str                     # read from the DATABASE_URL env var
+    log_level: str = "INFO"
+
+settings = Settings()
+app = FastAPI(title="Asset API", version="1.0.0")
+
+class AssetIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    site_id: int
+    condition_score: float = Field(ge=0, le=100)
+
+class AssetOut(AssetIn):
+    id: int
+
+def get_repo() -&gt; AssetRepository:        # dependency; overridden in tests
+    return AssetRepository(settings.database_url)
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+@app.get("/v1/assets", response_model=list[AssetOut])
+async def list_assets(site_id: int, limit: int = 50, offset: int = 0,
+                      repo: AssetRepository = Depends(get_repo)):
+    return await repo.list(site_id=site_id, limit=min(limit, 200), offset=offset)
+
+@app.post("/v1/assets", response_model=AssetOut, status_code=status.HTTP_201_CREATED)
+async def create_asset(payload: AssetIn, repo: AssetRepository = Depends(get_repo)):
+    if await repo.exists(payload.name, payload.site_id):
+        raise HTTPException(status.HTTP_409_CONFLICT, "asset already exists")
+    return await repo.insert(payload)</code></pre>
+      <h5>What to say while you write it</h5>
+      <ul>
+        <li>The Pydantic model gives request validation and a <b>422</b> with field-level errors for
+        free — no manual checking.</li>
+        <li><code>response_model</code> filters the output, so an internal field cannot leak.</li>
+        <li><code>Depends</code> is FastAPI's dependency injection. In tests you call
+        <code>app.dependency_overrides[get_repo] = fake_repo</code> and never touch a database.</li>
+        <li>Settings come from environment variables via <code>BaseSettings</code> — twelve-factor
+        config, not a hard-coded connection string.</li>
+        <li><code>min(limit, 200)</code> — always cap a client-supplied page size, or someone asks
+        for a million rows.</li>
+        <li>The <code>/health</code> endpoint is what the platform probes to decide whether to send
+        you traffic.</li>
+      </ul>
+      <div class="tip"><b>The bonus point:</b> FastAPI serves interactive documentation at
+      <code>/docs</code> generated from these annotations. Mention that it means the API contract is
+      always current — a genuine argument you can make in a design discussion.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q17</span><span class="qt">Middleware, background tasks and startup in FastAPI</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>from contextlib import asynccontextmanager
+import uuid
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.pool = await create_pool(settings.database_url)   # startup
+    yield
+    await app.state.pool.close()                                # shutdown
+
+app = FastAPI(lifespan=lifespan)
+
+@app.middleware("http")
+async def correlation_id(request, call_next):
+    cid = request.headers.get("X-Correlation-Id", str(uuid.uuid4()))
+    response = await call_next(request)
+    response.headers["X-Correlation-Id"] = cid
+    return response
+
+@app.post("/v1/reports")
+async def request_report(payload: ReportIn, tasks: BackgroundTasks):
+    report_id = await repo.create_pending(payload)
+    tasks.add_task(generate_report, report_id)     # returns immediately
+    return {"id": report_id, "status": "processing"}</code></pre>
+      <div class="gotcha"><b>Know the limit of background tasks.</b> They run in the same process,
+      so if it restarts mid-task the work is lost silently. Fine for sending an email; not fine for
+      anything that must not be lost. For that, put a message on a queue (Service Bus) and have a
+      separate worker consume it. Volunteering that distinction is a strong architectural signal.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q18</span><span class="qt">SQLAlchemy: sessions, the ORM, and N+1</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, selectinload
+from sqlalchemy import select
+
+class Base(DeclarativeBase): pass
+
+class Site(Base):
+    __tablename__ = "sites"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    assets: Mapped[list["Asset"]] = relationship(back_populates="site")
+
+class Asset(Base):
+    __tablename__ = "assets"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(index=True)
+    site_id: Mapped[int] = mapped_column(ForeignKey("sites.id"))
+    site: Mapped[Site] = relationship(back_populates="assets")
+
+# N+1: one query for sites, then one per site when .assets is touched
+stmt = select(Site).where(Site.region == "north")
+
+# fixed: load the children in a second batched query
+stmt = select(Site).where(Site.region == "north").options(selectinload(Site.assets))</code></pre>
+      <p>A <b>session</b> is a unit of work: it tracks the objects you have loaded, batches changes,
+      and commits them in one transaction. Scope it <b>per request</b> — a session shared across
+      requests leaks data between users and holds a connection open.</p>
+      <div class="tip"><b>Also mention Alembic</b> for schema migrations — versioned, reviewable,
+      applied in the deployment pipeline. "How do you change a database schema safely?" is a common
+      follow-up, and the answer is migrations plus the expand/contract pattern.</div>
+      <div class="bridgebox"><b>Coming from test automation →</b> you have almost certainly seen an endpoint
+      firing hundreds of queries during a load test. That is the story to tell here.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q19</span><span class="qt">pytest: fixtures, parametrize, mocking</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code># conftest.py — fixtures here are visible to every test in the directory tree
+import pytest
+from fastapi.testclient import TestClient
+
+@pytest.fixture
+def client(fake_repo):
+    app.dependency_overrides[get_repo] = lambda: fake_repo
+    yield TestClient(app)                  # everything after yield is teardown
+    app.dependency_overrides.clear()
+
+# test_assets.py
+@pytest.mark.parametrize("score,expected", [
+    (95, "good"), (80, "good"), (79, "fair"), (0, "poor"),
+])
+def test_classify(score, expected):
+    assert classify(score) == expected
+
+def test_create_returns_409_on_duplicate(client, fake_repo):
+    fake_repo.add(name="Bridge A", site_id=1)
+    r = client.post("/v1/assets", json={"name": "Bridge A", "site_id": 1,
+                                        "condition_score": 50})
+    assert r.status_code == 409</code></pre>
+      <table>
+        <tr><th>pytest</th><th>TestNG / JUnit equivalent</th></tr>
+        <tr><td><code>@pytest.fixture</code></td><td><code>@BeforeMethod</code> + dependency injection, combined</td></tr>
+        <tr><td><code>@pytest.mark.parametrize</code></td><td><code>@DataProvider</code></td></tr>
+        <tr><td><code>conftest.py</code></td><td>base test class / listener registration</td></tr>
+        <tr><td>fixture <code>scope=</code></td><td><code>@BeforeSuite</code> / <code>@BeforeClass</code> / <code>@BeforeMethod</code></td></tr>
+        <tr><td><code>pytest-xdist</code></td><td>TestNG parallel execution</td></tr>
+      </table>
+      <div class="bridgebox"><b>Coming from JUnit or TestNG</b>, draw this comparison out loud in
+      the interview. It converts existing testing experience into Python testing credibility in
+      about thirty seconds, and every row of it is accurate.</div>
+      <div class="tip"><b>For integration tests</b> mention <b>Testcontainers</b>: spin up a real
+      PostgreSQL in Docker for the test run rather than mocking the database. It is the practice
+      that separates teams whose integration tests mean something from teams whose do not.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q20</span><span class="qt">Packaging a Python service into a container</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>FROM python:3.12-slim AS base
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+
+WORKDIR /app
+# dependencies first — this layer is cached until requirements change
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY src/ ./src/
+RUN useradd --create-home appuser
+USER appuser
+
+EXPOSE 8000
+HEALTHCHECK CMD python -c "import urllib.request;urllib.request.urlopen('http://localhost:8000/health')"
+CMD ["uvicorn", "src.asset_api.main:app", "--host", "0.0.0.0", "--port", "8000"]</code></pre>
+      <ul>
+        <li><b>Dependencies copied before source</b> so a code change does not reinstall every
+        package. This one ordering decision is the difference between a 10-second and a 3-minute
+        build.</li>
+        <li><b><code>PYTHONUNBUFFERED=1</code></b> or your logs sit in a buffer and never reach the
+        container's stdout — a classic "why can't I see any logs" incident.</li>
+        <li><b>Non-root user</b>, <b>slim base image</b>, <b>pinned version</b>.</li>
+        <li>In production, run <b>multiple Uvicorn workers</b> or multiple container replicas —
+        one process cannot use more than one core for Python code.</li>
+      </ul>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q21</span><span class="qt">Live coding: the Python problems that actually get set</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Mid-level interviews rarely ask for dynamic programming. They ask for string and collection
+      manipulation written idiomatically, because that is what the job is.</p>
+      <pre><code># 1. Count occurrences
+from collections import Counter
+Counter(words).most_common(3)
+
+# 2. Group records by a key
+from collections import defaultdict
+by_site = defaultdict(list)
+for a in assets:
+    by_site[a.site_id].append(a)
+
+# 3. First non-repeating character
+def first_unique(s: str) -&gt; str | None:
+    counts = Counter(s)
+    return next((c for c in s if counts[c] == 1), None)
+
+# 4. Reverse the words of a sentence
+" ".join(reversed(sentence.split()))
+
+# 5. Two numbers summing to a target, in one pass
+def two_sum(nums: list[int], target: int) -&gt; tuple[int, int] | None:
+    seen: dict[int, int] = {}
+    for i, n in enumerate(nums):
+        if target - n in seen:
+            return seen[target - n], i
+        seen[n] = i
+    return None
+
+# 6. Flatten a nested list
+[x for row in matrix for x in row]
+
+# 7. Deduplicate, preserving order
+list(dict.fromkeys(items))
+
+# 8. Merge two dicts, second wins
+merged = base | override</code></pre>
+      <div class="tip"><b>What is being marked:</b> whether you reach for the standard library
+      (<code>Counter</code>, <code>defaultdict</code>, <code>enumerate</code>, <code>zip</code>,
+      <code>any</code>/<code>all</code>) instead of hand-rolling. Also: say your complexity out loud
+      when you finish, and name one edge case (empty input, duplicates, <code>None</code>) without
+      being asked.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q22</span><span class="qt">pandas and NumPy — enough to be credible near data work</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>The JD mentions working with data engineers and scientists. You do not need to be a pandas
+      expert; you need to not be lost when someone hands you a notebook.</p>
+      <pre><code>import pandas as pd
+
+df = pd.read_csv("readings.csv", parse_dates=["recorded_at"])
+df = df[df["sensor_id"].notna()]                       # filter rows
+df["is_high"] = df["value"] &gt; threshold                # derived column
+daily = (df.groupby([df["recorded_at"].dt.date, "site_id"])["value"]
+           .agg(["mean", "max", "count"])
+           .reset_index())
+merged = daily.merge(sites, on="site_id", how="left")  # a SQL join</code></pre>
+      <p>The mental model that makes pandas click: <b>a DataFrame is a table and the operations are
+      SQL</b>. <code>groupby</code> is GROUP BY, <code>merge</code> is JOIN, boolean indexing is
+      WHERE. Operations are <b>vectorised</b> — applied to the whole column in C — so a Python
+      <code>for</code> loop over rows is typically 50–100× slower and is the thing to flag in a
+      review.</p>
+      <div class="note"><b>The engineering opinion worth having:</b> pandas is excellent for
+      analysis and for data that fits in memory. Production pipelines over larger data belong in
+      Spark or in the database. Knowing where that line is matters more than knowing the API.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q23</span><span class="qt">How would you find and fix a slow Python endpoint?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <ol>
+        <li><b>Measure before guessing.</b> <code>cProfile</code> for CPU, and a distributed trace
+        (Application Insights / OpenTelemetry) to see where wall-clock time goes.</li>
+        <li><b>Count the queries.</b> Turn on SQLAlchemy echo or the query log. N+1 is the most
+        common cause by a wide margin.</li>
+        <li><b>Look for blocking calls in async code</b> — a synchronous HTTP client or file read
+        inside <code>async def</code> stalls the whole event loop.</li>
+        <li><b>Look for sequential awaits</b> that should be <code>asyncio.gather</code>.</li>
+        <li><b>Check serialisation volume</b> — returning 10,000 rows because there is no pagination
+        costs more in JSON encoding than in the query.</li>
+        <li><b>Then consider caching</b> and, only then, the algorithm.</li>
+      </ol>
+      <div class="bridgebox"><b>Coming from test automation →</b> this is a performance-testing answer.
+      Lead with "I'd want a profile and a trace before changing anything" — the instinct not to
+      guess is exactly what they are testing.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q24</span><span class="qt">The Python questions that catch people out</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Question</th><th>Answer</th></tr>
+        <tr><td>Is Python pass-by-value or pass-by-reference?</td><td>Neither — <b>pass by object reference</b>. Rebinding a parameter inside a function does not affect the caller; mutating a mutable object does.</td></tr>
+        <tr><td><code>list</code> vs <code>tuple</code> — why does immutability matter?</td><td>Tuples are hashable, so they can be dict keys and set members. Lists cannot.</td></tr>
+        <tr><td>What does <code>len()</code> call?</td><td><code>__len__</code>. Python's built-ins delegate to dunder methods — that is the data model, and it is how your own classes integrate with the language.</td></tr>
+        <tr><td>Difference between <code>append</code> and <code>extend</code>?</td><td><code>append</code> adds one item (a list becomes a nested list); <code>extend</code> adds each item of an iterable.</td></tr>
+        <tr><td>What is a closure?</td><td>A function that captures variables from the scope it was defined in. Decorators rely on it.</td></tr>
+        <tr><td>Why is string concatenation in a loop bad?</td><td>Strings are immutable, so each <code>+=</code> builds a new string — O(n²). Use <code>"".join(parts)</code>.</td></tr>
+        <tr><td><code>@staticmethod</code> vs <code>@classmethod</code>?</td><td>Static takes no receiver; class takes the class, which makes it the right way to write alternative constructors and to work correctly with subclasses.</td></tr>
+      </table>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <nav class="pager">
+      <a class="pn" href="01-foundations.html">&#8592; 01 · Foundations</a>
+      <a class="pn" href="03-javascript-typescript-frontend.html">03 · JavaScript, TypeScript &amp; front-end &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

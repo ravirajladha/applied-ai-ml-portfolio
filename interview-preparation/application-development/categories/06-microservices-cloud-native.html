@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>06 · Microservices &amp; Cloud-Native — Interview Prep</title>
+<meta name="description" content="Service boundaries, synchronous vs event-driven communication, saga and outbox, Docker and Kubernetes, resilience patterns, observability, and the anti-patterns that matter.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">AD</span><span>06 · Microservices &amp; Cloud-Native</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this page…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All categories</a> &nbsp;·&nbsp; 06 · Microservices &amp; cloud-native</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+
+<section class="sec" id="s1">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 1</div>
+    <div>
+      <h2>Boundaries, communication and data</h2>
+      <p>The architectural half. This is where an interviewer decides whether you have opinions or
+         vocabulary.</p>
+    </div>
+  </div>
+
+  <div class="primer">
+    <h3><span class="pill">Primer</span>What you are actually buying, and what it costs</h3>
+
+    <p>Microservices are not a better way to write software. They are a trade: you accept a large
+    amount of operational and distributed-systems complexity in exchange for <b>organisational</b>
+    benefits. Understanding it as a trade rather than as progress is the difference between a
+    mid-level and a senior answer.</p>
+
+    <table>
+      <tr><th>You gain</th><th>You pay</th></tr>
+      <tr><td>Independent deployment — one team ships without coordinating a release</td><td>Every call can now fail, be slow, or arrive twice</td></tr>
+      <tr><td>Independent scaling — scale only the hot component</td><td>No more database transactions across the whole operation</td></tr>
+      <tr><td>Technology choice per service</td><td>Debugging spans several codebases and needs distributed tracing</td></tr>
+      <tr><td>Fault isolation — one service dying does not take everything</td><td>More infrastructure, more pipelines, more monitoring, more cost</td></tr>
+      <tr><td>Smaller codebases people can hold in their heads</td><td>Eventual consistency you have to explain to non-technical stakeholders</td></tr>
+    </table>
+
+    <h4>Conway's law, and why it decides your architecture</h4>
+    <p>Systems tend to mirror the communication structure of the organisation that builds them.
+    Practically: if one team owns everything, splitting into six services just gives that team six
+    deployment pipelines and no independence. <b>Service boundaries that do not match team
+    boundaries produce all of the cost and none of the benefit.</b></p>
+
+    <h4>Where the boundaries actually go</h4>
+    <p>Not by technical layer (a "database service" and a "logic service" is just a distributed
+    monolith). By <b>business capability</b> — the domain-driven design term is a
+    <b>bounded context</b>. Signs you have drawn a good boundary:</p>
+    <ul>
+      <li>The service owns its data and nothing else reads its tables directly.</li>
+      <li>Most changes to one business capability touch exactly one service.</li>
+      <li>It can be deployed without deploying anything else.</li>
+      <li>It has a clear owner.</li>
+    </ul>
+    <p>The strongest signal of a <i>bad</i> boundary: a single user story routinely requires
+    coordinated changes to three services. That means you split along the wrong seam.</p>
+
+    <h4>Positioning this honestly if you have not run a large estate</h4>
+    <div class="say">"I haven't operated a large microservice estate. What I've worked with is
+    containerised services and the failure modes between them, and what I'd bring is a strong bias
+    toward starting with a well-modularised monolith and extracting services when there's a
+    concrete reason — a different scaling profile, a different release cadence, or a different
+    team. I've done enough distributed debugging to be wary of splitting early."</div>
+    <p>That is honest, defensible, and happens to be the position most experienced architects hold —
+    which is why stating it plainly costs nothing and gains credibility.</p>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q1</span><span class="qt">When would you NOT use microservices?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Interviewers ask the negative because everyone can recite the positive.</p>
+      <ul>
+        <li><b>A small team.</b> Under roughly ten engineers, the coordination benefit does not
+        exist and the overhead is pure cost.</li>
+        <li><b>An unclear domain.</b> Boundaries drawn before you understand the domain will be
+        wrong, and moving a boundary between services is far harder than moving one between modules.</li>
+        <li><b>Strong transactional requirements</b> across what would be several services. Sagas
+        are real work and real complexity.</li>
+        <li><b>No operational maturity.</b> Without CI/CD, centralised logging, tracing and
+        on-call, microservices produce outages you cannot diagnose.</li>
+        <li><b>A greenfield project with an unproven idea.</b> Optimise for changing your mind.</li>
+      </ul>
+      <div class="say">"The default I'd argue for is a modular monolith — one deployable, but with
+      internal module boundaries enforced in the build. You get most of the design benefit, you keep
+      transactions and in-process calls, and every module is a service you can extract later once
+      you know which one actually needs it."</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q2</span><span class="qt">Why can't services share a database?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Because a shared schema is a shared, invisible contract. If two services read the same
+      table, neither can change it — you have coupled them at the tightest possible level while
+      pretending they are independent. That is the <b>distributed monolith</b>: all the operational
+      cost of microservices with none of the independence.</p>
+      <p>Each service owns its data and exposes it only through its API or its events. If service B
+      needs data from A, it either asks A, or it keeps its own read-optimised copy updated from A's
+      events.</p>
+      <div class="gotcha"><b>The obvious objection, and the answer:</b> "then how do I join across
+      services for a report?" You do not. Options: an aggregating query in the calling service (fine
+      for small sets), a <b>read model</b> maintained from events, or — most often correct — a
+      separate reporting database or data warehouse fed from all services. Reporting and
+      transactional needs genuinely are different problems, and saying so is the mature answer.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q3</span><span class="qt">Synchronous or event-driven — how do you decide?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th></th><th>Synchronous (HTTP/gRPC)</th><th>Asynchronous (messages/events)</th></tr>
+        <tr><td>Use when</td><td>The caller needs the answer to proceed</td><td>The caller only needs the work to eventually happen</td></tr>
+        <tr><td>Coupling</td><td>Temporal — both must be up at the same time</td><td>Decoupled — the consumer can be down</td></tr>
+        <tr><td>Failure</td><td>Propagates immediately up the chain</td><td>Absorbed by the broker; retried later</td></tr>
+        <tr><td>Load spikes</td><td>Cascade</td><td>Buffered by the queue</td></tr>
+        <tr><td>Consistency</td><td>Immediate</td><td>Eventual</td></tr>
+        <tr><td>Debugging</td><td>Straightforward</td><td>Needs correlation IDs and tracing</td></tr>
+      </table>
+      <div class="gotcha"><b>The failure mode of synchronous chains:</b> if A calls B calls C and
+      each is 99.9% available, the combined path is about 99.7% — and if C is slow, A's threads are
+      all blocked waiting, so A dies too. Long synchronous chains are the most common cause of
+      cascading failure in microservice systems, which is exactly why timeouts and circuit breakers
+      are mandatory rather than optional.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q4</span><span class="qt">Events vs commands, and choreography vs orchestration</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>A <b>command</b> tells one specific service to do something (<code>GenerateReport</code>).
+      An <b>event</b> announces that something happened, with no knowledge of who cares
+      (<code>InspectionRecorded</code>). Events are past tense; that naming convention is not
+      cosmetic — it reflects that the publisher does not depend on the consumers.</p>
+      <table>
+        <tr><th></th><th>Choreography</th><th>Orchestration</th></tr>
+        <tr><td>How</td><td>Each service reacts to events; no central controller</td><td>One coordinator tells each service what to do next</td></tr>
+        <tr><td>Good</td><td>Loosely coupled; easy to add a new consumer</td><td>The whole flow is visible and debuggable in one place</td></tr>
+        <tr><td>Bad</td><td><b>Nobody knows what the overall process is</b> — it is emergent, and tracing it means reading six codebases</td><td>The coordinator becomes a bottleneck and a coupling point</td></tr>
+      </table>
+      <div class="tip"><b>The practical answer:</b> choreography for simple fan-out ("an inspection
+      was recorded" → notify, index, recompute); orchestration for a business process with ordering,
+      compensation and a status a user asks about. Most real systems use both, and choosing per
+      flow rather than per architecture is the right instinct.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q5</span><span class="qt">How do you do a transaction across services? (Saga)</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>You cannot — there is no distributed ACID transaction across independent databases (two-
+      phase commit exists, but it locks resources across services and is avoided for good reason).
+      Instead you use a <b>saga</b>: a sequence of local transactions, each with a
+      <b>compensating action</b> that semantically undoes it.</p>
+      <pre><code>Book inspection slot        →  ok
+Reserve inspector           →  ok
+Allocate equipment          →  FAILS
+    ↓ compensate, in reverse
+Release inspector
+Cancel inspection slot</code></pre>
+      <p>Compensation is not a rollback — the intermediate states were real and may have been
+      visible to users. That is a business conversation, not only a technical one: "the slot was
+      briefly booked and then released" has to be acceptable, or the design is wrong.</p>
+      <div class="tip"><b>Say this:</b> "Sagas are real complexity, so the first question I'd ask is
+      whether these steps belong in the same service. Needing a saga is often evidence that the
+      boundary was drawn in the wrong place."</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q6</span><span class="qt">The outbox pattern — the dual-write problem</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>The problem: you save to the database and publish an event. Two systems, no shared
+      transaction. If the publish fails after the commit, the event is lost forever and downstream
+      services are permanently wrong. If you publish first and the commit fails, you announced
+      something that never happened.</p>
+      <p><b>The transactional outbox:</b> in the <i>same</i> database transaction, write the
+      business row and an <code>outbox</code> row containing the event. A separate relay process
+      polls the outbox (or reads the database's change feed) and publishes to the broker, marking
+      rows as sent.</p>
+      <pre><code>BEGIN;
+  INSERT INTO inspections (...) VALUES (...);
+  INSERT INTO outbox (id, type, payload, created_at)
+       VALUES (uuid, 'InspectionRecorded', '{...}', now());
+COMMIT;
+-- relay publishes from outbox, at least once</code></pre>
+      <p>This gives <b>at-least-once</b> delivery, so consumers must be idempotent — which is why
+      every event carries an ID.</p>
+      <div class="tip"><b>This is a strong thing to know.</b> Dual writes are one of the most common
+      sources of silent data divergence in event-driven systems, and many candidates at this level
+      have never heard of the outbox. Bringing it up unprompted is memorable.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q7</span><span class="qt">Message delivery guarantees, ordering and poison messages</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Guarantee</th><th>Reality</th></tr>
+        <tr><td>At most once</td><td>May be lost. Acceptable only for disposable telemetry.</td></tr>
+        <tr><td><b>At least once</b></td><td>May be duplicated. <b>What you almost always get</b> — so consumers must be idempotent.</td></tr>
+        <tr><td>Exactly once</td><td>Not achievable end to end in a distributed system. What is achievable is at-least-once delivery plus idempotent processing, which is <i>effectively</i> once. Say it this way — it is a well-known interview discriminator.</td></tr>
+      </table>
+      <p><b>Ordering</b> is only guaranteed within a partition or session. If order matters, key the
+      messages by the entity ID (Service Bus sessions, Event Hubs partition key) so all events for
+      one asset go to one consumer in order — at the cost of parallelism for that key.</p>
+      <p><b>Poison messages</b> — a message that always fails — must go to a <b>dead-letter
+      queue</b> after N attempts, with an alert. Without that, one bad message blocks the queue
+      forever or spins in an infinite retry loop.</p>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q8</span><span class="qt">CQRS and event sourcing — know what they are, be cautious about them</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>CQRS</b> separates the write model from the read model. Writes go through the domain
+      model; reads come from a denormalised projection shaped for the screen. Useful when read and
+      write loads or shapes differ sharply.</p>
+      <p><b>Event sourcing</b> stores the sequence of events as the source of truth rather than the
+      current state; current state is a fold over the events. You gain a complete audit history and
+      the ability to rebuild any past state or a new projection retroactively.</p>
+      <div class="gotcha"><b>Show the caution, not just the knowledge.</b> Event sourcing makes
+      simple things hard: querying, deleting personal data on request, and schema evolution of old
+      events you must still be able to read years later. It is excellent for domains that are
+      genuinely event-shaped and audit-heavy — and expensive almost everywhere else. Candidates who
+      enthuse about it without naming a cost are flagged as untested.</div>
+      <div class="note"><b>Where it fits an asset-heavy domain:</b> asset condition over decades is genuinely an event
+      log — inspections, repairs, incidents — and regulators ask "what did you know and when?" So
+      the domain fits better than most. That is a good, specific observation to make.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="s2">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 2</div>
+    <div>
+      <h2>Running it: containers, orchestration, resilience</h2>
+      <p>The operational half.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q9</span><span class="qt">Docker: images, layers and a production Dockerfile</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code># ---- build stage: heavy SDK, discarded afterwards ----
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY *.csproj .
+RUN dotnet restore                       # cached until the csproj changes
+COPY . .
+RUN dotnet publish -c Release -o /app
+
+# ---- runtime stage: small, no compiler, no source ----
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /app .
+RUN adduser --disabled-password appuser
+USER appuser
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "AssetApi.dll"]</code></pre>
+      <table>
+        <tr><th>Practice</th><th>Why</th></tr>
+        <tr><td><b>Multi-stage build</b></td><td>The final image has no compiler, no source, no build tools — smaller and a far smaller attack surface</td></tr>
+        <tr><td><b>Dependencies before source</b></td><td>Layer caching: a code change rebuilds one layer, not the dependency install</td></tr>
+        <tr><td><b>Non-root user</b></td><td>A container escape starts from a much weaker position</td></tr>
+        <tr><td><b>Pinned base tags</b></td><td><code>:latest</code> means your build is not reproducible</td></tr>
+        <tr><td><b>.dockerignore</b></td><td>Keeps <code>.git</code>, <code>node_modules</code> and local secrets out of the build context</td></tr>
+        <tr><td><b>Scan the image</b></td><td>Base images accumulate CVEs; scan in CI and rebuild regularly</td></tr>
+      </table>
+      <div class="gotcha"><b>Never bake secrets into an image.</b> They persist in the layer even if
+      a later layer deletes them — anyone who can pull the image can extract them. Secrets are
+      injected at runtime.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q10</span><span class="qt">Kubernetes: the objects and the mental model</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>The model: <b>you declare desired state, a control loop reconciles reality toward it,
+      continuously.</b> Everything else follows from that.</p>
+      <table>
+        <tr><th>Object</th><th>Role</th></tr>
+        <tr><td><b>Pod</b></td><td>One or more containers sharing a network namespace. Disposable.</td></tr>
+        <tr><td><b>ReplicaSet</b></td><td>Keeps N pods running. Managed for you by a Deployment.</td></tr>
+        <tr><td><b>Deployment</b></td><td>Declares the image and replica count; performs rolling updates and rollbacks.</td></tr>
+        <tr><td><b>Service</b></td><td>Stable virtual IP and DNS name in front of a changing set of pods.</td></tr>
+        <tr><td><b>Ingress</b></td><td>HTTP routing into the cluster, TLS termination.</td></tr>
+        <tr><td><b>ConfigMap / Secret</b></td><td>Configuration and credentials as env vars or mounted files.</td></tr>
+        <tr><td><b>HPA</b></td><td>Horizontal Pod Autoscaler — scales replicas on CPU or a custom metric.</td></tr>
+        <tr><td><b>Namespace</b></td><td>Logical isolation with its own quotas and policies.</td></tr>
+      </table>
+      <pre><code>resources:
+  requests: { cpu: "100m", memory: "256Mi" }   # what the scheduler reserves
+  limits:   { cpu: "500m", memory: "512Mi" }   # the hard ceiling
+readinessProbe: { httpGet: { path: /health/ready, port: 8080 } }
+livenessProbe:  { httpGet: { path: /health/live,  port: 8080 } }</code></pre>
+      <div class="gotcha"><b>Two things that bite in production.</b> Exceeding a <b>memory limit</b>
+      gets the container killed instantly (OOMKilled) with no grace — whereas exceeding a CPU limit
+      merely throttles it. And <b>conflating liveness with readiness</b>: if your liveness probe
+      fails because a database is down, Kubernetes restarts every pod repeatedly and turns a
+      dependency outage into a total outage. Liveness = "am I broken?"; readiness = "should I get
+      traffic right now?"</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q11</span><span class="qt">Graceful shutdown — the detail that separates people</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>When the platform stops a container it sends <code>SIGTERM</code>, waits a grace period,
+      then <code>SIGKILL</code>. A well-behaved service:</p>
+      <ol>
+        <li>Marks readiness as false, so the load balancer stops sending new requests.</li>
+        <li>Finishes in-flight requests (with a deadline).</li>
+        <li>Stops consuming from queues and lets current messages complete or return to the queue.</li>
+        <li>Closes database connections and flushes logs.</li>
+        <li>Exits.</li>
+      </ol>
+      <p>Without this, every deployment drops a handful of requests. It looks like random
+      intermittent errors during releases, which is a miserable thing to debug — and it is
+      surprisingly common.</p>
+      <div class="bridgebox"><b>Coming from test automation →</b> if you have ever seen a test suite fail
+      intermittently only during a deployment window, this is very often why. Good story.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q12</span><span class="qt">Resilience: timeout, retry, circuit breaker, bulkhead — with the details</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Pattern</th><th>Detail that matters</th></tr>
+        <tr><td><b>Timeout</b></td><td>Every outbound call. Your timeout must be shorter than your caller's, or you hold their thread past their own deadline. Budget them down the chain.</td></tr>
+        <tr><td><b>Retry</b></td><td>Exponential backoff <b>with jitter</b>. Without jitter, every client retries at the same instant and re-kills the recovering service — the thundering herd. Only retry idempotent operations and only on transient errors (timeouts, 502/503/429), never on a 400.</td></tr>
+        <tr><td><b>Circuit breaker</b></td><td>Closed → (N failures) → Open, fail fast without calling → (after a cooldown) → Half-open, allow a trial request → Closed or Open again. Stops you wasting resources on a dependency that is down and gives it room to recover.</td></tr>
+        <tr><td><b>Bulkhead</b></td><td>Separate connection or thread pools per dependency, so one slow downstream cannot consume every thread and take out the unrelated parts of your service.</td></tr>
+        <tr><td><b>Fallback</b></td><td>Cached value, default, or a degraded feature. Decide it deliberately per call.</td></tr>
+        <tr><td><b>Load shedding</b></td><td>Under overload, reject early with 503 rather than accepting work you cannot finish. Slow failure is worse than fast failure.</td></tr>
+      </table>
+      <div class="gotcha"><b>The compound trap:</b> retries at three layers multiply. Three retries
+      at each of three levels is 27 requests from one user action. Retry at <b>one</b> layer,
+      deliberately chosen — usually the outermost one that understands idempotency.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q13</span><span class="qt">How do you debug a problem across five services?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>You cannot, unless you built for it in advance. That framing is the answer.</p>
+      <ul>
+        <li><b>Correlation ID</b> generated at the edge, propagated in a header through every
+        synchronous call <i>and</i> onto every message, and included in every log line.</li>
+        <li><b>Distributed tracing</b> (OpenTelemetry → Application Insights): each service records
+        spans with parent-child links, so you get one waterfall showing where the time went and
+        where the error started.</li>
+        <li><b>Centralised structured logs</b> — searching across services, not SSHing to instances
+        that no longer exist.</li>
+        <li><b>RED metrics per service</b>: Rate, Errors, Duration. Enough to answer "which service
+        is unhealthy" in seconds.</li>
+        <li><b>A service dependency map</b>, so you know what "downstream" even means at 2am.</li>
+      </ul>
+      <div class="tip"><b>The line to use:</b> "In a monolith you can attach a debugger. In a
+      distributed system observability isn't a nice-to-have, it's the replacement for the debugger —
+      so it has to be built in from the first service, not added after the first bad incident."</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q14</span><span class="qt">How do you test microservices without a nightmare end-to-end suite?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>This is your subject, and a place to be visibly expert.</p>
+      <table>
+        <tr><th>Level</th><th>What it does</th></tr>
+        <tr><td><b>Unit</b></td><td>Domain logic in isolation. Fast, plentiful.</td></tr>
+        <tr><td><b>Component</b></td><td>One service end to end in-process, with its real database (Testcontainers) and its collaborators stubbed. High value per test.</td></tr>
+        <tr><td><b>Contract</b></td><td>Consumer publishes its expectations; provider's build verifies them (Pact). <b>This is what removes the need for a big integration suite</b> and lets services deploy independently.</td></tr>
+        <tr><td><b>End-to-end</b></td><td>A handful of critical journeys in a shared environment. Expensive, slow, flaky — deliberately few.</td></tr>
+        <tr><td><b>In production</b></td><td>Synthetic monitoring, health checks, canary analysis. In a distributed system you cannot test everything before release, so you also test after.</td></tr>
+      </table>
+      <div class="bridgebox"><b>Lead with the argument, not the tool list:</b> "The failure mode I've
+      seen most is teams trying to hold quality with a big end-to-end suite against a shared
+      environment. It's slow, it's flaky, and the environment is broken more often than not — so it
+      becomes a deployment bottleneck and then it gets ignored. Contract tests move that assurance
+      into each service's own pipeline." You can defend every sentence of that from experience, and
+      it is exactly the contribution this role's "contribute to testing practices" line is asking
+      for.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q15</span><span class="qt">Serverless or containers?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th></th><th>Serverless (Azure Functions)</th><th>Containers (Container Apps / AKS)</th></tr>
+        <tr><td>Billing</td><td>Per execution — genuinely zero when idle</td><td>Per running instance (Container Apps can scale to zero)</td></tr>
+        <tr><td>Ops burden</td><td>Lowest</td><td>Moderate to high</td></tr>
+        <tr><td>Cold start</td><td>Real, and worse for JVM/.NET than for Node/Python</td><td>Only on scale-from-zero</td></tr>
+        <tr><td>Long-running work</td><td>Execution time limits</td><td>No limit</td></tr>
+        <tr><td>Best for</td><td>Event handlers, scheduled jobs, glue, spiky low-volume work</td><td>Steady traffic, long-running APIs, anything needing full control</td></tr>
+      </table>
+      <div class="say">"I'd use Functions for the event-driven edges — a blob arrives, process it; a
+      nightly job; a webhook receiver — and Container Apps for the core APIs. Container Apps is
+      usually the right middle ground for a team this size: you get scaling, revisions and
+      scale-to-zero without taking on the operational cost of running Kubernetes."</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q16</span><span class="qt">The anti-patterns, named</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Anti-pattern</th><th>What it looks like</th></tr>
+        <tr><td><b>Distributed monolith</b></td><td>Services must be deployed together; one story changes four repos. All the cost, none of the benefit. <b>The most common failure.</b></td></tr>
+        <tr><td><b>Shared database</b></td><td>Two services reading the same tables. An invisible contract nobody can change.</td></tr>
+        <tr><td><b>Chatty services</b></td><td>One page triggers thirty internal calls. Latency and failure probability both compound.</td></tr>
+        <tr><td><b>Nano-services</b></td><td>A service per entity. The overhead per service is fixed and now you pay it forty times.</td></tr>
+        <tr><td><b>No versioning story</b></td><td>Any change requires a synchronised deployment of every consumer.</td></tr>
+        <tr><td><b>Shared "common" library</b></td><td>A utility library every service depends on. Updating it becomes a coordinated release — coupling reintroduced through the back door.</td></tr>
+        <tr><td><b>No observability</b></td><td>Six services, no tracing. Every incident is archaeology.</td></tr>
+      </table>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q17</span><span class="qt">"We have a legacy monolith. How do you modernise it?"</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Very likely at a consultancy — much of the work is modernising something that exists.
+      The answer is the <b>strangler fig</b> pattern, and the discipline is not doing a rewrite.</p>
+      <ol>
+        <li><b>Put a facade in front</b> (API gateway or reverse proxy) so traffic can be routed per
+        route without clients knowing.</li>
+        <li><b>Pick the first slice by value and risk</b>, not by what is technically neatest —
+        something that changes often, or is a scaling bottleneck, and is reasonably self-contained.</li>
+        <li><b>Build the new service alongside</b>, route that slice to it, keep the old code
+        running until traffic is fully migrated.</li>
+        <li><b>Migrate the data for that slice</b>, often with a period of dual-writing and
+        reconciliation.</li>
+        <li><b>Delete the old code.</b> The step teams skip, which is how you end up maintaining
+        both forever.</li>
+        <li>Repeat. The monolith shrinks; there is never a big-bang cutover.</li>
+      </ol>
+      <div class="gotcha"><b>Say why not a rewrite:</b> a full rewrite means a long period with no
+      delivered value, and the old system keeps changing while you build, so you are chasing a
+      moving target. Strangler delivers value incrementally and is reversible at every step.
+      Having a clear opinion here is worth a lot in a consulting interview.</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <nav class="pager">
+      <a class="pn" href="05-api-design.html">&#8592; 05 · API design</a>
+      <a class="pn" href="07-azure.html">07 · Azure for developers &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>09 · Databases &amp; Data Engineering — Interview Prep</title>
+<meta name="description" content="SQL depth: joins, indexes, execution plans, transactions and isolation, concurrency, schema design and ORMs. Then data engineering: ETL vs ELT, batch vs streaming, Spark, Data Factory, medallion architecture and data quality.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">AD</span><span>09 · Databases &amp; Data Engineering</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this page…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All categories</a> &nbsp;·&nbsp; 09 · Databases &amp; data engineering</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+
+<section class="sec" id="s1">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 1</div>
+    <div>
+      <h2>SQL and relational databases</h2>
+      <p>You have written SQL for test data and verification. This section moves you from querying
+         a schema to designing and tuning one.</p>
+    </div>
+  </div>
+
+  <div class="primer">
+    <h3><span class="pill">Primer</span>Designing a schema, and the three normal forms that matter</h3>
+
+    <h4>Keys</h4>
+    <ul>
+      <li><b>Primary key</b> — uniquely identifies a row. Prefer a surrogate key (an auto-increment
+      integer or a UUID) over a natural key, because natural keys turn out to change.</li>
+      <li><b>Foreign key</b> — a reference to another table's primary key. It is a constraint the
+      database enforces, so orphan rows become impossible rather than merely unlikely.</li>
+      <li><b>Unique constraint</b> — business uniqueness, e.g. asset reference within a site.</li>
+      <li><b>Composite key</b> — several columns together, common in join tables.</li>
+    </ul>
+
+    <h4>Normalisation, practically</h4>
+    <table>
+      <tr><th>Form</th><th>Rule</th><th>Fixes</th></tr>
+      <tr><td><b>1NF</b></td><td>No repeating groups; one value per cell</td><td>A <code>tags</code> column holding <code>"a,b,c"</code></td></tr>
+      <tr><td><b>2NF</b></td><td>No partial dependency on part of a composite key</td><td>Site name stored on every inspection row</td></tr>
+      <tr><td><b>3NF</b></td><td>No non-key column depending on another non-key column</td><td>Storing <code>region</code> next to <code>site_id</code> when region is a property of the site</td></tr>
+    </table>
+    <p>The working rule: <b>normalise until it hurts, denormalise until it works.</b> Normalise the
+    transactional model so there is one place to update a fact; denormalise deliberately for read
+    performance, and know that you now own keeping the copies consistent.</p>
+
+    <h4>A schema you could be asked to design</h4>
+    <pre><code>CREATE TABLE sites (
+    id           BIGINT PRIMARY KEY,
+    name         VARCHAR(200) NOT NULL,
+    region       VARCHAR(80)  NOT NULL,
+    created_at   TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+CREATE TABLE assets (
+    id           BIGINT PRIMARY KEY,
+    site_id      BIGINT       NOT NULL REFERENCES sites(id),
+    reference    VARCHAR(60)  NOT NULL,
+    asset_type   VARCHAR(40)  NOT NULL,
+    installed_on DATE,
+    CONSTRAINT uq_asset_ref UNIQUE (site_id, reference)   -- unique within a site
+);
+
+CREATE TABLE inspections (
+    id               BIGINT PRIMARY KEY,
+    asset_id         BIGINT      NOT NULL REFERENCES assets(id),
+    inspected_at     TIMESTAMPTZ NOT NULL,
+    inspector_id     BIGINT      NOT NULL REFERENCES users(id),
+    condition_score  NUMERIC(5,2) CHECK (condition_score BETWEEN 0 AND 100)
+);
+
+CREATE INDEX ix_inspections_asset_time
+    ON inspections (asset_id, inspected_at DESC);   -- serves "latest inspection per asset"</code></pre>
+    <p>Points to make while writing it: constraints in the database rather than only in application
+    code (there is always a second writer eventually); timestamps with time zone, always;
+    <code>NUMERIC</code> not <code>FLOAT</code> for anything measured or monetary; and an index
+    designed for the query you know you will run.</p>
+
+    <div class="bridgebox"><b>Coming from test automation →</b> you have written verification queries against
+    schemas designed by other people, which means you have seen bad ones: nullable everything, no
+    foreign keys, statuses stored as free text. That is genuinely useful design experience — you
+    know what the failure looks like from the outside.</div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q1</span><span class="qt">Joins, and the one that catches people</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Join</th><th>Returns</th></tr>
+        <tr><td><b>INNER</b></td><td>Only rows matching on both sides</td></tr>
+        <tr><td><b>LEFT</b></td><td>All left rows; NULLs where the right has no match</td></tr>
+        <tr><td><b>RIGHT</b></td><td>Mirror of LEFT — rarely used; rewrite as LEFT for readability</td></tr>
+        <tr><td><b>FULL OUTER</b></td><td>Everything from both, NULLs where unmatched</td></tr>
+        <tr><td><b>CROSS</b></td><td>Cartesian product. Almost always a mistake when it appears by accident</td></tr>
+        <tr><td><b>SELF</b></td><td>A table joined to itself — hierarchies, comparing rows to other rows</td></tr>
+      </table>
+      <div class="gotcha"><b>The classic trap:</b> putting a condition on the right table in the
+      <code>WHERE</code> clause of a LEFT JOIN. It silently converts the join to an inner join,
+      because the NULL rows fail the predicate. Put the condition in the <code>ON</code> clause when
+      you want to keep unmatched rows.</div>
+      <pre><code>-- WRONG: excludes assets that have no inspection at all
+SELECT a.*, i.condition_score
+FROM assets a
+LEFT JOIN inspections i ON i.asset_id = a.id
+WHERE i.inspected_at &gt;= '2026-01-01';
+
+-- RIGHT
+SELECT a.*, i.condition_score
+FROM assets a
+LEFT JOIN inspections i
+       ON i.asset_id = a.id
+      AND i.inspected_at &gt;= '2026-01-01';</code></pre>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q2</span><span class="qt">Write a query: latest inspection per asset (window functions)</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>"Latest row per group" is the single most commonly set SQL exercise. Know the window
+      function version.</p>
+      <pre><code>WITH ranked AS (
+    SELECT i.*,
+           ROW_NUMBER() OVER (PARTITION BY i.asset_id
+                              ORDER BY i.inspected_at DESC) AS rn
+    FROM inspections i
+)
+SELECT a.reference, a.asset_type, r.inspected_at, r.condition_score
+FROM assets a
+JOIN ranked r ON r.asset_id = a.id AND r.rn = 1
+WHERE a.site_id = :site_id
+ORDER BY r.condition_score ASC;</code></pre>
+      <table>
+        <tr><th>Function</th><th>Behaviour on ties</th></tr>
+        <tr><td><code>ROW_NUMBER()</code></td><td>1,2,3 — always distinct, arbitrary tie-break</td></tr>
+        <tr><td><code>RANK()</code></td><td>1,1,3 — gaps after a tie</td></tr>
+        <tr><td><code>DENSE_RANK()</code></td><td>1,1,2 — no gaps</td></tr>
+        <tr><td><code>LAG()</code> / <code>LEAD()</code></td><td>Previous / next row's value — perfect for "change since last inspection"</td></tr>
+      </table>
+      <div class="tip"><b>Also know the aggregate rules:</b> <code>WHERE</code> filters rows before
+      grouping; <code>HAVING</code> filters groups after. And <code>COUNT(*)</code> counts rows
+      while <code>COUNT(col)</code> skips NULLs — a difference that has produced a lot of wrong
+      reports.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q3</span><span class="qt">Indexes: how to choose one, and how to kill one</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>An index is a sorted structure (B-tree) over one or more columns. Faster reads, slower
+      writes, more storage.</p>
+      <h5>Composite index column order — the left-most prefix rule</h5>
+      <p>An index on <code>(site_id, asset_type, installed_on)</code> serves queries filtering on:</p>
+      <ul>
+        <li><code>site_id</code> ✓</li>
+        <li><code>site_id + asset_type</code> ✓</li>
+        <li><code>site_id + asset_type + installed_on</code> ✓</li>
+        <li><code>asset_type</code> alone ✗ — cannot use the index</li>
+      </ul>
+      <p>So order columns by: equality filters first, then range filters, then sort columns.</p>
+      <h5>What makes an index unusable</h5>
+      <table>
+        <tr><th>Query</th><th>Why it fails</th><th>Fix</th></tr>
+        <tr><td><code>WHERE YEAR(inspected_at) = 2026</code></td><td>Function on the column</td><td><code>WHERE inspected_at &gt;= '2026-01-01' AND inspected_at &lt; '2027-01-01'</code></td></tr>
+        <tr><td><code>WHERE reference LIKE '%A12'</code></td><td>Leading wildcard</td><td>Trailing wildcard, or a full-text/trigram index</td></tr>
+        <tr><td><code>WHERE id = '123'</code> on an integer column</td><td>Implicit conversion</td><td>Pass the right type — an ORM usually handles this, raw SQL may not</td></tr>
+        <tr><td><code>WHERE a = 1 OR b = 2</code></td><td>Often cannot combine two indexes efficiently</td><td>Sometimes a <code>UNION</code> of two indexed queries is faster</td></tr>
+      </table>
+      <div class="tip"><b>The nuance that impresses:</b> more indexes are not better. Each one is
+      maintained on every insert, update and delete, and takes space and cache. An unused index is
+      pure cost. Databases expose index usage statistics — dropping indexes nobody uses is real
+      performance work and few candidates mention it.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q4</span><span class="qt">How do you read an execution plan?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>EXPLAIN ANALYZE
+SELECT ... ;          -- PostgreSQL: estimated AND actual rows and timing</code></pre>
+      <p>Read it bottom-up, inner-out. What you are looking for:</p>
+      <table>
+        <tr><th>Sign</th><th>Meaning</th></tr>
+        <tr><td><b>Seq Scan / Table Scan</b> on a large table</td><td>No usable index — usually the finding</td></tr>
+        <tr><td><b>Index Seek/Scan</b></td><td>Good — an index is being used</td></tr>
+        <tr><td><b>Nested Loop</b> with a big outer row count</td><td>Fine for small sets, disastrous for large — often means a missing index on the inner side</td></tr>
+        <tr><td><b>Hash Join / Merge Join</b></td><td>Appropriate for large joins</td></tr>
+        <tr><td><b>Estimated rows far from actual</b></td><td>Stale statistics — the optimiser is choosing badly because it has the wrong idea of the data</td></tr>
+        <tr><td><b>Sort</b> or <b>Spill to disk</b></td><td>Not enough memory, or an index could have supplied the order</td></tr>
+      </table>
+      <div class="tip"><b>The answer that shows judgement:</b> "A sequential scan is not
+      automatically bad — on a small table it is faster than an index lookup. What I'm actually
+      looking for is the operator where estimated and actual row counts diverge, because that is
+      where the optimiser made a bad decision, and everything downstream of it inherits that."</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q5</span><span class="qt">Transactions and isolation levels</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Level</th><th>Prevents</th><th>Still allows</th></tr>
+        <tr><td>Read uncommitted</td><td>Nothing</td><td><b>Dirty reads</b> — reading data another transaction may roll back</td></tr>
+        <tr><td><b>Read committed</b></td><td>Dirty reads</td><td>Non-repeatable reads, phantoms. <b>The usual default.</b></td></tr>
+        <tr><td>Repeatable read</td><td>Non-repeatable reads — the same row read twice gives the same value</td><td>Phantom rows appearing in a range</td></tr>
+        <tr><td>Serializable</td><td>Everything — behaves as if transactions ran one at a time</td><td>Nothing; costs concurrency and may cause serialisation failures you must retry</td></tr>
+      </table>
+      <p>The three anomalies: <b>dirty read</b> (uncommitted data), <b>non-repeatable read</b> (a
+      row changes between two reads in your transaction), <b>phantom read</b> (new rows appear in a
+      range you already queried).</p>
+      <div class="gotcha"><b>The practical follow-up:</b> "how do you stop two users overwriting
+      each other?" Do not reach for Serializable. Use <b>optimistic concurrency</b>: a
+      <code>version</code> or <code>rowversion</code> column, included in the WHERE clause of the
+      update. If zero rows are affected, someone else changed it — return <b>409 Conflict</b> and
+      let the user decide. It scales far better than locking and matches how users actually think
+      about the problem.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q6</span><span class="qt">Deadlocks, long transactions and connection pools</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <ul>
+        <li><b>Deadlock</b> — two transactions each hold a lock the other needs. The database
+        detects it and kills one with an error. Prevent by acquiring locks in a consistent order
+        and keeping transactions short.</li>
+        <li><b>Long transactions are the underlying disease.</b> A transaction that stays open while
+        calling an external API holds locks and a connection for the whole round trip. <b>Never do
+        I/O inside a transaction.</b></li>
+        <li><b>Connection pool exhaustion</b> presents as a mysterious application-wide hang: every
+        request waits for a connection that a few slow queries are holding. The pool is small (tens,
+        not thousands) by design, so one slow query pattern can stall everything.</li>
+      </ul>
+      <div class="tip"><b>A good, specific answer to "how would you diagnose it?"</b> Look at the
+      database's active sessions and wait statistics, find the blocking query, and check whether
+      transactions are being held open across application calls. Then fix the transaction scope, not
+      the pool size — increasing the pool usually just moves the queue.</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q7</span><span class="qt">ORM or raw SQL?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>Both, deliberately.</b> The ORM handles the 90% that is straightforward CRUD — mapping,
+      change tracking, migrations, parameterisation for free. Drop to SQL (or a view, or a stored
+      procedure) for reporting queries, bulk operations and anything where you need to control the
+      plan.</p>
+      <p>The ORM traps to name:</p>
+      <ul>
+        <li><b>N+1 queries</b> from lazy loading. The most common performance bug in ORM code.</li>
+        <li><b>Loading whole entities to read one column.</b> Project into a DTO instead.</li>
+        <li><b>Bulk operations row by row.</b> Deleting 100,000 rows one at a time through the ORM
+        instead of one statement.</li>
+        <li><b>Not knowing what SQL is generated.</b> Turn on query logging in development — it is
+        the single fastest way to find the problem.</li>
+      </ul>
+      <div class="say">"An ORM is a productivity tool, not an abstraction that lets you avoid
+      understanding the database. The teams I've seen get in trouble with one are the teams that
+      never looked at the SQL it emitted."</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q8</span><span class="qt">When would you use something other than a relational database?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Store</th><th>Fits</th></tr>
+        <tr><td><b>Relational</b></td><td>Structured data with relationships and transactions. The default; the burden of proof is on the alternative.</td></tr>
+        <tr><td><b>Document</b> (Cosmos, Mongo)</td><td>Records with varying shape, read as whole aggregates by key, needing horizontal scale.</td></tr>
+        <tr><td><b>Key-value</b> (Redis)</td><td>Caching, sessions, rate-limit counters, distributed locks. Usually alongside, not instead.</td></tr>
+        <tr><td><b>Time-series</b></td><td>Sensor readings — huge append-only volumes, queried by time window, with downsampling and retention policies.</td></tr>
+        <tr><td><b>Search</b> (Elasticsearch, Azure AI Search)</td><td>Full-text relevance, faceting, fuzzy matching. A database <code>LIKE</code> is not search.</td></tr>
+        <tr><td><b>Graph</b></td><td>Relationship traversal — dependency networks, "what else is affected if this fails".</td></tr>
+        <tr><td><b>Spatial</b> (PostGIS)</td><td>Geometry: "which assets are within 500 m of this flood boundary". <b>Very relevant in infrastructure work.</b></td></tr>
+      </table>
+      <div class="tip"><b>Polyglot persistence is normal</b> — a real system uses SQL for
+      transactional data, Redis for caching, blob storage for documents and a search index for
+      lookup. The skill is justifying each one, not picking a favourite.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="s2">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 2</div>
+    <div>
+      <h2>Data engineering workflows</h2>
+      <p>A common preferred qualification, and half of "work with data engineers to operationalize
+         analysis pipelines". You need the vocabulary and the shape, not a data engineer's depth.</p>
+    </div>
+  </div>
+
+  <div class="primer">
+    <h3><span class="pill">Primer</span>What a data platform looks like</h3>
+
+    <p>Application databases answer "what is true right now, for this record". Analytics needs "what
+    happened across everything, over time". Those are different access patterns, so they get
+    different systems — and understanding <i>why</i> is most of what an application developer needs
+    to know.</p>
+
+    <table>
+      <tr><th></th><th>OLTP (your application database)</th><th>OLAP (the analytics platform)</th></tr>
+      <tr><td>Access</td><td>Many small reads and writes by key</td><td>Few huge scans and aggregations</td></tr>
+      <tr><td>Model</td><td>Normalised</td><td>Denormalised — star schema</td></tr>
+      <tr><td>Storage</td><td>Row-oriented</td><td><b>Column-oriented</b> — you read three columns of a billion rows, not whole rows</td></tr>
+      <tr><td>Latency</td><td>Milliseconds</td><td>Seconds to minutes, and that is fine</td></tr>
+    </table>
+
+    <h4>The medallion (lakehouse) architecture</h4>
+    <table>
+      <tr><th>Layer</th><th>Contains</th><th>Purpose</th></tr>
+      <tr><td><b>Bronze</b></td><td>Raw, exactly as ingested, append-only, with load metadata</td><td>Never lose the source. You can always reprocess when requirements change — which they will.</td></tr>
+      <tr><td><b>Silver</b></td><td>Cleaned, typed, de-duplicated, conformed, joined</td><td>A trustworthy, queryable version of reality</td></tr>
+      <tr><td><b>Gold</b></td><td>Business aggregates, star schemas, ML feature tables</td><td>Serves dashboards, reports and models</td></tr>
+    </table>
+    <p>Why bronze exists is the point worth making: transforming on ingest and discarding the raw
+    data means a bug in the transformation is unrecoverable. Cheap storage removed the reason to
+    throw anything away.</p>
+
+    <h4>The Azure toolchain</h4>
+    <table>
+      <tr><th>Tool</th><th>Role</th></tr>
+      <tr><td><b>Azure Data Factory</b></td><td>Orchestration and ingestion — connectors, schedules, dependencies, retries. The scheduler and mover.</td></tr>
+      <tr><td><b>Databricks</b></td><td>Spark for large-scale transformation and ML. Where the heavy compute happens.</td></tr>
+      <tr><td><b>Synapse Analytics / Microsoft Fabric</b></td><td>Warehousing and analytics, increasingly consolidated under Fabric.</td></tr>
+      <tr><td><b>ADLS Gen2</b></td><td>The storage layer underneath all of it.</td></tr>
+      <tr><td><b>Power BI</b></td><td>What the business actually looks at. Worth remembering — it is often the real requirement.</td></tr>
+    </table>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q9</span><span class="qt">ETL vs ELT — and why ELT won</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>ETL</b>: extract, transform in a separate engine, load the result. Designed when storage
+      and compute were expensive and you only kept what you needed.</p>
+      <p><b>ELT</b>: extract, load raw, transform inside the warehouse or lakehouse.</p>
+      <p>ELT is now the default because cloud storage is cheap and warehouse compute is elastic. The
+      real benefit is not performance — it is that <b>you still have the raw data</b>. When a
+      definition changes or a bug is found, you reprocess. Under ETL, the untransformed data is gone.</p>
+      <div class="tip"><b>Where ETL still wins:</b> when the data cannot be landed raw for legal or
+      privacy reasons — personal data that must be masked or tokenised before it is stored. That is a
+      good caveat to offer, and it shows you think about governance.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q10</span><span class="qt">Batch or streaming?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th></th><th>Batch</th><th>Streaming</th></tr>
+        <tr><td>Processes</td><td>A bounded set on a schedule</td><td>Unbounded events as they arrive</td></tr>
+        <tr><td>Latency</td><td>Minutes to a day</td><td>Seconds</td></tr>
+        <tr><td>Complexity</td><td>Low — rerun it if it fails</td><td>High — windowing, late-arriving data, state, exactly-once concerns</td></tr>
+        <tr><td>Cost</td><td>Lower</td><td>Always-on compute</td></tr>
+      </table>
+      <div class="say">"I'd start by asking what decision the data supports and how quickly it has
+      to be made. A lot of 'real-time' requirements turn out to mean 'not tomorrow morning', and a
+      15-minute micro-batch gives you that at a fraction of the complexity. Genuine streaming is
+      worth it when something acts on the event automatically — a threshold alarm on a sensor, for
+      instance."</div>
+      <div class="tip"><b>The concepts to name if streaming comes up:</b> <b>event time vs
+      processing time</b> (a sensor's reading is timestamped when it was taken, not when it
+      arrived), <b>windowing</b> (tumbling, sliding, session), and <b>watermarks</b> (how long you
+      wait for late data before closing a window). Those three terms show you have looked past the
+      marketing.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q11</span><span class="qt">Spark, enough to be useful</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Spark distributes a computation over a cluster. Data is split into <b>partitions</b>; each
+      executor processes partitions in parallel.</p>
+      <pre><code>from pyspark.sql import functions as F
+
+readings = spark.read.format("delta").load("/mnt/bronze/sensor_readings")
+
+daily = (readings
+    .filter(F.col("recorded_at") &gt;= F.lit("2026-01-01"))
+    .withColumn("day", F.to_date("recorded_at"))
+    .groupBy("site_id", "day")
+    .agg(F.avg("value").alias("avg_value"),
+         F.max("value").alias("max_value"),
+         F.count("*").alias("reading_count")))
+
+daily.write.format("delta").mode("overwrite").save("/mnt/silver/daily_readings")</code></pre>
+      <ul>
+        <li><b>Transformations are lazy</b> (<code>filter</code>, <code>groupBy</code>); nothing runs
+        until an <b>action</b> (<code>write</code>, <code>count</code>, <code>collect</code>). Spark
+        optimises the whole plan before executing it.</li>
+        <li><b>Shuffles are the cost.</b> A <code>groupBy</code> or wide join moves data across the
+        network between executors. Minimising shuffles is most of Spark tuning.</li>
+        <li><b>Data skew</b> — one key with vastly more rows than others makes one task run for
+        hours while the cluster idles. The commonest real Spark problem.</li>
+        <li><b>Never <code>collect()</code> a large DataFrame</b> — it pulls everything into the
+        driver's memory and kills it.</li>
+      </ul>
+      <div class="note"><b>Honest positioning:</b> "I understand the model — partitions, lazy
+      evaluation, the cost of shuffles — and I've written PySpark, but I haven't tuned a large
+      production cluster. Where I'd add value is on the engineering side: making pipelines
+      idempotent, testable and observable, which is often where notebook-grown pipelines are
+      weakest." That is exactly the gap these roles describe, and it is an honest one to claim.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q12</span><span class="qt">File formats: why Parquet and Delta rather than CSV</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Format</th><th>Properties</th></tr>
+        <tr><td><b>CSV</b></td><td>Human-readable, universal, and bad: no types, no schema, no compression, must be read entirely.</td></tr>
+        <tr><td><b>JSON</b></td><td>Flexible and self-describing, but verbose and slow to scan at volume.</td></tr>
+        <tr><td><b>Parquet</b></td><td><b>Columnar</b>, compressed, typed, with per-column statistics. Reading three columns of a hundred skips the rest entirely. The analytics standard.</td></tr>
+        <tr><td><b>Avro</b></td><td>Row-oriented, strong schema evolution. Good for streaming and message payloads.</td></tr>
+        <tr><td><b>Delta Lake</b></td><td>Parquet plus a transaction log: <b>ACID on a data lake</b>, schema enforcement, time travel, upserts (<code>MERGE</code>). The default on Databricks.</td></tr>
+      </table>
+      <div class="tip"><b>What Delta actually solves:</b> on plain Parquet, a job that fails halfway
+      leaves partial files that readers will happily pick up. The transaction log makes writes
+      atomic, so readers only ever see complete versions — and "time travel" lets you query the
+      table as it was before a bad load. Being able to say <i>why</i> Delta exists, not just that it
+      does, is the differentiator.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q13</span><span class="qt">What makes a data pipeline production-grade?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>This is where an application developer adds the most value to a data team, so it is the
+      answer to invest in.</p>
+      <ul>
+        <li><b>Idempotent.</b> Re-running the same day's load produces the same result rather than
+        doubling it. Use overwrite-by-partition or <code>MERGE</code>, never blind append.</li>
+        <li><b>Backfillable.</b> Parameterised by date so you can reprocess history when a bug is
+        found — because one will be.</li>
+        <li><b>Incremental with a watermark</b>, so it does not reprocess everything nightly and
+        grow linearly in cost.</li>
+        <li><b>Schema-aware.</b> A silently added upstream column should be handled deliberately,
+        not break the job at 3am — or worse, be dropped without anyone noticing.</li>
+        <li><b>Validated.</b> Row counts within expected bounds, nulls in required fields, ranges,
+        referential checks. Fail loudly rather than publishing wrong numbers.</li>
+        <li><b>Observable.</b> Runtime, rows in and out, and alerting on failure <i>and on
+        suspicious success</i> — a job that finishes in 3 seconds instead of 20 minutes processed
+        nothing.</li>
+        <li><b>Versioned and reviewed.</b> Pipeline code in Git, deployed by CI/CD, not edited in a
+        notebook in production.</li>
+        <li><b>Tested.</b> Transformation logic unit-tested on small fixtures.</li>
+      </ul>
+      <div class="bridgebox"><b>This is the entry point into data work for an application
+      developer.</b> Notebook-grown pipelines are typically strong on analysis and weak on exactly
+      these engineering properties. "The gap I'd expect to help close is turning analysis code into
+      pipelines that are idempotent, tested, version-controlled and alerting" is a precise, credible
+      offer, and it is close to a direct quote of how these roles describe the work.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q14</span><span class="qt">Star schema and slowly changing dimensions</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>A <b>star schema</b> has a central <b>fact</b> table (the measurements — one row per
+      inspection, with numeric values and foreign keys) surrounded by <b>dimension</b> tables (the
+      descriptive context — asset, site, date, inspector). Denormalised on purpose, because
+      analytical queries filter and group by dimensions and sum facts.</p>
+      <p><b>Slowly changing dimensions</b> handle attributes that change over time:</p>
+      <table>
+        <tr><th>Type</th><th>Behaviour</th></tr>
+        <tr><td><b>Type 1</b></td><td>Overwrite. History lost. Fine for a corrected typo.</td></tr>
+        <tr><td><b>Type 2</b></td><td>Add a new row with validity dates and a current flag. <b>Preserves history</b> — the most commonly asked.</td></tr>
+        <tr><td>Type 3</td><td>Keep a "previous value" column. Only one step of history.</td></tr>
+      </table>
+      <div class="tip"><b>Why Type 2 matters, concretely:</b> if a site is reassigned to a
+      different region in 2026, a report on 2024 inspections should still show the 2024 region.
+      Overwriting the dimension silently rewrites history — and if that report went to a regulator,
+      that is a serious problem, not an inconvenience.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q15</span><span class="qt">Data quality, lineage and governance</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>Quality dimensions:</b> completeness (are values missing), accuracy (do they match
+      reality), consistency (do systems agree), timeliness (is it current enough), uniqueness (no
+      duplicates), validity (conforms to rules).</p>
+      <p><b>Lineage</b> is knowing where a number came from — which source, through which
+      transformations. The moment a stakeholder challenges a figure in a report, lineage is the only
+      thing that resolves it. Azure Purview / Microsoft Fabric provide this centrally.</p>
+      <p><b>Governance</b>: who may see what, retention periods, personal data handling, and audit.
+      For public-sector infrastructure work, the retention and audit requirements are contractual.</p>
+      <div class="tip"><b>The practice to name:</b> data quality checks as a <b>gate</b> in the
+      pipeline, not a report someone reads afterwards. If the row count drops 40% overnight, stop
+      and alert rather than publishing — because a dashboard that is quietly wrong is worse than one
+      that is visibly broken. That is exactly the same argument as a failing build stopping a
+      deployment, which is a nice bridge from your background.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q16</span><span class="qt">Geospatial and time-series data</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Worth ten minutes of preparation because almost no other candidate will raise it, and it is
+      the domain the whole company works in.</p>
+      <h5>Geospatial</h5>
+      <ul>
+        <li>Data types: <b>point</b> (an asset), <b>linestring</b> (a road, a pipeline),
+        <b>polygon</b> (a site boundary, a flood zone).</li>
+        <li><b>Coordinate reference systems</b> matter: WGS84 (lat/long, EPSG:4326) for global
+        positioning, a projected local CRS for accurate distance and area. <b>Mixing them silently
+        gives wrong answers</b> — this is the classic geospatial bug.</li>
+        <li>Queries are spatial predicates: within, intersects, distance, buffer. They need a
+        <b>spatial index</b> (R-tree / GiST) or they are full scans.</li>
+        <li>Tools: <b>PostGIS</b> on PostgreSQL, spatial types in Azure SQL, GeoJSON on the wire,
+        map tiles for rendering, and formats like Shapefile and GeoPackage from survey teams.</li>
+      </ul>
+      <h5>Time-series</h5>
+      <ul>
+        <li>Append-heavy, queried by time window, and it grows without limit — so <b>retention and
+        downsampling</b> are design requirements, not afterthoughts. Keep raw for 90 days, hourly
+        aggregates for 2 years, daily forever.</li>
+        <li>Partition by time so old partitions can be dropped cheaply and queries prune.</li>
+        <li>Gaps and irregular intervals are normal — sensors fail, batteries die. Interpolation and
+        gap detection are part of the pipeline, and "no data" must be distinguishable from "zero".</li>
+      </ul>
+      <div class="say">"The thing I find interesting about this domain is that the data has physical
+      constraints software people aren't used to — a coordinate system you can get subtly wrong, and
+      an asset whose record has to outlive several generations of the system that holds it."</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <nav class="pager">
+      <a class="pn" href="08-devops-cicd.html">&#8592; 08 · DevOps &amp; CI/CD</a>
+      <a class="pn" href="10-ml-ai-integration.html">10 · Integrating ML/AI into applications &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

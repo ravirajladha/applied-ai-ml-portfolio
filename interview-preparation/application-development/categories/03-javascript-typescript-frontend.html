@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 · JavaScript, TypeScript, Front-end &amp; Mobile — Interview Prep</title>
+<meta name="description" content="From Playwright TypeScript to application development: the event loop, ES6+, TypeScript depth, Node and Express, React, turning wireframes into responsive accessible UI, performance, and mobile.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">AD</span><span>03 · JS, TS, Front-end &amp; Mobile</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this page…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All categories</a> &nbsp;·&nbsp; 03 · JavaScript, TypeScript, front-end &amp; mobile</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+
+<section class="sec" id="s1">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 1</div>
+    <div>
+      <h2>The language: JavaScript and TypeScript</h2>
+      <p>You already write TypeScript daily. This section closes the gap between test TypeScript
+         and application TypeScript — which is smaller than you think.</p>
+    </div>
+  </div>
+
+  <div class="primer">
+    <h3><span class="pill">Primer</span>What changes when TypeScript stops being test code</h3>
+
+    <p>Your Playwright work already gave you the hard parts: async/await, typed function
+    signatures, module imports, npm, and the mental model of a single-threaded event loop. Four
+    things are genuinely different on the application side.</p>
+
+    <h4>1. You define the types instead of consuming them</h4>
+    <p>In test code the types mostly come from Playwright. In application code you design the
+    domain types — and the quality of those types is a large part of how maintainable the codebase
+    is. Expect to be asked to model something, not just to use a model.</p>
+
+    <h4>2. Runtime data does not obey your types</h4>
+    <p>TypeScript types are erased at compile time. A response from an API is <code>any</code> in
+    reality no matter what you annotate it as. Professional codebases therefore <b>validate at the
+    boundary</b> — <code>zod</code> or similar — and trust types only inside. This is the single
+    most important thing to say about TypeScript in an interview, because it shows you understand
+    what the type system is and is not.</p>
+    <pre><code>import { z } from "zod";
+
+const AssetSchema = z.object({
+  id: z.number(),
+  name: z.string().min(1),
+  conditionScore: z.number().min(0).max(100),
+});
+type Asset = z.infer&lt;typeof AssetSchema&gt;;      // the type is derived from the validator
+
+const asset = AssetSchema.parse(await res.json());   // throws on a malformed response</code></pre>
+
+    <h4>3. There is rendering, and rendering has its own rules</h4>
+    <p>A UI framework re-runs your code when data changes. Understanding <i>when</i> and <i>why</i>
+    it re-renders is the front-end equivalent of understanding the request lifecycle.</p>
+
+    <h4>4. CSS and accessibility are part of the job</h4>
+    <p>The JD explicitly says "translating design wireframes and mockups into responsive,
+    interactive web and mobile applications". Most backend-leaning candidates prepare nothing here
+    and lose marks that were free. Section 3 of this page covers it.</p>
+
+    <div class="bridgebox"><b>Coming from test automation →</b> you have an unusual advantage in front-end
+    interviews: you know exactly which UI patterns are hard to test, which selectors are stable, and
+    what an accessible DOM looks like — because you have written the locators. "I write components
+    with stable roles and labels, partly because it's the accessible thing and partly because I've
+    spent years fighting UIs that weren't" is a very strong sentence.</div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q1</span><span class="qt">The event loop: call stack, microtasks, macrotasks</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>JavaScript executes on one thread. The <b>call stack</b> runs synchronous code. When
+      asynchronous work is started, the environment (browser or Node) handles it and puts the
+      callback on a queue. When the stack empties, the event loop takes the next callback.</p>
+      <p><b>Microtasks</b> (promise callbacks, <code>queueMicrotask</code>) drain completely before
+      the next <b>macrotask</b> (<code>setTimeout</code>, I/O events).</p>
+      <pre><code>console.log("1");
+setTimeout(() =&gt; console.log("2"), 0);      // macrotask
+Promise.resolve().then(() =&gt; console.log("3"));  // microtask
+console.log("4");
+// 1, 4, 3, 2</code></pre>
+      <p>Why it matters practically: <b>blocking the loop blocks everything</b>. A synchronous
+      one-second computation in a Node service freezes every concurrent request, not just one.</p>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q2</span><span class="qt">Promises and async/await — including the parallelism trap</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>// sequential — 20 items × 200 ms = 4 seconds
+for (const id of ids) {
+  results.push(await fetchAsset(id));
+}
+
+// concurrent — about 200 ms
+const results = await Promise.all(ids.map(fetchAsset));
+
+// concurrent, tolerant of individual failures
+const settled = await Promise.allSettled(ids.map(fetchAsset));
+const ok = settled.filter(r =&gt; r.status === "fulfilled").map(r =&gt; r.value);</code></pre>
+      <table>
+        <tr><th>Combinator</th><th>Behaviour</th></tr>
+        <tr><td><code>Promise.all</code></td><td>Resolves when all resolve; <b>rejects immediately</b> if any rejects</td></tr>
+        <tr><td><code>Promise.allSettled</code></td><td>Always resolves, with a status per promise</td></tr>
+        <tr><td><code>Promise.race</code></td><td>Settles with the first to settle — used for timeouts</td></tr>
+        <tr><td><code>Promise.any</code></td><td>First to <i>fulfil</i>; ignores rejections until all fail</td></tr>
+      </table>
+      <div class="gotcha"><b>Two traps they will look for:</b> an unhandled rejection because you
+      forgot to <code>await</code> or <code>catch</code> (in Node this can terminate the process),
+      and firing 10,000 concurrent requests with <code>Promise.all</code> and exhausting sockets or
+      being rate-limited. For large sets, batch with a concurrency limit — mentioning that
+      unprompted is a senior signal.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q3</span><span class="qt">The ES6+ features you are expected to use fluently</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>const { name, siteId: site = 0, ...rest } = asset;      // destructuring + rename + default + rest
+const merged = { ...defaults, ...overrides };          // spread
+const label = `Asset ${asset.name} (${asset.id})`;     // template literal
+const score = asset?.condition?.score ?? 0;            // optional chaining + nullish coalescing
+const names = assets.filter(a =&gt; a.active).map(a =&gt; a.name);
+const total = readings.reduce((sum, r) =&gt; sum + r.value, 0);
+const byId = new Map(assets.map(a =&gt; [a.id, a]));</code></pre>
+      <div class="gotcha"><b>The classic question:</b> <code>??</code> vs <code>||</code>.
+      <code>||</code> falls back on any falsy value, so <code>0 || 10</code> gives 10 — a real bug
+      when 0 is a legitimate score. <code>??</code> falls back only on <code>null</code> or
+      <code>undefined</code>, so <code>0 ?? 10</code> gives 0. Use <code>??</code> for defaults.</div>
+      <div class="tip"><b>Arrow functions vs <code>function</code>:</b> arrows do not have their own
+      <code>this</code> — they inherit it from the enclosing scope. That is why they fixed the old
+      <code>const self = this</code> pattern, and why an arrow is wrong as an object method that
+      needs to reference the object.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q4</span><span class="qt">TypeScript: type vs interface, and when it matters</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>interface Asset {              // can be extended and re-opened (declaration merging)
+  id: number;
+  name: string;
+}
+interface TrackedAsset extends Asset { lastInspected: Date; }
+
+type Status = "draft" | "active" | "retired";        // union — impossible with interface
+type AssetWithStatus = Asset &amp; { status: Status };   // intersection
+type AssetKeys = keyof Asset;                        // "id" | "name"</code></pre>
+      <p>Rule of thumb: <b>interface for object shapes you may extend, type for everything else</b>
+      — unions, intersections, tuples, mapped and conditional types. In practice teams pick one for
+      consistency; what matters in an interview is knowing that unions and mapped types are
+      <code>type</code>-only.</p>
+      <div class="tip"><b>Utility types worth naming:</b> <code>Partial&lt;T&gt;</code>,
+      <code>Required&lt;T&gt;</code>, <code>Pick&lt;T,K&gt;</code>, <code>Omit&lt;T,K&gt;</code>,
+      <code>Record&lt;K,V&gt;</code>, <code>Readonly&lt;T&gt;</code>, <code>ReturnType&lt;F&gt;</code>.
+      <code>Omit</code> and <code>Partial</code> come up constantly in real code —
+      <code>type AssetUpdate = Partial&lt;Omit&lt;Asset, "id"&gt;&gt;</code> is exactly the shape of a PATCH body.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q5</span><span class="qt">Discriminated unions and narrowing — the pattern that shows real TypeScript</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>type Result =
+  | { kind: "ok"; data: Asset[] }
+  | { kind: "error"; message: string; retryable: boolean };
+
+function render(result: Result) {
+  switch (result.kind) {
+    case "ok":
+      return list(result.data);        // TypeScript knows .data exists here
+    case "error":
+      return banner(result.message);   // and .message here, but not .data
+  }
+}</code></pre>
+      <p>The literal <code>kind</code> field lets the compiler narrow the type inside each branch.
+      This is how you model "one of several shapes" without optional fields everywhere, and it makes
+      illegal states unrepresentable — you cannot accidentally read <code>data</code> from an error.</p>
+      <div class="tip"><b>The advanced follow-on:</b> add a <code>default</code> branch that assigns
+      to <code>never</code>. If someone later adds a third variant, the code stops compiling until
+      it is handled — exhaustiveness checking enforced by the type system.</div>
+      <pre><code>default: {
+  const _exhaustive: never = result;
+  throw new Error(`unhandled: ${JSON.stringify(_exhaustive)}`);
+}</code></pre>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q6</span><span class="qt">Generics, and why <code>any</code> is a smell</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>async function getJson&lt;T&gt;(url: string, schema: z.ZodType&lt;T&gt;): Promise&lt;T&gt; {
+  const res = await fetch(url);
+  if (!res.ok) throw new ApiError(res.status, url);
+  return schema.parse(await res.json());
+}
+
+const assets = await getJson("/v1/assets", z.array(AssetSchema));  // typed as Asset[]</code></pre>
+      <p>A generic preserves the relationship between input and output types instead of discarding
+      it. Compare with returning <code>any</code>, which switches type checking off for everything
+      downstream — the bug does not surface at the cast, it surfaces three files away.</p>
+      <div class="gotcha"><b>If you need an escape hatch, use <code>unknown</code>, not
+      <code>any</code>.</b> <code>unknown</code> forces you to narrow before use;
+      <code>any</code> silently disables checking. Also mention <code>strict: true</code> in
+      <code>tsconfig.json</code> — particularly <code>strictNullChecks</code>, which is what makes
+      TypeScript actually catch the null bugs it is famous for preventing.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="s2">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 2</div>
+    <div>
+      <h2>Node.js and building the backend in TypeScript</h2>
+      <p>One of the languages these roles list. Worth being able to describe a Node service even if
+         Python or C# is your primary answer.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q7</span><span class="qt">What is Node.js, and what is it bad at?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>A JavaScript runtime built on V8 with an event-driven, non-blocking I/O model. One thread
+      runs your code; a thread pool underneath handles file system and some crypto work.</p>
+      <p><b>Good at:</b> many concurrent I/O-bound connections — APIs, gateways, streaming,
+      real-time with WebSockets. <b>Bad at:</b> CPU-bound work, which blocks the single loop and
+      degrades every concurrent request. Push that to a worker thread, a separate service, or a
+      different runtime.</p>
+      <div class="tip"><b>Scaling:</b> the <code>cluster</code> module or a process manager runs one
+      Node process per core; in containers you simply run more replicas. Same conclusion as Python
+      — horizontal, not threaded.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q8</span><span class="qt">An Express API with the things that are usually missing</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>import express from "express";
+import helmet from "helmet";
+import { z } from "zod";
+
+const app = express();
+app.use(helmet());                 // security headers
+app.use(express.json({ limit: "1mb" }));
+app.use(correlationId);            // custom middleware, sets req.correlationId
+
+const CreateAsset = z.object({
+  name: z.string().min(1).max(120),
+  siteId: z.number().int().positive(),
+});
+
+app.post("/v1/assets", async (req, res, next) =&gt; {
+  try {
+    const body = CreateAsset.parse(req.body);          // 400 on bad input
+    const created = await assetService.create(body);
+    res.status(201).location(`/v1/assets/${created.id}`).json(created);
+  } catch (err) {
+    next(err);                                          // delegate to the error handler
+  }
+});
+
+// error middleware must have four parameters — this is how Express identifies it
+app.use((err, req, res, _next) =&gt; {
+  const status = err instanceof z.ZodError ? 400 : err.status ?? 500;
+  if (status &gt;= 500) logger.error({ err, correlationId: req.correlationId });
+  res.status(status).json({ title: err.name, status, traceId: req.correlationId });
+});</code></pre>
+      <div class="gotcha"><b>The Express trap:</b> an error thrown inside an <code>async</code>
+      handler is <i>not</i> caught by Express 4 automatically — you must call <code>next(err)</code>
+      or wrap the handler. Forgetting it produces a request that hangs until it times out, with
+      nothing in the logs. Express 5 fixes this; knowing the difference is a good detail.</div>
+      <div class="note"><b>If asked about NestJS:</b> it is an opinionated framework over Express
+      with decorators, modules and dependency injection — structurally very close to Spring Boot or
+      ASP.NET Core. Choose it for a larger team that benefits from imposed structure; plain Express
+      for a small service.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="s3">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 3</div>
+    <div>
+      <h2>From wireframe to responsive UI</h2>
+      <p>The JD line most candidates skip entirely. Preparing this is nearly free marks.</p>
+    </div>
+  </div>
+
+  <div class="primer">
+    <h3><span class="pill">Primer</span>Layout, from zero</h3>
+
+    <h4>The box model</h4>
+    <p>Every element is a box: content, padding, border, margin. By default <code>width</code> means
+    the content only, so padding and border are added on top — which is why layouts overflow. Every
+    modern codebase starts with <code>*{box-sizing:border-box}</code> so <code>width</code> includes
+    padding and border. Knowing that one line and why it exists is a real front-end signal.</p>
+
+    <h4>Flexbox — one dimension</h4>
+    <p>For a row or a column: toolbars, card contents, form rows, anything that should sit in a line
+    and wrap.</p>
+    <pre><code>.toolbar {
+  display: flex;
+  gap: 12px;                    /* replaces margin hacks */
+  align-items: center;          /* cross axis */
+  justify-content: space-between; /* main axis */
+  flex-wrap: wrap;              /* allow wrapping on narrow screens */
+}
+.toolbar .spacer { flex: 1; }   /* grow to fill remaining space */</code></pre>
+
+    <h4>Grid — two dimensions</h4>
+    <p>For page layouts and card grids. The single most useful line in responsive CSS:</p>
+    <pre><code>.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}</code></pre>
+    <p>That produces as many columns as fit, each at least 260px, sharing space equally — a fully
+    responsive card grid <b>with no media queries at all</b>. Being able to write it from memory is
+    worth more than reciting the flexbox property list.</p>
+
+    <h4>Mobile-first breakpoints</h4>
+    <pre><code>/* base styles = smallest screen */
+.layout { display: grid; grid-template-columns: 1fr; }
+
+@media (min-width: 768px)  { .layout { grid-template-columns: 220px 1fr; } }
+@media (min-width: 1200px) { .layout { grid-template-columns: 260px 1fr 300px; } }</code></pre>
+    <p>Write the small screen first and add complexity upward with <code>min-width</code>. The
+    reverse — designing for desktop and stripping away — produces layouts that carry desktop weight
+    onto phones, and it is what interviewers mean when they ask "mobile-first".</p>
+
+    <h4>Design tokens</h4>
+    <p>Put the design system's decisions in one place so the whole UI changes together, and so
+    dark mode is a variable swap rather than a rewrite:</p>
+    <pre><code>:root {
+  --space-2: 8px;  --space-3: 12px;  --space-4: 16px;
+  --color-ink: #161a22;  --color-accent: #4338ca;
+  --radius: 12px;
+}
+.card { padding: var(--space-4); border-radius: var(--radius); }</code></pre>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q9</span><span class="qt">"Walk me through turning a Figma mockup into a working screen."</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Give them a process. The process is the answer; the CSS is incidental.</p>
+      <ol>
+        <li><b>Inventory the components.</b> Go through the mockup and mark what repeats — button,
+        card, field, table row, empty state. Build those first as reusable components, then compose
+        screens from them. Building screen-by-screen is how you end up with nine slightly different
+        buttons.</li>
+        <li><b>Extract the tokens.</b> Spacing scale, type scale, colours, radii, breakpoints, into
+        CSS variables or the theme file. Agree them with the designer once.</li>
+        <li><b>Ask for the states the mockup does not show.</b> Loading, empty, error, no permission,
+        very long text, 500 rows, offline. Designers hand over the happy path; <b>asking this
+        question in the interview is itself the strong signal.</b></li>
+        <li><b>Build mobile-first</b>, semantic HTML first, then layout, then polish.</li>
+        <li><b>Wire the data</b> with explicit loading and error handling — no screen that shows
+        nothing while it waits.</li>
+        <li><b>Check accessibility</b> as you go, not at the end.</li>
+        <li><b>Review against the design at real breakpoints on a real device</b>, and walk the
+        designer through it before it reaches QA.</li>
+      </ol>
+      <div class="tip"><b>The collaboration point they are testing:</b> a good developer pushes back
+      on a design that is expensive for no user benefit, and offers the cheap alternative. "This
+      layout needs a custom scroll behaviour that will break on mobile Safari — here's a version
+      that gets 95% of it for a tenth of the effort" is what they want to hear.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q10</span><span class="qt">React fundamentals: components, props, state, keys</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>type Props = { siteId: number; onSelect: (a: Asset) =&gt; void };
+
+export function AssetList({ siteId, onSelect }: Props) {
+  const [assets, setAssets] = useState&lt;Asset[]&gt;([]);
+  const [status, setStatus] = useState&lt;"loading" | "ready" | "error"&gt;("loading");
+
+  useEffect(() =&gt; {
+    const controller = new AbortController();
+    getJson(`/v1/assets?siteId=${siteId}`, z.array(AssetSchema), controller.signal)
+      .then(data =&gt; { setAssets(data); setStatus("ready"); })
+      .catch(err =&gt; { if (err.name !== "AbortError") setStatus("error"); });
+    return () =&gt; controller.abort();      // cleanup — cancels if siteId changes or unmounts
+  }, [siteId]);                            // dependency array: re-run when siteId changes
+
+  if (status === "loading") return &lt;Spinner /&gt;;
+  if (status === "error")   return &lt;ErrorBanner onRetry={...} /&gt;;
+  if (!assets.length)       return &lt;EmptyState /&gt;;
+
+  return (
+    &lt;ul&gt;
+      {assets.map(a =&gt; (
+        &lt;li key={a.id}&gt;                 {/* stable key, never the array index */}
+          &lt;button onClick={() =&gt; onSelect(a)}&gt;{a.name}&lt;/button&gt;
+        &lt;/li&gt;
+      ))}
+    &lt;/ul&gt;
+  );
+}</code></pre>
+      <ul>
+        <li><b>Props</b> come from the parent and are read-only. <b>State</b> is owned by the
+        component and changing it triggers a re-render.</li>
+        <li><b>The dependency array</b> controls when the effect re-runs. Omitting a dependency is
+        the most common React bug — the effect closes over a stale value.</li>
+        <li><b>Cleanup</b> (the returned function) cancels in-flight work. Without it you get "state
+        update on an unmounted component" and race conditions where an old response overwrites a
+        new one.</li>
+        <li><b>Keys must be stable and unique.</b> Using the array index means React reuses the
+        wrong DOM node when the list reorders — you see it as input values jumping between rows.</li>
+      </ul>
+      <div class="gotcha"><b>The four states rule.</b> Notice the component handles loading, error,
+      empty and data. Shipping only the data path is the most common front-end review comment there
+      is — showing all four unprompted marks you out.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q11</span><span class="qt">Hooks: useState, useEffect, useMemo, useCallback — and when not to</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Hook</th><th>Purpose</th></tr>
+        <tr><td><code>useState</code></td><td>Local state that triggers re-render</td></tr>
+        <tr><td><code>useEffect</code></td><td>Synchronise with something outside React: fetches, subscriptions, timers</td></tr>
+        <tr><td><code>useMemo</code></td><td>Cache an expensive computed value between renders</td></tr>
+        <tr><td><code>useCallback</code></td><td>Keep a function identity stable so a memoised child does not re-render</td></tr>
+        <tr><td><code>useRef</code></td><td>A mutable value that does <b>not</b> trigger re-render; also DOM access</td></tr>
+        <tr><td><code>useContext</code></td><td>Read shared state without threading props through every level</td></tr>
+      </table>
+      <p><b>Rules of hooks:</b> only at the top level of a component (never inside a condition or
+      loop) and only from components or other hooks. React identifies hooks by call order, which is
+      why the order must be identical on every render.</p>
+      <div class="gotcha"><b>The senior answer on <code>useMemo</code>/<code>useCallback</code>:</b>
+      they are not free — they cost memory and comparison on every render. Reach for them when you
+      have measured a problem, not by default. Candidates who wrap everything in <code>useMemo</code>
+      are cargo-culting, and experienced interviewers probe for it.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q12</span><span class="qt">How do you manage state and server data in a React app?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Separate the two kinds — this distinction is the whole answer:</p>
+      <ul>
+        <li><b>Server state</b> — data that lives in your API. It is cached, can go stale, needs
+        refetching, retries and loading states. Use a data-fetching library
+        (<b>TanStack Query</b>, RTK Query) rather than hand-rolling <code>useEffect</code> +
+        <code>useState</code> everywhere. It gives you caching, deduplication, background refresh
+        and stale-while-revalidate for free.</li>
+        <li><b>Client state</b> — UI state: which tab is open, form input, a modal. Keep it local
+        with <code>useState</code>; lift it only as far as it needs to go; reach for Context or a
+        small store (Zustand, Redux Toolkit) only when genuinely shared.</li>
+      </ul>
+      <div class="say">"Most 'we need Redux' problems are really 'we're storing server data in
+      client state'. Once server data is handled by a query cache, the amount of global client state
+      left is usually small enough not to need a store at all."</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q13</span><span class="qt">Accessibility — what a developer is expected to do</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <ul>
+        <li><b>Semantic HTML first.</b> A <code>&lt;button&gt;</code> is focusable, keyboard-activatable
+        and announced as a button. A <code>&lt;div onClick&gt;</code> is none of those and needs four
+        attributes to catch up. <b>The best ARIA is no ARIA.</b></li>
+        <li><b>Labels tied to inputs</b> — <code>&lt;label for="x"&gt;</code> or wrapping. Placeholder
+        text is not a label; it disappears when you type.</li>
+        <li><b>Keyboard operability.</b> Everything reachable by Tab, in a sensible order, with a
+        <i>visible</i> focus ring. Never <code>outline: none</code> without a replacement.</li>
+        <li><b>Colour contrast</b> at least 4.5:1 for body text, and never colour as the only
+        signal — pair it with an icon or text.</li>
+        <li><b>Images:</b> meaningful <code>alt</code>, or <code>alt=""</code> for decorative ones.</li>
+        <li><b>Live regions</b> so screen readers announce async changes like "3 results found" or
+        a validation error.</li>
+      </ul>
+      <div class="bridgebox"><b>Coming from test automation →</b> you may have run axe or Lighthouse audits.
+      Say so, and make the developer-side point: accessibility issues are cheapest to fix at the
+      component level and most expensive as a retro-fit audit, so it belongs in the definition of
+      done — which is also exactly why accessible markup gives you stable test selectors
+      (<code>getByRole</code>) instead of brittle CSS ones.</div>
+      <div class="note"><b>Why it matters in public-sector work:</b> infrastructure and environmental
+      work is frequently public-sector, and public-sector procurement in most countries carries
+      accessibility requirements (WCAG 2.1 AA). This is a compliance concern, not a nice-to-have —
+      saying that shows commercial awareness.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q14</span><span class="qt">Front-end performance: what actually makes a page slow</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Cause</th><th>Fix</th></tr>
+        <tr><td>Huge JavaScript bundle</td><td>Code-split by route, lazy-load heavy components (maps, charts, editors), analyse the bundle and remove the accidental 300 KB date library</td></tr>
+        <tr><td>Unoptimised images</td><td>Modern formats, correct dimensions, <code>loading="lazy"</code>, a CDN</td></tr>
+        <tr><td>Waterfall requests</td><td>Parallelise; preload critical resources; avoid fetch-inside-fetch chains</td></tr>
+        <tr><td>Rendering thousands of rows</td><td>Virtualise the list, or paginate — the DOM is the bottleneck, not the data</td></tr>
+        <tr><td>Layout shift</td><td>Reserve space for images and async content with explicit dimensions or skeletons</td></tr>
+        <tr><td>Blocking the main thread</td><td>Move heavy computation to a Web Worker</td></tr>
+      </table>
+      <p><b>Core Web Vitals</b> are the metrics to name: <b>LCP</b> (largest contentful paint — how
+      soon the main content appears), <b>INP</b> (interaction to next paint — responsiveness), and
+      <b>CLS</b> (cumulative layout shift — does the page jump about).</p>
+      <div class="tip"><b>Method over trivia:</b> "I'd start from a Lighthouse run and a network
+      waterfall on a throttled connection, because the bottleneck on a site engineer's phone on
+      4G is rarely the one you see on a desktop with fibre."</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q15</span><span class="qt">Front-end security: XSS, tokens, and where to store them</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>XSS</b> is attacker-controlled content executing as script in another user's browser.
+      React escapes interpolated values by default, which handles most of it — the hole is
+      <code>dangerouslySetInnerHTML</code> (the name is a warning) and any <code>href</code> built
+      from user input, since <code>javascript:</code> URLs execute.</p>
+      <p>Defence in depth: a <b>Content-Security-Policy</b> header restricting where scripts may
+      load from, and sanitising any HTML you genuinely must render.</p>
+      <h5>Where to keep the access token</h5>
+      <table>
+        <tr><th>Option</th><th>Risk</th></tr>
+        <tr><td><code>localStorage</code></td><td>Readable by any script on the page — one XSS and the token is gone. Convenient, commonly used, genuinely weaker.</td></tr>
+        <tr><td>In-memory only</td><td>Safe from persistent theft, lost on refresh — pair with a refresh flow.</td></tr>
+        <tr><td><b>httpOnly, Secure, SameSite cookie</b></td><td>Not readable by JavaScript at all. Best option; requires CSRF protection in return.</td></tr>
+      </table>
+      <div class="say">"I'd default to an httpOnly SameSite cookie for the refresh token and keep
+      the access token in memory. Putting a long-lived token in localStorage means any XSS anywhere
+      on the site is a full account compromise."</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q16</span><span class="qt">Mobile: responsive web, PWA, or React Native?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Approach</th><th>Gains</th><th>Costs</th></tr>
+        <tr><td><b>Responsive web</b></td><td>One codebase, instant updates, no app store</td><td>Limited device access, no true offline, not in the app drawer</td></tr>
+        <tr><td><b>PWA</b></td><td>Installable, offline via service worker, push notifications, still one codebase</td><td>Platform capability gaps, particularly on iOS</td></tr>
+        <tr><td><b>React Native / .NET MAUI</b></td><td>Near-native performance, full device access (camera, GPS, Bluetooth), background work</td><td>Separate build and release pipeline, app store review, native knowledge needed</td></tr>
+      </table>
+      <div class="note"><b>The field-engineering answer.</b> Field data capture — a surveyor recording asset
+      condition on a bridge or a site with no signal — makes <b>offline-first</b> the deciding
+      requirement, not the rendering technology. That means local storage of pending changes, a sync
+      queue, conflict resolution when two people edited the same record, and GPS and camera access.
+      Saying "the requirement that drives this decision is offline capture and sync, not
+      performance" is a genuinely senior answer and it is specific to their domain.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q17</span><span class="qt">How do you test a front-end?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <ul>
+        <li><b>Unit</b> — pure functions and hooks (Vitest/Jest).</li>
+        <li><b>Component</b> — React Testing Library, querying by <b>role and accessible name</b>
+        rather than CSS classes, so tests survive refactors and implicitly check accessibility.</li>
+        <li><b>Integration</b> — a few screens with the network mocked at the HTTP layer (MSW), so
+        you test the real fetch path rather than a stubbed module.</li>
+        <li><b>End-to-end</b> — Playwright, for critical journeys only.</li>
+        <li><b>Visual regression</b> — screenshot comparison for a design system, where a CSS change
+        can silently break twenty screens.</li>
+      </ul>
+      <div class="bridgebox"><b>Coming from test automation, this is strong ground.</b> The
+      principle "test what the user does, not how the component is built" is arguable from
+      experience rather than from theory — and preferring <code>getByRole</code> over CSS selectors
+      is the same locator-stability argument, applied one layer earlier.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <nav class="pager">
+      <a class="pn" href="02-python.html">&#8592; 02 · Python</a>
+      <a class="pn" href="04-csharp-dotnet-java.html">04 · C#/.NET and Java Spring Boot &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

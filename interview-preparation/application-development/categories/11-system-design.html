@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11 · System Design &amp; Architecture — Interview Prep</title>
+<meta name="description" content="A repeatable framework for the design round, back-of-envelope estimation, and four worked designs taken from an engineering consultancy's problem space: sensor ingestion, offline field capture, document search and a notification service.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">AD</span><span>11 · System Design</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this page…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All categories</a> &nbsp;·&nbsp; 11 · System design &amp; architecture</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+
+<section class="sec" id="s1">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 1</div>
+    <div>
+      <h2>How to run a design round</h2>
+      <p>"Help shape technical architecture decisions" appears in most mid-level job descriptions, so
+         expect a design round. The good news: they reward process far more than knowledge, and
+         process can be rehearsed.</p>
+    </div>
+  </div>
+
+  <div class="primer">
+    <h3><span class="pill">Primer</span>The framework, and what is actually being marked</h3>
+
+    <p>A design interview is not testing whether you know the correct architecture. There isn't one.
+    It is testing four things:</p>
+    <ol>
+      <li><b>Do you clarify before building?</b> Candidates who start drawing immediately fail here
+      before they have said anything technical.</li>
+      <li><b>Can you decompose a vague problem into components with responsibilities?</b></li>
+      <li><b>Do you reason about trade-offs, or recite technologies?</b> "I'd use Kafka" is worth
+      nothing. "I'd use a partitioned log here because we need replay and multiple independent
+      consumers, and the cost is operational complexity" is worth everything.</li>
+      <li><b>Do you know where your design breaks?</b> Volunteering the weakness is the strongest
+      move available, because a senior engineer is someone who knows what will hurt.</li>
+    </ol>
+
+    <h4>The six steps, with timings for a 45-minute round</h4>
+    <table>
+      <tr><th>Step</th><th>Time</th><th>Do</th></tr>
+      <tr><td><b>1. Clarify</b></td><td>5 min</td><td>Who uses it, top three use cases, what is out of scope, what "done" looks like. Write the agreed scope where you both can see it.</td></tr>
+      <tr><td><b>2. Estimate</b></td><td>5 min</td><td>Users, requests per second, data volume and growth, read/write ratio, latency target, retention.</td></tr>
+      <tr><td><b>3. API</b></td><td>5 min</td><td>Three or four endpoints or events. Forces the data model to become concrete.</td></tr>
+      <tr><td><b>4. Data model</b></td><td>5 min</td><td>Entities, relationships, and which store — with the reason.</td></tr>
+      <tr><td><b>5. Architecture</b></td><td>15 min</td><td>The boxes and arrows. Walk one request through end to end out loud.</td></tr>
+      <tr><td><b>6. Attack it</b></td><td>10 min</td><td>Bottleneck, single point of failure, 10× traffic, failure modes, security, cost, monitoring.</td></tr>
+    </table>
+
+    <h4>Back-of-envelope numbers worth memorising</h4>
+    <table>
+      <tr><th>Quantity</th><th>Rough value</th></tr>
+      <tr><td>Seconds in a day</td><td>86,400 — call it 100,000</td></tr>
+      <tr><td>1 million requests/day</td><td>~12 per second average, so plan for ~50–100 at peak</td></tr>
+      <tr><td>Peak-to-average ratio</td><td>Assume 3–5×, more for an office-hours business system</td></tr>
+      <tr><td>Memory read</td><td>~100 ns</td></tr>
+      <tr><td>SSD read</td><td>~100 µs — 1,000× slower than memory</td></tr>
+      <tr><td>Same-datacentre round trip</td><td>~0.5 ms</td></tr>
+      <tr><td>Cross-continent round trip</td><td>~150 ms — no architecture beats the speed of light</td></tr>
+      <tr><td>A typical database row</td><td>~1 KB. 1 billion rows ≈ 1 TB</td></tr>
+      <tr><td>One modest server</td><td>Thousands of simple requests/second. <b>Most systems need far less scale than candidates assume.</b></td></tr>
+    </table>
+
+    <h4>Three sentences that improve almost any design answer</h4>
+    <ul>
+      <li>"Before I design anything — who uses this, and what are the two or three things they
+      actually need it to do?"</li>
+      <li>"Let me start with the simplest thing that could work, then find the point where it
+      breaks." <i>(Starting simple and evolving under pressure is much stronger than opening with a
+      microservice diagram.)</i></li>
+      <li>"The weakness of this design is X, and if we hit that I'd address it by Y."</li>
+    </ul>
+
+    <div class="gotcha"><b>The most common failure at mid-level:</b> over-engineering. Proposing
+    Kubernetes, event sourcing, CQRS and six services for a system with 200 users. It reads as
+    someone who has watched conference talks rather than run systems. <b>Right-sizing is the
+    senior signal.</b></div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q1</span><span class="qt">Design: an environmental sensor ingestion and alerting platform</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>A very common design question in the infrastructure and environmental space. Air quality, water level, noise, structural
+      strain monitors across many sites.</p>
+      <h5>1. Clarify</h5>
+      <ul>
+        <li>How many devices, and at what frequency? (Say 50,000 devices, one reading per minute.)</li>
+        <li>Is anything acted on automatically, or is it dashboards and reports?</li>
+        <li>What is the alert latency requirement — seconds, or "within the hour"?</li>
+        <li>How long must raw data be retained? (Regulatory answer: usually years.)</li>
+        <li>Do devices buffer when connectivity drops? (They do — so out-of-order and late data are
+        normal, not exceptional.)</li>
+      </ul>
+      <h5>2. Estimate</h5>
+      <p>50,000 devices × 1/min ≈ <b>833 events/second</b> average, perhaps 2,500 at peak. At ~200
+      bytes each that is ~14 GB/day raw, ~5 TB/year. Comfortably within one Event Hubs namespace and
+      a lakehouse — <b>not</b> a problem needing exotic scale, and saying so is a mark in your favour.</p>
+      <h5>3. Architecture</h5>
+      <pre><code>Devices ──▶ IoT Hub / Event Hubs ──┬──▶ Stream processor ──▶ Alert rules
+           (device identity,        │    (windowed aggregates)      │
+            buffering, ordering     │                               ▼
+            per device)             │                        Service Bus ──▶ Notification service
+                                    │
+                                    └──▶ Capture to ADLS (bronze, raw Parquet)
+                                                    │
+                                          Databricks / ADF (silver: cleaned, gap-filled)
+                                                    │
+                                          Gold: hourly & daily aggregates
+                                                    │
+                                   ┌────────────────┴─────────────────┐
+                                   ▼                                  ▼
+                          Time-series API  ◀── Dashboard        Power BI / reports</code></pre>
+      <h5>4. The decisions to justify out loud</h5>
+      <ul>
+        <li><b>Event Hubs, not a queue</b>, because multiple independent consumers need the same
+        stream (alerting, archival, analytics) and replay matters when a downstream consumer has a
+        bug. Partition by device ID for per-device ordering.</li>
+        <li><b>Capture raw to storage immediately</b>, before any processing. If the transformation
+        is wrong you reprocess; ingestion is the one step you cannot redo.</li>
+        <li><b>Alerting is separate from analytics</b> — different latency requirements, so
+        different paths. Do not make a dashboard query the alerting path.</li>
+        <li><b>Downsample for retention:</b> raw for 90 days, hourly for 2 years, daily forever.
+        Otherwise storage grows without bound for data nobody queries at that resolution.</li>
+        <li><b>Alert state matters more than alert detection.</b> A sensor oscillating around a
+        threshold must not send 400 notifications — you need debouncing, hysteresis, deduplication
+        and acknowledgement. This is the part most candidates miss and it is the part that decides
+        whether people trust the system.</li>
+      </ul>
+      <h5>5. Attack it</h5>
+      <p><b>Late and out-of-order data</b> from buffered devices — use event time with a watermark,
+      and design aggregates to be recomputable. <b>A device with a stuck clock</b> poisoning
+      time-based aggregates — validate timestamps on ingest. <b>Missing data is meaningful</b>: a
+      sensor that stops reporting may be the most important signal, so monitor for silence, not just
+      for values. <b>Backpressure</b> if the processor falls behind — the stream buffers, which is
+      why it is a log rather than a queue.</p>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q2</span><span class="qt">Design: an offline-first field inspection app</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Engineers inspecting bridges, culverts and substations, frequently with no signal. This is
+      the design most specific to real field-engineering work, and offline sync is a genuinely hard problem —
+      which makes it a good one to show judgement on.</p>
+      <h5>1. Clarify</h5>
+      <ul>
+        <li>How long offline — hours, or days?</li>
+        <li>Can two inspectors edit the same asset? (This determines whether you need conflict
+        resolution at all — and if the answer is no, say so and skip the complexity.)</li>
+        <li>Photo and video volume per inspection? This dominates the sync design.</li>
+        <li>Does the inspector need reference data offline (drawings, previous inspections, asset
+        register)?</li>
+      </ul>
+      <h5>2. The design</h5>
+      <pre><code>Mobile app
+ ├── Local store (SQLite)            asset cache + pending changes queue
+ ├── Outbox of operations            each with a client-generated UUID
+ └── Sync engine                     runs when connectivity returns
+                │
+                ▼
+        Sync API  (idempotent, batched)
+                │
+   ┌────────────┼──────────────────┐
+   ▼            ▼                  ▼
+ Assets DB   Blob storage    Service Bus ──▶ downstream processing
+             (photos, direct
+              upload via SAS)</code></pre>
+      <h5>3. The decisions that matter</h5>
+      <ul>
+        <li><b>Client-generated IDs (UUIDs).</b> The device must create records while offline, so
+        the server cannot be the source of identity. This also makes sync naturally idempotent.</li>
+        <li><b>Sync an operation log, not final state.</b> "Set condition to 62 at 09:20" merges far
+        better than "here is my whole record".</li>
+        <li><b>Photos upload separately and resumably</b>, direct to blob storage via a SAS URL, at
+        lower priority than the structured data. A 4G connection at the edge of a field will not
+        survive a 200 MB upload — so structured data syncs first and the inspection is usable
+        before the media arrives.</li>
+        <li><b>Conflict policy decided by the business, not the code.</b> Last-write-wins is fine
+        for a note and wrong for a safety rating. Ask; then implement the answer, flagging genuine
+        conflicts for human review rather than silently discarding one.</li>
+        <li><b>Reference data pre-downloaded by area</b> before going on site, with a version so the
+        app can tell the user their cache is stale.</li>
+        <li><b>The sync endpoint must be idempotent and batched</b> — one call with 40 operations,
+        replayable safely. See <a href="05-api-design.html">category 05, Q5</a>.</li>
+      </ul>
+      <h5>4. Attack it</h5>
+      <p><b>A device syncing after two weeks offline</b> against reference data that has changed —
+      needs a schema/version negotiation and a defined behaviour. <b>Storage limits</b> on the device
+      after many inspections with photos — needs eviction of synced data. <b>Battery and data
+      usage</b>, which is a real constraint for a full day in the field. <b>Security of the local
+      cache</b> — an unencrypted device store containing client site data is a serious exposure, so
+      encrypt at rest and support remote wipe.</p>
+      <div class="tip"><b>Say the meta-point:</b> "Offline sync is one of those problems where the
+      right first question is how much of it we genuinely need. If inspectors are offline for hours
+      rather than days and never edit the same asset, a queue of operations with client-generated
+      IDs is enough, and I'd avoid building a conflict-resolution engine nobody needs."</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q3</span><span class="qt">Design: a document management and search platform</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Engineering consultancies run on documents — drawings, specifications, reports, standards,
+      correspondence — across thousands of projects, with strict access control and retention.</p>
+      <h5>The design</h5>
+      <pre><code>Upload ──▶ API ──▶ SAS URL ──▶ Blob Storage (versioned, immutable, tiered)
+                    │
+                    └─▶ Event Grid ──▶ Function (processing pipeline)
+                                          ├── virus scan
+                                          ├── text + metadata extraction (OCR for scans)
+                                          ├── thumbnail generation
+                                          └── index into Azure AI Search
+                                                   │
+Search API ◀───────────────────────────────────────┘
+   │  (security trimming applied at query time)
+   ▼
+ Metadata DB (Azure SQL): project, document type, revision, status, permissions</code></pre>
+      <h5>The decisions</h5>
+      <ul>
+        <li><b>Metadata in SQL, bytes in blob storage.</b> Never store files in the database.</li>
+        <li><b>Immutable versions.</b> A revision is a new blob, never an overwrite. In a discipline
+        where "which revision was issued for construction?" is a legal question, this is a
+        requirement, not a design preference.</li>
+        <li><b>Processing is asynchronous and event-driven</b> — the upload returns immediately; OCR
+        of a 300-page scan happens behind it. The document has a processing status the UI shows.</li>
+        <li><b>Security trimming at query time.</b> The search index carries permission identifiers
+        and the query filters on the caller's groups. Filtering results <i>after</i> retrieval leaks
+        existence and breaks paging counts.</li>
+        <li><b>Lifecycle to cool and archive tiers</b> — most documents are read in their first
+        month and retained for decades.</li>
+        <li><b>Full-text plus metadata facets</b>, because engineers search by project, discipline
+        and revision at least as often as by words.</li>
+      </ul>
+      <div class="tip"><b>The natural extension question:</b> "how would you add a question-answering
+      assistant over this?" You already have the ingestion and permission model — add chunking,
+      embeddings and a vector index, retrieve with the <i>same</i> security trimming, and return
+      citations. See <a href="10-ml-ai-integration.html">category 10, Q11</a>. Being able to connect
+      the two designs is exactly the hybrid profile this role is looking for.</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q4</span><span class="qt">Design: a notification service</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>A common design question, and a good one because it is deceptively simple.</p>
+      <pre><code>Producers ──▶ Service Bus topic ──▶ Notification service
+                                       ├── resolve recipients + preferences
+                                       ├── apply quiet hours / rate caps / dedup
+                                       ├── render template (per channel, per locale)
+                                       └── dispatch
+                                             ├── Email provider
+                                             ├── SMS provider
+                                             └── Push (mobile)
+                                       └── record status; retry; dead-letter</code></pre>
+      <h5>What makes this question interesting</h5>
+      <ul>
+        <li><b>Idempotency.</b> At-least-once delivery means the same event may arrive twice. Without
+        a deduplication key, users get duplicate emails — the most visible possible bug.</li>
+        <li><b>Preferences and quiet hours</b> are the actual product. Sending is easy; not sending
+        the wrong thing at 3am is the feature.</li>
+        <li><b>Templates are versioned content</b>, not code, so they can change without a
+        deployment — and need a preview and approval path.</li>
+        <li><b>Third-party providers fail.</b> Retry with backoff, circuit-break, and consider a
+        secondary provider for critical channels.</li>
+        <li><b>Priority separation.</b> A critical safety alert must not queue behind 50,000 weekly
+        digest emails — use separate queues or priority handling.</li>
+        <li><b>Delivery status</b> matters: sent, delivered, bounced, opened. Bounces must feed back
+        or you keep sending to a dead address and damage your sending reputation.</li>
+      </ul>
+      <div class="gotcha"><b>The trap:</b> putting the send in the request path of whatever triggered
+      it. If the email provider is slow, saving an inspection becomes slow. Always decouple through
+      a queue — this is the clearest everyday example of when to go asynchronous.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q5</span><span class="qt">Design: an asset dashboard with geospatial filtering</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>A map with tens of thousands of assets, filterable by type, condition and area, with a
+      detail panel.</p>
+      <h5>The problems, in order of how often they are missed</h5>
+      <ul>
+        <li><b>Do not send 50,000 features to the browser.</b> Query by the current map viewport
+        (bounding box), and <b>cluster or aggregate at low zoom</b> — at national zoom the user
+        cannot distinguish individual points anyway. Either server-side clustering or pre-generated
+        vector tiles.</li>
+        <li><b>Spatial index</b> on the geometry column, or every pan is a full table scan.</li>
+        <li><b>Separate the list from the detail.</b> Return minimal fields for the map (id,
+        position, status colour) and fetch the full record only when something is selected.</li>
+        <li><b>Cache aggressively.</b> Asset positions change rarely; condition changes daily. Cache
+        the geometry layer hard, the status layer briefly — two different cache policies for two
+        different data lifetimes.</li>
+        <li><b>Debounce</b> map movement so a pan does not fire thirty queries.</li>
+        <li><b>Coordinate reference system</b> agreed end to end — see
+        <a href="09-databases-data-engineering.html">category 09, Q16</a>. Mixing a projected CRS
+        with WGS84 puts assets in the wrong place, subtly enough that nobody notices for a week.</li>
+      </ul>
+      <div class="tip"><b>The performance framing:</b> "The bottleneck on a map view is almost never
+      the database — it's payload size and the number of DOM or canvas objects. So I'd design the
+      API around what the viewport actually needs rather than around the entity."</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q6</span><span class="qt">The generic scaling toolkit — reach for these in order</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>When asked "what if traffic grows 10×?", walk this list. Cheapest and least disruptive
+      first — the order itself is the answer.</p>
+      <table>
+        <tr><th>Step</th><th>Lever</th></tr>
+        <tr><td>1</td><td><b>Measure.</b> Find the actual bottleneck. Everything below is guessing until you have.</td></tr>
+        <tr><td>2</td><td><b>Fix the obvious query problems</b> — indexes, N+1, missing pagination. Usually the biggest single win, and free.</td></tr>
+        <tr><td>3</td><td><b>Cache</b> — HTTP caching, then a distributed cache for hot reads.</td></tr>
+        <tr><td>4</td><td><b>Scale out the stateless tier.</b> Easy, provided the application is genuinely stateless.</td></tr>
+        <tr><td>5</td><td><b>Move work out of the request path</b> onto a queue. Often the largest structural improvement available.</td></tr>
+        <tr><td>6</td><td><b>Read replicas</b> for read-heavy workloads — accepting replication lag.</td></tr>
+        <tr><td>7</td><td><b>CDN</b> for static and cacheable content.</td></tr>
+        <tr><td>8</td><td><b>Split the hot component</b> into its own service so it scales independently.</td></tr>
+        <tr><td>9</td><td><b>Partition / shard the data.</b> Powerful and hard to reverse — last resort.</td></tr>
+      </table>
+      <div class="gotcha"><b>Jumping to step 9 is the classic mid-level error.</b> Sharding a database
+      that would be fine with an index is the architectural equivalent of demolishing a house to fix
+      a dripping tap. Walking the list in order demonstrates judgement rather than knowledge.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q7</span><span class="qt">How do you talk while designing?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>The mechanics matter, especially remotely.</p>
+      <ul>
+        <li><b>Narrate your reasoning, not your conclusions.</b> "I'm putting a queue here because I
+        don't want report generation in the request path" beats silently drawing a queue.</li>
+        <li><b>Check in.</b> "Does that scope sound right before I go further?" every ten minutes.
+        Interviewers usually want to steer you toward what they intend to probe, and you should let
+        them.</li>
+        <li><b>Say what you are deferring.</b> "I'll assume authentication is handled by Entra ID
+        and come back to authorisation detail if we have time." Shows you know it exists without
+        burning the clock.</li>
+        <li><b>Draw badly and quickly.</b> Boxes and arrows. Nobody is marking your handwriting; on
+        a video call, paper held up to the camera is completely normal.</li>
+        <li><b>When you do not know, say so and reason anyway.</b> "I haven't used Cosmos at that
+        scale — the thing I'd need to establish first is the partition key, because it's the
+        decision you can't undo." That is a better answer than confident invention, and interviewers
+        are explicitly listening for whether you bluff.</li>
+        <li><b>Watch the clock and cover the whole problem.</b> A complete design with shallow
+        detail scores better than a perfect authentication layer and no architecture.</li>
+      </ul>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q8</span><span class="qt">The trade-offs you should be able to argue both sides of</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Interviewers probe by pushing back. Be ready to defend <i>and</i> to concede.</p>
+      <table>
+        <tr><th>Trade-off</th><th>The pivot</th></tr>
+        <tr><td>Consistency vs availability</td><td>What is the cost of a stale read <i>for this specific data</i>? A dashboard count, fine. A permission check, no.</td></tr>
+        <tr><td>Monolith vs microservices</td><td>Team structure and release cadence, not code size.</td></tr>
+        <tr><td>Sync vs async</td><td>Does the caller need the answer to continue?</td></tr>
+        <tr><td>SQL vs NoSQL</td><td>Do relationships and transactions matter, or scale and flexible shape?</td></tr>
+        <tr><td>Normalise vs denormalise</td><td>Write correctness vs read speed. Denormalise deliberately and own the consistency.</td></tr>
+        <tr><td>Build vs buy</td><td>Is this our differentiator? Nobody wins by building their own identity provider.</td></tr>
+        <tr><td>Cache vs freshness</td><td>How stale can this be before someone makes a wrong decision?</td></tr>
+        <tr><td>Batch vs real-time</td><td>What decision does it drive, and how fast must that decision be made?</td></tr>
+      </table>
+      <div class="tip"><b>The universal move when pushed:</b> "That's a fair objection — it depends
+      on X. If X is true, your approach is better; if not, I'd stay with mine because of Y." That
+      shows you hold a position for reasons rather than by habit, and it is what they are probing
+      for. Changing your mind under a good argument is a strength; changing it under mild pressure
+      is not.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <nav class="pager">
+      <a class="pn" href="10-ml-ai-integration.html">&#8592; 10 · ML integration</a>
+      <a class="pn" href="../index.html">All categories &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

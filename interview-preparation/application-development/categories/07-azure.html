@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>07 · Azure for Developers — Interview Prep</title>
+<meta name="description" content="The Azure a developer must know: compute options, storage, Azure SQL and Cosmos DB, Service Bus and Event Hubs, Entra ID and managed identity, Key Vault, API Management, Application Insights, Bicep and cost.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">AD</span><span>07 · Azure</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this page…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All categories</a> &nbsp;·&nbsp; 07 · Azure for developers</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+
+<section class="sec" id="s1">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 1</div>
+    <div>
+      <h2>The mental model, and the services you must be able to choose between</h2>
+      <p>"Azure preferred" appears in most job descriptions on this stack. For many candidates this is the
+         biggest new-territory category — and the one with the highest ratio of marks to study time,
+         because it is mostly vocabulary and decision rules.</p>
+    </div>
+  </div>
+
+  <div class="primer">
+    <h3><span class="pill">Primer</span>How Azure is organised, from zero</h3>
+
+    <h4>The hierarchy</h4>
+    <table>
+      <tr><th>Level</th><th>What it is</th></tr>
+      <tr><td><b>Tenant</b></td><td>The organisation's identity boundary, in Microsoft Entra ID. One tenant per organisation.</td></tr>
+      <tr><td><b>Subscription</b></td><td>The billing and quota boundary. Often one per environment or per business unit.</td></tr>
+      <tr><td><b>Resource group</b></td><td>A logical container for resources that share a lifecycle. <b>Deleting the group deletes everything in it</b> — which is exactly why you group by lifecycle, not by type.</td></tr>
+      <tr><td><b>Resource</b></td><td>The thing itself: a web app, a database, a storage account.</td></tr>
+      <tr><td><b>Region</b></td><td>Where it physically runs. Latency, data residency and cost all depend on it.</td></tr>
+    </table>
+
+    <h4>The three things that are true of everything in Azure</h4>
+    <ol>
+      <li><b>Every resource is described by a template.</b> The portal is a UI over the Azure
+      Resource Manager API. Anything you can click, you can declare in Bicep or Terraform — and in
+      a professional setup you always do, because clicked infrastructure cannot be reviewed,
+      reproduced or rolled back.</li>
+      <li><b>Access is RBAC on a scope.</b> You assign a <i>role</i> (Reader, Contributor, Storage
+      Blob Data Reader) to an <i>identity</i> at a <i>scope</i> (subscription, resource group,
+      resource). Permissions inherit downward. Least privilege means assigning at the narrowest
+      scope that works.</li>
+      <li><b>Identity is the security perimeter.</b> The modern pattern is that resources
+      authenticate to each other as themselves via <b>managed identity</b>, with no connection
+      strings or keys anywhere. If you remember one Azure concept, remember this one.</li>
+    </ol>
+
+    <h4>The vocabulary that trips people up</h4>
+    <table>
+      <tr><th>Term</th><th>Meaning</th></tr>
+      <tr><td><b>Microsoft Entra ID</b></td><td>The identity provider. Formerly Azure Active Directory — both names are still used, so recognise both.</td></tr>
+      <tr><td><b>Managed identity</b></td><td>An identity Azure creates and rotates for a resource. System-assigned (tied to one resource's lifecycle) or user-assigned (shared across several).</td></tr>
+      <tr><td><b>Service principal</b></td><td>An identity for an application, used where managed identity is not available — for example a CI pipeline outside Azure.</td></tr>
+      <tr><td><b>SAS token</b></td><td>Shared Access Signature — a time-limited, scoped URL granting access to a storage object.</td></tr>
+      <tr><td><b>Private endpoint</b></td><td>Gives a PaaS service a private IP inside your virtual network, so traffic never crosses the public internet.</td></tr>
+      <tr><td><b>SKU / tier</b></td><td>The size and feature level you pay for. Many features (VNet integration, slots, autoscale) are gated behind a tier — a very common real-world surprise.</td></tr>
+    </table>
+
+    <div class="note"><b>How to prepare this honestly in a few evenings.</b> Get a free Azure
+    account, deploy one container to Container Apps, put its secret in Key Vault, connect with a
+    managed identity, and send its logs to Application Insights. That single exercise gives you
+    first-hand answers to about half the questions on this page, and lets you say "when I set this
+    up" rather than "I believe you would". It costs nothing on the free tier.</div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q1</span><span class="qt">Where would you host this application? — the compute decision</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Service</th><th>What it is</th><th>Choose when</th></tr>
+        <tr><td><b>App Service</b></td><td>Managed PaaS for web apps and APIs</td><td>A standard web application. Deployment slots, autoscale, easy custom domains and TLS. The lowest-friction default.</td></tr>
+        <tr><td><b>Azure Functions</b></td><td>Event-driven, per-execution</td><td>Triggers and glue: a blob lands, a queue message arrives, a timer fires. Consumption plan bills only when it runs.</td></tr>
+        <tr><td><b>Container Apps</b></td><td>Managed containers on Kubernetes you never see</td><td>Microservices with scale-to-zero, revisions, traffic splitting and built-in Dapr — without operating a cluster. <b>Usually the right answer for a team this size.</b></td></tr>
+        <tr><td><b>AKS</b></td><td>Managed Kubernetes</td><td>You need real Kubernetes control, custom operators or a large estate — and you have the people to run it.</td></tr>
+        <tr><td><b>Container Instances</b></td><td>A single container, no orchestration</td><td>Short-lived batch jobs and burst capacity.</td></tr>
+        <tr><td><b>Static Web Apps</b></td><td>Static front-end plus a managed Functions API</td><td>A React/Angular SPA with a light backend. Free tier, global CDN, built-in auth.</td></tr>
+        <tr><td><b>Virtual Machines</b></td><td>IaaS</td><td>Legacy software, specific OS requirements, or licensing constraints. Last resort — you inherit all the patching.</td></tr>
+      </table>
+      <div class="say">"For a new API I'd start with App Service or Container Apps depending on
+      whether we're containerising. Container Apps if we want several services with independent
+      scaling, App Service if it's one web application and simplicity wins. I'd only reach for AKS
+      when there's a concrete need for cluster-level control, because it's a meaningful operational
+      commitment."</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q2</span><span class="qt">App Service: slots, scaling and configuration</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <ul>
+        <li><b>Deployment slots</b> — a staging slot is a live copy on the same plan. Deploy there,
+        warm it up, smoke test, then <b>swap</b>. The swap is near-instant and reversible, which
+        makes it blue-green deployment with almost no effort. This is the single most useful App
+        Service feature to name.</li>
+        <li><b>App settings become environment variables</b>, and can be marked <b>slot-specific</b>
+        so they do not travel with a swap — which is how the staging slot keeps pointing at the
+        staging database.</li>
+        <li><b>Scaling:</b> <i>scale up</i> changes the plan tier (bigger instance);
+        <i>scale out</i> adds instances, manually or by autoscale rules on CPU, memory, queue depth
+        or a schedule.</li>
+        <li><b>Always On</b> stops the app being unloaded when idle — otherwise the first request
+        after a quiet period is very slow.</li>
+        <li><b>Health check path</b> so unhealthy instances are taken out of rotation automatically.</li>
+      </ul>
+      <div class="gotcha"><b>The swap trap:</b> if your app caches configuration at startup and the
+      slot swap changes connection strings, you can briefly serve requests against the wrong
+      database. Warm up the slot and verify against the settings it will actually run with. Also:
+      an in-progress swap plus a scale event is a well-known source of confusion — keep deployments
+      and scaling events apart.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q3</span><span class="qt">Azure Functions: triggers, bindings, plans and cold starts</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>A function has one <b>trigger</b> (what starts it) and any number of <b>bindings</b> (data
+      in and out, declared rather than coded).</p>
+      <pre><code>@app.blob_trigger(arg_name="blob", path="uploads/{name}",
+                  connection="STORAGE_CONNECTION")
+@app.queue_output(arg_name="msg", queue_name="processed",
+                  connection="STORAGE_CONNECTION")
+def process_upload(blob: func.InputStream, msg: func.Out[str]):
+    result = parse_survey(blob.read())
+    msg.set(json.dumps(result))</code></pre>
+      <table>
+        <tr><th>Plan</th><th>Trade-off</th></tr>
+        <tr><td><b>Consumption</b></td><td>Pay per execution, scale to zero. <b>Cold starts</b> — the first call after idle takes seconds. Execution time limited.</td></tr>
+        <tr><td><b>Premium</b></td><td>Pre-warmed instances (no cold start), VNet integration, longer runs. Costs whether used or not.</td></tr>
+        <tr><td><b>Dedicated (App Service plan)</b></td><td>Runs on a plan you already pay for.</td></tr>
+      </table>
+      <div class="tip"><b>Mention Durable Functions</b> if orchestration comes up: it lets you write
+      a multi-step workflow with fan-out/fan-in, waiting and human approval as ordinary code, with
+      the state checkpointed for you. It is Azure's answer to the saga orchestration problem and
+      knowing it exists is a differentiator.</div>
+      <div class="gotcha"><b>Common trap:</b> putting a long-running or latency-sensitive API on a
+      Consumption plan. A user-facing endpoint that takes eight seconds because of a cold start is
+      a bad experience, and it appears only after quiet periods — so it passes every test.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q4</span><span class="qt">Storage: blobs, tiers, and what a data lake is</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Service</th><th>For</th></tr>
+        <tr><td><b>Blob Storage</b></td><td>Unstructured objects — documents, images, backups, raw data. The workhorse.</td></tr>
+        <tr><td><b>ADLS Gen2</b></td><td>Blob storage with a real hierarchical namespace and POSIX-style ACLs. <b>The data lake</b>; what analytics engines expect.</td></tr>
+        <tr><td><b>Azure Files</b></td><td>An SMB/NFS file share, for lift-and-shift applications that need a mounted drive.</td></tr>
+        <tr><td><b>Queue Storage</b></td><td>Simple, cheap queue. Service Bus when you need ordering, sessions, topics or transactions.</td></tr>
+        <tr><td><b>Table Storage</b></td><td>Cheap key-value at scale. Cosmos DB for anything richer.</td></tr>
+      </table>
+      <p><b>Access tiers</b> — Hot (frequent access, cheap reads), Cool (infrequent, cheaper
+      storage, higher read cost, 30-day minimum), Cold, and Archive (very cheap, but retrieval takes
+      hours). <b>Lifecycle management rules</b> move blobs between tiers automatically by age.</p>
+      <div class="note"><b>Directly relevant in engineering and environmental work:</b> survey data, drone imagery, LiDAR scans and
+      long-term monitoring records are large and rarely re-read but must be retained for decades for
+      regulatory reasons. Automatic tiering from Hot to Cool to Archive is a substantial and very
+      real cost decision — mentioning it shows you think about running cost, not just architecture.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q5</span><span class="qt">Azure SQL vs Cosmos DB vs PostgreSQL</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th></th><th>Azure SQL Database</th><th>Cosmos DB</th><th>Azure Database for PostgreSQL</th></tr>
+        <tr><td>Model</td><td>Relational, managed SQL Server</td><td>Multi-model NoSQL (document by default)</td><td>Relational, managed PostgreSQL</td></tr>
+        <tr><td>Strength</td><td>Transactions, joins, mature tooling. <b>The default.</b></td><td>Global distribution, single-digit-ms reads, elastic scale, tunable consistency</td><td>Open source, rich extensions — notably <b>PostGIS</b></td></tr>
+        <tr><td>Scaling</td><td>Vertical, read replicas, elastic pools, Hyperscale</td><td>Horizontal by partition key</td><td>Vertical, read replicas, Citus for sharding</td></tr>
+        <tr><td>Billing</td><td>DTU or vCore; serverless auto-pause</td><td><b>Request Units (RU/s)</b>, provisioned or serverless</td><td>vCore</td></tr>
+      </table>
+      <div class="tip"><b>The domain-specific point worth making:</b> if the work is geospatial —
+      asset locations, boundaries, route networks — <b>PostgreSQL with PostGIS</b> is the strongest
+      option in the field, and Azure SQL also has native spatial types. Raising geospatial storage
+      unprompted in an environmental/infrastructure interview is a genuinely differentiating move.</div>
+      <div class="gotcha"><b>The Cosmos DB question they always ask: the partition key.</b> It
+      determines how data is distributed and it <b>cannot be changed</b> without migrating
+      everything. Choose one with high cardinality that spreads writes evenly and that most queries
+      filter on — otherwise you get a "hot partition" throttling one physical partition while the
+      rest idle. Also know that a query <i>without</i> the partition key becomes a cross-partition
+      fan-out and costs many times more RUs.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q6</span><span class="qt">Service Bus, Event Hubs, Event Grid, Storage Queue — which one?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Service</th><th>Model</th><th>Use for</th></tr>
+        <tr><td><b>Service Bus</b></td><td>Enterprise message broker — queues and topics/subscriptions</td><td>Business messages that must not be lost. FIFO with sessions, dead-lettering, duplicate detection, transactions, scheduled delivery. <b>"Process this order."</b></td></tr>
+        <tr><td><b>Event Hubs</b></td><td>High-throughput partitioned event stream (Kafka-compatible)</td><td>Telemetry and sensor data at millions of events per second, with consumers reading at their own offset and replay. <b>"Here is a reading."</b></td></tr>
+        <tr><td><b>Event Grid</b></td><td>Reactive pub/sub event routing</td><td>Discrete notifications: a blob was created, a resource changed. Push-based, with filtering and retries. <b>"Something happened."</b></td></tr>
+        <tr><td><b>Storage Queue</b></td><td>Simple, cheap queue</td><td>Basic decoupling with no advanced features and very low cost.</td></tr>
+      </table>
+      <div class="note"><b>A worked example from environmental monitoring.</b> Environmental sensors across a city
+      stream readings → <b>Event Hubs</b> (volume, ordered per device, replayable). A processor
+      detects a threshold breach and publishes a business message → <b>Service Bus</b> (must not be
+      lost, must be processed once). A report file lands in blob storage → <b>Event Grid</b> fires a
+      Function to index it. Being able to place all three in one story is exactly the answer they
+      want, and it is more convincing than defining them separately.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="s2">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 2</div>
+    <div>
+      <h2>Identity, secrets, networking and operations</h2>
+      <p>The parts that separate "I deployed something to Azure once" from "I have run something on
+         Azure".</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q7</span><span class="qt">Managed identity and Key Vault — the answer that signals real exposure</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>Key Vault</b> stores secrets, keys and certificates, with access controlled by RBAC and
+      every access audited. Secrets can be versioned and rotated centrally rather than redeployed.</p>
+      <p><b>Managed identity</b> goes further and removes the secret entirely. Azure creates an
+      identity for your App Service or Container App, rotates its credentials itself, and you grant
+      that identity a role on the target resource. Your code asks for a token; nothing is stored.</p>
+      <pre><code>from azure.identity import DefaultAzureCredential
+from azure.storage.blob import BlobServiceClient
+
+# no connection string, no key, nothing in config
+credential = DefaultAzureCredential()
+client = BlobServiceClient(account_url=ACCOUNT_URL, credential=credential)</code></pre>
+      <p><code>DefaultAzureCredential</code> tries a chain of sources — managed identity in Azure,
+      your developer sign-in locally — so the same code works in both places with no branching.</p>
+      <div class="say">"The pattern I'd push for is managed identity everywhere it's supported, and
+      Key Vault for the residue that genuinely needs a secret — a third-party API key, say. If
+      there's no secret, there's nothing to leak, nothing to rotate and nothing to accidentally
+      commit."</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q8</span><span class="qt">Entra ID: how does a user actually sign in to your app?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <ol>
+        <li>You register two applications in Entra ID: the <b>client</b> (your SPA or web app) and
+        the <b>API</b>, which exposes scopes such as <code>Assets.Read</code>.</li>
+        <li>The client redirects the user to Entra ID (Authorization Code + PKCE). The user
+        authenticates — with MFA and conditional access policies enforced by the tenant, not by you.</li>
+        <li>The client receives an <b>ID token</b> (who the user is) and an <b>access token</b> for
+        your API's audience.</li>
+        <li>Every request carries <code>Authorization: Bearer &lt;access token&gt;</code>.</li>
+        <li>Your API validates signature, <code>iss</code>, <code>aud</code>, <code>exp</code>, then
+        authorises on <b>scopes</b> (delegated permissions) or <b>app roles</b> (assigned to users
+        or groups).</li>
+      </ol>
+      <div class="tip"><b>The organisational point:</b> using Entra ID means you never store
+      passwords, and MFA, conditional access, device compliance and offboarding are handled by the
+      identity team centrally. For a large enterprise that is not a convenience, it is a
+      requirement — and framing it that way shows you understand why enterprises standardise on it.</div>
+      <div class="note"><b>Also know B2C / External ID</b> — the variant for external users such as
+      clients or contractors, where you do not want them in the corporate directory.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q9</span><span class="qt">Networking: VNet, private endpoints and what sits at the edge</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Thing</th><th>Role</th></tr>
+        <tr><td><b>Virtual network (VNet)</b></td><td>Your private address space, divided into subnets.</td></tr>
+        <tr><td><b>Network security group</b></td><td>Firewall rules at the subnet or NIC level.</td></tr>
+        <tr><td><b>Private endpoint</b></td><td>Gives a PaaS service (SQL, Storage, Key Vault) a private IP inside your VNet, so traffic never touches the public internet and the public endpoint can be disabled.</td></tr>
+        <tr><td><b>VNet integration</b></td><td>Lets an App Service or Function make outbound calls into the VNet.</td></tr>
+        <tr><td><b>Application Gateway</b></td><td>Regional layer-7 load balancer with a Web Application Firewall.</td></tr>
+        <tr><td><b>Front Door</b></td><td>Global entry point: CDN, WAF, global load balancing and failover across regions.</td></tr>
+        <tr><td><b>API Management</b></td><td>The API front door — keys, quotas, throttling, versioning, transformation, developer portal.</td></tr>
+      </table>
+      <div class="tip"><b>The one-line answer to "how do you secure a database in Azure?"</b>
+      "Private endpoint, public access disabled, access via managed identity with Entra
+      authentication rather than a SQL login, firewall rules on top, and auditing on." That single
+      sentence covers network, identity and audit and it sounds like someone who has done it.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q10</span><span class="qt">Application Insights, Log Analytics and KQL</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>Application Insights</b> is the application-level telemetry service — requests,
+      dependencies, exceptions, traces, custom metrics, and end-to-end distributed transaction
+      views. It writes into a <b>Log Analytics</b> workspace, which you query with <b>KQL</b>
+      (Kusto Query Language).</p>
+      <pre><code>requests
+| where timestamp &gt; ago(1h)
+| where success == false
+| summarize failures = count(), p95 = percentile(duration, 95)
+          by name, resultCode
+| order by failures desc
+| take 20</code></pre>
+      <p>KQL reads like a pipeline: a table, then filters, then aggregation. Being able to write
+      even a simple query out loud is a strong, concrete signal — most candidates only say
+      "we used App Insights".</p>
+      <ul>
+        <li><b>Auto-instrumentation</b> captures requests and dependency calls (SQL, HTTP, Service
+        Bus) with almost no code — including the timings that answer "is it the app or the
+        database?"</li>
+        <li><b>The operation ID</b> correlates everything in one request, across services.</li>
+        <li><b>Alerts</b> on metrics, log queries or availability tests, routed to an
+        <b>action group</b> (email, Teams, PagerDuty).</li>
+        <li><b>Sampling</b> keeps cost down at volume — and telemetry cost is real, so knowing it
+        exists matters.</li>
+      </ul>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q11</span><span class="qt">Infrastructure as code: Bicep, ARM or Terraform?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>param location string = resourceGroup().location
+param appName string
+
+resource plan 'Microsoft.Web/serverfarms@2023-01-01' = {
+  name: '${appName}-plan'
+  location: location
+  sku: { name: 'P1v3' }
+}
+
+resource site 'Microsoft.Web/sites@2023-01-01' = {
+  name: appName
+  location: location
+  identity: { type: 'SystemAssigned' }        // managed identity, declared
+  properties: {
+    serverFarmId: plan.id
+    siteConfig: {
+      healthCheckPath: '/health'
+      appSettings: [
+        { name: 'KEY_VAULT_URI', value: keyVault.properties.vaultUri }
+      ]
+    }
+  }
+}</code></pre>
+      <table>
+        <tr><th></th><th>Verdict</th></tr>
+        <tr><td><b>ARM templates</b></td><td>The underlying JSON. Verbose; rarely hand-written now.</td></tr>
+        <tr><td><b>Bicep</b></td><td>A readable language that compiles to ARM. Azure-only, first-party, no state file to manage. <b>The default for an Azure-only estate.</b></td></tr>
+        <tr><td><b>Terraform</b></td><td>Multi-cloud, huge provider ecosystem, mature module patterns. Requires managing state. Choose it if the organisation is multi-cloud or already standardised on it.</td></tr>
+      </table>
+      <div class="tip"><b>Why it matters, said well:</b> "Infrastructure defined in code gets code
+      review, gets versioned, and can be recreated identically in a new environment. Clicked
+      infrastructure means nobody knows why a setting is the way it is, and dev and prod drift apart
+      silently — which is the same environment-parity problem I've spent years dealing with from
+      the testing side."</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q12</span><span class="qt">The Well-Architected Framework, and what it is for</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Five pillars — worth knowing by name because Microsoft-stack architects use them as a
+      checklist in design reviews:</p>
+      <table>
+        <tr><th>Pillar</th><th>Asks</th></tr>
+        <tr><td><b>Reliability</b></td><td>What happens when a component fails? Redundancy, retries, backups, recovery objectives (RTO/RPO).</td></tr>
+        <tr><td><b>Security</b></td><td>Identity, least privilege, encryption in transit and at rest, network isolation, secrets.</td></tr>
+        <tr><td><b>Cost optimisation</b></td><td>Are we paying for what we use? Right-sizing, autoscale, reserved capacity, storage tiering.</td></tr>
+        <tr><td><b>Operational excellence</b></td><td>Automated deployment, monitoring, alerting, runbooks, infrastructure as code.</td></tr>
+        <tr><td><b>Performance efficiency</b></td><td>Does it scale with demand? Caching, async processing, the right service tier.</td></tr>
+      </table>
+      <div class="tip"><b>Use it as a structure, not a recitation.</b> If asked to review or design
+      an architecture, walking the five pillars gives you an organised answer under pressure and
+      signals that you have been in a real design review.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q13</span><span class="qt">How do you keep Azure costs under control?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>A consultancy bills clients for cloud spend, so this question carries more weight here than
+      at a product company.</p>
+      <ul>
+        <li><b>Right-size, then autoscale.</b> Most over-spend is idle capacity provisioned for a
+        peak that happens twice a year.</li>
+        <li><b>Scale to zero</b> where the workload allows — Container Apps, Consumption Functions,
+        serverless SQL with auto-pause. Excellent for non-production environments.</li>
+        <li><b>Shut down non-production out of hours.</b> Dev and test running 24/7 is often a third
+        of the bill for no benefit.</li>
+        <li><b>Storage lifecycle rules</b> to move cold data to cheaper tiers automatically.</li>
+        <li><b>Reserved instances or savings plans</b> for genuinely steady workloads — one to three
+        year commitments at a large discount.</li>
+        <li><b>Tag everything</b> by project, environment and client so cost can be attributed —
+        essential when it is rebilled.</li>
+        <li><b>Budgets and alerts</b>, plus Azure Advisor recommendations reviewed regularly.</li>
+        <li><b>Watch egress and cross-region traffic</b> — data leaving a region is a line item
+        people forget until the invoice arrives.</li>
+      </ul>
+      <div class="tip"><b>The sentence that lands:</b> "Cost is a design constraint, not a
+      procurement problem. The architecture decision and the monthly bill are the same decision, and
+      in a consulting context that number is visible to the client."</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q14</span><span class="qt">Draw a reference architecture on the whiteboard</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Have one you can draw in ninety seconds. This shape answers a large proportion of Azure
+      design questions:</p>
+      <pre><code>                     ┌──────────────┐
+   Users ──────────▶│ Front Door   │  global entry, WAF, TLS
+                     └──────┬───────┘
+                            ▼
+                   ┌──────────────────┐
+                   │ API Management   │  keys, throttling, versioning
+                   └────────┬─────────┘
+                            ▼
+        ┌───────────────────────────────────────┐
+        │ Container Apps  (assets-api, docs-api)│  managed identity
+        └───┬──────────────┬─────────────┬──────┘
+            ▼              ▼             ▼
+     ┌────────────┐  ┌───────────┐  ┌──────────┐
+     │ Azure SQL  │  │Service Bus│  │Key Vault │
+     │  (private  │  │  (queue)  │  │(secrets) │
+     │  endpoint) │  └─────┬─────┘  └──────────┘
+     └────────────┘        ▼
+                    ┌──────────────┐      ┌──────────────┐
+                    │ Function     │─────▶│ Blob Storage │
+                    │ (worker)     │      │ / ADLS Gen2  │
+                    └──────────────┘      └──────────────┘
+
+   Everything emits to ▶ Application Insights / Log Analytics
+   Everything deployed by ▶ Azure Pipelines from Bicep + container images</code></pre>
+      <p>Talking points as you draw: identity flows from Entra ID; services authenticate with
+      managed identity so there are no secrets in configuration; the database is reachable only over
+      a private endpoint; long work goes on the queue rather than in the request; and the whole thing
+      is defined in Bicep so a second environment is a parameter file.</p>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q15</span><span class="qt">Stating the limits of your cloud experience without undermining yourself</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Azure is one of the easiest topics to be caught out on, because the follow-up is always
+      "and how did you configure that?" Overstating it fails immediately; understating it wastes
+      what you do know. The answer is a <b>bounded claim</b>: state the boundary, demonstrate what
+      sits inside it, and name the specific things outside it.</p>
+      <div class="say">"I haven't run a production estate on Azure. What I have done is build and
+      deploy on it — containerised a service into Container Apps, wired Key Vault with a managed
+      identity, and shipped telemetry into Application Insights — so I understand the model and the
+      service choices. Where I'd expect to lean on the team early is the organisational side:
+      landing zones, networking standards, and how subscriptions and cost allocation are
+      structured."</div>
+      <p>Why it works: naming the things you do <i>not</i> know is itself evidence that you
+      understand the landscape — you cannot name landing zones and cost allocation as your gaps
+      unless you know they exist. It is a far stronger answer than a confident generality, and it
+      is one an interviewer can safely believe.</p>
+      <div class="tip"><b>Closing the gap quickly:</b> deploy one container to Container Apps, put
+      its secret in Key Vault, connect with a managed identity, and send logs to Application
+      Insights. That single exercise, on the free tier, converts most of this page from "I believe
+      you would" into "when I set this up". The AZ-900 fundamentals material is a fast, structured
+      way to close the remaining vocabulary gaps.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <nav class="pager">
+      <a class="pn" href="06-microservices-cloud-native.html">&#8592; 06 · Microservices &amp; cloud-native</a>
+      <a class="pn" href="08-devops-cicd.html">08 · Git, Azure DevOps, CI/CD &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

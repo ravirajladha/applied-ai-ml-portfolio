@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>10 · Integrating ML into Applications — Interview Prep</title>
+<meta name="description" content="Operationalising models: training vs inference, serving patterns, feature stores and training-serving skew, model registry, MLOps, drift monitoring, retraining, Azure Machine Learning, evaluation metrics and retrieval-augmented generation.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">AD</span><span>10 · ML Integration</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this page…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All categories</a> &nbsp;·&nbsp; 10 · Integrating ML into applications</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+
+<section class="sec" id="s1">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 1</div>
+    <div>
+      <h2>The differentiator</h2>
+      <p>"Work with data engineers and scientists to operationalize analysis pipelines and ML
+         models" now appears as a responsibility in a lot of application developer job descriptions,
+         usually alongside "experience integrating ML/AI components" as a preferred qualification.
+         Very few candidates for a mid-level application role can answer it well, which makes it one
+         of the highest-leverage topics on this list.</p>
+    </div>
+  </div>
+
+  <div class="primer">
+    <h3><span class="pill">Primer</span>What an application developer needs to understand about models</h3>
+
+    <h4>A model is a function with learned parameters</h4>
+    <p>Strip the mystique: a trained model is a file containing numbers, plus code that turns an
+    input into an output using them. From an application's point of view it is a dependency with
+    unusual properties:</p>
+    <ul>
+      <li>It is <b>probabilistic</b> — the same input gives the same output, but the output is a
+      likelihood, not a fact. Your application has to decide what to do with a 0.71.</li>
+      <li>It <b>degrades over time</b> without anyone changing it, because the world it was trained
+      on moves.</li>
+      <li>Its behaviour depends on <b>data</b> as much as on code, so "what version is running?"
+      must mean the model, the data it was trained on, and the preprocessing.</li>
+    </ul>
+
+    <h4>Training vs inference — the distinction everything else rests on</h4>
+    <table>
+      <tr><th></th><th>Training</th><th>Inference (serving)</th></tr>
+      <tr><td>What</td><td>Learning parameters from historical data</td><td>Applying them to a new input</td></tr>
+      <tr><td>When</td><td>Occasionally — daily, weekly, on drift</td><td>Constantly, in the request path</td></tr>
+      <tr><td>Compute</td><td>Heavy, batch, possibly GPU</td><td>Light, low-latency, usually CPU</td></tr>
+      <tr><td>Owner</td><td>Data scientist</td><td><b>You</b></td></tr>
+      <tr><td>Fails as</td><td>A bad metric, caught in evaluation</td><td>A latency spike, an outage, or silently wrong answers</td></tr>
+    </table>
+
+    <h4>The lifecycle, and where the gap actually is</h4>
+    <pre><code>data → features → training → evaluation → registry → deployment → monitoring
+                     ▲                                                  │
+                     └──────────────  retraining triggered  ────────────┘</code></pre>
+    <p>Data scientists are typically strong from data to evaluation. The gap — the part this job is
+    hiring for — is everything from <b>registry</b> onward: packaging, deployment, latency, cost,
+    versioning, rollback, monitoring and retraining automation. That is ordinary software
+    engineering applied to an unusual artefact, which is exactly why an application developer who
+    understands models is valuable.</p>
+
+    <div class="say"><b>The sentence to have ready:</b> "The interface between me and a data
+    scientist should be a versioned model artefact and an agreed input schema. They own the model
+    and the metric; I own that it runs reliably, cheaply, reproducibly and can be rolled back."</div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q1</span><span class="qt">"A data scientist hands you a notebook. How do you get it into production?"</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>The flagship question for this role. Answer it as a sequence with a reason for each step.</p>
+      <ol>
+        <li><b>Understand the contract first.</b> What are the exact inputs, their types and ranges,
+        what does the output mean, and what latency does the consumer need? Most integration
+        failures are contract failures, not model failures.</li>
+        <li><b>Extract the code from the notebook</b> into a module with a clear entry point.
+        Notebooks hide execution order and carry hidden state — a notebook that works top to bottom
+        for its author frequently does not work anywhere else.</li>
+        <li><b>Pin everything.</b> Library versions, especially the one that serialised the model —
+        loading a model with a different library version is a classic silent failure. Pinned
+        dependencies plus a container.</li>
+        <li><b>Separate preprocessing and make it shared.</b> The same transformation code must run
+        at training and at serving. If it is reimplemented for serving, the two <i>will</i> diverge —
+        this is training-serving skew and it is the single most common production ML bug.</li>
+        <li><b>Register the model</b> with a version, the training data reference, the evaluation
+        metrics and who produced it. A prediction must be traceable to an exact artefact.</li>
+        <li><b>Choose the serving pattern</b> — batch, real-time or streaming (next question).</li>
+        <li><b>Wrap it in an API and containerise it</b>, with validation, timeouts, a health
+        endpoint and a fallback for when the model is unavailable.</li>
+        <li><b>Deploy through the normal pipeline</b>, behind a flag or a shadow deployment first.</li>
+        <li><b>Monitor service health and model health separately.</b></li>
+        <li><b>Automate retraining</b> as a pipeline with the same gates a code change gets.</li>
+      </ol>
+      <div class="tip"><b>Land it with a project you have actually done.</b> "That's the sequence I
+      went through on the last model I put behind an API — the part that surprised me most was how
+      much of the work was preprocessing parity rather than anything to do with the model."
+      Specific, humble, and it demonstrates the experience instead of asserting it.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q2</span><span class="qt">Batch, real-time or streaming inference?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Pattern</th><th>How</th><th>Use when</th></tr>
+        <tr><td><b>Batch</b></td><td>Scheduled job scores everything, writes predictions to a table the app reads</td><td>Predictions can be precomputed: risk scores refreshed nightly, next-inspection-due rankings. <b>Cheapest, simplest, and correct more often than people assume.</b></td></tr>
+        <tr><td><b>Real-time</b></td><td>HTTP endpoint, scored per request</td><td>Input is only known at request time and a user or transaction is waiting.</td></tr>
+        <tr><td><b>Streaming</b></td><td>Consumer scores events off a stream</td><td>Continuous event flows — sensor readings scored for anomalies as they arrive.</td></tr>
+        <tr><td><b>Edge</b></td><td>Model runs on the device</td><td>No connectivity, or latency/privacy requires local processing. Real for field devices.</td></tr>
+      </table>
+      <div class="say">"I'd start by asking whether the prediction actually needs to be computed at
+      request time. If the inputs are known in advance, batch scoring into a table is far cheaper and
+      more reliable — you get a database lookup instead of a model server in the request path. I'd
+      only go real-time when the input genuinely isn't known until the request."</div>
+      <div class="tip"><b>The senior addition:</b> real-time inference puts the model on the critical
+      path, so it needs a timeout and a defined fallback. Decide in advance what happens when the
+      model service is slow or down — a default score, the previous batch value, or a clear error.
+      An application that hangs because a model is slow is a bad architecture, not a bad model.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q3</span><span class="qt">Training-serving skew and feature stores</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>Training-serving skew</b> is when the features computed at serving time differ from those
+      computed at training time. The model is fed something subtly different from what it learned
+      on, so accuracy quietly collapses while every dashboard stays green.</p>
+      <p>How it happens in practice:</p>
+      <ul>
+        <li>Training used pandas; serving reimplemented the transformation in the application.</li>
+        <li>A default or imputation value differs between the two paths.</li>
+        <li>Training aggregated over a 30-day window computed one way; serving computes it another.</li>
+        <li><b>Data leakage</b> — training used a value that is not actually available at prediction
+        time, so the model looked excellent in evaluation and is useless in production.</li>
+      </ul>
+      <p><b>A feature store</b> addresses this by computing features once and serving them to both
+      paths — an offline store (historical, for training) and an online store (low-latency, for
+      serving) built from the same definitions. It also gives you <b>point-in-time correctness</b>:
+      training on the feature values as they were <i>at that moment</i>, not as they are now.</p>
+      <div class="tip"><b>Say this if nothing else on the topic:</b> "The bug I'd look for first
+      isn't in the model, it's whether training and serving compute features with the same code. In
+      my experience that's where production accuracy goes, and it's invisible unless you check for
+      it deliberately."</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q4</span><span class="qt">Model registry and versioning: what does "version" mean for a model?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Four things must be versioned together, or a prediction is not reproducible:</p>
+      <table>
+        <tr><th>Artefact</th><th>Versioned by</th></tr>
+        <tr><td>Code (training + preprocessing)</td><td>Git commit</td></tr>
+        <tr><td>Data</td><td>A dataset snapshot or a Delta table version — not "the production table", which has changed since</td></tr>
+        <tr><td>Model binary</td><td>Model registry version</td></tr>
+        <tr><td>Environment</td><td>Container image digest / lock file</td></tr>
+      </table>
+      <p>A <b>model registry</b> (MLflow, Azure ML) stores the artefact with its metrics, parameters,
+      lineage and stage (staging / production / archived), and provides promotion and rollback.</p>
+      <div class="gotcha"><b>The question behind the question:</b> "a prediction from three months ago
+      is being disputed — can you reproduce it?" If you can name the model version, the code commit
+      and the input, the answer is yes. For anything with a regulatory or contractual dimension —
+      which describes a lot of engineering and public-sector work — that is not a nice-to-have.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q5</span><span class="qt">How is CI/CD for ML different from CI/CD for software?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th></th><th>Software</th><th>ML</th></tr>
+        <tr><td>Triggers</td><td>Code change</td><td>Code change, <b>new data</b>, or <b>detected drift</b></td></tr>
+        <tr><td>Tests</td><td>Deterministic pass/fail</td><td>Metric thresholds — plus tests on the data itself</td></tr>
+        <tr><td>Artefact</td><td>A build</td><td>A build <b>and</b> a model, versioned together</td></tr>
+        <tr><td>"Broken"</td><td>Throws an error</td><td>Returns confident, plausible, wrong answers</td></tr>
+        <tr><td>Rollback</td><td>Previous version</td><td>Previous model version — which must still be deployable</td></tr>
+      </table>
+      <p>Gates in an ML pipeline that do not exist in a normal one:</p>
+      <ul>
+        <li><b>Data validation</b> — schema, ranges, null rates, class balance. Bad data in is worse
+        than no data.</li>
+        <li><b>Metric threshold</b> — the candidate model must beat the current production model on
+        a held-out set by a defined margin, or the promotion fails automatically.</li>
+        <li><b>Fairness / slice checks</b> — performance on important subgroups, not just the
+        average. A model with good overall accuracy can be much worse for one region or asset type.</li>
+        <li><b>Latency and size</b> — a more accurate model that doubles inference time may be a net
+        loss.</li>
+      </ul>
+      <div class="tip"><b>The framing that lands:</b> "The uncomfortable difference is that a broken
+      deployment throws errors and a broken model doesn't. It keeps answering, confidently, and
+      nothing goes red — so the monitoring has to be designed to catch quiet failure."</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q6</span><span class="qt">Monitoring a model in production: drift and the feedback loop</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Two independent layers, and saying so is the point:</p>
+      <table>
+        <tr><th>Service health</th><th>Model health</th></tr>
+        <tr><td>Latency, error rate, throughput, saturation, cost</td><td>Input distributions, prediction distribution, accuracy once labels arrive</td></tr>
+        <tr><td>Fails loudly</td><td><b>Fails silently</b></td></tr>
+      </table>
+      <h5>Kinds of drift</h5>
+      <ul>
+        <li><b>Data drift</b> — the input distribution moves. New sensor type, a new region onboarded,
+        a changed upstream unit of measurement. Detect by comparing live feature distributions
+        against the training baseline.</li>
+        <li><b>Concept drift</b> — the relationship between inputs and the target changes. Fraud
+        tactics evolve; maintenance regimes change how assets deteriorate. Only detectable once you
+        have labels.</li>
+        <li><b>Prediction drift</b> — the output distribution shifts. Cheap to monitor, needs no
+        labels, and is often the earliest warning you can actually get.</li>
+      </ul>
+      <h5>The label problem</h5>
+      <p>You cannot measure accuracy until you know the truth, and truth arrives late — a fraud
+      chargeback comes weeks later; whether an asset actually failed is known years later. So
+      monitor the leading indicators (input and prediction drift) continuously, and accuracy on the
+      delay the domain imposes.</p>
+      <div class="tip"><b>Ask about the feedback loop.</b> "How do labels get back into the system?"
+      is a question few candidates think to ask, and without an answer no model can improve. It also
+      opens the harder version: if the model's own decisions affect what data you collect —
+      inspecting only the assets the model flagged — you never learn about the ones it missed. That
+      is <b>feedback loop bias</b>, and naming it is a strong senior signal.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q7</span><span class="qt">Deploying a new model safely</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Technique</th><th>What it does</th></tr>
+        <tr><td><b>Shadow deployment</b></td><td>The new model scores real traffic but its output is not used — only logged and compared. Zero risk, real data. <b>The best first step.</b></td></tr>
+        <tr><td><b>Canary</b></td><td>A small percentage of traffic uses the new model; watch business and technical metrics before ramping.</td></tr>
+        <tr><td><b>Champion–challenger</b></td><td>Run both continuously and compare on live outcomes over time.</td></tr>
+        <tr><td><b>A/B test</b></td><td>Randomised split measured against a business metric, not just accuracy.</td></tr>
+      </table>
+      <div class="gotcha"><b>The point that separates people:</b> the metric that matters is the
+      business outcome, not the offline score. A model with better AUC can perform worse in
+      production because the threshold is wrong for the operational cost of a false positive. If
+      every flagged asset triggers a site visit, a small increase in false positives is expensive in
+      a way no offline metric captures — and choosing the decision threshold is a business
+      conversation, not a modelling one.</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q8</span><span class="qt">Evaluation metrics — enough to talk to a data scientist as a peer</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Metric</th><th>Meaning</th><th>Care when</th></tr>
+        <tr><td><b>Accuracy</b></td><td>Fraction correct</td><td><b>Misleading with imbalanced classes</b> — always predicting "not fraud" is 99.9% accurate and worthless</td></tr>
+        <tr><td><b>Precision</b></td><td>Of those flagged, how many were right</td><td>False positives are costly — a wasted site visit</td></tr>
+        <tr><td><b>Recall</b></td><td>Of the real cases, how many were caught</td><td>False negatives are costly — a missed structural defect</td></tr>
+        <tr><td><b>F1</b></td><td>Harmonic mean of the two</td><td>You need one number and both matter</td></tr>
+        <tr><td><b>ROC AUC</b></td><td>Ranking quality across thresholds</td><td>General comparison; optimistic under heavy imbalance</td></tr>
+        <tr><td><b>PR AUC</b></td><td>Precision–recall trade-off</td><td><b>Better than ROC for rare positives</b></td></tr>
+        <tr><td><b>MAE / RMSE</b></td><td>Regression error; RMSE punishes large errors more</td><td>Predicting a continuous value like a condition score</td></tr>
+      </table>
+      <p><b>Precision and recall trade off against each other</b> via the decision threshold. Moving
+      the threshold is a business decision about which error is more expensive — and being able to
+      frame it that way, rather than as a modelling detail, is the whole point of this question for
+      an application developer.</p>
+      <div class="say">"For infrastructure inspection I'd expect recall to matter more than
+      precision — missing a defect has a much higher cost than an unnecessary inspection. So I'd
+      want the threshold set by whoever owns that risk, not chosen to maximise F1."</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q9</span><span class="qt">Azure Machine Learning: what it gives you</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Component</th><th>Role</th></tr>
+        <tr><td><b>Workspace</b></td><td>The top-level container — experiments, models, endpoints, compute, data assets.</td></tr>
+        <tr><td><b>Compute</b></td><td>Instances for development, clusters for training that scale to zero when idle.</td></tr>
+        <tr><td><b>Data assets</b></td><td>Versioned references to data in storage.</td></tr>
+        <tr><td><b>Jobs / pipelines</b></td><td>Reproducible training runs with tracked parameters and metrics (MLflow underneath).</td></tr>
+        <tr><td><b>Model registry</b></td><td>Versioned models with lineage back to the run that produced them.</td></tr>
+        <tr><td><b>Managed online endpoints</b></td><td>Real-time serving with autoscale, authentication and <b>traffic splitting between deployments</b> — canary for models, built in.</td></tr>
+        <tr><td><b>Batch endpoints</b></td><td>Scheduled scoring over large datasets.</td></tr>
+        <tr><td><b>Responsible AI dashboard</b></td><td>Fairness, error analysis and explanations.</td></tr>
+      </table>
+      <div class="tip"><b>The integration point to mention:</b> Azure ML pipelines can be triggered
+      from Azure DevOps, so retraining and promotion run through the same CI/CD system as
+      application code, with the same approvals and audit trail. Tying ML delivery back into normal
+      engineering governance is exactly the contribution this role is asking for.</div>
+      <div class="note"><b>Alternatives worth knowing exist:</b> <b>MLflow</b> (open source, and what
+      Azure ML uses internally) for tracking and registry, and <b>Databricks</b> where the data
+      platform already lives there.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q10</span><span class="qt">Inference cost and latency: the engineering levers</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <ul>
+        <li><b>Do not use a GPU unless you need one.</b> Classical models (gradient boosting,
+        regression) run fine on CPU and cost a fraction. GPUs are for deep learning at volume.</li>
+        <li><b>Batch requests</b> where latency allows — scoring 100 rows in one call is far cheaper
+        per row than 100 calls.</li>
+        <li><b>Cache predictions</b> when the same input recurs, keyed including the model version.</li>
+        <li><b>Optimise the model itself</b>: quantisation, distillation, or exporting to
+        <b>ONNX</b> for a faster, framework-independent runtime.</li>
+        <li><b>Load the model once at startup</b>, not per request. Sounds obvious; is a real bug.</li>
+        <li><b>Scale to zero</b> for spiky workloads, accepting cold start — or keep a warm instance
+        if a user is waiting.</li>
+        <li><b>Precompute</b>. The cheapest inference is the one you did last night in a batch job.</li>
+      </ul>
+      <div class="tip"><b>Have a latency budget answer:</b> "If the endpoint has a 200 ms budget and
+      the model takes 40 ms, I have 160 ms for feature lookup, network and serialisation — so the
+      feature store lookup is as much of a design concern as the model." That is systems thinking
+      applied to ML, which is precisely the hybrid this role wants.</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q11</span><span class="qt">Integrating a large language model: RAG and the engineering concerns</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Increasingly common wherever a role mentions "ML/AI components". <b>Retrieval-augmented generation</b>
+      is the standard pattern for answering questions over an organisation's own documents:</p>
+      <ol>
+        <li><b>Ingest and chunk</b> the documents — technical reports, specifications, standards.
+        Chunking strategy matters more than people expect; chunks that split a table or a clause in
+        half produce bad answers.</li>
+        <li><b>Embed</b> each chunk into a vector and store it in a vector index (Azure AI Search,
+        pgvector, Cosmos DB vector search).</li>
+        <li><b>At query time</b>, embed the question, retrieve the most relevant chunks — usually
+        hybrid: vector similarity <i>plus</i> keyword search, because exact terms and reference
+        numbers matter in technical documents.</li>
+        <li><b>Compose a prompt</b> with the retrieved context and instructions.</li>
+        <li><b>Return the answer with citations</b> back to the source documents.</li>
+      </ol>
+      <h5>The engineering concerns — where an application developer earns their place</h5>
+      <table>
+        <tr><th>Concern</th><th>Handling</th></tr>
+        <tr><td><b>Grounding and hallucination</b></td><td>Require citations; instruct the model to answer only from the provided context and to say when it cannot. Show sources in the UI so a user can verify.</td></tr>
+        <tr><td><b>Access control</b></td><td><b>The one people forget.</b> Retrieval must respect document permissions per user, or the assistant becomes a way to read documents you are not allowed to see. Filter at retrieval time, not afterwards.</td></tr>
+        <tr><td><b>Prompt injection</b></td><td>Retrieved content is untrusted input. A document containing instructions can attempt to redirect the model. Never let retrieved text trigger privileged actions.</td></tr>
+        <tr><td><b>Cost and latency</b></td><td>Priced per token, and slow. Cache, limit context size, stream responses, and set budgets.</td></tr>
+        <tr><td><b>Evaluation</b></td><td>Non-deterministic output needs an evaluation set with graded answers, run as a regression suite — otherwise "we changed the prompt" is an untested deployment.</td></tr>
+        <tr><td><b>Privacy</b></td><td>What leaves your tenant. Azure OpenAI keeps data within your Azure boundary, which is usually the requirement for client documents.</td></tr>
+      </table>
+      <div class="bridgebox"><b>The angle worth taking:</b> "The interesting part of that stack
+      isn't the model, it's that the output is non-deterministic — so the testing strategy has to
+      change. You need an evaluation set and graded regression runs rather than assertions." Coming
+      from anyone with a testing background, that is a distinctive and genuinely useful
+      observation, and few candidates make it.</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q12</span><span class="qt">Responsible use: bias, explainability and governance</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>For a consultancy advising public bodies, this is a client-facing requirement, not a
+      philosophical one.</p>
+      <ul>
+        <li><b>Bias comes from data.</b> If historical inspections concentrated on certain regions,
+        the model learns that those assets fail more — because those are the only ones anyone
+        looked at. Evaluate performance per slice, not just overall.</li>
+        <li><b>Explainability.</b> Feature importance, SHAP values, or a simpler model where a
+        decision must be justified. "The model said so" is not an acceptable answer to a client
+        asking why an asset was prioritised.</li>
+        <li><b>Human in the loop</b> for consequential decisions. The model recommends; a qualified
+        engineer decides. That is both the right design and the one that survives professional
+        liability scrutiny.</li>
+        <li><b>Documentation</b> — what the model is for, its limitations, the data it was trained
+        on, when it should not be used.</li>
+        <li><b>Auditability</b> — reproduce any past prediction from versioned inputs and artefacts.</li>
+      </ul>
+      <div class="say">"In an engineering consultancy the model is advice to a professional who
+      carries the responsibility for the decision. That shapes the design: it has to be explainable
+      and auditable, and it has to be clear that it recommends rather than decides."</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q13</span><span class="qt">Walking through an ML project — the structure that works</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Any project involving a model will be asked about. Prepare the walkthrough once and reuse
+      it, with real numbers — the specifics matter far more than the structure.</p>
+      <table>
+        <tr><th>Beat</th><th>What to say</th></tr>
+        <tr><td><b>The problem, in business terms</b></td><td>What decision does the prediction support, and what does being wrong cost in each direction?</td></tr>
+        <tr><td><b>The data</b></td><td>Source, volume, class balance, and the labelling problem. Name the class imbalance explicitly if there is one — it drives the metric choice.</td></tr>
+        <tr><td><b>Features</b></td><td>What was engineered and why. Name one that mattered and one that turned out to be leakage or noise.</td></tr>
+        <tr><td><b>Model and metric</b></td><td>What you chose, what you compared against, and <b>why that metric</b> for this cost structure.</td></tr>
+        <tr><td><b>Serving</b></td><td>Real-time endpoint, latency achieved, containerised, how it is deployed.</td></tr>
+        <tr><td><b>Monitoring</b></td><td>What is watched, and what would reveal that the model had gone stale.</td></tr>
+        <tr><td><b>One hard problem</b></td><td>The genuinely difficult part. Threshold selection, imbalance handling, or preprocessing parity are all good, real answers.</td></tr>
+        <tr><td><b>What you'd change</b></td><td>One honest improvement. Every project has one; claiming none is the wrong answer.</td></tr>
+      </table>
+      <div class="gotcha"><b>Scale the claim to the project.</b> If it is a side project, say so:
+      "the data volume and operational pressure aren't comparable to production — what it gave me is
+      the full path from data to a deployed, monitored endpoint, and a clear view of which parts are
+      hard." That framing is more persuasive than inflating it, because interviewers can tell, and
+      the follow-up questions expose it immediately.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <nav class="pager">
+      <a class="pn" href="09-databases-data-engineering.html">&#8592; 09 · Databases &amp; data engineering</a>
+      <a class="pn" href="11-system-design.html">11 · System design &amp; architecture &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

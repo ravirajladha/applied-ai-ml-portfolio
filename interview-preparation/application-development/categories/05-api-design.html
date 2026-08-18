@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05 · API Design and Integration — Interview Prep</title>
+<meta name="description" content="Designing APIs rather than testing them: resource modelling, pagination, versioning, idempotency, error contracts, OAuth2 and JWT, rate limiting, webhooks, GraphQL and gRPC, and integration patterns.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">AD</span><span>05 · API Design</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this page…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All categories</a> &nbsp;·&nbsp; 05 · API design and integration</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+
+<section class="sec" id="s1">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 1</div>
+    <div>
+      <h2>Designing an API</h2>
+      <p>"Build APIs, microservices, and integrations" is a headline responsibility in almost every one
+         of these roles. Expect to design one live.</p>
+    </div>
+  </div>
+
+  <div class="primer">
+    <h3><span class="pill">Primer</span>The method for designing an API on the spot</h3>
+
+    <p>Most developers know APIs far better from the outside — consuming and testing them — than
+    from the design side. The interview asks you to produce one. The gap is usually not knowledge,
+    it is having a repeatable procedure so you are not inventing an approach while someone
+    watches.</p>
+
+    <h4>Step 1 — find the nouns</h4>
+    <p>Write down the things the system is about. For an asset-management problem: <b>site</b>,
+    <b>asset</b>, <b>inspection</b>, <b>report</b>, <b>attachment</b>, <b>user</b>. These become
+    your resources. Resist starting from the screens — screens change, the domain does not.</p>
+
+    <h4>Step 2 — establish the relationships and the ownership</h4>
+    <p>An inspection belongs to an asset; an asset belongs to a site. Ownership determines URL
+    nesting <i>and</i> your authorisation rules, which is why it is worth doing before you write a
+    single path.</p>
+
+    <h4>Step 3 — write the paths</h4>
+    <pre><code>GET    /v1/sites                          list, filtered and paginated
+POST   /v1/sites                          create
+GET    /v1/sites/{siteId}                 read one
+PATCH  /v1/sites/{siteId}                 partial update
+DELETE /v1/sites/{siteId}                 remove
+
+GET    /v1/sites/{siteId}/assets          assets of a site  (nested: shows ownership)
+POST   /v1/sites/{siteId}/assets          create within a site
+GET    /v1/assets/{assetId}               read one directly (do not force deep nesting)
+POST   /v1/assets/{assetId}/inspections   record an inspection</code></pre>
+    <p><b>Nest one level, no more.</b> <code>/sites/1/assets/5/inspections/9/photos/3</code> is
+    unusable. Nest to express ownership on collections, then address individual resources by their
+    own top-level path.</p>
+
+    <h4>Step 4 — decide the collection parameters</h4>
+    <pre><code>GET /v1/assets?siteId=12&amp;status=active&amp;minScore=50
+                &amp;sort=-conditionScore&amp;limit=50&amp;cursor=eyJpZCI6MTIzfQ</code></pre>
+    <p>Filtering, sorting and pagination on every collection endpoint, decided once and applied
+    consistently. Consistency across endpoints is worth more than the specific convention you pick.</p>
+
+    <h4>Step 5 — the things that are not CRUD</h4>
+    <p>Some operations are genuinely actions, not resource mutations: approving, publishing,
+    recalculating, exporting. Two acceptable answers, and having an opinion matters:</p>
+    <ul>
+      <li>Model the action as a resource: <code>POST /v1/reports/{id}/approvals</code> — the
+      approval is a thing with a timestamp and an approver, which is usually true anyway.</li>
+      <li>Or accept a controller-style sub-resource: <code>POST /v1/reports/{id}:approve</code>.</li>
+    </ul>
+    <p>What is <i>not</i> acceptable is <code>POST /approveReport?id=5</code>. If you find yourself
+    writing verbs into paths everywhere, the domain model is probably missing a noun.</p>
+
+    <h4>Step 6 — say the cross-cutting decisions out loud</h4>
+    <p>Auth, versioning, error format, pagination style, idempotency, rate limits. Naming these
+    unprompted is what separates a designed API from a collection of endpoints — and it is exactly
+    what the interviewer is listening for.</p>
+
+    <div class="bridgebox"><b>Coming from test automation →</b> you have an unusual advantage: you know what
+    a badly designed API costs, because you have written clients for them. Inconsistent error
+    shapes, pagination that changes under you, a 200 with an error in the body. Say so — "I've
+    written a lot of API clients, so I design for the person who has to consume this" is a genuine,
+    memorable framing that few candidates can offer honestly.</div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q1</span><span class="qt">"Design an API for inspecting infrastructure assets." — a worked answer</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Run the six steps out loud. Start with questions, not endpoints:</p>
+      <ul>
+        <li>Who consumes it — a web app, a mobile field app, other services, or third parties?</li>
+        <li>Does the field app work offline? (In infrastructure and environmental work this is very likely yes, and it changes the
+        design — you need client-generated IDs and an idempotent sync endpoint.)</li>
+        <li>How many assets per site, realistically? Hundreds or millions?</li>
+        <li>Are photos and documents attached? How large?</li>
+      </ul>
+      <h5>Then the design</h5>
+      <pre><code>POST /v1/assets/{assetId}/inspections
+Idempotency-Key: 8f14e45f-ea1a-4b2c-9c1e-0d5f3a7b6c21
+Authorization: Bearer &lt;token&gt;
+
+{
+  "inspectedAt": "2026-08-14T09:20:00Z",
+  "inspectorId": 4412,
+  "conditionScore": 62.5,
+  "findings": [
+    { "code": "CORROSION", "severity": "medium", "note": "north abutment" }
+  ],
+  "location": { "lat": 28.5355, "lon": 77.3910 }
+}
+
+201 Created
+Location: /v1/inspections/90210</code></pre>
+      <p>Points to make while designing:</p>
+      <ul>
+        <li><b>Client-supplied idempotency key</b> so a field device retrying on a flaky connection
+        cannot create duplicate inspections. For an offline-first app this is essential, not a
+        nicety — and volunteering it is the single strongest thing you can say in this answer.</li>
+        <li><b>Attachments are separate.</b> Do not base64 photos into JSON. Issue a pre-signed
+        upload URL to blob storage, then reference the blob:
+        <code>POST /v1/inspections/{id}/attachments</code> with the returned key. Keeps large
+        binaries off the API and lets uploads resume.</li>
+        <li><b>Timestamps in UTC, ISO 8601, always.</b> Field data crosses time zones and the
+        argument about local time is not one you want later.</li>
+        <li><b>Findings as an array of coded objects</b>, not free text, so they can be aggregated
+        and reported on.</li>
+      </ul>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q2</span><span class="qt">Pagination: offset vs cursor</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th></th><th>Offset / page</th><th>Cursor / keyset</th></tr>
+        <tr><td>Looks like</td><td><code>?limit=50&amp;offset=100</code></td><td><code>?limit=50&amp;cursor=eyJpZCI6MTIzfQ</code></td></tr>
+        <tr><td>Can jump to page 7</td><td>Yes</td><td>No</td></tr>
+        <tr><td>Deep pages</td><td><b>Slow</b> — the database still scans and discards the skipped rows</td><td>Fast — it seeks with <code>WHERE id &gt; :last</code></td></tr>
+        <tr><td>Data changing underneath</td><td><b>Broken</b> — an insert shifts everything, so you skip or repeat rows between pages</td><td>Stable</td></tr>
+        <tr><td>Use for</td><td>Admin tables where a page number is expected</td><td>Feeds, infinite scroll, syncing, anything large</td></tr>
+      </table>
+      <div class="tip"><b>The answer that scores:</b> "Offset for a UI that shows page numbers over
+      a modest dataset; cursor for anything large or actively changing. And I'd always cap the page
+      size server-side — if a client asks for 10,000 I return 200, because otherwise one client can
+      take the service down by accident."</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q3</span><span class="qt">How do you version an API?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Approach</th><th>Example</th><th>Verdict</th></tr>
+        <tr><td><b>URL path</b></td><td><code>/v1/assets</code></td><td>Most common. Obvious, cacheable, trivially routable at a gateway. <b>The pragmatic default.</b></td></tr>
+        <tr><td>Header</td><td><code>Accept: application/vnd.example.v2+json</code></td><td>Purist's choice — the URL identifies the resource, not the representation. Harder to test and to route.</td></tr>
+        <tr><td>Query parameter</td><td><code>?version=2</code></td><td>Easy, but easy to omit and easy to cache wrongly.</td></tr>
+      </table>
+      <p>The more important half of the answer is <b>avoiding a new version</b>. Additive changes —
+      a new optional request field, a new response field — are backwards compatible provided
+      consumers ignore unknown fields, which you state explicitly in the contract. Only break out a
+      new major version for a genuinely breaking change.</p>
+      <div class="say">"Version in the path, but treat a new version as a cost, not a feature. Every
+      version is one you support and test in parallel. I'd add fields additively, deprecate with a
+      <code>Sunset</code> header and a migration window, and only cut v2 when the model genuinely
+      changed shape."</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q4</span><span class="qt">What does a good error response look like?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/problem+json
+
+{
+  "type": "https://api.example.com/errors/validation",
+  "title": "Validation failed",
+  "status": 422,
+  "detail": "One or more fields are invalid",
+  "instance": "/v1/assets",
+  "traceId": "0af7651916cd43dd8448eb211c80319c",
+  "errors": [
+    { "field": "conditionScore", "code": "out_of_range",
+      "message": "must be between 0 and 100" }
+  ]
+}</code></pre>
+      <p>That shape is <b>Problem Details</b> — <b>RFC 9457</b>, which obsoleted RFC 7807 in 2023.
+      Most people still say 7807, so either name is understood, but 9457 is the current one.
+      Properties that make it good:</p>
+      <ul>
+        <li><b>Machine-readable codes</b> (<code>out_of_range</code>) as well as human messages —
+        a client should never have to string-match on English.</li>
+        <li><b>Field-level errors</b> so a form can highlight the right input.</li>
+        <li><b>A trace ID</b> the caller can quote to support, correlating to your logs.</li>
+        <li><b>Every endpoint fails identically</b>, produced by one global handler.</li>
+        <li><b>Nothing internal</b> — no stack traces, no SQL, no table names.</li>
+      </ul>
+      <div class="gotcha"><b>The anti-pattern to name:</b> returning <code>200 OK</code> with
+      <code>{"success": false}</code>. It defeats HTTP caching, monitoring, retries and every
+      standard client library — your error rate dashboard shows zero while everything is failing.
+      You have almost certainly hit this from the testing side; say so.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q5</span><span class="qt">Idempotency in a real design</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>The client generates a UUID and sends it as <code>Idempotency-Key</code>. The server:</p>
+      <ol>
+        <li>Looks the key up. If present and complete, return the <b>stored response</b> — same
+        status, same body — without redoing the work.</li>
+        <li>If present but still in flight, return <b>409</b> so the client retries later.</li>
+        <li>If absent, record the key, do the work in the same transaction as recording the result,
+        and store the response.</li>
+      </ol>
+      <p>Keys expire — 24 hours is typical. Store them in a table or Redis with a TTL.</p>
+      <div class="tip"><b>Where this matters in the field:</b> an offline field app queues inspections
+      and syncs when signal returns. Without idempotency, one bad connection produces duplicate
+      inspection records that someone has to reconcile by hand. Framing the answer around a real
+      failure is far better than describing the mechanism.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q6</span><span class="qt">How do you handle a long-running operation?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Never hold an HTTP connection open for two minutes generating a report. Use the
+      <b>202 + polling</b> pattern:</p>
+      <pre><code>POST /v1/reports              →  202 Accepted
+                                 Location: /v1/jobs/8812
+                                 { "jobId": "8812", "status": "queued" }
+
+GET /v1/jobs/8812             →  200 { "status": "running", "progress": 45 }
+GET /v1/jobs/8812             →  200 { "status": "succeeded",
+                                        "resultUrl": "/v1/reports/551" }</code></pre>
+      <p>Behind it: the POST writes a job row and puts a message on a queue; a worker consumes it.
+      That gives you retries, visibility, and a request that returns in milliseconds.</p>
+      <p><b>Alternatives worth naming:</b> a <b>webhook</b> so you call the client back when it is
+      done (better for server-to-server, but the client needs a public endpoint and you need
+      retries and signing), or <b>WebSocket / server-sent events</b> for live progress in a UI.</p>
+      <div class="tip"><b>Add <code>Retry-After</code></b> to the polling response so clients do not
+      hammer you every 100 ms. Small detail, real operational experience.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q7</span><span class="qt">Designing a webhook (an API that calls someone else)</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Everything that is hard about webhooks is on your side, and knowing the list is the answer:</p>
+      <ul>
+        <li><b>Sign the payload</b> — HMAC over the body with a shared secret, in a header. The
+        receiver verifies it, otherwise anyone who learns the URL can post fake events.</li>
+        <li><b>Include a timestamp in the signature</b> to prevent replay.</li>
+        <li><b>Retry with exponential backoff</b> for a bounded window, then dead-letter and alert.</li>
+        <li><b>At-least-once delivery</b> — so include an event ID and tell consumers to be
+        idempotent. Duplicates <i>will</i> happen.</li>
+        <li><b>Do not guarantee ordering</b>, or if you do, say so explicitly and pay for it.</li>
+        <li><b>Time out fast</b> and treat the delivery as async — a slow consumer must not back up
+        your system.</li>
+        <li><b>Let consumers replay</b> missed events from a log or an API.</li>
+      </ul>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q8</span><span class="qt">OpenAPI: contract-first or code-first?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th></th><th>Contract-first</th><th>Code-first</th></tr>
+        <tr><td>How</td><td>Write the OpenAPI YAML, generate server stubs and client SDKs</td><td>Write annotated code, generate the spec (FastAPI, Swashbuckle, springdoc)</td></tr>
+        <tr><td>Good for</td><td>Multiple teams or external consumers agreeing before anyone builds; parallel front-end and back-end work</td><td>A single team moving fast; documentation that cannot drift</td></tr>
+        <tr><td>Risk</td><td>The spec and the implementation diverge unless validated in CI</td><td>The API is designed incrementally by accident</td></tr>
+      </table>
+      <div class="say">"For an integration with another team or a client I'd go contract-first — the
+      spec is the negotiation, and both sides can build against it in parallel. For an internal
+      service I'd go code-first and publish the generated spec, then add a CI check that fails the
+      build on a breaking change against the previous version."</div>
+      <div class="tip"><b>Mention the generated client SDK.</b> Consumers get a typed client instead
+      of hand-writing HTTP calls, which removes a whole category of integration bug. It is also
+      exactly what makes contract testing enforceable.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="s2">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 2</div>
+    <div>
+      <h2>Security, protection and protocols</h2>
+      <p>Everything between the caller and your handler.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q9</span><span class="qt">OAuth2 flows — which one, when</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Flow</th><th>Use when</th></tr>
+        <tr><td><b>Authorization Code + PKCE</b></td><td>A user is logging in — web app, SPA or mobile. <b>The default answer.</b> PKCE protects the code exchange on public clients that cannot keep a secret.</td></tr>
+        <tr><td><b>Client credentials</b></td><td>Service to service, no user involved. A daemon, a scheduled job, a backend calling another backend.</td></tr>
+        <tr><td><b>Device code</b></td><td>A device with no browser or keyboard.</td></tr>
+        <tr><td><s>Implicit</s></td><td><b>Deprecated.</b> Tokens in the URL fragment. Saying you would use it dates you badly.</td></tr>
+        <tr><td><s>Resource owner password</s></td><td><b>Deprecated.</b> The app handles the user's password, which is the thing OAuth exists to avoid.</td></tr>
+      </table>
+      <h5>The roles</h5>
+      <p><b>Resource owner</b> (the user), <b>client</b> (the app), <b>authorization server</b>
+      (Microsoft Entra ID), <b>resource server</b> (your API). The client gets a token from the
+      authorization server and presents it to the resource server.</p>
+      <div class="tip"><b>Access token vs refresh token:</b> the access token is short-lived
+      (minutes) and sent on every request; the refresh token is long-lived, stored securely, and
+      used only to obtain a new access token. That split is what limits the damage from a leaked
+      access token.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q10</span><span class="qt">How does your API validate a JWT?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>A JWT is <code>header.payload.signature</code>, base64url-encoded. Validation, in order:</p>
+      <ol>
+        <li><b>Signature</b> — against the issuer's public key, fetched from its JWKS endpoint and
+        cached. Match on the <code>kid</code> in the header so key rotation works.</li>
+        <li><b><code>exp</code> and <code>nbf</code></b> — not expired, not used before valid.</li>
+        <li><b><code>iss</code></b> — issued by the identity provider you expect.</li>
+        <li><b><code>aud</code></b> — intended for <i>your</i> API. Skipping this means a token
+        minted for a different application is accepted by yours.</li>
+        <li><b>Scopes / roles</b> — the authorisation decision, after authentication succeeds.</li>
+      </ol>
+      <div class="gotcha"><b>Two classic vulnerabilities:</b> accepting <code>alg: none</code>
+      (the token claims it is unsigned and a naive library believes it), and accepting a token
+      signed with a symmetric algorithm when you expected asymmetric. Pin the expected algorithm
+      explicitly. Also remember JWTs are <b>signed, not encrypted</b> — the payload is readable by
+      anyone, so nothing confidential goes in it.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q11</span><span class="qt">Rate limiting and throttling</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>Why:</b> protect the service from abuse, from a buggy client in a retry loop, and from
+      one tenant consuming everyone's capacity.</p>
+      <table>
+        <tr><th>Algorithm</th><th>Behaviour</th></tr>
+        <tr><td><b>Token bucket</b></td><td>Tokens refill at a fixed rate; a burst is allowed up to the bucket size. Most common, because bursts are normal.</td></tr>
+        <tr><td>Fixed window</td><td>Simple, but allows a double burst at the window boundary</td></tr>
+        <tr><td>Sliding window</td><td>Smoother, more expensive to compute</td></tr>
+        <tr><td>Concurrency limit</td><td>Cap simultaneous in-flight requests rather than rate</td></tr>
+      </table>
+      <p>Respond with <b>429</b>, a <code>Retry-After</code> header, and
+      <code>X-RateLimit-Limit/Remaining/Reset</code> so a well-behaved client can self-regulate.
+      Limit per API key or per tenant, not per IP — many users share one IP behind corporate NAT.</p>
+      <div class="tip"><b>Where it belongs:</b> at the gateway (Azure API Management), so every
+      service behind it is protected without each one implementing it. And in a multi-instance
+      deployment the counter must be in a shared store like Redis, or your limit is silently
+      multiplied by the number of instances.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q12</span><span class="qt">The API security checklist</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Control</th><th>Detail</th></tr>
+        <tr><td><b>Authenticate everything</b></td><td>No anonymous endpoints except health and public docs</td></tr>
+        <tr><td><b>Authorise per object</b></td><td><b>The big one.</b> Authenticated user A must get 403/404 for user B's asset. Check ownership on every request, in the service layer — not by hiding the button in the UI.</td></tr>
+        <tr><td><b>Validate all input</b></td><td>Types, lengths, ranges, enums, allow-lists. Reject unknown fields rather than ignoring them.</td></tr>
+        <tr><td><b>Parameterised queries</b></td><td>Never build SQL by concatenation, including in "just a quick report query"</td></tr>
+        <tr><td><b>TLS everywhere</b></td><td>Including service-to-service inside the network</td></tr>
+        <tr><td><b>Rate limit</b></td><td>Especially login, password reset and search</td></tr>
+        <tr><td><b>Limit payload size</b></td><td>An unbounded body is a denial-of-service vector</td></tr>
+        <tr><td><b>No sensitive data in URLs</b></td><td>Query strings land in logs, proxies and browser history</td></tr>
+        <tr><td><b>Mass assignment</b></td><td>Bind to an explicit request DTO, never straight to the entity — otherwise a client sets <code>isAdmin: true</code></td></tr>
+        <tr><td><b>Scan dependencies</b></td><td>In CI, failing the build on a critical CVE</td></tr>
+      </table>
+      <div class="gotcha"><b>If you name one thing, name broken object-level authorisation.</b> It is
+      the most common serious API vulnerability in the wild, no scanner reliably finds it, and it is
+      invisible in the UI. Saying that demonstrates security thinking rather than security trivia.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q13</span><span class="qt">HTTP caching: ETag, Cache-Control and conditional requests</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>GET /v1/assets/42
+→ 200 OK
+  ETag: "a17c9f"
+  Cache-Control: private, max-age=60
+
+GET /v1/assets/42
+  If-None-Match: "a17c9f"
+→ 304 Not Modified          (no body — bandwidth and serialisation saved)</code></pre>
+      <p><b>ETag</b> is a version identifier for a representation. Beyond caching it gives you
+      <b>optimistic concurrency</b>: send <code>If-Match: "a17c9f"</code> on a PUT/PATCH and the
+      server returns <b>412 Precondition Failed</b> if someone else changed it meanwhile. That is a
+      clean answer to "how do you stop two users overwriting each other?" and it uses only HTTP.</p>
+      <div class="gotcha"><b><code>Cache-Control: private</code> vs <code>public</code>:</b>
+      <code>public</code> allows shared caches and CDNs to store it. Marking a per-user response
+      <code>public</code> means one user's data gets served to another — a serious and entirely
+      real bug class.</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q14</span><span class="qt">REST vs GraphQL vs gRPC</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th></th><th>REST</th><th>GraphQL</th><th>gRPC</th></tr>
+        <tr><td>Shape</td><td>Resources over HTTP/JSON</td><td>One endpoint, client-specified query</td><td>RPC over HTTP/2 with Protobuf</td></tr>
+        <tr><td>Strength</td><td>Universal, cacheable, simple, everyone knows it</td><td>Client asks for exactly the fields it needs; one round trip for a complex screen</td><td>Fast, compact, strongly typed, streaming</td></tr>
+        <tr><td>Weakness</td><td>Over- and under-fetching; several calls for one screen</td><td>HTTP caching is hard; a malicious query can be expensive; more server complexity</td><td>Not browser-native without a proxy; not human-readable on the wire</td></tr>
+        <tr><td>Choose for</td><td>Public and general-purpose APIs. <b>Default.</b></td><td>Rich clients with varied data needs, or aggregating many back-ends</td><td>Internal service-to-service where latency matters</td></tr>
+      </table>
+      <div class="say">"REST for anything public or client-facing, because it is cacheable and every
+      consumer already understands it. gRPC between internal services on a hot path where the
+      serialisation cost is measurable. GraphQL if the front-end genuinely needs to compose data
+      from several sources per screen — but it moves complexity to the server rather than removing
+      it, and query cost control becomes your problem."</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q15</span><span class="qt">Integrating with a third-party API you do not control</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>"Integrations across digital platforms" appears in most of these job descriptions, and this
+      is the practical question behind it.</p>
+      <ul>
+        <li><b>Wrap it behind your own interface</b> (the Adapter pattern). Nothing in your domain
+        should import their SDK's types — otherwise their breaking change becomes yours everywhere.</li>
+        <li><b>Timeout on every call.</b> Then retry with backoff for transient failures only, and a
+        circuit breaker so their outage does not become yours.</li>
+        <li><b>Decide the degraded behaviour</b> in advance: cached data, a partial response, or a
+        clear error. "The whole page 500s" is a decision too — just usually the wrong one.</li>
+        <li><b>Respect their rate limits</b> proactively rather than discovering them via 429s.</li>
+        <li><b>Log every request and response</b> (redacted) — when there is a dispute about what
+        was sent, this is the only thing that resolves it.</li>
+        <li><b>Record their contract in a test.</b> A recorded-response test tells you when their
+        payload changes shape.</li>
+        <li><b>Treat their data as untrusted input</b> and validate it, even though they are a
+        partner.</li>
+      </ul>
+      <div class="bridgebox"><b>Coming from test automation →</b> service virtualisation and mocking external
+      dependencies is exactly this problem from the other side. You know why depending on a live
+      third-party sandbox in CI is a bad idea — that story fits perfectly here.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q16</span><span class="qt">How do you change an API without breaking consumers?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <ol>
+        <li><b>Additive changes only</b>, wherever possible. New optional fields, new endpoints.</li>
+        <li><b>Never repurpose an existing field.</b> Changing what a value <i>means</i> is worse
+        than removing it, because nothing fails — it just goes quietly wrong.</li>
+        <li><b>Deprecate visibly:</b> document it, add a <code>Deprecation</code> and
+        <code>Sunset</code> header, and measure who is still calling it before you remove anything.</li>
+        <li><b>Consumer-driven contract tests</b> (Pact): each consumer publishes what it actually
+        relies on, and your build fails if you break it. This is what lets services deploy
+        independently without a full end-to-end suite.</li>
+        <li><b>Run both versions in parallel</b> during a migration window with a defined end date.</li>
+      </ol>
+      <div class="bridgebox"><b>This is a place to lead rather than follow.</b> Contract testing sits
+      exactly between your testing background and this role's architecture work. If the team has not
+      adopted it, "here is how services deploy independently without an integration bottleneck" is
+      the kind of contribution that gets a mid-level hire noticed.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q17</span><span class="qt">File upload and download at scale</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Do not stream large files through your API. The pattern:</p>
+      <ol>
+        <li>Client asks your API for permission: <code>POST /v1/attachments</code> with filename,
+        size and content type.</li>
+        <li>Your API validates (size cap, allowed types, quota, authorisation) and returns a
+        <b>short-lived pre-signed URL</b> to blob storage — on Azure, a SAS URL.</li>
+        <li>Client uploads directly to storage. Your service never touches the bytes.</li>
+        <li>Client confirms: <code>PUT /v1/attachments/{id}/complete</code>. Your service verifies
+        the blob exists, scans it for malware, and records the metadata.</li>
+      </ol>
+      <p>Downloads work the same way in reverse: a short-lived read SAS rather than proxying.</p>
+      <div class="gotcha"><b>Validate the content, not the extension.</b> A file named
+      <code>report.pdf</code> can contain anything. Check the magic bytes, cap the size before
+      accepting, and never serve user-uploaded files from your application's own origin — a stored
+      HTML file becomes stored XSS.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <nav class="pager">
+      <a class="pn" href="04-csharp-dotnet-java.html">&#8592; 04 · C#/.NET and Java</a>
+      <a class="pn" href="06-microservices-cloud-native.html">06 · Microservices &amp; cloud-native &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

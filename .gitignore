@@ -7,6 +7,8 @@
 !interview-preparation/*.html
 !interview-preparation/automation-testing/*.html
 !interview-preparation/automation-testing/categories/*.html
+!interview-preparation/application-development/*.html
+!interview-preparation/application-development/categories/*.html
 *.pdf
 # ...except the printable build of the automation guide (regenerated rarely, on purpose)
 !interview-preparation/automation-testing/Automation-Interview-Prep.pdf

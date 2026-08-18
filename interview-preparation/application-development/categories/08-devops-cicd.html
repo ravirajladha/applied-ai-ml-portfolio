@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>08 · Git, Azure DevOps, CI/CD &amp; Observability — Interview Prep</title>
+<meta name="description" content="Branching strategy, pull request practice, Azure Pipelines YAML, environments and approvals, deployment strategies, database migrations, observability, SLOs and performance debugging.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">AD</span><span>08 · DevOps &amp; CI/CD</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this page…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All categories</a> &nbsp;·&nbsp; 08 · Git, Azure DevOps, CI/CD, observability</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+
+<section class="sec" id="s1">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 1</div>
+    <div>
+      <h2>Version control and delivery</h2>
+      <p>"Strong version control and DevOps practices (Git, Azure DevOps, CI/CD pipelines)" appears
+         in almost every job description on this stack. If you have built pipelines in Jenkins or
+         GitHub Actions, the only real gap is Azure DevOps's vocabulary for concepts you already
+         know.</p>
+    </div>
+  </div>
+
+  <div class="primer">
+    <h3><span class="pill">Primer</span>Jenkins to Azure DevOps, translated</h3>
+
+    <p>You have designed and maintained pipelines. Azure DevOps is a different product with the same
+    concepts. Learn the mapping and you can speak about it fluently and honestly.</p>
+
+    <table>
+      <tr><th>Concept</th><th>Jenkins</th><th>Azure DevOps</th></tr>
+      <tr><td>Pipeline definition</td><td><code>Jenkinsfile</code> (Groovy)</td><td><code>azure-pipelines.yml</code> (YAML)</td></tr>
+      <tr><td>Where it runs</td><td>Agent / node</td><td>Agent pool — Microsoft-hosted or self-hosted</td></tr>
+      <tr><td>Grouping</td><td>Stage → step</td><td>Stage → job → step (jobs can run in parallel)</td></tr>
+      <tr><td>Reusable logic</td><td>Shared library</td><td>Template (<code>extends</code> / <code>template:</code>)</td></tr>
+      <tr><td>Credentials</td><td>Credentials plugin</td><td>Variable group linked to <b>Key Vault</b>, or a service connection</td></tr>
+      <tr><td>Build output</td><td>Archived artifact</td><td>Pipeline artifact, or a package in <b>Azure Artifacts</b></td></tr>
+      <tr><td>Manual approval</td><td><code>input</code> step</td><td><b>Environment</b> with approval checks</td></tr>
+      <tr><td>Cloud access</td><td>Credentials + CLI</td><td><b>Service connection</b> (a service principal or workload identity)</td></tr>
+      <tr><td>Triggers</td><td>Webhook / poll</td><td><code>trigger:</code> (CI) and <code>pr:</code> (pull request) blocks</td></tr>
+    </table>
+
+    <h4>The five Azure DevOps services</h4>
+    <table>
+      <tr><th>Service</th><th>What it is</th></tr>
+      <tr><td><b>Boards</b></td><td>Work items, backlogs, sprints, boards. Where stories live.</td></tr>
+      <tr><td><b>Repos</b></td><td>Git hosting, with <b>branch policies</b> — required reviewers, required builds, linked work items, comment resolution.</td></tr>
+      <tr><td><b>Pipelines</b></td><td>CI/CD. YAML pipelines are the current standard; classic release pipelines are legacy.</td></tr>
+      <tr><td><b>Artifacts</b></td><td>Package feeds — NuGet, npm, Maven, Python — with upstream sources.</td></tr>
+      <tr><td><b>Test Plans</b></td><td>Manual and exploratory test management.</td></tr>
+    </table>
+
+    <div class="bridgebox"><b>How to open this topic if your pipeline experience is elsewhere.</b>
+    "My pipeline experience is mostly Jenkins and GitHub Actions rather than Azure DevOps, but the
+    model maps directly — stages and jobs, agent pools instead of nodes, variable groups backed by
+    Key Vault instead of the credentials plugin, and environments with approval checks instead of an
+    input step. What I'd bring is the design side: owning a pipeline end to end, including the
+    unglamorous parts — keeping it under ten minutes, and keeping the test suite trustworthy enough
+    that a red build actually stops people." Confident, specific, and it does not overstate.</div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q1</span><span class="qt">Which branching strategy, and why?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Strategy</th><th>How it works</th><th>Fits</th></tr>
+        <tr><td><b>Trunk-based</b></td><td>Short-lived branches off <code>main</code>, merged within a day or two, behind feature flags if incomplete</td><td>Continuous delivery. <b>The modern default.</b></td></tr>
+        <tr><td><b>GitHub flow</b></td><td>Branch → PR → merge → deploy. Essentially trunk-based with a PR gate</td><td>Most web teams</td></tr>
+        <tr><td><b>GitFlow</b></td><td><code>develop</code>, <code>release/*</code>, <code>hotfix/*</code>, <code>feature/*</code></td><td>Versioned software with scheduled releases and supported older versions. Heavy for a continuously deployed service.</td></tr>
+        <tr><td><b>Release branches</b></td><td>Trunk-based plus a branch cut per release</td><td>When you must support several versions in the field simultaneously</td></tr>
+      </table>
+      <div class="say">"I'd default to trunk-based with short-lived branches and a required PR.
+      Long-lived branches are where merge pain comes from, and they hide integration problems until
+      the worst possible moment. If a feature is too big to finish in two days, that's an argument
+      for a feature flag, not for a three-week branch."</div>
+      <div class="tip"><b>The senior addition:</b> the branching strategy should follow the release
+      cadence. If a client contract means quarterly releases with supported older versions, GitFlow
+      or release branches are the honest answer, not a failure of modernity. Showing you would ask
+      about release cadence first is better than naming a favourite.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q2</span><span class="qt">Merge, rebase, squash — and the Git commands you should have used</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Operation</th><th>Result</th><th>Rule</th></tr>
+        <tr><td><b>Merge</b></td><td>Merge commit; true history preserved</td><td>Use for shared branches</td></tr>
+        <tr><td><b>Rebase</b></td><td>Your commits replayed on top; linear history</td><td>Only on your own unpushed work — it rewrites history</td></tr>
+        <tr><td><b>Squash merge</b></td><td>The whole branch becomes one commit on main</td><td>Good default for feature branches: clean history, one revertable unit</td></tr>
+      </table>
+      <pre><code>git switch -c feature/asset-scoring        # create and switch
+git rebase -i main                        # tidy your own commits before the PR
+git revert &lt;sha&gt;                          # safe undo — a new commit, history intact
+git reset --soft HEAD~1                   # uncommit, keep changes staged
+git cherry-pick &lt;sha&gt;                     # move one commit to a release branch
+git bisect start / bad / good &lt;sha&gt;       # binary search for the breaking commit
+git stash push -m "wip"                   # park changes
+git reflog                                # find a commit you thought you destroyed
+git log --oneline --graph --all           # see the actual shape of history</code></pre>
+      <div class="gotcha"><b>The question behind the question:</b> "you've pushed a secret to the
+      repository — what do you do?" The answer is <b>rotate the secret first</b>. Rewriting history
+      is secondary housekeeping: it is already in every clone, in CI caches, and possibly already
+      scraped. Candidates who lead with <code>filter-branch</code> instead of rotation are missing
+      the point, and interviewers know it.</div>
+      <div class="tip"><b><code>git reflog</code> is the answer to "I've lost my commits".</b> Almost
+      nothing is truly gone for 30 days. Having actually used it is a nice small credibility marker.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q3</span><span class="qt">What makes a good pull request, and a good review?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <h5>As the author</h5>
+      <ul>
+        <li><b>Small.</b> Under ~400 lines gets a real review; 2,000 lines gets an approval and a
+        thumbs-up emoji. This is the single biggest lever on review quality.</li>
+        <li><b>One concern per PR.</b> A refactor mixed with a behaviour change is unreviewable —
+        the reviewer cannot tell which diff lines matter.</li>
+        <li><b>A description that says <i>why</i></b>, links the work item, and notes anything you
+        are unsure about. Point reviewers at the risky part.</li>
+        <li><b>Green build, tests included, self-reviewed first.</b> Read your own diff before
+        asking anyone else to.</li>
+      </ul>
+      <h5>As the reviewer</h5>
+      <p>Priority order: correctness → security → design fit → tests → readability → style
+      (automated). Beyond the checklist, the behaviour matters:</p>
+      <ul>
+        <li>Ask questions rather than issue instructions — "what happens if this list is empty?"
+        rather than "handle the empty case".</li>
+        <li>Mark severity: <b>must fix</b> vs <b>suggestion</b> vs <b>nitpick</b>. Without it, every
+        comment feels blocking and reviews become adversarial.</li>
+        <li>Approve with minor comments rather than blocking on trivia.</li>
+        <li>Take anything contentious to a five-minute call. A twelve-comment thread is a
+        conversation that should have happened out loud.</li>
+        <li>Say what is good, not only what is wrong.</li>
+      </ul>
+      <div class="tip"><b>Branch policies</b> make this enforceable in Azure Repos: minimum
+      reviewers, a required successful build, linked work items, comment resolution required, and
+      auto-reset approvals on new pushes. Naming those is the concrete half of the answer.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q4</span><span class="qt">Write an Azure Pipelines YAML file</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>trigger:
+  branches: { include: [ main ] }
+pr:
+  branches: { include: [ main ] }
+
+variables:
+  - group: shared-secrets          # linked to Key Vault
+  - name: imageName
+    value: assets-api
+
+stages:
+- stage: Build
+  jobs:
+  - job: BuildTest
+    pool: { vmImage: ubuntu-latest }
+    steps:
+    - task: UsePythonVersion@0
+      inputs: { versionSpec: '3.12' }
+    - script: pip install -r requirements.txt -r requirements-dev.txt
+      displayName: Install dependencies
+    - script: ruff check . &amp;&amp; mypy src
+      displayName: Lint and type check
+    - script: pytest --junitxml=junit.xml --cov=src --cov-report=xml
+      displayName: Unit tests
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()          # publish results even when tests fail
+      inputs: { testResultsFiles: junit.xml }
+    - task: PublishCodeCoverageResults@2
+      inputs: { summaryFileLocation: coverage.xml }
+    - task: Docker@2
+      inputs:
+        command: buildAndPush
+        repository: $(imageName)
+        containerRegistry: acr-connection
+        tags: |
+          $(Build.BuildId)
+          latest
+
+- stage: DeployDev
+  dependsOn: Build
+  jobs:
+  - deployment: Dev
+    environment: dev                          # no approval
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: templates/deploy-container-app.yml
+            parameters: { envName: dev, tag: $(Build.BuildId) }
+
+- stage: DeployProd
+  dependsOn: DeployDev
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - deployment: Prod
+    environment: production                   # approval check configured here
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: templates/deploy-container-app.yml
+            parameters: { envName: prod, tag: $(Build.BuildId) }</code></pre>
+      <h5>What to point out while explaining it</h5>
+      <ul>
+        <li><b>Build once.</b> The image is built in <code>Build</code> and the <i>same tag</i> is
+        promoted through every environment. Rebuilding per environment means production runs
+        something nobody tested.</li>
+        <li><b>The approval lives on the environment</b>, not in the YAML — so approvers can be
+        changed without a code change, and the audit trail is in one place.</li>
+        <li><b><code>condition: succeededOrFailed()</code></b> on test publishing, or a failing run
+        shows you nothing about why.</li>
+        <li><b>Secrets come from a variable group linked to Key Vault</b>, never from literals.</li>
+        <li><b>Templates</b> keep deployment logic in one place across services.</li>
+      </ul>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q5</span><span class="qt">What quality gates belong in a pipeline?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Gate</th><th>Stops</th></tr>
+        <tr><td>Compile / build</td><td>The obvious</td></tr>
+        <tr><td>Lint + format check</td><td>Style debate in code review</td></tr>
+        <tr><td>Static type check</td><td>A whole class of runtime error</td></tr>
+        <tr><td>Unit tests</td><td>Logic regressions. Fast, so run first.</td></tr>
+        <tr><td>Coverage threshold</td><td>Untested new code — better as "coverage of the diff" than a global number</td></tr>
+        <tr><td><b>SAST</b></td><td>Injection, hard-coded secrets, unsafe deserialisation</td></tr>
+        <tr><td><b>Dependency / SCA scan</b></td><td>Known CVEs in packages</td></tr>
+        <tr><td><b>Secret scanning</b></td><td>Credentials committed by accident</td></tr>
+        <tr><td>Container image scan</td><td>Vulnerable base image layers</td></tr>
+        <tr><td>Integration tests</td><td>Wiring failures — with Testcontainers, against a real database</td></tr>
+        <tr><td>Smoke tests post-deploy</td><td>A deployment that "succeeded" but does not work</td></tr>
+      </table>
+      <div class="gotcha"><b>The opinion that shows experience:</b> a gate that is frequently
+      overridden is worse than no gate, because it trains the team to ignore red. Either make it
+      blocking and keep it trustworthy, or make it advisory and stop pretending. The same is true of
+      flaky tests — a suite people re-run until it passes provides no signal at all.</div>
+      <div class="bridgebox"><b>This is the argument you can make better than anyone else in the
+      room.</b> You have watched teams lose faith in a test suite. Say what you did about it —
+      quarantine policy, flake tracking, deleting tests that never caught anything.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q6</span><span class="qt">Deployment strategies and zero-downtime database changes</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Strategy</th><th>Mechanism</th><th>Rollback</th></tr>
+        <tr><td><b>Rolling</b></td><td>Replace instances in batches</td><td>Roll forward, or redeploy the previous version</td></tr>
+        <tr><td><b>Blue-green</b></td><td>Two full environments, switch at the router. In App Service this is a <b>slot swap</b></td><td>Swap back — seconds</td></tr>
+        <tr><td><b>Canary</b></td><td>Small traffic percentage to the new version, watch metrics, ramp. Container Apps does this with revision traffic weights</td><td>Set the weight back to zero</td></tr>
+        <tr><td><b>Feature flags</b></td><td>Deploy dark, enable separately</td><td>Turn the flag off — no deployment at all</td></tr>
+      </table>
+      <h5>The database question, which is the real one</h5>
+      <p>During any of these, two versions of the code run at once. So the schema must work with
+      both. Use <b>expand / contract</b>:</p>
+      <ol>
+        <li><b>Expand</b> — add the new column as nullable. Deploy. Nothing reads it yet.</li>
+        <li><b>Dual write</b> — new code writes both old and new; still reads the old.</li>
+        <li><b>Backfill</b> — migrate historical rows in batches, out of hours if large.</li>
+        <li><b>Switch reads</b> to the new column. Deploy. Verify.</li>
+        <li><b>Contract</b> — in a later release, stop writing the old column and drop it.</li>
+      </ol>
+      <p>Rename in one step and you get errors for the whole rollout window, and a rollback that
+      cannot work.</p>
+      <div class="tip"><b>Say this:</b> "Migrations run as a separate pipeline step before the app
+      deploys, they're versioned in the repository (Alembic, EF migrations, Flyway), and they're
+      forward-only. Rolling back a schema is far riskier than rolling forward, so I'd design the
+      change so it never needs a rollback."</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q7</span><span class="qt">Feature flags — the benefits and the debt</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Flags decouple <b>deploy</b> (technical, low risk, frequent) from <b>release</b> (a business
+      decision). That lets you merge incomplete work to main safely, run a canary by user segment,
+      A/B test, and kill a broken feature in seconds without a rollback.</p>
+      <p>Types worth distinguishing: <b>release toggles</b> (short-lived, removed once shipped),
+      <b>ops toggles</b> (a kill switch for an expensive feature under load), <b>permission
+      toggles</b> (long-lived, effectively entitlements).</p>
+      <div class="gotcha"><b>The cost, which you should volunteer:</b> every flag doubles the paths
+      through the code, and combinations multiply. Untidied flags become permanent conditional
+      complexity that nobody dares remove. The discipline is a removal ticket created with the flag
+      and an owner — release toggles are temporary by definition. On Azure: <b>App Configuration</b>
+      provides managed feature flags.</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="s2">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 2</div>
+    <div>
+      <h2>Running it: observability, incidents and performance</h2>
+      <p>"Debugging, testing and addressing performance issues" is a JD line, and this is the
+         section where your background is worth the most.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q8</span><span class="qt">What do you monitor, and what do you alert on?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Two useful frameworks, both worth naming:</p>
+      <table>
+        <tr><th>RED (per service)</th><th>USE (per resource)</th></tr>
+        <tr><td><b>R</b>ate — requests per second</td><td><b>U</b>tilisation — how busy</td></tr>
+        <tr><td><b>E</b>rrors — failure rate</td><td><b>S</b>aturation — queue depth, how much work is waiting</td></tr>
+        <tr><td><b>D</b>uration — latency distribution, p50/p95/p99</td><td><b>E</b>rrors — hardware or resource errors</td></tr>
+      </table>
+      <p><b>Alert on symptoms, not causes.</b> "Error rate above 2% for five minutes" is actionable;
+      "CPU above 80%" usually is not — high CPU with healthy latency is a machine doing its job.</p>
+      <div class="gotcha"><b>The failure mode to name: alert fatigue.</b> If a channel produces
+      forty notifications a day, nobody reads the one that matters. Every alert should be actionable,
+      have a documented response, and page a human only if it needs a human right now. Everything
+      else is a dashboard or a ticket. Being able to say this shows you have been on a rota, or at
+      least understand what one is for.</div>
+      <div class="tip"><b>SLI / SLO / error budget:</b> an <b>SLI</b> is the measurement ("99.2% of
+      requests under 500 ms"), an <b>SLO</b> is the target, and the <b>error budget</b> is the
+      allowed shortfall. It turns "is it reliable enough?" into a number both engineering and the
+      business can argue about — and it is what justifies pausing features to fix stability.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q9</span><span class="qt">"Production is slow. Walk me through it."</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Structure matters more than the specific tools. Say the structure first.</p>
+      <ol>
+        <li><b>Scope it.</b> Everything or one endpoint? All users or one tenant? Since when — and
+        what changed at that time? A deployment, a data volume change, a traffic spike, a
+        dependency?</li>
+        <li><b>Look at the percentiles.</b> p50 rising means a systemic slowdown; only p99 rising
+        means a subset — a particular tenant's data volume, a lock, or a cold cache.</li>
+        <li><b>Open one slow trace.</b> The end-to-end transaction view tells you immediately
+        whether the time is in your code, the database, or a downstream call. This step replaces
+        most guessing.</li>
+        <li><b>If it is the database:</b> query count (N+1), execution plan, missing index, lock
+        waits, connection pool exhaustion.</li>
+        <li><b>If it is your code:</b> serialising too much, synchronous I/O in a loop, no
+        pagination, blocking the event loop, GC pressure.</li>
+        <li><b>If it is infrastructure:</b> CPU or memory saturation, throttling (Cosmos RU limits,
+        SQL DTU), cold starts, a noisy neighbour, cross-region calls.</li>
+        <li><b>Mitigate, then fix.</b> Scale out or roll back to stop the bleeding, then find the
+        root cause properly. Do not debug in the middle of an incident when you can restore service
+        first.</li>
+        <li><b>Add the alert you wished you had</b> and write it up.</li>
+      </ol>
+      <div class="bridgebox"><b>Land the framing:</b> "The most valuable thing I learned doing
+      performance work is that the bottleneck is almost never where the team assumes it is — so I
+      won't change anything until I have a profile or a trace pointing at it." Then give a real
+      example with numbers. This should be one of the two or three strongest answers you give all
+      day.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q10</span><span class="qt">"You broke production. What do you do?"</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <ol>
+        <li><b>Restore service first.</b> Roll back, swap the slot, turn off the flag. Do not debug
+        while users are affected — diagnosis can happen after.</li>
+        <li><b>Communicate immediately.</b> Tell the team and whoever owns the stakeholder
+        relationship, before they find out from a client. In a consultancy this matters as much as
+        the fix.</li>
+        <li><b>Fix properly</b>, with a test that would have caught it.</li>
+        <li><b>Blameless postmortem.</b> What happened, timeline, why the safeguards did not catch
+        it, what changes. Actions with owners and dates.</li>
+      </ol>
+      <div class="tip"><b>The word to use is "blameless".</b> The point is that if people fear
+      blame, they hide problems and you lose the information. And the useful question is never "who
+      pushed it" but "how did a change like this reach production without being caught?" — that is
+      a systems answer and it is what senior engineers give.</div>
+      <div class="tip"><b>Have a real story ready.</b> Something you broke, how you handled it, what
+      changed afterwards. Candidates who claim they have never broken anything have either not
+      shipped much or are not being straight.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q11</span><span class="qt">Monorepo or multiple repositories?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th></th><th>Monorepo</th><th>Repo per service</th></tr>
+        <tr><td>Cross-cutting change</td><td>One atomic commit and PR</td><td>Coordinated PRs across repos</td></tr>
+        <tr><td>Shared code</td><td>Direct reference, always current</td><td>Versioned package — deliberate, but slower</td></tr>
+        <tr><td>CI</td><td>Needs path filters or it rebuilds everything</td><td>Naturally scoped</td></tr>
+        <tr><td>Ownership</td><td>Needs CODEOWNERS</td><td>Obvious</td></tr>
+        <tr><td>Risk</td><td>Accidental coupling — easy to reach into another service's internals</td><td>Drift and duplication</td></tr>
+      </table>
+      <div class="say">"For a small team with several related services I'd lean monorepo with path
+      filters, because the coordination cost of cross-repo changes is real and the tooling for
+      monorepos is good now. What I'd guard against is the coupling it makes easy — the boundary has
+      to be enforced by the build, not just by convention."</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q12</span><span class="qt">The DORA metrics, and what they are for</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Metric</th><th>Meaning</th></tr>
+        <tr><td><b>Deployment frequency</b></td><td>How often you release. Higher means smaller, safer changes.</td></tr>
+        <tr><td><b>Lead time for change</b></td><td>Commit to production. Measures the whole pipeline, including review and approval queues.</td></tr>
+        <tr><td><b>Change failure rate</b></td><td>Share of deployments causing a problem.</td></tr>
+        <tr><td><b>Mean time to restore</b></td><td>How fast you recover.</td></tr>
+      </table>
+      <p>The insight that makes them worth quoting: <b>speed and stability move together</b>, not
+      against each other. Teams that deploy frequently deploy small changes, and small changes are
+      easier to review, test and revert.</p>
+      <div class="gotcha"><b>Add the caveat.</b> These are team health indicators, not individual
+      performance measures. The moment they are used to rank people they get gamed, and you lose
+      both the metric and the trust. Volunteering that shows maturity about metrics generally.</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <nav class="pager">
+      <a class="pn" href="07-azure.html">&#8592; 07 · Azure</a>
+      <a class="pn" href="09-databases-data-engineering.html">09 · Databases &amp; data engineering &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

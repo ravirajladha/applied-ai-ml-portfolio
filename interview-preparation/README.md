@@ -9,6 +9,11 @@ Prep material for AI/ML interviews — theory-first, written so each answer can 
 > **Also in this folder:** [automation-testing/](automation-testing/) — a separate 250-question guide for
 > **test automation / SDET** interviews (Selenium + Java, Playwright + TypeScript, Appium, framework
 > design, CI/CD and manual QA), split into nine categories with diagrams, code and a PDF.
+>
+> And [application-development/](application-development/) — an 11-category guide for **cloud-native
+> application developer** interviews (Python and FastAPI, TypeScript and React, C#/.NET and Spring Boot,
+> API design, microservices, Azure, CI/CD, databases and data engineering, ML integration and system
+> design), each category opening with a concepts primer written from zero.
 
 | File | What it is |
 |------|------------|

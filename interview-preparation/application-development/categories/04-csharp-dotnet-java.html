@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · C#/.NET and Java Spring Boot — Interview Prep</title>
+<meta name="description" content="The two enterprise backend stacks: Java fundamentals and Spring Boot, C# fundamentals and ASP.NET Core, EF Core and JPA, and how to position which one you claim.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">AD</span><span>04 · C#/.NET &amp; Java</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this page…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All categories</a> &nbsp;·&nbsp; 04 · C#/.NET and Java Spring Boot</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+
+<section class="sec" id="s1">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 1</div>
+    <div>
+      <h2>Positioning, and the Java you already have</h2>
+      <p>Many enterprises on this stack are Microsoft shops, so C# is often in play — but these job
+         descriptions almost always say "or". Knowing how the two stacks map onto each other lets you
+         answer confidently on either side.</p>
+    </div>
+  </div>
+
+  <div class="primer">
+    <h3><span class="pill">Primer</span>The two stacks are the same stack with different names</h3>
+
+    <p>If you know Spring Boot conceptually, you know ASP.NET Core, and vice versa. They solve
+    identical problems with near-identical architecture. Learning the mapping is a couple of hours
+    and it lets you answer a C# question honestly without ever having shipped C#.</p>
+
+    <table>
+      <tr><th>Concept</th><th>Java / Spring Boot</th><th>C# / ASP.NET Core</th></tr>
+      <tr><td>Runtime</td><td>JVM</td><td>.NET CLR</td></tr>
+      <tr><td>Build / packages</td><td>Maven or Gradle, <code>pom.xml</code></td><td>MSBuild + NuGet, <code>.csproj</code></td></tr>
+      <tr><td>Web entry point</td><td><code>@RestController</code></td><td><code>[ApiController]</code> or a minimal API endpoint</td></tr>
+      <tr><td>Dependency injection</td><td>Spring container, <code>@Service</code> / <code>@Autowired</code></td><td>Built-in container, <code>builder.Services.AddScoped&lt;T&gt;()</code></td></tr>
+      <tr><td>ORM</td><td>JPA / Hibernate</td><td>Entity Framework Core</td></tr>
+      <tr><td>Config</td><td><code>application.yml</code> + profiles</td><td><code>appsettings.json</code> + environments</td></tr>
+      <tr><td>Cross-cutting</td><td>Filters, interceptors, AOP</td><td>Middleware pipeline, filters</td></tr>
+      <tr><td>Health / metrics</td><td>Spring Boot Actuator</td><td><code>AddHealthChecks()</code></td></tr>
+      <tr><td>Testing</td><td>JUnit + Mockito, <code>@SpringBootTest</code></td><td>xUnit + Moq, <code>WebApplicationFactory</code></td></tr>
+      <tr><td>Async</td><td><code>CompletableFuture</code>, virtual threads</td><td><code>async</code>/<code>await</code>, <code>Task&lt;T&gt;</code></td></tr>
+      <tr><td>Streams / queries</td><td>Stream API</td><td>LINQ</td></tr>
+    </table>
+
+    <h4>How to say this in the room</h4>
+    <div class="say">"My production language is Java — Spring Boot is the model I think in. I read
+    C# comfortably and I've worked through the .NET equivalents, because the architecture maps
+    almost one to one: DI container, middleware pipeline, EF Core instead of JPA. I'd expect to be
+    productive in C# quickly, but I wouldn't claim to have shipped it."</div>
+    <p>That answer is honest, demonstrates the knowledge, and pre-empts the "so you don't know C#"
+    objection by showing you already did the mapping. It is much stronger than either bluffing or
+    saying "no".</p>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q1</span><span class="qt">Java collections: which one, and why</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Type</th><th>Backed by</th><th>Notes</th></tr>
+        <tr><td><code>ArrayList</code></td><td>Array</td><td>O(1) index, O(n) middle insert. The default list.</td></tr>
+        <tr><td><code>LinkedList</code></td><td>Doubly-linked nodes</td><td>Rarely the right answer; poor cache locality</td></tr>
+        <tr><td><code>HashMap</code></td><td>Hash buckets</td><td>O(1) average; no ordering</td></tr>
+        <tr><td><code>LinkedHashMap</code></td><td>Hash + linked list</td><td>Preserves insertion order; basis of an LRU cache</td></tr>
+        <tr><td><code>TreeMap</code></td><td>Red-black tree</td><td>Sorted, O(log n)</td></tr>
+        <tr><td><code>ConcurrentHashMap</code></td><td>Segmented/CAS</td><td>Thread-safe without locking the whole map</td></tr>
+      </table>
+      <div class="gotcha"><b>The perennial follow-up: <code>equals</code> and <code>hashCode</code>.</b>
+      Override them together. Two objects that are equal must have the same hash code, or a
+      <code>HashMap</code> lookup will fail to find an object you just put in. Also: a mutable field
+      used in <code>hashCode</code> means mutating the object after insertion makes it unfindable —
+      the object is in the map, in the wrong bucket.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q2</span><span class="qt">Java streams — and where they are the wrong tool</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>Map&lt;Long, List&lt;Asset&gt;&gt; bySite = assets.stream()
+    .filter(Asset::isActive)
+    .sorted(Comparator.comparing(Asset::getName))
+    .collect(Collectors.groupingBy(Asset::getSiteId));
+
+Optional&lt;Asset&gt; worst = assets.stream()
+    .min(Comparator.comparingDouble(Asset::getScore));
+
+double average = assets.stream()
+    .mapToDouble(Asset::getScore)
+    .average()
+    .orElse(0.0);</code></pre>
+      <p>Streams are <b>lazy</b> — nothing runs until a terminal operation
+      (<code>collect</code>, <code>forEach</code>, <code>reduce</code>, <code>count</code>).
+      Intermediate operations just build the pipeline.</p>
+      <div class="gotcha"><b>The senior nuance:</b> <code>parallelStream()</code> is not free
+      concurrency. It uses the common ForkJoin pool, so one slow parallel stream can starve others,
+      and it is a net loss for small collections or I/O-bound work. Use it only for large,
+      CPU-bound, side-effect-free computation — and measure. Candidates who suggest
+      <code>parallelStream</code> as a general performance fix reveal a lot.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q3</span><span class="qt">Checked vs unchecked exceptions, and how to design them</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>Checked</b> (extends <code>Exception</code>) must be declared or caught — the compiler
+      enforces it. <b>Unchecked</b> (extends <code>RuntimeException</code>) need not be.</p>
+      <p>Modern practice leans heavily toward unchecked for application code, because checked
+      exceptions force every intermediate layer to declare things it cannot handle, and the result
+      is usually a <code>catch</code> that wraps and rethrows or, worse, swallows.</p>
+      <div class="tip"><b>The design answer:</b> throw a domain exception
+      (<code>AssetNotFoundException</code>), let it propagate, and map it to an HTTP status in one
+      place — a <code>@ControllerAdvice</code> in Spring, exception middleware in ASP.NET Core.
+      Business logic should not know what a 404 is.</div>
+      <div class="note"><b>C# has no checked exceptions at all</b> — a reasonable thing to mention
+      as a deliberate language design difference, since it shows you have compared the two rather
+      than just used one.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q4</span><span class="qt">Spring Boot: how a request actually flows</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>@RestController
+@RequestMapping("/v1/assets")
+public class AssetController {
+
+    private final AssetService service;                 // constructor injection
+
+    public AssetController(AssetService service) {      // no @Autowired needed
+        this.service = service;
+    }
+
+    @GetMapping("/{id}")
+    public AssetDto get(@PathVariable Long id) {
+        return service.findById(id)
+                      .orElseThrow(() -&gt; new AssetNotFoundException(id));
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public AssetDto create(@Valid @RequestBody CreateAssetRequest request) {
+        return service.create(request);
+    }
+}
+
+@RestControllerAdvice
+public class ErrorHandler {
+    @ExceptionHandler(AssetNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ProblemDetail handle(AssetNotFoundException ex) { ... }
+}</code></pre>
+      <table>
+        <tr><th>Annotation</th><th>Role</th></tr>
+        <tr><td><code>@SpringBootApplication</code></td><td>Config + component scan + auto-configuration on the main class</td></tr>
+        <tr><td><code>@RestController</code></td><td>Controller whose returns are serialised to the body</td></tr>
+        <tr><td><code>@Service</code> / <code>@Repository</code> / <code>@Component</code></td><td>Registers a bean for injection</td></tr>
+        <tr><td><code>@Valid</code></td><td>Triggers bean validation on the request body — a 400 with field errors</td></tr>
+        <tr><td><code>@Transactional</code></td><td>Wraps the method in a database transaction</td></tr>
+        <tr><td><code>@Profile</code></td><td>Bean active only in a named environment</td></tr>
+      </table>
+      <div class="tip"><b>Say "constructor injection, not field injection".</b> Constructor injection
+      makes dependencies explicit and required, keeps fields <code>final</code>, and lets you build
+      the object in a test without a Spring context. <code>@Autowired</code> on a field is a legacy
+      pattern and interviewers notice which one you reach for.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q5</span><span class="qt">What does Spring Boot's auto-configuration actually do?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Spring Boot inspects the classpath and configures sensible defaults conditionally: if it
+      finds an H2 driver and no configured <code>DataSource</code>, it creates an in-memory one; if
+      it finds Spring MVC, it configures an embedded Tomcat. Every auto-configuration is guarded by
+      <code>@ConditionalOnClass</code> / <code>@ConditionalOnMissingBean</code>, so <b>anything you
+      define yourself wins</b>.</p>
+      <p>That is the whole "convention over configuration" claim: a dependency on
+      <code>spring-boot-starter-web</code> replaces several hundred lines of XML.</p>
+      <div class="tip"><b>Mention Actuator</b> — <code>/actuator/health</code>,
+      <code>/actuator/metrics</code>, <code>/actuator/info</code>. These are exactly the liveness and
+      readiness endpoints a container platform needs, which ties this answer straight back to
+      cloud-native.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q6</span><span class="qt">JPA: entity states, lazy loading and the N+1 problem</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>An entity is <b>transient</b> (new, unknown to the persistence context), <b>managed</b>
+      (attached — changes are flushed automatically at commit), <b>detached</b> (was managed, the
+      context closed), or <b>removed</b>.</p>
+      <p><b>Lazy loading</b> defers fetching an association until it is touched. Two failure modes,
+      both extremely common interview material:</p>
+      <ul>
+        <li><b>N+1 queries</b> — loading 100 sites then touching <code>site.getAssets()</code> in a
+        loop issues 101 queries. Fix with <code>JOIN FETCH</code>, an entity graph, or a batch size.</li>
+        <li><b><code>LazyInitializationException</code></b> — serialising a detached entity outside
+        the transaction. The real fix is to return a <b>DTO</b> shaped for the API rather than
+        exposing entities directly, which also stops your database schema leaking into your public
+        contract.</li>
+      </ul>
+      <pre><code>@Query("select s from Site s join fetch s.assets where s.region = :region")
+List&lt;Site&gt; findByRegionWithAssets(@Param("region") String region);</code></pre>
+      <div class="gotcha"><b>Never return entities from controllers.</b> It couples your API to your
+      schema, triggers lazy loads during serialisation, and leaks fields you did not intend to
+      publish. This is a strong opinion worth holding.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="s2">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 2</div>
+    <div>
+      <h2>C# and ASP.NET Core</h2>
+      <p>Enough to answer confidently on a Microsoft-stack team without claiming production
+         experience you do not have.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q7</span><span class="qt">C# for a Java developer: the differences that matter</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Feature</th><th>C#</th><th>Java</th></tr>
+        <tr><td>Properties</td><td><code>public string Name { get; set; }</code></td><td>Explicit getters and setters</td></tr>
+        <tr><td>Value types</td><td><code>struct</code> lives on the stack</td><td>Only primitives; records are reference types</td></tr>
+        <tr><td>Nullability</td><td><b>Nullable reference types</b> — <code>string?</code> vs <code>string</code>, checked by the compiler</td><td><code>Optional</code>, or annotations</td></tr>
+        <tr><td>Queries</td><td>LINQ, with query and method syntax</td><td>Stream API</td></tr>
+        <tr><td>Async</td><td><code>async</code>/<code>await</code> built in since 2012</td><td><code>CompletableFuture</code>; virtual threads more recently</td></tr>
+        <tr><td>Immutable data</td><td><code>record</code> with <code>init</code> setters and <code>with</code> expressions</td><td><code>record</code> (Java 16+)</td></tr>
+        <tr><td>Extension methods</td><td>Yes — add methods to a type you do not own</td><td>No equivalent</td></tr>
+        <tr><td>Naming</td><td><code>PascalCase</code> for methods and properties</td><td><code>camelCase</code></td></tr>
+      </table>
+      <pre><code>public record AssetDto(int Id, string Name, double ConditionScore);
+
+var poorAssets = assets
+    .Where(a =&gt; a.ConditionScore &lt; 50)
+    .OrderBy(a =&gt; a.Name)
+    .Select(a =&gt; new AssetDto(a.Id, a.Name, a.ConditionScore))
+    .ToList();</code></pre>
+      <p>That LINQ block is the Java stream above, with different method names. Say that out loud
+      when asked about C# — recognising the isomorphism is the point.</p>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q8</span><span class="qt">An ASP.NET Core minimal API, end to end</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext&lt;AppDb&gt;(o =&gt;
+    o.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+builder.Services.AddScoped&lt;IAssetService, AssetService&gt;();
+builder.Services.AddHealthChecks();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+app.UseExceptionHandler();          // order matters — this is a pipeline
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapHealthChecks("/health");
+
+app.MapGet("/v1/assets/{id:int}", async (int id, IAssetService svc) =&gt;
+    await svc.FindAsync(id) is { } asset
+        ? Results.Ok(asset)
+        : Results.NotFound());
+
+app.MapPost("/v1/assets", async (CreateAssetRequest req, IAssetService svc) =&gt;
+{
+    var created = await svc.CreateAsync(req);
+    return Results.Created($"/v1/assets/{created.Id}", created);
+});
+
+app.Run();</code></pre>
+      <ul>
+        <li><b>Middleware order is the behaviour.</b> Authentication before authorisation; exception
+        handling first so it wraps everything. A misordered pipeline is a classic bug and a classic
+        question.</li>
+        <li><b>Service lifetimes:</b> <code>AddSingleton</code> (one per application),
+        <code>AddScoped</code> (one per request — correct for a <code>DbContext</code>),
+        <code>AddTransient</code> (a new one each time).</li>
+        <li>Configuration layers in order: <code>appsettings.json</code> →
+        <code>appsettings.{Environment}.json</code> → environment variables → Key Vault. Later
+        sources override earlier ones, which is exactly the twelve-factor model.</li>
+      </ul>
+      <div class="gotcha"><b>The lifetime trap:</b> injecting a scoped <code>DbContext</code> into a
+      singleton. It is captured on the first request and reused forever — stale data, a leaked
+      connection, and cross-request data exposure. ASP.NET Core will actually throw on this in
+      development, which is worth knowing.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q9</span><span class="qt">Entity Framework Core: tracking, and the queries that surprise people</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <pre><code>// read-only query — skip change tracking for a measurable speed-up
+var assets = await db.Assets
+    .AsNoTracking()
+    .Include(a =&gt; a.Site)                 // eager load; avoids N+1
+    .Where(a =&gt; a.SiteId == siteId &amp;&amp; a.ConditionScore &lt; 50)
+    .OrderBy(a =&gt; a.Name)
+    .Skip(offset).Take(limit)
+    .Select(a =&gt; new AssetDto(a.Id, a.Name, a.ConditionScore))   // projection
+    .ToListAsync();</code></pre>
+      <ul>
+        <li><b>Change tracking</b> is how <code>SaveChanges</code> knows what to update. Turn it off
+        with <code>AsNoTracking()</code> for reads — it is one of the cheapest wins available.</li>
+        <li><b><code>Include</code></b> is EF's <code>JOIN FETCH</code>. Without it, lazy loading
+        gives you N+1.</li>
+        <li><b>Projection with <code>Select</code></b> means the database only returns the columns
+        you need.</li>
+        <li><b>Migrations</b> — <code>dotnet ef migrations add</code>, applied in the pipeline, not
+        by <code>EnsureCreated</code> at startup.</li>
+      </ul>
+      <div class="gotcha"><b>The client-evaluation trap:</b> a <code>Where</code> containing
+      something EF cannot translate to SQL. Older versions silently pulled the whole table into
+      memory and filtered there; EF Core now throws instead. Either way, know that a LINQ query
+      against <code>IQueryable</code> and one against <code>IEnumerable</code> are completely
+      different things — the first becomes SQL, the second runs in your process.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q10</span><span class="qt">async/await in C#: what to know and what to avoid</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><code>await</code> frees the thread while I/O is in flight, so a server handles far more
+      concurrent requests with the same thread pool. Async in C# is about <b>throughput</b>, not
+      about making one request faster.</p>
+      <div class="gotcha"><b>Three things that get asked:</b>
+      <ul>
+        <li><b>Never <code>.Result</code> or <code>.Wait()</code></b> on a task — it blocks a thread
+        and, in some contexts, deadlocks. Async all the way up.</li>
+        <li><b><code>async void</code></b> only for event handlers — exceptions from it cannot be
+        caught and will crash the process. Use <code>async Task</code>.</li>
+        <li><b><code>Task.WhenAll</code></b> for independent work, exactly like
+        <code>Promise.all</code> and <code>asyncio.gather</code>. Awaiting in a loop is sequential.</li>
+      </ul></div>
+      <div class="bridgebox"><b>Three languages, one idea.</b> <code>Promise.all</code> /
+      <code>asyncio.gather</code> / <code>Task.WhenAll</code> are the same tool. Saying that in an
+      interview demonstrates that you understand the concept rather than one syntax, and it makes
+      your multi-language claim credible.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q11</span><span class="qt">Garbage collection and memory — what a developer should know</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Both runtimes use generational, tracing collectors: most objects die young, so the
+      collector scans a small "young generation" frequently and the older ones rarely. You do not
+      manage memory, but you can still leak it.</p>
+      <h5>How a managed language still leaks</h5>
+      <ul>
+        <li>A static or singleton collection that only ever grows — a cache with no eviction.</li>
+        <li>Event handlers or listeners never unsubscribed, keeping the subscriber alive.</li>
+        <li>Unclosed resources — connections, streams, HTTP clients. Use try-with-resources /
+        <code>using</code>.</li>
+        <li>A <code>ThreadLocal</code> not cleared on a pooled thread, so the value survives into
+        the next request that reuses that thread.</li>
+      </ul>
+      <div class="bridgebox"><b>Coming from test automation →</b> that last one is a genuine automation
+      gotcha; if you have used <code>ThreadLocal&lt;WebDriver&gt;</code> for parallel execution you
+      have met exactly this class of bug. It is a good, specific story.</div>
+      <div class="tip"><b>If asked how you'd diagnose one:</b> watch memory over time under steady
+      load — a sawtooth that never returns to baseline is a leak — then take a heap dump and compare
+      two snapshots to find the type that keeps growing.</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q12</span><span class="qt">Job descriptions say "Python, JavaScript, C# <i>or</i> Java" — how do you position that?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>You do not need all four. You need one you are deep in, one you are fluent in, and the rest
+      at reading literacy. Decide which is which before the interview and stay consistent across
+      every round — a mismatch between the screening call and the technical round gets noticed.</p>
+      <p>A useful way to grade your own claim, because each level commits you to something:</p>
+      <table>
+        <tr><th>Claim</th><th>What it commits you to</th></tr>
+        <tr><td><b>Strongest</b></td><td>A live coding problem, questions on concurrency and memory, and an opinion on its ecosystem's frameworks.</td></tr>
+        <tr><td><b>Fluent</b></td><td>Writing idiomatic code unaided and explaining the runtime model.</td></tr>
+        <tr><td><b>Literate</b></td><td>Reading it confidently and explaining how its stack maps onto one you do know. Say plainly that you have not shipped it in production.</td></tr>
+      </table>
+      <p>The literate tier is the useful one, and it is worth stating explicitly rather than
+      dodging: <i>"I read C# comfortably and I understand the .NET model — DI container, middleware
+      pipeline, EF Core. I haven't shipped production C#, but the mapping from Spring Boot is close
+      enough that I'd be productive quickly."</i> That is a bounded, checkable claim, and the
+      mapping table at the top of this page is what makes it true rather than aspirational.</p>
+      <div class="gotcha"><b>The failure mode is over-claiming.</b> "I know all four" invites a
+      whiteboard problem in the one you know least, and the recovery from that is very difficult.
+      A confident, bounded claim plus a demonstrated ability to map concepts across languages reads
+      as more senior, not less.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <nav class="pager">
+      <a class="pn" href="03-javascript-typescript-frontend.html">&#8592; 03 · JavaScript &amp; TypeScript</a>
+      <a class="pn" href="05-api-design.html">05 · API design and integration &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

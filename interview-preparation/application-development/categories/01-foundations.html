@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Application Development Foundations — Interview Prep</title>
+<meta name="description" content="How a modern application is actually put together: client/server, the HTTP request lifecycle, runtimes, layered architecture, environments, SOLID, coupling and cohesion, and what cloud-native means.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot">AD</span><span>01 · Foundations</span></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search this page…  (press /)" autocomplete="off">
+      <span class="count" id="count"></span>
+      <button class="btn" id="quiz" title="Hide all answers and test yourself">Quiz mode</button>
+      <button class="btn" id="expand">Expand all</button>
+      <button class="btn" id="theme" title="Toggle dark mode">Dark</button>
+      <button class="btn" onclick="window.print()" title="Save as PDF">Print / PDF</button>
+    </div>
+  </div>
+</header>
+
+<div class="crumb"><a href="../index.html">&#8592; All categories</a> &nbsp;·&nbsp; 01 · Application development foundations</div>
+
+<div class="wrap" style="grid-template-columns:1fr">
+<main>
+
+<section class="sec" id="s1">
+  <div class="sec-head">
+    <div class="sec-badge">SECTION 1</div>
+    <div>
+      <h2>The anatomy of a modern application</h2>
+      <p>The vocabulary every other page assumes. If any of this is fuzzy, fixing it here saves you
+         three times the effort later.</p>
+    </div>
+  </div>
+
+  <div class="primer">
+    <h3><span class="pill">Primer</span>What an application actually is, from zero</h3>
+
+    <p>Strip away the frameworks and a web application is four things talking to each other.</p>
+
+    <h4>1. The client</h4>
+    <p>A browser or a mobile app. It renders an interface and sends requests. Critically,
+    <b>you do not control it</b> — the user can modify anything in it, replay requests, or send
+    requests your interface never would. This is why validation on the client is a convenience and
+    validation on the server is the actual rule. That one sentence answers a surprising number of
+    interview questions.</p>
+
+    <h4>2. The server (your application)</h4>
+    <p>A long-running process listening on a port. It receives an HTTP request, decides what it
+    means, does some work — usually reading or writing data — and returns a response. Everything
+    called a "backend framework" (FastAPI, Express, Spring Boot, ASP.NET Core) is machinery for
+    turning "a request arrived at <code>POST /v1/assets</code>" into "call this function".</p>
+
+    <h4>3. The data store</h4>
+    <p>The only part that remembers anything between requests. Your application process can be
+    killed and restarted at any moment without losing data — because it holds none. That property
+    is what makes horizontal scaling possible, and it is the whole idea behind statelessness.</p>
+
+    <h4>4. Everything else</h4>
+    <p>Caches, queues, file storage, third-party APIs, identity providers. Each is a network call
+    that can be slow or fail, and each one you add makes the system more capable and less reliable.
+    Good engineering is being deliberate about that trade.</p>
+
+    <h4>The request lifecycle, end to end</h4>
+    <p>Being able to narrate this is a genuine mid-level checkpoint. A user clicks "Save":</p>
+    <ol>
+      <li><b>DNS</b> resolves <code>api.example.com</code> to an IP address.</li>
+      <li><b>TCP</b> connection opens; <b>TLS</b> handshake negotiates encryption and verifies the
+      server's certificate. From here everything is encrypted in transit.</li>
+      <li>The browser sends an <b>HTTP request</b>: a method, a path, headers (including
+      <code>Authorization</code> and <code>Content-Type</code>) and a body.</li>
+      <li>It arrives at a <b>load balancer / reverse proxy</b>, which picks one of several healthy
+      instances of your application.</li>
+      <li>Your framework's <b>middleware pipeline</b> runs: logging, authentication, CORS,
+      rate limiting, request validation.</li>
+      <li><b>Routing</b> matches the path to a handler function. The JSON body is
+      <b>deserialised</b> into an object and validated.</li>
+      <li>The handler calls into your <b>business logic</b>, which calls a <b>repository</b>, which
+      issues <b>SQL</b> over a pooled connection.</li>
+      <li>The result is <b>serialised</b> back to JSON, a <b>status code</b> is chosen, response
+      headers are set, and it travels back down the chain.</li>
+      <li>Along the way the request emitted <b>logs, metrics and a trace</b> — otherwise you have
+      no idea what happened when it goes wrong.</li>
+    </ol>
+
+    <h4>Where code lives: layers</h4>
+    <table>
+      <tr><th>Layer</th><th>Responsibility</th><th>Must not</th></tr>
+      <tr><td><b>API / controller</b></td><td>HTTP concerns: routing, status codes, request and response shapes, auth checks</td><td>Contain business rules</td></tr>
+      <tr><td><b>Service / domain</b></td><td>The actual rules of the business. The part that would still make sense if you replaced HTTP with a CLI</td><td>Know about HTTP or SQL</td></tr>
+      <tr><td><b>Repository / data access</b></td><td>Reading and writing persistence</td><td>Make business decisions</td></tr>
+      <tr><td><b>Model / entity</b></td><td>The shapes the data takes</td><td>—</td></tr>
+    </table>
+    <p>The test for whether your layering is real: <b>could you add a second interface — a
+    scheduled job, a message consumer, a CLI — that reuses the service layer without touching
+    it?</b> If not, your business logic is stuck inside your controllers.</p>
+
+    <h4>The same application in four environments</h4>
+    <p>One codebase, one build artefact, four sets of configuration: <b>local</b> (your machine),
+    <b>dev</b>, <b>test/UAT</b> (where stakeholders sign off), <b>production</b>. The artefact must
+    not be rebuilt between them — if you rebuild for production you are shipping something nobody
+    tested. Configuration comes from environment variables, secrets from a vault.</p>
+
+    <div class="bridgebox"><b>Coming from test automation →</b> you have lived on the consequences of every
+    one of these ideas: environment drift, unvalidated input, flaky behaviour that was really a
+    race condition, data that persisted between tests. You are not learning these concepts from
+    scratch — you are learning to name them from the building side.</div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q1</span><span class="qt">What happens between clicking a button and seeing the data?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Narrate the nine steps above. Interviewers ask this because it reveals instantly how much
+      of the stack you actually hold in your head — a candidate who jumps straight from "click" to
+      "the API returns data" is telling you where their understanding stops.</p>
+      <div class="tip"><b>Score the extra mark</b> by mentioning something most people forget:
+      the browser may send a <b>CORS preflight</b> <code>OPTIONS</code> request first; connections
+      are <b>pooled and reused</b>, not opened per request; and the response may be served from a
+      cache without ever reaching your server.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q2</span><span class="qt">HTTP methods, status codes and headers — the working set</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Method</th><th>Purpose</th><th>Safe</th><th>Idempotent</th></tr>
+        <tr><td>GET</td><td>Read</td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>POST</td><td>Create / trigger</td><td>No</td><td><b>No</b></td></tr>
+        <tr><td>PUT</td><td>Replace entirely</td><td>No</td><td>Yes</td></tr>
+        <tr><td>PATCH</td><td>Partially update</td><td>No</td><td>Not guaranteed</td></tr>
+        <tr><td>DELETE</td><td>Remove</td><td>No</td><td>Yes</td></tr>
+        <tr><td>OPTIONS</td><td>Supported methods / CORS preflight</td><td>Yes</td><td>Yes</td></tr>
+      </table>
+      <p><b>Safe</b> = does not change server state. <b>Idempotent</b> = repeating it has the same
+      effect as doing it once.</p>
+      <table>
+        <tr><th>Code</th><th>Use it when</th></tr>
+        <tr><td>200 / 201 / 202 / 204</td><td>OK / Created (send a <code>Location</code> header) / Accepted for async processing / success with no body</td></tr>
+        <tr><td>301 / 302 / 304</td><td>Moved permanently / found / not modified (client's cached copy is still good)</td></tr>
+        <tr><td>400</td><td>Malformed request — the server could not parse it</td></tr>
+        <tr><td>401 / 403</td><td>Not authenticated / authenticated but not permitted</td></tr>
+        <tr><td>404 / 405 / 409</td><td>Not found / method not allowed / conflict, e.g. duplicate or concurrent edit</td></tr>
+        <tr><td>422</td><td>Parsed fine, failed business validation</td></tr>
+        <tr><td>429</td><td>Rate limited — pair it with a <code>Retry-After</code> header</td></tr>
+        <tr><td>500 / 502 / 503 / 504</td><td>Unhandled server error / bad gateway / unavailable (use for planned maintenance) / upstream timeout</td></tr>
+      </table>
+      <h5>Headers worth naming</h5>
+      <p><code>Authorization</code>, <code>Content-Type</code>, <code>Accept</code>,
+      <code>Cache-Control</code>, <code>ETag</code> / <code>If-None-Match</code> (conditional
+      requests and optimistic concurrency), <code>Location</code>, <code>Retry-After</code>,
+      <code>X-Correlation-Id</code> (your own, for tracing a request across services).</p>
+      <div class="bridgebox"><b>Coming from test automation →</b> this is territory you already own. The
+      shift is being asked "which status code would you return?" rather than "which did it return?"</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q3</span><span class="qt">Why is HTTP stateless, and how do you have a logged-in user then?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Each HTTP request is independent — the server remembers nothing about the last one. That
+      is a feature: any instance can serve any request, so you can put ten instances behind a load
+      balancer and kill any of them freely.</p>
+      <p>Identity is therefore carried <i>on every request</i>. Two approaches:</p>
+      <table>
+        <tr><th></th><th>Server-side session</th><th>Token (JWT)</th></tr>
+        <tr><td>How</td><td>Cookie holds an opaque session ID; server looks up session state</td><td>Signed token holds the claims; server validates the signature</td></tr>
+        <tr><td>Scaling</td><td>Needs shared session store (Redis) or sticky sessions</td><td>No lookup at all — validate offline with the issuer's public key</td></tr>
+        <tr><td>Revocation</td><td>Easy — delete the session</td><td><b>Hard</b> — a valid token works until it expires. Mitigate with short lifetimes plus refresh tokens</td></tr>
+        <tr><td>Suits</td><td>Traditional server-rendered web apps</td><td>APIs, SPAs, mobile, service-to-service</td></tr>
+      </table>
+      <div class="gotcha"><b>The follow-up they hope you cannot answer:</b> "how do you log someone
+      out immediately with JWTs?" You cannot, purely. You either keep a short-lived access token
+      (5–15 minutes) with a revocable refresh token, or maintain a deny-list of revoked token IDs —
+      which re-introduces the state you were avoiding. Saying "there's a real trade-off here"
+      is the correct answer.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q4</span><span class="qt">What is CORS, and why does it keep breaking things?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Browsers enforce the <b>same-origin policy</b>: JavaScript on <code>app.example.com</code>
+      cannot read a response from <code>api.example.com</code> unless that server explicitly allows
+      it. <b>CORS</b> is the set of response headers by which the server grants permission —
+      <code>Access-Control-Allow-Origin</code> and friends.</p>
+      <p>For anything beyond a simple GET, the browser first sends a <b>preflight</b>
+      <code>OPTIONS</code> request asking whether the real request is allowed.</p>
+      <div class="gotcha"><b>Two things to say that show you understand it properly:</b> CORS is
+      enforced <i>by the browser</i>, not the server — which is why the same call works fine from
+      Postman or curl and fails in the app. And <code>Access-Control-Allow-Origin: *</code> is not
+      a fix; it is disabling a protection, and it cannot be combined with credentialed requests
+      anyway. List the actual origins.</div>
+      <div class="bridgebox"><b>Coming from test automation →</b> you have almost certainly debugged
+      "works in Postman, fails in the browser". Now you know the real reason, and it makes a
+      good answer.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q5</span><span class="qt">Compiled vs interpreted, and what a runtime does</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Language</th><th>How it runs</th><th>Consequence</th></tr>
+        <tr><td><b>Java</b></td><td>Compiled to bytecode, run by the JVM, hot paths JIT-compiled to native</td><td>Slow to warm up, fast once warm. Matters for serverless cold starts.</td></tr>
+        <tr><td><b>C#</b></td><td>Compiled to IL, run by the .NET CLR, also JIT (or AOT)</td><td>Same shape as Java.</td></tr>
+        <tr><td><b>Python</b></td><td>Compiled to bytecode at import, interpreted by CPython</td><td>Slower per operation; heavy work delegated to C libraries (NumPy, pandas).</td></tr>
+        <tr><td><b>JavaScript/TS</b></td><td>TS is erased to JS at build; JS is JIT-compiled by V8</td><td>TypeScript types exist only at compile time — they are gone at runtime.</td></tr>
+      </table>
+      <p>A <b>runtime</b> is what your code needs to exist while it runs: memory management and
+      garbage collection, threading, the standard library, JIT compilation. It is why "install the
+      JRE" or "install Python 3.12" is a deployment concern — and why containers, which bundle the
+      runtime with the app, removed a whole class of problems.</p>
+      <div class="gotcha"><b>Trap worth knowing:</b> because TypeScript types vanish at runtime, a
+      JSON response that does not match your interface will <i>not</i> throw — you get
+      <code>undefined</code> three layers later. That is why you still validate incoming data at
+      the boundary (zod, class-validator) even in a fully typed codebase.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q6</span><span class="qt">Process, thread, and asynchronous — what is the difference?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <ul>
+        <li><b>Process</b> — an isolated program with its own memory. Crashing one does not touch
+        another. Communication between them is expensive.</li>
+        <li><b>Thread</b> — a unit of execution inside a process, sharing memory with its siblings.
+        Cheap to create, but shared mutable memory is where race conditions live.</li>
+        <li><b>Asynchronous</b> — a single thread that does not sit idle waiting for I/O. When a
+        request goes out, the thread is released to do other work and resumes when the answer
+        arrives.</li>
+      </ul>
+      <p>The decision rule: <b>I/O-bound work benefits from async</b> (you are waiting on a network
+      or disk, not computing). <b>CPU-bound work needs real parallelism</b> — more threads on a
+      multi-core machine, or more processes.</p>
+      <div class="note"><b>Language specifics they may probe:</b> Python's GIL means threads do not
+      give you CPU parallelism — use <code>asyncio</code> for I/O, <code>multiprocessing</code> for
+      CPU. Node.js is single-threaded with an event loop, so CPU-heavy work blocks everything and
+      belongs in a worker thread or a separate service. Java and .NET have genuine multithreading
+      plus async/await for I/O.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q7</span><span class="qt">Race conditions, deadlocks and idempotency in one answer</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>A <b>race condition</b> is when the outcome depends on the timing of concurrent operations.
+      The classic: two requests read a stock count of 1, both decide it is available, both decrement,
+      and you have sold the same item twice. Fixes: a database transaction with the right isolation
+      level, optimistic concurrency (a version column, rejecting the second write with a 409), or
+      pessimistic locking.</p>
+      <p>A <b>deadlock</b> is two operations each holding what the other needs. Prevention: always
+      acquire locks in the same order, keep transactions short, and set lock timeouts.</p>
+      <div class="bridgebox"><b>Coming from test automation →</b> "flaky test" and "race condition" are very
+      often the same sentence. You have debugged more of these than most application developers.
+      Say that: "a large share of the flakiness I've chased turned out to be genuine concurrency
+      bugs in the application, not in the test."</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q8</span><span class="qt">Coupling and cohesion — the two words that explain most design advice</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>Cohesion</b> is how related the things inside one module are. <b>Coupling</b> is how
+      much one module depends on the internals of another. You want <b>high cohesion, low
+      coupling</b>, and essentially every design principle is a restatement of that.</p>
+      <p>Practical signs of high coupling: changing one class forces edits in five others; you
+      cannot test a class without standing up half the system; a module reaches into another's data
+      structures rather than calling its interface.</p>
+      <div class="tip"><b>Say this and it will land:</b> "the useful question isn't whether a design
+      is elegant, it's what happens when the next requirement arrives. Good structure is the one
+      where the likely change touches one place."</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q9</span><span class="qt">SOLID, with the two that actually come up</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>All five are worth being able to state in one line each. The two that actually get
+      probed:</p>
+      <h5>Single responsibility</h5>
+      <p>Often misread as "a class does one thing". It is really "a class has one reason to change"
+      — one stakeholder or concern. An <code>Invoice</code> class that both calculates tax and
+      renders a PDF has two: a tax law change and a design change both edit it.</p>
+      <h5>Dependency inversion</h5>
+      <p>High-level policy should not depend on low-level detail; both depend on an abstraction.
+      Concretely: your service layer depends on an <code>AssetRepository</code> interface, not on
+      "the SQL Server implementation". That is what lets you test the service without a database
+      and swap the store later.</p>
+      <div class="gotcha"><b>The mature caveat, and worth volunteering:</b> applied dogmatically,
+      SOLID produces an interface for every class and indirection nobody can follow. Add the
+      abstraction when there is a second implementation or a real testing need — not
+      pre-emptively. Interviewers hearing this recognise someone who has maintained code rather
+      than only written it.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q10</span><span class="qt">DRY, KISS, YAGNI — and when DRY is wrong</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>DRY</b> — every piece of knowledge has one authoritative representation.
+      <b>KISS</b> — prefer the simple solution. <b>YAGNI</b> — do not build for a requirement you
+      have imagined.</p>
+      <div class="tip"><b>The senior nuance:</b> DRY is about duplicated <i>knowledge</i>, not
+      duplicated <i>text</i>. Two functions that look identical today but change for different
+      reasons should stay separate — merging them creates a coupling that hurts the first time the
+      two reasons diverge. "A little duplication is far cheaper than the wrong abstraction" is a
+      well-known line in the field and it is a genuinely good answer.</div>
+      <div class="tags"><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q11</span><span class="qt">The design patterns you will actually be asked about</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Pattern</th><th>What it does</th><th>Where you have met it</th></tr>
+        <tr><td><b>Repository</b></td><td>Abstracts data access behind a collection-like interface</td><td>Every layered backend</td></tr>
+        <tr><td><b>Factory</b></td><td>Creates objects without the caller knowing the concrete type</td><td>WebDriver factory in your framework</td></tr>
+        <tr><td><b>Strategy</b></td><td>Swappable algorithms behind one interface</td><td>Different pricing rules, different export formats</td></tr>
+        <tr><td><b>Builder</b></td><td>Constructs complex objects step by step</td><td>Test data builders</td></tr>
+        <tr><td><b>Singleton</b></td><td>One shared instance</td><td>Config, connection pools — usually better achieved by DI lifetime than by the pattern</td></tr>
+        <tr><td><b>Adapter</b></td><td>Makes an incompatible interface fit yours</td><td>Wrapping a third-party API</td></tr>
+        <tr><td><b>Decorator</b></td><td>Adds behaviour by wrapping</td><td>Caching or retry around a repository; middleware</td></tr>
+        <tr><td><b>Observer / pub-sub</b></td><td>Notify many listeners of an event</td><td>Event-driven architecture, UI state</td></tr>
+      </table>
+      <div class="bridgebox"><b>Coming from test automation →</b> Page Object Model is Facade plus
+      Repository; your driver factory is Factory; your test data builders are Builder. Say this out
+      loud in the interview — it converts framework experience into design-pattern experience in
+      one sentence, and it is entirely true.</div>
+      <div class="gotcha"><b>Singleton trap:</b> it is widely considered an anti-pattern because it
+      is global mutable state that makes testing hard. If asked, say you would get a single instance
+      from the DI container instead, which gives you the same lifetime with none of the coupling.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag bridge">bridge</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q12</span><span class="qt">How should an application handle errors?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <ul>
+        <li><b>Fail fast at the boundary.</b> Validate input as it enters and reject it with a
+        clear 400/422. Do not let bad data travel three layers in.</li>
+        <li><b>Distinguish expected from unexpected.</b> "Asset not found" is a normal outcome and
+        deserves a 404, not an exception logged at error level. Only genuinely unexpected failures
+        should page someone.</li>
+        <li><b>Catch only what you can handle.</b> A <code>catch</code> that logs and swallows is
+        how bugs become invisible. If you cannot do anything useful, let it propagate to a global
+        handler.</li>
+        <li><b>One global exception handler</b> maps exceptions to status codes and to a consistent
+        error body, so every endpoint fails the same shape.</li>
+        <li><b>Never leak internals.</b> Return a correlation ID to the caller; put the stack trace
+        in the logs. A stack trace in an HTTP response is a security finding.</li>
+      </ul>
+      <pre><code>{
+  "type": "https://api.example.com/errors/validation",
+  "title": "Validation failed",
+  "status": 422,
+  "detail": "condition_score must be between 0 and 100",
+  "traceId": "0af7651916cd43dd8448eb211c80319c"
+}</code></pre>
+      <p>That shape is <b>Problem Details</b>, standardised in <b>RFC 9457</b> (which obsoleted the
+      older and more widely quoted RFC 7807). Naming it is a cheap, real credibility point — and
+      knowing it was renumbered is a slightly better one.</p>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q13</span><span class="qt">What makes a log line useful?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>Structured, correlated, levelled, and free of secrets.</b></p>
+      <pre><code>logger.info("asset.created", extra={
+    "asset_id": asset.id,
+    "site_id": asset.site_id,
+    "user_id": current_user.id,
+    "duration_ms": elapsed,
+    "correlation_id": ctx.correlation_id,
+})</code></pre>
+      <p>Structured means fields, not an interpolated sentence — you can then query
+      <code>duration_ms &gt; 1000</code> instead of grepping. The <b>correlation ID</b> is created at
+      the edge and passed to every downstream call, so one identifier reconstructs the whole
+      journey.</p>
+      <table>
+        <tr><th>Level</th><th>Means</th></tr>
+        <tr><td>ERROR</td><td>Something failed and a human needs to know</td></tr>
+        <tr><td>WARN</td><td>Recovered, but suspicious — a retry succeeded, a fallback was used</td></tr>
+        <tr><td>INFO</td><td>Business-meaningful events: created, approved, exported</td></tr>
+        <tr><td>DEBUG</td><td>Developer detail, off in production</td></tr>
+      </table>
+      <div class="gotcha"><b>Never log</b> passwords, tokens, full card numbers, or personal data
+      you would not want in a support ticket. Logs get shipped to third-party tools and retained
+      for months.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q14</span><span class="qt">Configuration and secrets — where do they live?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>Configuration</b> — anything that differs per environment (database host, feature flags,
+      log level, external API URLs) comes from environment variables, so the same artefact runs
+      everywhere. <b>Secrets</b> — connection strings, API keys, certificates — come from a vault
+      (Azure Key Vault), never from the repository.</p>
+      <p>The best answer goes one step further: on Azure, use a <b>managed identity</b> so the
+      application authenticates to the database or storage account as itself and <i>there is no
+      secret to store at all</i>. You have removed the problem rather than protected it.</p>
+      <div class="gotcha"><b>If a secret does get committed:</b> rotating it is the fix, not
+      deleting the commit. It is in the history, in every clone, and possibly already scraped.
+      Interviewers ask this to see whether you understand that git history is permanent.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag trap">trap</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q15</span><span class="qt">Semantic versioning, and what counts as a breaking change</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><code>MAJOR.MINOR.PATCH</code> — MAJOR for breaking changes, MINOR for backwards-compatible
+      additions, PATCH for backwards-compatible fixes.</p>
+      <p>For an API, <b>breaking</b> means: removing or renaming a field, making an optional request
+      field required, tightening validation, changing a type, changing the meaning of an existing
+      value, or removing an enum member. <b>Non-breaking</b> means adding an optional request field
+      or a new response field — provided your consumers ignore unknown fields, which is worth
+      stating explicitly in the contract.</p>
+      <div class="tip"><b>Also know lock files.</b> <code>package-lock.json</code>,
+      <code>poetry.lock</code>, <code>packages.lock.json</code> pin the exact resolved dependency
+      tree so a build is reproducible. Committing them is what stops "it built yesterday" — a
+      good short answer if asked about supply-chain or build reliability.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q16</span><span class="qt">Big-O, at the level a web developer is actually asked</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Complexity</th><th>Example</th></tr>
+        <tr><td>O(1)</td><td>Hash map lookup, array index</td></tr>
+        <tr><td>O(log n)</td><td>Binary search, B-tree index lookup</td></tr>
+        <tr><td>O(n)</td><td>Single pass over a list</td></tr>
+        <tr><td>O(n log n)</td><td>Efficient sorting</td></tr>
+        <tr><td>O(n²)</td><td>Nested loop over the same collection — the one to spot in a review</td></tr>
+      </table>
+      <p>The practical version for application work: the nested loop that becomes a full table scan,
+      and the loop that does I/O per iteration. The second is far more expensive in real systems —
+      an O(n) loop making a network call per item is worse than an O(n²) in-memory computation for
+      any realistic n.</p>
+      <div class="tip"><b>The line to use:</b> "in application code the algorithmic complexity is
+      rarely the bottleneck — the number of round trips is. I look for I/O inside loops before I
+      look at nested loops."</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q17</span><span class="qt">Technical debt — what is it and when do you pay it down?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>Technical debt is a design shortcut taken for speed that makes future change more
+      expensive. The metaphor matters: like financial debt it is sometimes the correct decision, and
+      it charges interest until repaid.</p>
+      <p><b>Deliberate and documented</b> — "we hard-coded the tax rate to hit the deadline; ticket
+      raised" — is legitimate engineering. <b>Accidental and invisible</b> is the dangerous kind.</p>
+      <p>How to pay it down without a doomed "refactoring sprint": fix it in the area you are
+      already working in, budget a percentage of each sprint, and — most importantly — argue for it
+      in terms of delivery, not aesthetics. "This module has caused four of our last six production
+      issues" persuades a product owner; "the code is ugly" does not.</p>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q18</span><span class="qt">What does "clean, maintainable code" mean concretely?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>The JD uses this phrase, so have a concrete answer rather than adjectives.</p>
+      <ul>
+        <li><b>Names that remove the need for a comment.</b> <code>daysUntilInspectionDue</code>,
+        not <code>d</code>.</li>
+        <li><b>Small functions at one level of abstraction.</b> A function that mixes "calculate the
+        score" with "open a database connection" is doing two jobs.</li>
+        <li><b>Comments explain <i>why</i>, never <i>what</i>.</b> The code says what. A comment
+        earns its place by recording the reason — the regulation, the bug, the constraint.</li>
+        <li><b>No surprises.</b> A function called <code>getUser</code> should not also send an
+        email.</li>
+        <li><b>Errors handled deliberately</b>, not swallowed.</li>
+        <li><b>Tests that read as a specification</b> of the behaviour.</li>
+        <li><b>Automated formatting and linting</b> so the team never spends review time on style.</li>
+      </ul>
+      <div class="tip"><b>The framing that impresses:</b> "code is read far more often than it is
+      written, and most of it is read by someone debugging at speed. I optimise for that reader."</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q19</span><span class="qt">Cloud-native, cloud-hosted, and the twelve factors</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>The distinction to hold: <b>cloud-hosted</b> is where it runs; <b>cloud-native</b> is how it is built.</p>
+      <table>
+        <tr><th>Property</th><th>Why it exists</th></tr>
+        <tr><td>Containerised</td><td>The tested artefact is the deployed artefact</td></tr>
+        <tr><td>Stateless</td><td>Scale horizontally; instances are disposable</td></tr>
+        <tr><td>Config from the environment</td><td>One build, many environments</td></tr>
+        <tr><td>Backing services attached by URL</td><td>Swap a database without a code change</td></tr>
+        <tr><td>Health endpoints</td><td>The platform can restart or drain you automatically</td></tr>
+        <tr><td>Observable</td><td>You cannot SSH into a container that no longer exists</td></tr>
+        <tr><td>Designed for failure</td><td>Timeouts, retries, breakers — the network is not reliable</td></tr>
+        <tr><td>Automated delivery</td><td>Deployment is a routine event, not a project</td></tr>
+      </table>
+      <div class="note"><b>Health endpoints are worth a sentence of detail:</b> <b>liveness</b>
+      ("am I alive, or should I be restarted?") and <b>readiness</b> ("am I ready for traffic, or
+      still warming up / waiting on a dependency?") are different questions, and conflating them
+      causes restart loops. Knowing the difference is a small but reliable signal.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q20</span><span class="qt">Security basics every developer is expected to know</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Risk</th><th>What it is</th><th>The fix</th></tr>
+        <tr><td><b>Injection</b></td><td>User input concatenated into SQL or a command</td><td>Parameterised queries. Always. An ORM does this by default — until someone writes raw SQL.</td></tr>
+        <tr><td><b>Broken access control</b></td><td>Changing an ID in the URL returns someone else's data</td><td>Check ownership on every request, server-side. The number one risk in practice.</td></tr>
+        <tr><td><b>XSS</b></td><td>Attacker script executes in another user's browser</td><td>Context-aware output encoding; a Content-Security-Policy; never <code>innerHTML</code> with user data</td></tr>
+        <tr><td><b>CSRF</b></td><td>Another site makes an authenticated request as the user</td><td>Anti-forgery tokens; <code>SameSite</code> cookies. Largely moot for token-auth APIs</td></tr>
+        <tr><td><b>Sensitive data exposure</b></td><td>Secrets in code, PII in logs, no TLS</td><td>Vault, log scrubbing, HTTPS everywhere</td></tr>
+        <tr><td><b>Vulnerable dependencies</b></td><td>A CVE in a package you never think about</td><td>Automated dependency scanning in CI</td></tr>
+        <tr><td><b>Security misconfiguration</b></td><td>Debug mode on, default credentials, a public storage bucket</td><td>Hardened defaults, infrastructure as code, review</td></tr>
+      </table>
+      <div class="tip"><b>The principle to name:</b> defence in depth, least privilege, and never
+      trust the client. If you only remember one specific: <b>broken access control</b> is the
+      single most common serious flaw in real applications, and it is not caught by a scanner —
+      it needs someone to think about who owns the record.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q21</span><span class="qt">Framework vs library, and web server vs application server</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>You call a library; a framework calls you.</b> That inversion of control is the whole
+      distinction — you write handlers and the framework decides when to invoke them.</p>
+      <p><b>Web server</b> (nginx, IIS) terminates TLS, serves static files and reverse-proxies to
+      your application. <b>Application server / runtime host</b> (Uvicorn for FastAPI, Node,
+      Kestrel for ASP.NET Core, Tomcat for Java) executes your code. In production you usually have
+      both, because the web server is much better at TLS, compression, static files and buffering
+      slow clients than your application process is.</p>
+      <div class="note"><b>In a PaaS like Azure App Service or Container Apps</b>, the platform
+      provides the front end and you only ship the application — which is precisely the appeal.</div>
+      <div class="tags"><span class="tag core">core</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q22</span><span class="qt">Load balancer, reverse proxy, API gateway and CDN — who does what?</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <table>
+        <tr><th>Thing</th><th>Job</th></tr>
+        <tr><td><b>CDN</b></td><td>Serves static assets from a location near the user. Cuts latency and origin load.</td></tr>
+        <tr><td><b>Load balancer</b></td><td>Distributes requests across healthy instances; removes unhealthy ones via health checks.</td></tr>
+        <tr><td><b>Reverse proxy</b></td><td>A single entry point in front of one or more services: TLS termination, compression, routing by path.</td></tr>
+        <tr><td><b>API gateway</b></td><td>A reverse proxy with API concerns added: authentication, rate limiting, keys and quotas, request transformation, versioning, a developer portal. On Azure: <b>API Management</b>.</td></tr>
+      </table>
+      <p>They overlap heavily, and in a real deployment one component often plays several roles.
+      Saying that is better than pretending the boundaries are crisp.</p>
+      <div class="tags"><span class="tag core">core</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q23</span><span class="qt">Horizontal vs vertical scaling, and what stops you scaling out</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p><b>Vertical</b> = a bigger machine. Simple, no code changes, but there is a ceiling and
+      it is a single point of failure. <b>Horizontal</b> = more machines behind a load balancer.
+      Effectively unbounded and more resilient, but your application has to tolerate it.</p>
+      <p>What breaks when you add a second instance — this is the real question:</p>
+      <ul>
+        <li>In-memory session state (user gets logged out on every other request)</li>
+        <li>In-memory caches drifting out of sync</li>
+        <li>Files written to local disk that the next request cannot find</li>
+        <li>A scheduled job that now runs N times instead of once</li>
+        <li>An in-process lock or counter that is no longer global</li>
+      </ul>
+      <p>Fixes: externalise state to Redis, blob storage or the database; use a distributed lock or
+      a leader election for scheduled work.</p>
+      <div class="gotcha"><b>The one nobody mentions:</b> the database usually becomes the
+      bottleneck long before the application layer does, and it is the hardest part to scale out.
+      Read replicas, caching and connection pooling come before sharding.</div>
+      <div class="tags"><span class="tag core">core</span><span class="tag adv">advanced</span></div>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q"><span class="num">Q24</span><span class="qt">CAP theorem and eventual consistency, without the hand-waving</span><span class="chev">&#9660;</span></div>
+    <div class="a">
+      <p>In a distributed system, when the network partitions you must choose between
+      <b>consistency</b> (every read sees the latest write, or errors) and <b>availability</b>
+      (every request gets an answer, possibly stale). Partition tolerance is not optional — networks
+      do fail — so the real choice is CP or AP.</p>
+      <p><b>Eventual consistency</b> means replicas converge given time without new writes. It is
+      perfectly acceptable for a dashboard count or a search index, and unacceptable for an account
+      balance or a permission check.</p>
+      <div class="tip"><b>What makes this answer good rather than recited:</b> tie it to a product
+      decision. "For an asset-condition dashboard I'd happily accept a few seconds of staleness for
+      availability. For whether a user can approve a document, I want strong consistency and I'll
+      take the error." Interviewers are checking whether you can turn theory into a choice.</div>
+      <div class="tags"><span class="tag adv">advanced</span><span class="tag new">new</span></div>
+    </div>
+  </div>
+
+  <nav class="pager">
+      <a class="pn" href="../index.html">&#8592; All categories</a>
+      <a class="pn" href="02-python.html">02 · Python for application development &#8594;</a>
+  </nav>
+</main>
+</div>
+
+<button class="btn toTop noprint" onclick="scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593; Top</button>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>
