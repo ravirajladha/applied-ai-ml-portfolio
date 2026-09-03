@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch 6 — POS Tagging &amp; the Viterbi Drill</title>
+<style>
+  :root{
+    --bg:#0e1117; --panel:#161b26; --panel2:#1d2432; --line:#2b3446;
+    --ink:#e6edf7; --dim:#93a1b8;
+    --accent:#5aa9ff; --good:#3ddc97; --warn:#ffb454; --bad:#ff6b6b; --violet:#b78cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1000px;margin:0 auto;padding:32px 20px 90px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.4px}
+  .sub{color:var(--dim);margin:0 0 30px}
+  h2{font-size:21px;margin:48px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:22px 0 8px;color:var(--accent)}
+  code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:14px;
+       font-family:ui-monospace,Consolas,monospace}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+        padding:18px 20px;margin:18px 0}
+  .analogy{border-left:3px solid var(--warn);background:#1b1a14}
+  .analogy b{color:var(--warn)}
+  .keypoint{border-left:3px solid var(--good);background:#111d19}
+  .keypoint b{color:var(--good)}
+  .trap{border-left:3px solid var(--bad);background:#1d1416}
+  .trap b{color:var(--bad)}
+  button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+         border-radius:8px;padding:8px 14px;cursor:pointer;font-size:14px;
+         font-family:inherit;transition:.12s}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.on{background:var(--accent);color:#08111d;border-color:var(--accent);font-weight:600}
+  button.big{padding:10px 18px;font-weight:600}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--dim);font-weight:600}
+  td.num{text-align:right;font-family:ui-monospace,Consolas,monospace}
+  .out{font-family:ui-monospace,Consolas,monospace;font-size:14px;background:#0a0e15;
+       border:1px solid var(--line);border-radius:8px;padding:14px;white-space:pre-wrap;
+       line-height:1.75;margin-top:12px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+  .lbl{color:var(--dim);font-size:13px;min-width:110px}
+  .quiz{background:var(--panel2);border-radius:10px;padding:14px;margin:12px 0;
+        border:1px solid var(--line)}
+  .quiz .q{font-weight:600;margin-bottom:8px}
+  .fb{margin-top:10px;font-size:14px;display:none;padding:10px;border-radius:6px}
+  .fb.ok{display:block;background:#12312a;color:var(--good)}
+  .fb.no{display:block;background:#33161a;color:#ffb0b0}
+  .toc a{color:var(--accent);text-decoration:none;display:block;padding:3px 0;font-size:14px}
+  .toc a:hover{text-decoration:underline}
+  select,input[type=number],input[type=text]{background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:8px;padding:7px 10px;
+    font-family:inherit;font-size:14px}
+  .good-t{color:var(--good)} .bad-t{color:var(--bad)} .warn-t{color:var(--warn)}
+  .vio-t{color:var(--violet)} .acc-t{color:var(--accent)} .dim-t{color:var(--dim)}
+  .note{font-size:13px;color:var(--dim);margin-top:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:820px){.grid2{grid-template-columns:1fr}}
+  /* viterbi table */
+  .vtab{border-collapse:collapse;font-size:13px;width:100%}
+  .vtab th,.vtab td{border:1px solid var(--line);padding:8px 8px;text-align:center;
+       font-family:ui-monospace,Consolas,monospace}
+  .vtab th{background:var(--panel2);color:var(--dim)}
+  .vtab td.z{color:#3d4657}
+  .vtab td.v{color:var(--ink)}
+  .vtab td.best{background:#16303f;color:var(--accent);font-weight:700;
+       box-shadow:inset 0 0 0 2px var(--accent)}
+  .vtab td.path{background:#1a2a1f;color:var(--good);font-weight:700;
+       box-shadow:inset 0 0 0 2px var(--good)}
+  .vtab td.cur{background:#241a2e;box-shadow:inset 0 0 0 2px var(--violet)}
+  .vtab td.pend{color:#3d4657}
+  .tagcol{background:var(--panel2);color:var(--violet);font-weight:700}
+  .stepbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  .prog{height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;margin:8px 0 4px}
+  .prog i{display:block;height:100%;background:var(--accent);transition:.3s}
+  .kbd{font-family:ui-monospace,Consolas,monospace;background:var(--panel2);
+       border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>POS Tagging &amp; the Viterbi Drill</h1>
+<p class="sub">NLP Session 6. <b>The heaviest numerical in the pre-midsem half</b> —
+a Viterbi table is almost always asked. Drill §5 until it is automatic.
+Written notes: <code>../ch06-pos-tagging-hmm-viterbi.md</code></p>
+
+<div class="card toc">
+  <b>What's in here</b>
+  <a href="#s1">1 · Why tagging isn't dictionary lookup</a>
+  <a href="#s2">2 · Word classes and the Penn tagset</a>
+  <a href="#s3">3 · The two probabilities (and the trap)</a>
+  <a href="#s4">4 · Markov chains — the off-by-one that costs marks</a>
+  <a href="#s5">5 · ⭐⭐ THE VITERBI DRILL — step through every cell</a>
+  <a href="#s6">6 · The "race" disambiguation, calculated</a>
+  <a href="#s7">7 · Ice cream — the other classic setup</a>
+  <a href="#s8">8 · HMM vs MEMM, and bidirectionality</a>
+  <a href="#s9">9 · Quiz yourself</a>
+</div>
+
+
+<h2 id="s1">1 · Why tagging isn't dictionary lookup</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> The word <i>"lead"</i> on its own is unanswerable — metal or
+verb? You need the sentence. Tagging is not "look the word up", it's
+<b>"decide, using the neighbours"</b>. And because every neighbour is also
+ambiguous, you can't decide them one at a time — you have to decide the
+<b>whole sequence at once</b>. That's the whole reason Viterbi exists.
+</div>
+
+<div class="card">
+<p><b>POS tagging</b> = assigning a part-of-speech or lexical class marker to
+each word in a sentence.</p>
+<div class="out">Input :  the lead paint is unsafe
+Output:  the/Det  lead/N  paint/N  is/V  unsafe/Adj</div>
+
+<h3>One word, four tags — click to see it move</h3>
+<div class="row">
+  <button onclick="backD(0)" class="on" id="bk0">The <b>back</b> door</button>
+  <button onclick="backD(1)" id="bk1">On my <b>back</b></button>
+  <button onclick="backD(2)" id="bk2">Win the voters <b>back</b></button>
+  <button onclick="backD(3)" id="bk3">Promised to <b>back</b> the bill</button>
+</div>
+<div class="out" id="backout"></div>
+</div>
+
+<div class="card keypoint">
+<b>Why you cannot classify each word independently</b> — the two reasons from
+the slide:
+<ol>
+<li>It is <b>not easy to integrate information from the categories of tokens on
+both sides</b>.</li>
+<li>It is <b>difficult to propagate uncertainty between decisions</b> and
+collectively determine the most likely joint assignment for the whole sequence.</li>
+</ol>
+Hence: <b>probabilistic sequence models</b>. The standard one is the
+<b>Hidden Markov Model</b>.
+</div>
+
+<div class="card">
+<h3>The same machinery, other labels</h3>
+<table>
+<tr><td><b>Information extraction</b></td>
+    <td><i>"<span class="acc-t">Michael Dell</span> is the CEO of <span class="warn-t">Dell Computer Corporation</span> and lives in <span class="good-t">Austin Texas</span>."</i><br>
+    <span class="note">people · organizations · places</span></td></tr>
+<tr><td><b>Semantic role labelling</b></td>
+    <td><i>"<span class="acc-t">John</span> drove <span class="warn-t">Mary</span> from <span class="good-t">Austin</span> to <span class="vio-t">Dallas</span> in <span class="bad-t">his Toyota Prius</span>."</i><br>
+    <span class="note">agent · patient · source · destination · instrument</span></td></tr>
+<tr><td><b>Bioinformatics</b></td>
+    <td><code>AGCTAACGTTCGATACGGATTACAGCCT</code> → extron / intron</td></tr>
+</table>
+</div>
+
+
+<h2 id="s2">2 · Word classes and the Penn tagset</h2>
+
+<div class="card">
+<div class="grid2">
+<div>
+<h3>Closed class</h3>
+<p>A <b>small fixed</b> membership. Usually <b>function words</b> — short common
+words that play a role in grammar.</p>
+<div class="out">Prepositions : of, in, by, ...
+Auxiliaries  : may, can, will, had, been, ...
+Pronouns     : I, you, she, mine, his, them, ...</div>
+</div>
+<div>
+<h3>Open class</h3>
+<p><b>New ones can be created all the time.</b></p>
+<div class="out">English has exactly FOUR:
+
+    Nouns
+    Verbs
+    Adjectives
+    Adverbs
+
+Many languages have these four — but not all.</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<h3>Penn Treebank — 45 tags. Hover-worthy subset:</h3>
+<table>
+<tr><td><code>DT</code> Determiner</td><td><code>VB</code> Verb, base</td><td><code>NN</code> Noun, sing.</td></tr>
+<tr><td><code>NNS</code> Noun, plural</td><td><code>VBD</code> Verb, past</td><td><code>NNP</code> Proper noun</td></tr>
+<tr><td><code>JJ</code> Adjective</td><td><code>VBG</code> Verb, gerund</td><td><code>RB</code> Adverb</td></tr>
+<tr><td><code>VBN</code> Verb, past part.</td><td><code>VBZ</code> Verb, 3sg pres</td><td><code>MD</code> Modal</td></tr>
+<tr><td><code>IN</code> Prep / sub. conj.</td><td><code>TO</code> the word <i>to</i></td><td><code>PRP</code> Pers. pronoun</td></tr>
+</table>
+<div class="out">The/DT grand/JJ jury/NN commented/VBD on/IN a/DT number/NN of/IN other/JJ topics/NNS ./.</div>
+</div>
+
+<div class="card trap">
+<b>Two conventions worth a mark.</b> Prepositions <b>and</b> subordinating
+conjunctions are both <code>IN</code> (<i>"although/IN I/PRP…"</i>) —
+<b>except</b> the preposition <i>to</i>, which gets its own tag <code>TO</code>.
+</div>
+
+
+<h2 id="s3">3 · The two probabilities (and the trap)</h2>
+
+<div class="card">
+<table>
+<tr><th>Name</th><th>Formula</th><th>Intuition</th><th>Counted as</th></tr>
+<tr><td><b class="acc-t">Transition</b><br><span class="note">tag → tag</span></td>
+    <td><code>P(tᵢ | tᵢ₋₁)</code></td>
+    <td>Determiners precede adjectives and nouns — <i>That/DT flight/NN</i>, <i>The/DT yellow/JJ hat/NN</i> — so P(NN|DT) and P(JJ|DT) are high</td>
+    <td><code>C(tᵢ₋₁,tᵢ) / C(tᵢ₋₁)</code></td></tr>
+<tr><td><b class="good-t">Emission</b><br><span class="note">tag → WORD</span></td>
+    <td><code>P(wᵢ | tᵢ)</code></td>
+    <td>VBZ (3sg present verb) is likely to be <i>is</i>, so P(is|VBZ) is high</td>
+    <td><code>C(tᵢ,wᵢ) / C(tᵢ)</code></td></tr>
+</table>
+</div>
+
+<div class="card trap">
+<b>THE trap of this chapter.</b> Emission is <code>P(word | tag)</code> — <b>not</b>
+<code>P(tag | word)</code>. Writing it upside down costs the whole question,
+because it silently turns your generative HMM into a discriminative model.
+<br><br><b>Mnemonic:</b> the hidden state <i>emits</i> the word. Tag first,
+word second.
+</div>
+
+<div class="card">
+<h3>The derivation, in four lines</h3>
+<div class="out">We want:      t^ = argmax  P(T | W)
+
+Bayes rule:                    P(W|T) P(T)
+              t^ = argmax     -------------
+                                  P(W)
+
+P(W) is the SAME for every candidate tag sequence, so DROP it:
+
+              t^ = argmax  P(W|T) · P(T)
+                           \______/  \____/
+                          LIKELIHOOD  PRIOR
+
+Two assumptions:
+   (1) MARKOV        P(T)    ~ PROD P(ti | ti-1)
+   (2) INDEPENDENCE  P(W|T)  ~ PROD P(wi | ti)
+
+THE HMM TAGGING EQUATION
+
+    t^ = argmax  PROD  P(wi | ti) · P(ti | ti-1)
+                       \_________/  \___________/
+                        emission     transition</div>
+</div>
+
+<h3>Build the matrices from a tagged corpus</h3>
+<div class="card">
+<div class="out" style="margin-top:0">S1: the/DT  Employees/NNS  pass/VB  an/DT  exam/NN  ./STOP
+S2: the/DT  employees/NNS  wait/VB  for/IN  the/DT  pass/VB  ./STOP
+S3: employers/NNS  fire/VB  employees/NNS  ./STOP</div>
+<div class="row">
+  <button id="mt0" class="on" onclick="matView(0)">Transition matrix</button>
+  <button id="mt1" onclick="matView(1)">Emission matrix</button>
+</div>
+<div id="mattab"></div>
+<div class="out" id="matout"></div>
+</div>
+
+
+<h2 id="s4">4 · Markov chains — the off-by-one that costs marks</h2>
+
+<div class="card">
+<div class="out" style="margin-top:0">A set of STATES              Q = q1, q2 ... qN
+TRANSITION probabilities     A = {aij},  aij = P(qt = j | qt-1 = i)
+INITIAL probability vector   pi
+
+MARKOV PROPERTY: the current state depends ONLY on the previous state.</div>
+
+<div class="row">
+  <span class="lbl">π (initial)</span><input type="number" id="mc_pi" value="0.2" step="0.05" min="0" max="1" oninput="mcCalc()">
+  <span class="lbl">a (self-loop)</span><input type="number" id="mc_a" value="0.6" step="0.05" min="0" max="1" oninput="mcCalc()">
+  <span class="lbl">days</span><input type="number" id="mc_d" value="4" min="1" max="12" oninput="mcCalc()">
+</div>
+<div class="out" id="mcout"></div>
+</div>
+
+<div class="card trap">
+<b>The off-by-one.</b> <b>T states means T − 1 transitions.</b> Four warm days is
+<code>π₃ · a₃₃³</code> — <b>three</b> multiplications of <code>a</code>, not four.
+Push "days" up and down above and watch the exponent. This is a classic dropped
+mark.
+</div>
+
+
+<h2 id="s5">5 · ⭐⭐ THE VITERBI DRILL</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> You're planning a road trip across 4 cities, and each city has 5
+hotels. There are 5⁴ = 625 possible itineraries. But you don't need to price them
+all: once you know <b>the cheapest way to reach each hotel in city 2</b>, you can
+throw away every worse route into it forever. Viterbi is exactly that — <b>keep
+one best path into each state, at each step.</b>
+</div>
+
+<div class="card">
+<div class="out" style="margin-top:0">INITIALISATION   V[t,1] = P(t | &lt;S&gt;) · P(w1 | t)
+
+RECURSION        V[t,j] = max   [ V[t', j-1] · P(t | t') ]  ·  P(wj | t)
+                          t'
+                          \___________________________/     \__________/
+                         best way to ARRIVE in state t         emission
+
+                 bp[t,j] = argmax [ V[t',j-1] · P(t|t') ]
+
+TERMINATION      best = max  V[t,T] · P(STOP | t)
+BACKTRACE        follow the backpointers back to column 1
+
+COMPLEXITY       O(N² T)</div>
+</div>
+
+<div class="card">
+<div class="row">
+  <span class="lbl">sentence</span>
+  <select id="vsent" onchange="vReset()">
+    <option value="the doctor is in">the doctor is in &nbsp;(the slide's example)</option>
+    <option value="a cat">a cat</option>
+    <option value="a cat is in">a cat is in</option>
+    <option value="the cat is very">the cat is very</option>
+    <option value="the doctor is very">the doctor is very</option>
+  </select>
+</div>
+
+<div class="stepbar">
+  <button class="big" onclick="vStep()" id="vnext">▶ Next cell</button>
+  <button onclick="vColumn()">Fill this column</button>
+  <button onclick="vAll()">Fill everything</button>
+  <button onclick="vReset()">↺ Reset</button>
+</div>
+<div class="prog"><i id="vprog" style="width:0%"></i></div>
+
+<div id="vtable"></div>
+<div class="out" id="vwork">Press <span class="kbd">▶ Next cell</span> to start.</div>
+</div>
+
+<div class="card trap">
+<b>The single most important habit.</b> The <code>max</code> is taken over
+<b>where you came from</b>, and the emission <code>P(wⱼ|t)</code> multiplies in
+<b>once, AFTER the max</b>. Do not put the emission inside the max. Watch the
+working panel above — it always shows the candidates first, then the max, then
+the emission.
+</div>
+
+<div class="card keypoint">
+<b>Note on the STOP column.</b> The slide's worked example reads the answer
+straight off the last column. If your exam question supplies an explicit
+<code>STOP</code> / <code>&lt;/s&gt;</code> transition, do the termination step
+properly — multiply each final cell by <code>P(STOP|t)</code> <b>before</b>
+taking the max.
+</div>
+
+
+<h2 id="s6">6 · The "race" disambiguation, calculated</h2>
+
+<div class="card">
+<div class="out" style="margin-top:0">Secretariat/NNP is/VBZ expected/VBN to/TO race/?? tomorrow/NR
+
+  NR = adverbial noun ("tomorrow")     TO = the word "to"</div>
+<div class="row">
+  <button onclick="raceShow()" class="on">Compute both paths</button>
+</div>
+<div class="out" id="raceout"></div>
+</div>
+
+<div class="card keypoint">
+<b>Notice WHICH factor decided it.</b> The emission probabilities actually favour
+<code>NN</code> (0.00057 &gt; 0.00012) — <i>race</i> really is more often a noun.
+But <code>P(VB|TO) = .83</code> vs <code>P(NN|TO) = .00047</code> is a ~1770×
+advantage that steamrolls it. <b>The transition probability overrules the word's
+own preference.</b> That is the sequence model earning its keep, in one example.
+</div>
+
+
+<h2 id="s7">7 · Ice cream — the other classic setup</h2>
+
+<div class="card analogy">
+<b>The setup.</b> You are a climatologist in <b>2799</b> studying global warming.
+You cannot find any weather records for Baltimore in summer 2007 — but you find
+Jason Eisner's diary listing <b>how many ice creams he ate each day</b>. Your
+job: figure out <b>how hot it was</b> each day.
+</div>
+
+<div class="card">
+<div class="out" style="margin-top:0">Observations (VISIBLE)  :  1, 2, 3, 2, 2, 2, 3 ...     ice creams eaten
+Hidden states           :  H, C, H, H, H, C, C ...     Hot / Cold</div>
+<p style="margin-top:14px">For the observation <code>1 3 1</code> with 2 states
+there are <b>2³ = 8</b> possible state sequences: HHH, HHC, HCH, HCC, CCC, CCH,
+CHC, CHH. Score one of them by hand:</p>
+<div class="out">path C H C, observation 1 3 1
+
+    P(Cold|Start)      0.2
+  x P(1 | Cold)        0.5
+  x P(Hot | Cold)      0.4
+  x P(3 | Hot)         0.4
+  x P(Cold | Hot)      0.3
+  x P(1 | Cold)        0.5
+  ------------------------
+                     = 0.0024</div>
+<p class="note">Viterbi is what saves you from doing that <b>eight</b> times —
+or, for a 20-word sentence with 45 tags, 45²⁰ ≈ 10³³ times.</p>
+</div>
+
+<div class="card">
+<div class="row">
+  <span class="lbl">sentence length T</span><input type="number" id="cx_t" value="20" min="1" max="40" oninput="cxCalc()">
+  <span class="lbl">tagset size N</span><input type="number" id="cx_n" value="45" min="2" max="100" oninput="cxCalc()">
+</div>
+<div class="out" id="cxout"></div>
+</div>
+
+
+<h2 id="s8">8 · HMM vs MEMM, and bidirectionality</h2>
+
+<div class="card">
+<table>
+<tr><th></th><th>HMM</th><th>MEMM</th></tr>
+<tr><td><b>Type</b></td><td class="acc-t"><b>Generative</b></td><td class="good-t"><b>Discriminative</b></td></tr>
+<tr><td><b>Computes</b></td><td><b>Likelihood</b> — P(word | tag), observation conditioned on tags</td><td><b>Posterior</b> — P(tag | word) directly</td></tr>
+<tr><td><b>Model</b></td><td><code>T̂ = argmax Π P(wᵢ|tᵢ) P(tᵢ|tᵢ₋₁)</code></td><td><code>T̂ = argmax Π P(tᵢ | wᵢ, tᵢ₋₁)</code></td></tr>
+<tr><td><b>Features</b></td><td>Only the word identity</td><td class="good-t"><b>Any features you like</b> ← the whole reason to use it</td></tr>
+<tr><td><b>Training</b></td><td>Counting</td><td>Gradient descent (as for logistic regression)</td></tr>
+</table>
+<p class="note"><b>The reason to use a discriminative sequence model is that it is
+much easier to incorporate a lot of features.</b></p>
+</div>
+
+<div class="card">
+<h3>Features an MEMM can use and an HMM cannot</h3>
+<p>Tagging <code>Janet/NNP will/MD back/VB the/DT bill/NN</code>, when
+<code>wᵢ</code> = <i>back</i>:</p>
+<div class="out">wi = back              ti-1 = MD           ti-2 ti-1 = NNP MD
+wi-1 = will            wi+1 = the
+wi contains no digit   wi is lowercase
+suffix(wi) = "ack"     prefix(wi) = "b"</div>
+<p class="note">None of these are expressible in an HMM. Note especially
+<b>suffix</b> — that is what lets an MEMM tag a word it has never seen.</p>
+</div>
+
+<div class="card">
+<h3>Decoding an MEMM</h3>
+<div class="row">
+  <button id="dcG" class="on" onclick="decode('g')">Greedy</button>
+  <button id="dcV" onclick="decode('v')">Viterbi</button>
+</div>
+<div class="out" id="decout"></div>
+</div>
+
+<div class="card">
+<h3>Bidirectionality</h3>
+<p>The problem: HMM taggers as presented run <b>exclusively left-to-right</b> —
+though Viterbi does let present decisions be influenced <i>indirectly</i> by
+future ones, since the whole path is optimised.</p>
+<table>
+<tr><td><b>Two-pass</b></td><td>First pass uses POS features only from already-disambiguated words on the <b>left</b>. Second pass can use tags for <b>all</b> words, including those on the right.</td></tr>
+<tr><td><b>Two-direction</b></td><td>Run the tagger twice — once left-to-right, once right-to-left — and in Viterbi decoding pick the <b>higher-scoring</b> sequence.</td></tr>
+</table>
+<p class="note"><b>Modern taggers are generally run bidirectionally.</b> This is
+exactly what the "Bi-" in Bi-LSTM and the "B" in BERT are for → Chapter 7.</p>
+</div>
+
+<div class="card trap">
+<b>Three problems with HMM tagging</b> (and their fixes):
+<b>unknown words</b> → smoothing · <b>limited context</b> → trigram/4-gram HMMs ·
+<b>sparsity</b> → smoothing again.
+</div>
+
+
+<h2 id="s9">9 · Quiz yourself</h2>
+<div id="quiz"></div>
+
+<div class="card" style="margin-top:34px">
+<b>Next:</b> <code>../ch07-neural-llm-pos-tagging.md</code> ·
+<a href="ch07-modern-pos-tagging.html" style="color:var(--accent)">explainer</a>
+— the same task with Bi-LSTM-CRF, BERT and LLM agents.
+</div>
+
+</div>
+
+<script>
+/* ============ shared HMM data (the slide's matrices) ============ */
+const TAGS=['Noun','Verb','Det','Prep','Adv'];
+const INIT={Noun:.3, Verb:.1, Det:.3, Prep:.2, Adv:.1};
+const TR={
+ Noun:{Noun:.2,Verb:.4,Det:.01,Prep:.3,Adv:.04,STOP:.05},
+ Verb:{Noun:.3,Verb:.05,Det:.3,Prep:.2,Adv:.1,STOP:.05},
+ Det :{Noun:.9,Verb:.01,Det:.01,Prep:.01,Adv:.07,STOP:0},
+ Prep:{Noun:.4,Verb:.05,Det:.4,Prep:.1,Adv:.05,STOP:0},
+ Adv :{Noun:.1,Verb:.5,Det:.1,Prep:.1,Adv:.1,STOP:.1}
+};
+const EM={
+ Noun:{a:0,cat:.5,doctor:.4,'in':0,is:.1,the:0,very:0},
+ Verb:{a:0,cat:0,doctor:.1,'in':0,is:.9,the:0,very:0},
+ Det :{a:.3,cat:0,doctor:0,'in':0,is:0,the:.7,very:0},
+ Prep:{a:0,cat:0,doctor:0,'in':1.0,is:0,the:0,very:0},
+ Adv :{a:0,cat:0,doctor:0,'in':.1,is:0,the:0,very:.9}
+};
+
+/* ---------- 1. "back" ---------- */
+const BACK=[
+ {s:'The <b>back</b> door',t:'JJ',d:'adjective — it modifies "door"'},
+ {s:'On my <b>back</b>',t:'NN',d:'noun — object of the preposition "on"'},
+ {s:'Win the voters <b>back</b>',t:'RB',d:'adverb — it modifies the verb "win"'},
+ {s:'Promised to <b>back</b> the bill',t:'VB',d:'verb — "to" forces a bare infinitive'}
+];
+function backD(i){
+  for(let j=0;j<4;j++) document.getElementById('bk'+j).className=(j===i?'on':'');
+  const B=BACK[i];
+  document.getElementById('backout').textContent =
+`"${B.s.replace(/<\/?b>/g,'')}"
+
+    back  ->  ${B.t}
+    ${B.d}
+
+Same string. Four different tags. The POS tagging problem is to
+determine the tag for a PARTICULAR INSTANCE of a word — and only
+the CONTEXT can decide it.`;
+}
+backD(0);
+
+/* ---------- 3. corpus matrices ---------- */
+function matView(k){
+  document.getElementById('mt0').className=k===0?'on':'';
+  document.getElementById('mt1').className=k===1?'on':'';
+  if(k===0){
+    document.getElementById('mattab').innerHTML=`
+    <table><tr><th>first ↓ / second →</th><th>*</th><th>DT</th><th>NNS</th><th>VB</th><th>NN</th><th>IN</th><th>STOP</th></tr>
+    <tr><th>*</th><td></td><td class="num">2/3</td><td class="num">1/3</td><td></td><td></td><td></td><td></td></tr>
+    <tr><th>DT</th><td></td><td></td><td class="num">2/4</td><td class="num">1/4</td><td class="num">1/4</td><td></td><td></td></tr>
+    <tr><th>NNS</th><td></td><td></td><td></td><td class="num">3/4</td><td></td><td></td><td class="num">1/4</td></tr>
+    <tr><th>VB</th><td></td><td class="num">1/4</td><td class="num">1/4</td><td></td><td></td><td class="num">1/4</td><td class="num">1/4</td></tr>
+    <tr><th>NN</th><td></td><td></td><td></td><td></td><td></td><td></td><td class="num">1</td></tr>
+    <tr><th>IN</th><td></td><td class="num">1</td><td></td><td></td><td></td><td></td><td></td></tr>
+    </table>`;
+    document.getElementById('matout').textContent =
+`HOW TO READ A DENOMINATOR
+
+  P(NNS | DT) = 2/4
+                | |
+                | +--  DT occurs 4 times in the corpus
+                +----  ...and is followed by NNS twice
+
+  DENOMINATOR = the count of the CONDITIONING thing.
+
+  P(VB | NNS) = 3/4    NNS occurs 4 times, followed by VB 3 times
+  P(DT | IN)  = 1/1    IN occurs once, always followed by DT`;
+  } else {
+    document.getElementById('mattab').innerHTML=`
+    <table><tr><th>word ↓ / tag →</th><th>*</th><th>DT</th><th>NNS</th><th>VB</th><th>NN</th><th>IN</th><th>STOP</th></tr>
+    <tr><th>*</th><td class="num">1</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><th>the</th><td></td><td class="num">3/4</td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><th>employees</th><td></td><td></td><td class="num">3/4</td><td></td><td></td><td></td><td></td></tr>
+    <tr><th>pass</th><td></td><td></td><td></td><td class="num">2/4</td><td></td><td></td><td></td></tr>
+    <tr><th>an</th><td></td><td class="num">1/4</td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><th>exam</th><td></td><td></td><td></td><td></td><td class="num">1</td><td></td><td></td></tr>
+    <tr><th>wait</th><td></td><td></td><td></td><td class="num">1/4</td><td></td><td></td><td></td></tr>
+    <tr><th>for</th><td></td><td></td><td></td><td></td><td></td><td class="num">1</td><td></td></tr>
+    <tr><th>employers</th><td></td><td></td><td class="num">1/4</td><td></td><td></td><td></td><td></td></tr>
+    <tr><th>fire</th><td></td><td></td><td></td><td class="num">1/4</td><td></td><td></td><td></td></tr>
+    <tr><th>.</th><td></td><td></td><td></td><td></td><td></td><td></td><td class="num">1</td></tr>
+    </table>`;
+    document.getElementById('matout').textContent =
+`EMISSION = P(word | tag)          NOT P(tag | word)
+
+  P(the | DT) = 3/4
+                | |
+                | +--  DT occurs 4 times
+                +----  ...and 3 of those emit "the"
+
+  Read DOWN a tag column and the probabilities sum to 1 —
+  because a tag must emit SOME word.
+
+  If you ever find yourself dividing by the count of the WORD,
+  you have written the emission upside down.`;
+  }
+}
+matView(0);
+
+/* ---------- 4. markov chain ---------- */
+function mcCalc(){
+  const pi=+document.getElementById('mc_pi').value;
+  const a =+document.getElementById('mc_a').value;
+  const d =+document.getElementById('mc_d').value;
+  const p=pi*Math.pow(a,d-1);
+  document.getElementById('mcout').textContent =
+`${d} consecutive days in the same state
+
+  P = pi x a^(${d} - 1)
+    = ${pi} x ${a}^${d-1}
+    = ${pi} x ${Math.pow(a,d-1).toFixed(6)}
+    = ${p.toFixed(6)}
+
+  ${d} STATES  ->  ${d-1} TRANSITIONS.   <-- the off-by-one
+
+The slide's case: pi = 0.2, a = 0.6, 4 warm days
+  P(3,3,3,3) = 0.2 x (0.6)^3 = 0.2 x 0.216 = 0.0432`;
+}
+mcCalc();
+
+/* ---------- 5. VITERBI DRILL ---------- */
+let W=[], V=[], BP=[], order=[], step=0;
+function vReset(){
+  W=document.getElementById('vsent').value.split(' ');
+  V=TAGS.map(()=>W.map(()=>null));
+  BP=TAGS.map(()=>W.map(()=>null));
+  order=[];
+  for(let j=0;j<W.length;j++) for(let i=0;i<TAGS.length;i++) order.push([i,j]);
+  step=0;
+  document.getElementById('vwork').textContent='Press ▶ Next cell to start.';
+  renderV();
+}
+function computeCell(i,j){
+  const t=TAGS[i], w=W[j], em=EM[t][w]!==undefined?EM[t][w]:0;
+  if(j===0){
+    const val=INIT[t]*em;
+    V[i][0]=val; BP[i][0]=null;
+    return {val, em, lines:
+`COLUMN 1  —  w1 = "${w}"      INITIALISATION
+
+  V[${t}, 1] = P(${t} | <S>) x P(${w} | ${t})
+  ${' '.repeat(t.length)}      = ${INIT[t]} x ${em}
+  ${' '.repeat(t.length)}      = ${fmt(val)}${val===0?'   (dead — this tag cannot emit "'+w+'")':'   <-- survives'}`};
+  }
+  let best=-1,bi=-1,cands=[];
+  TAGS.forEach((tp,pi)=>{
+    const prev=V[pi][j-1];
+    const tr=TR[tp][t];
+    const c=prev*tr;
+    cands.push({tp,prev,tr,c});
+    if(c>best){best=c;bi=pi;}
+  });
+  const val=best*em;
+  V[i][j]=val; BP[i][j]=best>0?bi:null;
+  const shown=cands.filter(c=>c.prev>0);
+  let lines=`COLUMN ${j+1}  —  w${j+1} = "${w}"      RECURSION\n\n`;
+  lines+=`  V[${t}, ${j+1}] = max over t' of [ V[t', ${j}] x P(${t} | t') ]  x  P(${w} | ${t})\n\n`;
+  if(!shown.length){
+    lines+=`  every predecessor cell in column ${j} is 0 — nothing can reach here\n`;
+  } else {
+    lines+='  candidates (only non-zero predecessors shown):\n';
+    shown.forEach(c=>{
+      lines+=`    from ${c.tp.padEnd(5)}: ${fmt(c.prev)} x P(${t}|${c.tp})=${c.tr}`+
+             ` = ${fmt(c.c)}${c.c===best&&best>0?'   <-- MAX':''}\n`;
+    });
+  }
+  lines+=`\n  max = ${fmt(best)}\n`;
+  lines+=`  x emission P(${w} | ${t}) = ${em}\n`;
+  lines+=`  ------------------------------------------\n`;
+  lines+=`  V[${t}, ${j+1}] = ${fmt(val)}`;
+  if(val>0) lines+=`      backpointer -> ${TAGS[bi]}`;
+  else if(em===0) lines+=`      (emission is 0 — "${w}" is never a ${t})`;
+  lines+=`\n\n  NOTE the emission multiplies in ONCE, AFTER the max.`;
+  return {val, em, lines};
+}
+function fmt(x){
+  if(x===0) return '0';
+  if(x>=0.001) return (+x.toPrecision(4)).toString();
+  return x.toExponential(3);
+}
+function vStep(){
+  if(step>=order.length){ finish(); return; }
+  const [i,j]=order[step];
+  const r=computeCell(i,j);
+  document.getElementById('vwork').textContent=r.lines;
+  step++; renderV();
+  if(step>=order.length) finish();
+}
+function vColumn(){
+  if(step>=order.length){finish();return;}
+  const j0=order[step][1];
+  while(step<order.length && order[step][1]===j0) vStep();
+}
+function vAll(){ while(step<order.length) vStep(); }
+function finish(){
+  const T=W.length-1;
+  let best=-1,bi=-1;
+  TAGS.forEach((t,i)=>{ if(V[i][T]>best){best=V[i][T];bi=i;} });
+  const path=[]; let cur=bi;
+  for(let j=T;j>=0;j--){ path.unshift(cur); cur = BP[cur][j]; if(cur===null&&j>0) break; }
+  renderV(path);
+  let s='ALL CELLS FILLED.  TERMINATION + BACKTRACE\n\n';
+  s+='  best final cell: '+TAGS[bi]+' at w'+(T+1)+'  = '+fmt(best)+'\n\n';
+  s+='  follow the backpointers:\n';
+  for(let j=T;j>=1;j--){
+    const p=path[j-1];
+    s+='    '+TAGS[path[j]].padEnd(5)+' at w'+(j+1)+'  <-  came from  '+TAGS[p]+' at w'+j+'\n';
+  }
+  s+='\n  ANSWER:  '+W.map((w,j)=>w+'/'+TAGS[path[j]]).join('   ')+'\n';
+  s+='\n  score = '+fmt(best);
+  s+='\n\n  (If your exam gives an explicit STOP transition, multiply each\n';
+  s+='   final cell by P(STOP|t) BEFORE taking this max.)';
+  document.getElementById('vwork').textContent=s;
+}
+function renderV(path){
+  let h='<table class="vtab"><tr><th></th>'+
+    W.map((w,j)=>'<th>w'+(j+1)+' = '+w+'</th>').join('')+'</tr>';
+  const curIdx = step>0 && step<=order.length ? order[step-1] : null;
+  // find per-column max for highlight
+  TAGS.forEach((t,i)=>{
+    h+='<tr><td class="tagcol">'+t+'</td>';
+    W.forEach((w,j)=>{
+      const v=V[i][j];
+      let cls='pend', txt='·';
+      if(v!==null){
+        txt=fmt(v);
+        cls = v===0 ? 'z' : 'v';
+      }
+      if(path && path[j]===i) cls='path';
+      else if(curIdx && curIdx[0]===i && curIdx[1]===j && !path) cls='cur';
+      h+='<td class="'+cls+'">'+txt+'</td>';
+    });
+    h+='</tr>';
+  });
+  h+='</table>';
+  document.getElementById('vtable').innerHTML=h;
+  document.getElementById('vprog').style.width=(100*step/order.length)+'%';
+  document.getElementById('vnext').textContent = step>=order.length?'✓ complete':'▶ Next cell';
+}
+vReset();
+
+/* ---------- 6. race ---------- */
+function raceShow(){
+  const P={NNgTO:.00047,VBgTO:.83,raceNN:.00057,raceVB:.00012,NRgNN:.0012,NRgVB:.0027};
+  const vb=P.VBgTO*P.NRgVB*P.raceVB;
+  const nn=P.NNgTO*P.NRgNN*P.raceNN;
+  document.getElementById('raceout').textContent =
+`GIVEN
+  P(NN|TO)   = ${P.NNgTO}          P(VB|TO)   = ${P.VBgTO}
+  P(race|NN) = ${P.raceNN}         P(race|VB) = ${P.raceVB}
+  P(NR|NN)   = ${P.NRgNN}          P(NR|VB)   = ${P.NRgVB}
+
+VB PATH
+  P(VB|TO) x P(NR|VB) x P(race|VB)
+  = ${P.VBgTO} x ${P.NRgVB} x ${P.raceVB}
+  = ${vb.toExponential(2)}          ( = 0.00000027 )
+
+NN PATH
+  P(NN|TO) x P(NR|NN) x P(race|NN)
+  = ${P.NNgTO} x ${P.NRgNN} x ${P.raceNN}
+  = ${nn.toExponential(2)}          ( = 0.00000000032 )
+
+  ${vb.toExponential(2)} beats ${nn.toExponential(2)} by a factor of ${Math.round(vb/nn)}
+
+  ==> we correctly choose the VERB tag for "race".
+
+WHICH FACTOR DECIDED IT?
+  emissions favour NN : ${P.raceNN} > ${P.raceVB}    (race IS more often a noun)
+  transitions favour VB: ${P.VBgTO} vs ${P.NNgTO}    (~${Math.round(P.VBgTO/P.NNgTO)}x)
+
+  The TRANSITION overrules the word's own preference.`;
+}
+raceShow();
+
+/* ---------- 7. complexity ---------- */
+function cxCalc(){
+  const T=+document.getElementById('cx_t').value;
+  const N=+document.getElementById('cx_n').value;
+  const brute=Math.pow(N,T);
+  const cells=N*T, ops=N*N*T;
+  document.getElementById('cxout').textContent =
+`BRUTE FORCE
+  ${N}^${T} = ${brute>1e15?brute.toExponential(3):brute.toLocaleString()} possible tag sequences
+
+VITERBI
+  table = ${N} tags x ${T} words = ${cells.toLocaleString()} cells
+  each cell takes a max over ${N} predecessors
+  -> ${N} x ${N} x ${T} = ${ops.toLocaleString()} multiply-and-compare steps
+
+  complexity class:  O(N^2 T)
+
+  ${brute>1e15?brute.toExponential(1):brute.toLocaleString()}  ->  ${ops.toLocaleString()}
+  That is the dynamic-programming win, in one line.`;
+}
+cxCalc();
+
+/* ---------- 8. decoding ---------- */
+function decode(m){
+  document.getElementById('dcG').className=m==='g'?'on':'';
+  document.getElementById('dcV').className=m==='v'?'on':'';
+  document.getElementById('decout').textContent = m==='g'
+? `GREEDY DECODING
+
+  Classify each word LEFT TO RIGHT, making a HARD decision on
+  the first word, then a hard decision on the second, and so on.
+
+    the  -> DT   (decided, locked in)
+    lead -> ??   (must decide NOW, without seeing "paint is unsafe")
+
+  PROBLEM
+  By making a hard decision on each word before moving on, the
+  classifier CANNOT USE EVIDENCE FROM FUTURE DECISIONS.
+
+  Very fast, and occasionally has sufficient accuracy to be useful.
+  But in general the hard decision causes too great a drop in
+  performance, and WE DO NOT USE IT.`
+: `VITERBI DECODING  (for the MEMM, just as for the HMM)
+
+  Find the sequence of part-of-speech tags that is optimal for
+  the WHOLE SENTENCE.
+
+  Viterbi value at time t for state j:
+
+    HMM :   v_t(j) = max_i  v_{t-1}(i) · a_ij · b_j(o_t)
+                                         \___/  \______/
+                                       transition emission
+
+    MEMM:   v_t(j) = max_i  v_{t-1}(i) · P( s_j | s_i, o_t )
+                                         \_________________/
+                                   ONE conditional term instead of two
+
+  Same dynamic programming, different scoring function.
+
+TRAINING AN MEMM
+  Same supervised algorithms as logistic regression: given
+  observations, feature functions and hidden states, use
+  GRADIENT DESCENT to maximise the log-likelihood of the corpus.`;
+}
+decode('g');
+
+/* ---------- 9. quiz ---------- */
+const QS=[
+ {q:'The emission probability is…',
+  a:['P(tag | word)','P(word | tag)','P(tag | previous tag)','P(word | previous word)'],c:1,
+  e:'THE trap of this chapter. The hidden state EMITS the word: tag first, word second. Writing it upside down turns your generative HMM into a discriminative model.'},
+ {q:'How many open classes does English have?',
+  a:['2','4 — Noun, Verb, Adjective, Adverb','8','45'],c:1,
+  e:'Open classes accept new members. Prepositions, auxiliaries and pronouns are CLOSED classes — small fixed membership, usually function words.'},
+ {q:'The Penn Treebank tagset has how many tags?',
+  a:['8','12','45','100'],c:2,
+  e:'45 tags. Coarser sets exist (N, V, Adj, Adv) and finer ones too, but 45 is the standard this course uses.'},
+ {q:'Prepositions get tag IN — with one exception:',
+  a:['of','to, which gets TO','by','in'],c:1,
+  e:'Prepositions AND subordinating conjunctions are both IN ("although/IN I/PRP…"), except "to", which gets its own tag TO.'},
+ {q:'After applying Bayes rule we drop P(W) because…',
+  a:['it is always 1','it is identical for every candidate tag sequence','it is unknown','it cancels with the prior'],c:1,
+  e:'argmax over T of P(W|T)P(T)/P(W) — the denominator does not depend on T, so it cannot change which T wins.'},
+ {q:'The HMM tagging equation is argmax over T of…',
+  a:['Π P(tᵢ|wᵢ) P(wᵢ|wᵢ₋₁)','Π P(wᵢ|tᵢ) · P(tᵢ|tᵢ₋₁)','Π P(tᵢ|tᵢ₋₁) only','Π P(wᵢ|tᵢ) only'],c:1,
+  e:'Emission times transition, multiplied across the sentence. It comes from the Markov assumption on tags plus the independence assumption on words.'},
+ {q:'An HMM is…',
+  a:['discriminative','generative','neither','both'],c:1,
+  e:'It models the likelihood P(word|tag) — how the observation is GENERATED from the hidden state. An MEMM is the discriminative one.'},
+ {q:'For 4 consecutive warm days with π₃=0.2 and a₃₃=0.6, P =',
+  a:['0.2 × 0.6⁴ = 0.0259','0.2 × 0.6³ = 0.0432','0.6⁴ = 0.1296','0.2 × 0.6 = 0.12'],c:1,
+  e:'4 STATES means 3 TRANSITIONS. The off-by-one here is a classic dropped mark.'},
+ {q:'Viterbi initialisation for column 1 is…',
+  a:['V[t,1] = P(w₁|t)','V[t,1] = P(t|⟨S⟩) × P(w₁|t)','V[t,1] = 1','V[t,1] = max over t′'],c:1,
+  e:'Initial transition probability times the emission of the first word. There is no max in column 1 because there is no predecessor.'},
+ {q:'In the recursion, the emission P(wⱼ|t) is multiplied in…',
+  a:['inside the max, once per candidate','after the max, once','before the max, once','not at all'],c:1,
+  e:'V[t,j] = max_{t\'}[ V[t\',j−1] · P(t|t\') ] × P(wⱼ|t). The max is over WHERE YOU CAME FROM; the emission does not depend on the predecessor.'},
+ {q:'Viterbi complexity is…',
+  a:['O(N^T)','O(N²T)','O(NT)','O(T²)'],c:1,
+  e:'N tags × T words = NT cells, each taking a max over N predecessors. For 20 words and 45 tags that is 40,500 steps instead of 45²⁰ ≈ 10³³.'},
+ {q:'In the "race" example, what decided the verb reading?',
+  a:['P(race|VB) > P(race|NN)','P(VB|TO) = .83 vs P(NN|TO) = .00047 — the TRANSITION',
+     'The emission of "tomorrow"','The initial probability'],c:1,
+  e:'The emissions actually favour NN (.00057 > .00012). The transition overrules the word\'s own preference — that is the sequence model earning its keep.'},
+ {q:'HMM computes ___ ; MEMM computes ___ .',
+  a:['posterior / likelihood','likelihood / posterior','prior / posterior','likelihood / prior'],c:1,
+  e:'HMM: likelihood P(word|tag), observation conditioned on tags. MEMM: posterior P(tag|word) directly, trained to discriminate among tag sequences.'},
+ {q:'The main reason to prefer an MEMM is…',
+  a:['it is faster','it is easier to incorporate a lot of features','it needs no training data','it is generative'],c:1,
+  e:'Suffixes, capitalisation, neighbouring words, digit-containment — none of these are expressible in an HMM, but each is just another feature function in an MEMM.'},
+ {q:'Why is greedy decoding not used for MEMMs?',
+  a:['It is too slow','Hard decisions on each word cannot use evidence from future words',
+     'It needs the Markov assumption','It only works for HMMs'],c:1,
+  e:'Very fast, occasionally accurate enough — but in general the hard decision causes too great a drop in performance. Use Viterbi instead.'},
+ {q:'Two ways to make a tagger bidirectional:',
+  a:['Two passes (left-context then all-context), or run both directions and pick the higher-scoring sequence',
+     'Use trigrams, or use smoothing','Freeze or fine-tune','Greedy or Viterbi'],c:0,
+  e:'Modern taggers are generally run bidirectionally. This is exactly what the "Bi-" in Bi-LSTM and the "B" in BERT are for.'}
+];
+(function(){
+  const root=document.getElementById('quiz');
+  QS.forEach((item,qi)=>{
+    const d=document.createElement('div'); d.className='quiz';
+    let h='<div class="q">'+(qi+1)+'. '+item.q+'</div><div class="row">';
+    item.a.forEach((opt,k)=>{h+='<button onclick="ans('+qi+','+k+',this)">'+opt+'</button>';});
+    h+='</div><div class="fb" id="fb'+qi+'"></div>';
+    d.innerHTML=h; root.appendChild(d);
+  });
+})();
+function ans(qi,k,btn){
+  const item=QS[qi], fb=document.getElementById('fb'+qi);
+  const ok=k===item.c;
+  fb.className='fb '+(ok?'ok':'no');
+  fb.innerHTML=(ok?'✅ Correct. ':'❌ Not quite — the answer is <b>'+item.a[item.c]+'</b>. ')+item.e;
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.className='');
+  btn.className='on';
+}
+</script>
+</body>
+</html>

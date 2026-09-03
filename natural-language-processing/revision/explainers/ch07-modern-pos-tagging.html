@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch 7 — Modern POS Tagging: Bi-LSTM-CRF → BERT → Agents</title>
+<style>
+  :root{
+    --bg:#0e1117; --panel:#161b26; --panel2:#1d2432; --line:#2b3446;
+    --ink:#e6edf7; --dim:#93a1b8;
+    --accent:#5aa9ff; --good:#3ddc97; --warn:#ffb454; --bad:#ff6b6b; --violet:#b78cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 20px 90px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.4px}
+  .sub{color:var(--dim);margin:0 0 30px}
+  h2{font-size:21px;margin:48px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:22px 0 8px;color:var(--accent)}
+  code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:14px;
+       font-family:ui-monospace,Consolas,monospace}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+        padding:18px 20px;margin:18px 0}
+  .analogy{border-left:3px solid var(--warn);background:#1b1a14}
+  .analogy b{color:var(--warn)}
+  .keypoint{border-left:3px solid var(--good);background:#111d19}
+  .keypoint b{color:var(--good)}
+  .trap{border-left:3px solid var(--bad);background:#1d1416}
+  .trap b{color:var(--bad)}
+  button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+         border-radius:8px;padding:8px 14px;cursor:pointer;font-size:14px;
+         font-family:inherit;transition:.12s}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.on{background:var(--accent);color:#08111d;border-color:var(--accent);font-weight:600}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--dim);font-weight:600}
+  td.num{text-align:right;font-family:ui-monospace,Consolas,monospace}
+  .out{font-family:ui-monospace,Consolas,monospace;font-size:14px;background:#0a0e15;
+       border:1px solid var(--line);border-radius:8px;padding:14px;white-space:pre-wrap;
+       line-height:1.75;margin-top:12px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+  .lbl{color:var(--dim);font-size:13px;min-width:120px}
+  .quiz{background:var(--panel2);border-radius:10px;padding:14px;margin:12px 0;
+        border:1px solid var(--line)}
+  .quiz .q{font-weight:600;margin-bottom:8px}
+  .fb{margin-top:10px;font-size:14px;display:none;padding:10px;border-radius:6px}
+  .fb.ok{display:block;background:#12312a;color:var(--good)}
+  .fb.no{display:block;background:#33161a;color:#ffb0b0}
+  .toc a{color:var(--accent);text-decoration:none;display:block;padding:3px 0;font-size:14px}
+  .toc a:hover{text-decoration:underline}
+  select,input[type=range]{background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:8px;padding:7px 10px;
+    font-family:inherit;font-size:14px}
+  input[type=range]{padding:0;height:26px}
+  .good-t{color:var(--good)} .bad-t{color:var(--bad)} .warn-t{color:var(--warn)}
+  .vio-t{color:var(--violet)} .acc-t{color:var(--accent)} .dim-t{color:var(--dim)}
+  .note{font-size:13px;color:var(--dim);margin-top:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .flow{display:flex;align-items:center;justify-content:center;gap:10px;
+        flex-wrap:wrap;margin:16px 0}
+  .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+       padding:12px 16px;text-align:center;font-size:14px;min-width:100px}
+  .box b{display:block;color:var(--accent);font-size:13px;margin-bottom:2px}
+  .arrowc{color:var(--dim);font-size:22px}
+  .stack{display:grid;gap:8px;margin:14px 0}
+  .layer{border:1px solid var(--line);border-radius:10px;padding:12px 16px;
+         background:var(--panel2);cursor:pointer;transition:.15s}
+  .layer:hover{border-color:var(--accent)}
+  .layer.open{border-color:var(--accent);background:#16222f}
+  .layer h4{margin:0;font-size:15px;color:var(--violet);display:flex;
+            justify-content:space-between;gap:10px}
+  .layer .tag{font-size:11px;color:var(--dim);font-weight:400}
+  .layer .body{display:none;margin-top:10px;font-size:14px}
+  .layer.open .body{display:block}
+  .accbar{height:24px;border-radius:5px;transition:.4s}
+  .arow{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:13px}
+  .arow .al{width:170px;color:var(--dim)}
+  .arow .av{width:90px;text-align:right;font-family:ui-monospace,Consolas,monospace}
+  .sent{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0;font-size:15px}
+  .tok{padding:8px 12px;border-radius:8px;border:1px solid var(--line);
+       background:var(--panel2);font-family:ui-monospace,Consolas,monospace;
+       text-align:center;transition:.2s}
+  .tok small{display:block;font-size:10px;color:var(--dim);margin-top:2px}
+  .tok.lft{border-color:var(--accent);background:#16303f}
+  .tok.rgt{border-color:var(--warn);background:#221d10}
+  .tok.both{border-color:var(--good);background:#12312a}
+  .tok.tgt{border-color:var(--violet);background:#241a2e;font-weight:700}
+  .bad-seq{color:var(--bad);font-weight:700}
+  .ok-seq{color:var(--good);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Modern POS Tagging</h1>
+<p class="sub">NLP Session 7 — Bi-LSTM-CRF → Transformer → BERT → prompting → agents.
+<b>Theory only, no numericals.</b> Written notes: <code>../ch07-neural-llm-pos-tagging.md</code></p>
+
+<div class="card toc">
+  <b>What's in here</b>
+  <a href="#s1">1 · The whole story in one slider</a>
+  <a href="#s2">2 · Bi-LSTM-CRF — click through the stack</a>
+  <a href="#s3">3 · Why bidirectional? The "river bank" demo</a>
+  <a href="#s4">4 · Why a CRF? Greedy vs structured</a>
+  <a href="#s5">5 · The Transformer — self-attention</a>
+  <a href="#s6">6 · BERT: pre-train, then fine-tune</a>
+  <a href="#s7">7 · Prompting and LLM agents</a>
+  <a href="#s8">8 · Which would you pick?</a>
+  <a href="#s9">9 · Quiz yourself</a>
+</div>
+
+
+<h2 id="s1">1 · The whole story in one slider</h2>
+
+<div class="card analogy">
+<b>The arc.</b> Accuracy climbs from ~96% to ~99%, and the <i>effort</i> moves
+from <b>feature engineering</b> (MEMM) → <b>architecture design</b> (Bi-LSTM-CRF,
+Transformer) → <b>writing an instruction</b> (prompting). Same task throughout.
+</div>
+
+<div class="card">
+<div class="row">
+  <span class="lbl">drag through time</span>
+  <input type="range" id="era" min="0" max="5" value="0" oninput="eraShow()" style="width:260px">
+  <span id="eraname" class="acc-t" style="font-weight:700"></span>
+</div>
+<div id="accbars"></div>
+<div class="out" id="eraout"></div>
+</div>
+
+
+<h2 id="s2">2 · Bi-LSTM-CRF — click through the stack</h2>
+
+<p><b>Concept:</b> combine a powerful <b>feature extractor</b> (Bi-LSTM) with a
+<b>structured prediction layer</b> (CRF) to ensure <b>valid tag sequences</b>.</p>
+
+<div class="stack" id="stack"></div>
+
+<div class="card">
+<table>
+<tr><td><b>Typical accuracy</b></td><td class="good-t"><b>~97–98% on the Penn Treebank</b></td></tr>
+<tr><td><b>Pros</b></td><td>Highly accurate · <b>automatically learns features</b> · good for <b>low-resource languages</b> (with transfer learning)</td></tr>
+<tr><td><b>Cons</b></td><td><b>Slower training</b> than non-recurrent models · <b>replaced as SOTA by Transformers</b></td></tr>
+</table>
+</div>
+
+
+<h2 id="s3">3 · Why bidirectional? The "river bank" demo</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> Someone reads you a sentence one word at a time and asks you to
+commit to each word's role <i>before</i> hearing the next. You'd get some wrong,
+and you'd know why: <b>you hadn't heard the end yet.</b> A bidirectional model
+gets to hear the whole thing, twice, from both ends.
+</div>
+
+<div class="card">
+<div class="row">
+  <button id="bdL" class="on" onclick="biDir('l')">← Forward only (left context)</button>
+  <button id="bdR" onclick="biDir('r')">Backward only (right context) →</button>
+  <button id="bdB" onclick="biDir('b')">Bidirectional</button>
+</div>
+<div class="sent" id="bdsent"></div>
+<div class="out" id="bdout"></div>
+</div>
+
+<div class="card keypoint">
+<b>LSTM gates.</b> An LSTM solves the <b>vanishing gradient</b> problem of simple
+RNNs using <b>gates: Input, Forget, Output</b>. That is the mechanism that lets
+it carry the word <i>river</i> forward far enough to matter.
+</div>
+
+
+<h2 id="s4">4 · Why a CRF? Greedy vs structured</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> Filling in a crossword by writing whatever fits each clue best,
+one at a time, and never checking whether the letters cross correctly. You'd end
+up with locally plausible words that <b>can't coexist</b>. The CRF layer is the
+step that checks the crossings.
+</div>
+
+<div class="card">
+<p>The Bi-LSTM gives an excellent score for each word <b>independently</b>.
+Suppose those per-word bests are:</p>
+<div class="row">
+  <button id="crG" class="on" onclick="crf('g')">Take the per-word best (greedy)</button>
+  <button id="crC" onclick="crf('c')">CRF: score the whole path</button>
+</div>
+<div class="out" id="crfout"></div>
+</div>
+
+<div class="card">
+<div class="out" style="margin-top:0">                   exp( score of the TRUE tag path )
+    P(y | x) =  ---------------------------------------
+                 SUM over ALL possible paths of exp( score )
+
+    Goal: MAXIMISE the numerator (score of the true path)
+          relative to ALL possible paths.</div>
+<p class="note">Same instinct as Viterbi in Chapter 6 — <b>optimise the whole
+sequence, not each position greedily.</b> The CRF learns constraints such as
+<i>"a Verb is unlikely to follow a Determiner"</i>.</p>
+</div>
+
+
+<h2 id="s5">5 · The Transformer — self-attention</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> An LSTM is a game of <b>telephone</b> — information about word 1
+reaches word 20 only by being whispered through 19 intermediaries, degrading on
+the way. Self-attention is a <b>conference call</b> — every word hears every
+other word directly, at full volume, in one step.
+</div>
+
+<div class="card">
+<p><b>Key idea:</b> replaces recurrence (RNN/LSTM) with the
+<b>self-attention mechanism</b>.</p>
+<div class="row">
+  <button id="tfL" class="on" onclick="tform('l')">LSTM path length</button>
+  <button id="tfT" onclick="tform('t')">Transformer path length</button>
+</div>
+<div class="out" id="tfout"></div>
+</div>
+
+<div class="card">
+<div class="flow">
+  <div class="box"><b>Encoder block</b>× many layers</div>
+  <div class="arrowc">=</div>
+  <div class="box" style="border-color:var(--violet)"><b class="vio-t">Multi-Head<br>Attention</b></div>
+  <div class="arrowc">+</div>
+  <div class="box" style="border-color:var(--good)"><b class="good-t">Feed-Forward<br>Network</b></div>
+</div>
+</div>
+
+<div class="card keypoint">
+<b>The one-line contrast to memorise.</b> An LSTM's path length between two words
+<b>grows with their distance</b>; a Transformer's is <b>constant — 1 hop</b> for
+every pair. That is why it beats recurrence on long-range dependencies
+<b>and</b> is far more parallelizable.
+</div>
+
+
+<h2 id="s6">6 · BERT: pre-train, then fine-tune</h2>
+
+<div class="card">
+<div class="flow">
+  <div class="box" style="border-color:var(--warn);min-width:200px">
+    <b class="warn-t">STAGE 1 — PRE-TRAINING</b>
+    done once, by someone with a data centre<br>
+    <span class="note">learns grammar + world knowledge on<br>TRILLIONS of words, e.g. predicting MASKED words</span></div>
+  <div class="arrowc">→</div>
+  <div class="box" style="border-color:var(--good);min-width:200px">
+    <b class="good-t">STAGE 2 — FINE-TUNING</b>
+    what YOU do<br>
+    <span class="note">add a simple CLASSIFICATION LAYER on top,<br>train the whole model a FEW EPOCHS on your POS corpus</span></div>
+</div>
+<table>
+<tr><td><b>SOTA performance</b></td><td class="good-t"><b>~98.5 – 99.5% accuracy</b></td></tr>
+<tr><td><b>Efficiency</b></td><td>Highly <b>parallelizable</b> — faster training than RNNs</td></tr>
+<tr><td><b>Context</b></td><td>Captures the deepest contextual meaning, <b>solving nearly all lexical ambiguity issues</b></td></tr>
+<tr><td><b>Impact</b></td><td>The standard in <b>spaCy</b> and <b>Hugging Face Transformers</b></td></tr>
+</table>
+</div>
+
+<div class="card keypoint">
+<b>Tie it back to Chapter 2.</b> These are <b>contextual embeddings</b> —
+<i>bank</i> gets a <b>different vector</b> in <i>river bank</i> and
+<i>money bank</i>. That is precisely why the lexical ambiguity of Chapter 1
+largely stops being a problem here.
+</div>
+
+
+<h2 id="s7">7 · Prompting and LLM agents</h2>
+
+<div class="card">
+<h3>Prompting — no fine-tuning at all</h3>
+<div class="out">"Tag the following sentence using the Penn Treebank tagset.
+ Output only the word/tag pairs.
+ Sentence: The concert was great."</div>
+<p style="margin-top:12px"><b>Zero-shot / few-shot learning:</b> the LLM can tag a
+sentence accurately <b>without being explicitly fine-tuned on any POS corpus</b>,
+based solely on its general pre-training.</p>
+</div>
+
+<div class="card keypoint">
+<b>The shift to notice.</b> With <b>BERT</b> you still needed a
+<b>labelled POS corpus</b> and a training run. With <b>prompting</b> you need
+<b>neither</b> — only a well-written instruction. That is the entire argument of
+Chapter 8.
+</div>
+
+<div class="card">
+<h3>The LLM agent flow — click each step</h3>
+<div class="row">
+  <button onclick="agent(0)" class="on" id="ag0">1 · Input</button>
+  <button onclick="agent(1)" id="ag1">2 · Agent plans</button>
+  <button onclick="agent(2)" id="ag2">3 · Tool use</button>
+  <button onclick="agent(3)" id="ag3">4 · Integration</button>
+</div>
+<div class="out" id="agout"></div>
+</div>
+
+<div class="card">
+<h3>Conclusion — is modern POS tagging solved?</h3>
+<ul>
+<li>The task has achieved <b>near-human performance</b> thanks to deep learning.</li>
+<li><b>Current SOTA:</b> fine-tuned Transformer models (BERT / RoBERTa).</li>
+<li><b>Future trend (LLMs):</b> POS tagging is becoming an <b>internal utility</b>
+inside larger LLM agent systems.</li>
+<li><b>The focus shifts</b> from <i>how to build the best tagger</i> to
+<b>how to use tags to power complex downstream AI systems</b>.</li>
+</ul>
+</div>
+
+
+<h2 id="s8">8 · Which would you pick?</h2>
+
+<p>Answer the two questions and get the recommendation — this is exactly the
+shape of the short-answer question.</p>
+
+<div class="card">
+<div class="row">
+  <span class="lbl">Labelled data</span>
+  <select id="q_data" onchange="pick()">
+    <option value="none">none at all</option>
+    <option value="tiny">~2,000 sentences</option>
+    <option value="big">&gt;50,000 items</option>
+  </select>
+  <span class="lbl">Pre-trained model</span>
+  <select id="q_pre" onchange="pick()">
+    <option value="yes">available for this language</option>
+    <option value="no">not available</option>
+  </select>
+</div>
+<div class="out" id="pickout"></div>
+</div>
+
+
+<h2 id="s9">9 · Quiz yourself</h2>
+<div id="quiz"></div>
+
+<div class="card" style="margin-top:34px">
+<b>Next:</b> <code>../ch08-llm-prompt-engineering.md</code> ·
+<a href="ch08-prompting-transfer-finetuning.html" style="color:var(--accent)">explainer</a>
+— the last pre-midsem chapter.
+</div>
+
+</div>
+
+<script>
+/* ---------- 1. era slider ---------- */
+const ERAS=[
+ {n:'HMM + Viterbi', acc:95.5, c:'#ff6b6b',
+  d:`GENERATIVE, transition x emission (Chapter 6).
+
+  Strength : simple, interpretable, fast
+  Weakness : word IDENTITY only; poor on unknown words;
+             runs left-to-right
+  Effort   : none — just counting`},
+ {n:'MEMM', acc:96.5, c:'#ff9d6b',
+  d:`DISCRIMINATIVE logistic regression at each position (Chapter 6).
+
+  Strength : arbitrary features (suffix, capitalisation, neighbours)
+  Weakness : you must still HAND-ENGINEER those features
+  Effort   : FEATURE ENGINEERING`},
+ {n:'Bi-LSTM-CRF', acc:97.5, c:'#ffb454',
+  d:`Bi-LSTM feature extractor + CRF structured decoder.
+
+  Strength : LEARNS features automatically; character embeddings
+             handle unknown words; good for low-resource languages
+  Weakness : slower training; replaced as SOTA by Transformers
+  Effort   : ARCHITECTURE DESIGN`},
+ {n:'Transformer', acc:98.5, c:'#a8d84a',
+  d:`Self-attention replaces recurrence.
+
+  Strength : every word attends to every other word in ONE hop,
+             regardless of distance; highly parallelizable
+  Weakness : large; needs a lot of pre-training compute
+  Effort   : ARCHITECTURE DESIGN`},
+ {n:'BERT / RoBERTa fine-tuned', acc:99.0, c:'#3ddc97',
+  d:`Pre-train on trillions of words, then add a classification
+layer and fine-tune for a few epochs.
+
+  Strength : DEEPEST context; solves nearly all lexical ambiguity;
+             CURRENT SOTA (~98.5-99.5%)
+  Weakness : still needs a LABELLED CORPUS and a training run
+  Effort   : FINE-TUNING
+  Impact   : the standard in spaCy and Hugging Face Transformers`},
+ {n:'LLM prompting / agents', acc:98.0, c:'#b78cff',
+  d:`Frame the task as a natural-language instruction.
+
+  Strength : NO fine-tuning and NO labelled corpus at all;
+             zero-shot or few-shot
+  Weakness : slower and costlier per sentence; less predictable
+  Effort   : WRITING A PROMPT
+
+  As an AGENT: the LLM plans, then calls a fast specialised
+  tagger as a TOOL — reasoning + speed combined.`}
+];
+function eraShow(){
+  const i=+document.getElementById('era').value;
+  document.getElementById('eraname').textContent=ERAS[i].n;
+  document.getElementById('accbars').innerHTML = ERAS.map((e,k)=>
+    '<div class="arow"><span class="al" style="'+(k===i?'color:var(--ink);font-weight:700':'')+'">'+e.n+'</span>'+
+    '<div class="accbar" style="width:'+((e.acc-94)*80)+'px;background:'+e.c+
+    ';opacity:'+(k<=i?1:0.18)+'"></div>'+
+    '<span class="av" style="opacity:'+(k<=i?1:0.25)+'">'+e.acc+'%</span></div>').join('')+
+    '<p class="note">Bars are approximate typical accuracies on the Penn Treebank. '+
+    'The last row has no single published figure — prompting trades a little accuracy for zero setup.</p>';
+  document.getElementById('eraout').textContent=ERAS[i].n+'\n\n'+ERAS[i].d;
+}
+eraShow();
+
+/* ---------- 2. stack ---------- */
+const STACK=[
+ {n:'CRF layer', tag:'structured decoder — the TOP',
+  d:'Learns constraints (e.g. <b>"a Verb is unlikely to follow a Determiner"</b>) and finds the sequence of tags with the highest <b>overall probability across the entire sentence</b>.<br><br>Without it, you could pick the best tag at each word independently and end up with an <b>impossible sequence</b>.'},
+ {n:'Bi-LSTM layer', tag:'feature extractor',
+  d:'Processes the sentence in <b>forward and backward</b> directions. Captures <b>long-range dependencies</b> and <b>bidirectional context</b>.<br><br><b>LSTM</b> solves the <b>vanishing gradient</b> problem of simple RNNs using <b>gates: Input, Forget, Output</b>.'},
+ {n:'Input layer', tag:'the BOTTOM',
+  d:'<b>Word embeddings</b> (word2vec, GloVe — straight from Chapter 3)<br>+ <b>character embeddings</b>.<br><br>The character embeddings are the part that <b>handles unknown words</b>: a word ending in <i>-ing</i> looks verb-like even if the model has never seen it.'}
+];
+(function(){
+  const r=document.getElementById('stack');
+  STACK.forEach(L=>{
+    const d=document.createElement('div'); d.className='layer';
+    d.innerHTML='<h4><span>'+L.n+'</span><span class="tag">'+L.tag+'</span></h4>'+
+                '<div class="body">'+L.d+'</div>';
+    d.onclick=()=>d.classList.toggle('open');
+    r.appendChild(d);
+  });
+})();
+
+/* ---------- 3. bidirectional ---------- */
+const BSENT=['I','walked','to','the','river','bank','.'];
+function biDir(m){
+  document.getElementById('bdL').className=m==='l'?'on':'';
+  document.getElementById('bdR').className=m==='r'?'on':'';
+  document.getElementById('bdB').className=m==='b'?'on':'';
+  const tgt=5;
+  const s=document.getElementById('bdsent'); s.innerHTML='';
+  BSENT.forEach((w,i)=>{
+    const d=document.createElement('div'); d.className='tok';
+    let sub='';
+    if(i===tgt){ d.className+=' tgt'; sub='tag me'; }
+    else if(m==='l'&&i<tgt){ d.className+=' lft'; sub='seen'; }
+    else if(m==='r'&&i>tgt){ d.className+=' rgt'; sub='seen'; }
+    else if(m==='b'){ d.className+= i<tgt?' lft':' rgt'; sub='seen'; }
+    else sub='unseen';
+    d.innerHTML=w+'<small>'+sub+'</small>';
+    s.appendChild(d);
+  });
+  document.getElementById('bdout').textContent = m==='l'
+? `FORWARD ONLY  (left context)
+
+  visible: I walked to the RIVER   [bank]   ? ?
+
+  You have the "river" cue -> geographic sense looks likely.
+  But you have NO idea what follows. Is "bank" the end of a
+  noun phrase, or the start of a verb phrase ("bank left")?
+
+  Deciding on HALF the available evidence.`
+: m==='r'
+? `BACKWARD ONLY  (right context)
+
+  visible: ? ? ? ?   [bank]   .
+
+  You know "bank" is followed by a full stop, so it ends the
+  sentence and is almost certainly a noun.
+  But you have NO idea it is a RIVER bank rather than a
+  financial one.
+
+  The opposite half of the evidence.`
+: `BIDIRECTIONAL
+
+  forward pass  gives: I walked to the RIVER ->
+  backward pass gives:                       <- .
+
+  FORWARD supplies "river"  -> the geographic sense
+  BACKWARD supplies "."     -> it ends the noun phrase
+
+  Both cues at once. The slide's own example:
+
+  "The tag for 'bank' in 'I walked to the river bank.'
+   depends on both 'river' (left context) and '.' (right
+   context)."`;
+}
+biDir('l');
+
+/* ---------- 4. CRF ---------- */
+function crf(m){
+  document.getElementById('crG').className=m==='g'?'on':'';
+  document.getElementById('crC').className=m==='c'?'on':'';
+  document.getElementById('crfout').textContent = m==='g'
+? `PER-WORD BEST (no CRF)
+
+  word     best tag   score      2nd best   score
+  ------   --------   -----      --------   -----
+  The      DT         0.98       NN         0.01
+  old      VB         0.44       JJ         0.42     <- close call!
+  man      NN         0.71       VB         0.22
+  boats    NNS        0.88       VBZ        0.09
+
+  greedy sequence:   The/DT  old/VB  man/NN  boats/NNS
+                             ^^^^^^
+  A VERB immediately after a DETERMINER.
+
+  That sequence is GRAMMATICALLY IMPOSSIBLE, and nothing in
+  a per-word decision can see it — each choice was locally
+  the best available.`
+: `CRF: SCORE THE WHOLE PATH
+
+  The CRF adds TRANSITION scores between adjacent tags and
+  picks the highest-scoring PATH, not the highest-scoring
+  individual cells.
+
+  learned constraint:   P(VB | DT)  is very low
+                        P(JJ | DT)  is high
+
+  path A: DT VB  NN  NNS   ->  0.98 x 0.44 x 0.71 x 0.88
+                               x TINY transition DT->VB
+                               = poor overall score
+
+  path B: DT JJ  NN  NNS   ->  0.98 x 0.42 x 0.71 x 0.88
+                               x HIGH transition DT->JJ
+                               = BEST overall score
+
+  chosen:  The/DT  old/JJ  man/NN  boats/NNS      valid
+
+  It gave up 0.02 at the word level to gain far more at the
+  sequence level. Exactly the Viterbi instinct from Ch 6.`;
+}
+crf('g');
+
+/* ---------- 5. transformer ---------- */
+function tform(m){
+  document.getElementById('tfL').className=m==='l'?'on':'';
+  document.getElementById('tfT').className=m==='t'?'on':'';
+  document.getElementById('tfout').textContent = m==='l'
+? `LSTM — information travels STEP BY STEP
+
+  He  ->  quickly  ->  ran  ->  after  ->  the  ->  red  ->  ball
+  |________________________________________________________|
+                     7 hops to connect "He" and "ball"
+
+  Path length GROWS WITH DISTANCE. Information degrades on
+  the way, and the steps cannot be parallelised because each
+  one needs the previous one's output.`
+: `TRANSFORMER — SELF-ATTENTION connects everything at once
+
+  He  <-->  quickly  <-->  ran  <-->  after  <-->  the  <-->  red  <-->  ball
+   \\_________________________________________________________________/
+                        1 hop between ANY pair
+
+  "Self-attention allows the model to weigh the relevance of
+   EVERY OTHER WORD in the sentence SIMULTANEOUSLY, REGARDLESS
+   OF DISTANCE."
+
+  Example from the slide: when tagging "He", the model instantly
+  links it to "ran" and "ball" equally well.
+
+  Constant path length + full parallelism = why Transformers won.`;
+}
+tform('l');
+
+/* ---------- 7. agent ---------- */
+const AGENT=[
+ `1 · INPUT
+
+  The user gives a complex request:
+
+    "Analyze the sentiment of all nouns in the user reviews."
+
+  Note this is not a POS request. POS tagging is a SUB-TASK
+  buried inside it.`,
+ `2 · LLM AGENT PLANS
+
+  The agent breaks the task down:
+
+    a) split the reviews into sentences
+    b) find the NOUNS  <-- needs POS tagging
+    c) run sentiment on the words tagged NN
+    d) aggregate and report
+
+  The reasoning/planning step is what the LLM is good at.`,
+ `3 · TOOL USE
+
+  For the labelling sub-task, the LLM decides to call a
+  SPECIALISED, FAST POS tagger — e.g. a fine-tuned BERT
+  model — as a TOOL.
+
+    tool_call: pos_tag("The battery life is excellent but
+                        the screen cracked")
+    -> The/DT battery/NN life/NN is/VBZ excellent/JJ
+       but/CC the/DT screen/NN cracked/VBD
+
+  Why not just ask the LLM to tag it? Because the specialised
+  model is FASTER and MORE ACCURATE at this one thing.`,
+ `4 · INTEGRATION
+
+  The agent feeds the tags back into its context and performs
+  the final task — sentiment analysis on the words tagged NN.
+
+    battery  -> positive
+    life     -> positive
+    screen   -> negative
+
+  BENEFIT
+  Combines the LLM's REASONING / PLANNING ability with the
+  SPEED / ACCURACY of a specialised POS model.`
+];
+function agent(i){
+  for(let j=0;j<4;j++) document.getElementById('ag'+j).className=(j===i?'on':'');
+  document.getElementById('agout').textContent=AGENT[i];
+}
+agent(0);
+
+/* ---------- 8. picker ---------- */
+function pick(){
+  const d=document.getElementById('q_data').value;
+  const p=document.getElementById('q_pre').value;
+  let rec, why;
+  if(d==='none'){
+    rec='LLM PROMPTING  (zero-shot or few-shot)';
+    why=`With no labelled data there is nothing to train on, and no
+training run can be cheaper than writing one instruction.
+
+  "The LLM can tag a sentence accurately WITHOUT being explicitly
+   fine-tuned on a POS corpus, based solely on its general
+   pre-training."
+
+Use FEW-SHOT rather than zero-shot if you need a specific output
+format pinned down.`;
+  } else if(d==='tiny' && p==='no'){
+    rec='Bi-LSTM-CRF';
+    why=`No pre-trained model rules out BERT fine-tuning. 2,000 sentences
+is far too little for a large model anyway.
+
+Bi-LSTM-CRF is explicitly listed as "good for LOW-RESOURCE
+LANGUAGES (with transfer learning)":
+
+  - CHARACTER EMBEDDINGS handle the many unknown words you will
+    hit with so little data
+  - it LEARNS FEATURES AUTOMATICALLY, so you do not have to
+    hand-engineer an MEMM feature set for a language you may
+    not know well
+
+An HMM would be weak precisely where you need help: unknown words.`;
+  } else if(d==='tiny' && p==='yes'){
+    rec='TRANSFER LEARNING on the pre-trained model  (freeze the backbone)';
+    why=`A pre-trained model is available, so use it — but 2,000 sentences
+is not enough to safely UPDATE its weights without overfitting.
+
+Freeze the pre-trained layers and train only a small
+classification head on top. (Chapter 8 calls this transfer
+learning / feature extraction, as opposed to fine-tuning.)`;
+  } else if(d==='big' && p==='yes'){
+    rec='FINE-TUNE BERT / RoBERTa      <-- current SOTA';
+    why=`Both conditions for fine-tuning are met: the dataset is LARGE
+ENOUGH (>50K) and SIMILAR in kind to the pre-training text.
+
+  Stage 1: pre-training — already done for you
+  Stage 2: add a classification layer, train a few epochs
+
+Expect ~98.5-99.5% accuracy. This is the standard approach in
+spaCy and Hugging Face Transformers.`;
+  } else {
+    rec='Bi-LSTM-CRF, trained from scratch';
+    why=`Plenty of data but no pre-trained model to build on. A Bi-LSTM-CRF
+trains perfectly well from scratch on >50K items and reaches
+~97-98%.
+
+You could also pre-train your own Transformer — but that is a
+data-centre-scale job, and the accuracy gap to Bi-LSTM-CRF is
+about 1 point.`;
+  }
+  document.getElementById('pickout').textContent =
+    'RECOMMENDATION\n\n  '+rec+'\n\nWHY\n\n'+why;
+}
+pick();
+
+/* ---------- 9. quiz ---------- */
+const QS=[
+ {q:'What does the CRF layer add on top of a Bi-LSTM?',
+  a:['Faster training','Valid tag SEQUENCES — it learns constraints and scores whole paths',
+     'Character embeddings','Bidirectional context'],c:1,
+  e:'Without it you can pick the best tag per word and get an impossible sequence, e.g. a Verb right after a Determiner. The CRF optimises the whole sentence.'},
+ {q:'Why add CHARACTER embeddings to the input layer?',
+  a:['To speed up training','To handle UNKNOWN words','To make it bidirectional','To replace word2vec'],c:1,
+  e:'A word ending in "-ing" looks verb-like even if never seen. This is the same job the suffix feature did for an MEMM in Chapter 6.'},
+ {q:'LSTM gates solve which problem, and what are they?',
+  a:['Overfitting; dropout, batchnorm, L2','Vanishing gradients; Input, Forget, Output',
+     'Sparsity; Read, Write, Erase','Ambiguity; Left, Right, Centre'],c:1,
+  e:'The gates let an LSTM carry information a long way without the gradient dying — which is what makes "river" still available when you reach "bank".'},
+ {q:'Typical Bi-LSTM-CRF accuracy on the Penn Treebank is…',
+  a:['~90%','~93–95%','~97–98%','~99.9%'],c:2,
+  e:'~97–98%. Fine-tuned BERT/RoBERTa pushes it to ~98.5–99.5%, which is the current SOTA.'},
+ {q:'The Transformer\'s key idea is…',
+  a:['deeper LSTMs','replacing recurrence with SELF-ATTENTION','bigger embeddings','a better CRF'],c:1,
+  e:'Self-attention weighs the relevance of every other word simultaneously, regardless of distance — constant path length instead of one that grows with distance.'},
+ {q:'A Transformer encoder block consists of…',
+  a:['LSTM + CRF','Multi-Head Attention + Feed-Forward Networks','Embedding + softmax','Convolution + pooling'],c:1,
+  e:'Multi-layer encoder blocks, each with multi-head attention and a feed-forward network.'},
+ {q:'The two stages of the BERT approach are…',
+  a:['Tokenize then tag','Pre-training (masked word prediction on trillions of words) then fine-tuning (add a classification layer, few epochs)',
+     'Forward pass then backward pass','Encode then decode'],c:1,
+  e:'Stage 1 is done once by someone with a data centre. Stage 2 is what you do: a classification layer on top of the PLM output vectors, trained for a few epochs.'},
+ {q:'Which libraries use fine-tuned Transformers as the standard for POS tagging?',
+  a:['NLTK and Gensim','spaCy and Hugging Face Transformers','Stanford CoreNLP and AllenNLP','scikit-learn and Keras'],c:1,
+  e:'Named directly on the slide as the modern standard.'},
+ {q:'In the LLM approach, what REPLACES fine-tuning?',
+  a:['More data','Prompting','A bigger CRF','Character embeddings'],c:1,
+  e:'"Traditional fine-tuning is replaced by prompting" — the POS task is framed as a natural language instruction, and works zero-shot.'},
+ {q:'An LLM agent is…',
+  a:['a very large LLM','an LLM given the ability to USE EXTERNAL TOOLS','an LLM with a CRF layer','a fine-tuned BERT'],c:1,
+  e:'The agent plans, then calls a fast specialised POS tagger as a tool, then feeds the tags back into its context to finish the real task.'},
+ {q:'The benefit of the agent approach is…',
+  a:['it needs no LLM','it combines the LLM\'s reasoning/planning with the speed/accuracy of a specialised model',
+     'it is always cheaper','it removes the need for tagging'],c:1,
+  e:'Neither piece alone is enough: the LLM is good at planning, the specialised tagger is good at fast accurate labelling.'},
+ {q:'Where is POS tagging heading, according to the conclusion slide?',
+  a:['Being abandoned','Becoming an INTERNAL UTILITY inside larger LLM agent systems',
+     'Back to rule-based methods','Toward larger tagsets'],c:1,
+  e:'"The focus shifts from how to build the best tagger to how to USE TAGS to power complex downstream AI systems."'},
+ {q:'You have 2,000 labelled sentences and no pre-trained model for the language. Best choice?',
+  a:['Fine-tune BERT','Bi-LSTM-CRF','HMM + Viterbi','LLM prompting only'],c:1,
+  e:'No pre-trained model rules out BERT. Bi-LSTM-CRF is explicitly "good for low-resource languages", its character embeddings handle the many unknown words, and it learns features automatically.'}
+];
+(function(){
+  const root=document.getElementById('quiz');
+  QS.forEach((item,qi)=>{
+    const d=document.createElement('div'); d.className='quiz';
+    let h='<div class="q">'+(qi+1)+'. '+item.q+'</div><div class="row">';
+    item.a.forEach((opt,k)=>{h+='<button onclick="ans('+qi+','+k+',this)">'+opt+'</button>';});
+    h+='</div><div class="fb" id="fb'+qi+'"></div>';
+    d.innerHTML=h; root.appendChild(d);
+  });
+})();
+function ans(qi,k,btn){
+  const item=QS[qi], fb=document.getElementById('fb'+qi);
+  const ok=k===item.c;
+  fb.className='fb '+(ok?'ok':'no');
+  fb.innerHTML=(ok?'✅ Correct. ':'❌ Not quite — the answer is <b>'+item.a[item.c]+'</b>. ')+item.e;
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.className='');
+  btn.className='on';
+}
+</script>
+</body>
+</html>

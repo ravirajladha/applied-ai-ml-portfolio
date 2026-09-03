@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch 3 — word2vec, Skip-gram &amp; GloVe, visually</title>
+<style>
+  :root{
+    --bg:#0e1117; --panel:#161b26; --panel2:#1d2432; --line:#2b3446;
+    --ink:#e6edf7; --dim:#93a1b8;
+    --accent:#5aa9ff; --good:#3ddc97; --warn:#ffb454; --bad:#ff6b6b; --violet:#b78cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 20px 90px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.4px}
+  .sub{color:var(--dim);margin:0 0 30px}
+  h2{font-size:21px;margin:48px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:22px 0 8px;color:var(--accent)}
+  code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:14px;
+       font-family:ui-monospace,Consolas,monospace}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+        padding:18px 20px;margin:18px 0}
+  .analogy{border-left:3px solid var(--warn);background:#1b1a14}
+  .analogy b{color:var(--warn)}
+  .keypoint{border-left:3px solid var(--good);background:#111d19}
+  .keypoint b{color:var(--good)}
+  .trap{border-left:3px solid var(--bad);background:#1d1416}
+  .trap b{color:var(--bad)}
+  button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+         border-radius:8px;padding:8px 14px;cursor:pointer;font-size:14px;
+         font-family:inherit;transition:.12s}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.on{background:var(--accent);color:#08111d;border-color:var(--accent);font-weight:600}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--dim);font-weight:600}
+  td.num{text-align:right;font-family:ui-monospace,Consolas,monospace}
+  .out{font-family:ui-monospace,Consolas,monospace;font-size:14px;background:#0a0e15;
+       border:1px solid var(--line);border-radius:8px;padding:14px;white-space:pre-wrap;
+       line-height:1.75;margin-top:12px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+  .lbl{color:var(--dim);font-size:13px;min-width:130px}
+  .flow{display:flex;align-items:center;justify-content:center;gap:10px;
+        flex-wrap:wrap;margin:16px 0}
+  .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+       padding:12px 16px;text-align:center;font-size:14px;min-width:110px}
+  .box b{display:block;color:var(--accent);font-size:13px;margin-bottom:2px}
+  .arrowc{color:var(--dim);font-size:22px}
+  .quiz{background:var(--panel2);border-radius:10px;padding:14px;margin:12px 0;
+        border:1px solid var(--line)}
+  .quiz .q{font-weight:600;margin-bottom:8px}
+  .fb{margin-top:10px;font-size:14px;display:none;padding:10px;border-radius:6px}
+  .fb.ok{display:block;background:#12312a;color:var(--good)}
+  .fb.no{display:block;background:#33161a;color:#ffb0b0}
+  .toc a{color:var(--accent);text-decoration:none;display:block;padding:3px 0;font-size:14px}
+  .toc a:hover{text-decoration:underline}
+  .sent{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0;font-size:15px}
+  .tok{padding:6px 10px;border-radius:7px;border:1px solid var(--line);
+       background:var(--panel2);cursor:pointer;transition:.12s;
+       font-family:ui-monospace,Consolas,monospace}
+  .tok:hover{border-color:var(--accent)}
+  .tok.target{background:var(--violet);color:#12081f;border-color:var(--violet);font-weight:700}
+  .tok.ctx{background:#16303f;border-color:var(--accent);color:var(--accent)}
+  select,input[type=number],input[type=range]{background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:8px;padding:7px 10px;
+    font-family:inherit;font-size:14px}
+  input[type=range]{padding:0;height:26px}
+  .good-t{color:var(--good)} .bad-t{color:var(--bad)} .warn-t{color:var(--warn)}
+  .vio-t{color:var(--violet)} .acc-t{color:var(--accent)} .dim-t{color:var(--dim)}
+  .note{font-size:13px;color:var(--dim);margin-top:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .pos{color:var(--good);font-weight:700}
+  .neg{color:var(--bad);font-weight:700}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;
+        border:1px solid var(--line);color:var(--dim);margin-left:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>word2vec, Skip-gram &amp; GloVe</h1>
+<p class="sub">NLP Session 3 — Word Embeddings. The <b>dense</b> half of the
+sparse-vs-dense split. Written notes: <code>../ch03-word-embeddings-word2vec-glove.md</code></p>
+
+<div class="card toc">
+  <b>What's in here</b>
+  <a href="#s1">1 · The trick: train a classifier, then throw it away</a>
+  <a href="#s2">2 · Skip-gram vs CBOW — which way does the arrow point?</a>
+  <a href="#s3">3 · Build the training data (positives + negatives)</a>
+  <a href="#s4">4 · ⭐ One SGNS training step, live</a>
+  <a href="#s5">5 · Window size changes what "similar" means</a>
+  <a href="#s6">6 · Analogies — the parallelogram</a>
+  <a href="#s7">7 · GloVe — count vs predict vs both</a>
+  <a href="#s8">8 · Embeddings carry bias</a>
+  <a href="#s9">9 · Quiz yourself</a>
+</div>
+
+
+<h2 id="s1">1 · The trick: train a classifier, then throw it away</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> You want to know which staff in a big office are on the same
+team. You can't ask. So you set up a silly game: "guess whether these two people
+were seen at lunch together." You play it thousands of times, and to get good at
+it your brain builds a mental map of who hangs around whom. Then you
+<b>delete the game and keep the map</b>. The map is the embeddings.
+</div>
+
+<div class="card">
+<div class="flow">
+  <div class="box"><b>fake task</b>"is <i>w</i> likely<br>near <i>apricot</i>?"</div>
+  <div class="arrowc">→</div>
+  <div class="box"><b>train</b>logistic regression<br>on yes/no pairs</div>
+  <div class="arrowc">→</div>
+  <div class="box" style="border-color:var(--bad)"><b class="bad-t">throw away</b>the classifier</div>
+  <div class="arrowc">→</div>
+  <div class="box" style="border-color:var(--good)"><b class="good-t">KEEP</b>the weights =<br>the embeddings</div>
+</div>
+<p class="note"><b>We don't actually care about the task.</b> We only want the
+weights it was forced to learn.</p>
+</div>
+
+<div class="card keypoint">
+<b>Self-supervision.</b> Nobody labels anything. A word <i>c</i> that genuinely
+occurs near <i>apricot</i> in the corpus <b>acts as the gold "correct answer"</b>.
+The text labels itself — which is why word2vec can train on billions of words
+for free.
+</div>
+
+
+<h2 id="s2">2 · Skip-gram vs CBOW — which way does the arrow point?</h2>
+
+<div class="card">
+<div class="row">
+  <button id="bSG" class="on" onclick="dirMode('sg')">SKIP-GRAM</button>
+  <button id="bCB" onclick="dirMode('cb')">CBOW</button>
+</div>
+<div class="out" id="dirout"></div>
+</div>
+
+<div class="card">
+<table>
+<tr><th></th><th>Skip-gram</th><th>CBOW</th></tr>
+<tr><td><b>Predicts</b></td><td class="acc-t">Context, from the centre word</td><td class="good-t">Centre word, from the context</td></tr>
+<tr><td><b>Works well with</b></td><td><b>Small</b> training data</td><td>Large data</td></tr>
+<tr><td><b>Rare words</b></td><td>Represents rare words/phrases <b>well</b></td><td>Weaker on rare words</td></tr>
+<tr><td><b>Speed</b></td><td>Slower</td><td><b>Several times faster</b> to train</td></tr>
+<tr><td><b>Accuracy</b></td><td>—</td><td>Slightly <b>better on frequent words</b></td></tr>
+</table>
+</div>
+
+<div class="card trap">
+<b>Memory hook.</b> <b>Skip</b>-gram <b>skips outward</b> from the centre to the
+context. <b>C</b>BOW <b>c</b>ollects the context <b>c</b>oming inward to the
+centre. Arrow out vs arrow in.
+</div>
+
+
+<h2 id="s3">3 · Build the training data (positives + negatives)</h2>
+
+<p>Click a word to make it the <span class="vio-t">target</span>. Its
+<span class="acc-t">±2 window</span> becomes the positive examples; then
+<code>k</code> random words are drawn as negatives.</p>
+
+<div class="card">
+  <div class="sent" id="sent3"></div>
+  <div class="row">
+    <span class="lbl">k (negatives per positive)</span>
+    <input type="range" id="kslider" min="1" max="8" value="2" oninput="buildPairs()" style="width:180px">
+    <span id="kval" class="acc-t" style="font-family:ui-monospace">2</span>
+  </div>
+  <div class="out" id="pairout">Click a word above.</div>
+</div>
+
+<div class="card keypoint">
+<b>The number to remember.</b> Mikolov et al. 2013: <b>k = 2–5 for large
+datasets</b>, <b>k = 5–20 for small datasets</b>. Small corpus → you need more
+negative contrast per positive to get a usable signal.
+</div>
+
+
+<h2 id="s4">4 · ⭐ One SGNS training step, live</h2>
+
+<p>These are the exact numbers from the slide's "Ned Stark" worked example.
+Change the learning rate and watch every downstream number move.</p>
+
+<div class="card">
+<div class="out" style="margin-top:0">corpus         : "Ned Stark is the most honourable man"
+positive pair  : (ned, stark)                t = 1
+negative words : pimples, zebra, idiot       t = 0
+
+input embedding   w(ned) = [-0.018,  0.404, -0.317]</div>
+
+<div class="row">
+  <span class="lbl">learning rate η</span>
+  <input type="range" id="lr" min="1" max="30" value="5" oninput="sgns()" style="width:200px">
+  <span id="lrval" class="acc-t" style="font-family:ui-monospace">0.05</span>
+</div>
+
+<div class="row">
+  <button onclick="sgStep(1)" id="sg1" class="on">a · Forward (dot → sigmoid)</button>
+  <button onclick="sgStep(2)" id="sg2">b · Error (σ − t)</button>
+  <button onclick="sgStep(3)" id="sg3">c · Gradient</button>
+  <button onclick="sgStep(4)" id="sg4">d · Update w</button>
+  <button onclick="sgStep(5)" id="sg5">e · Update contexts</button>
+</div>
+<div class="out" id="sgout"></div>
+</div>
+
+<div class="card keypoint">
+<b>The sign is the whole story.</b> The positive pair gets a <b class="good-t">negative
+error</b> → the update <b>pulls the vectors together</b>. Every negative sample
+gets a <b class="bad-t">positive error</b> → the update <b>pushes them apart</b>.
+"Move <i>apricot</i> toward <i>jam</i>, away from <i>Tolstoy</i>." That is
+literally all gradient descent is doing here.
+</div>
+
+<div class="card trap">
+<b>Exam favourite.</b> SGNS learns <b>TWO</b> matrices — the target matrix
+<code>W</code> and the context matrix <code>C</code>, each holding one embedding
+per vocabulary word. It is common to just <b>add them</b>: word <i>i</i> is
+represented as <code>wᵢ + cᵢ</code>. Saying "word2vec learns one matrix" loses
+the mark.
+</div>
+
+
+<h2 id="s5">5 · Window size changes what "similar" means</h2>
+
+<div class="card">
+<div class="row">
+  <button id="wn2" class="on" onclick="winDemo(2)">Small window ± 2</button>
+  <button id="wn5" onclick="winDemo(5)">Large window ± 5</button>
+</div>
+<div class="out" id="winout"></div>
+</div>
+
+<div class="card analogy">
+<b>Why this happens.</b> A tight window only sees a word's immediate
+grammatical neighbours, so it learns <i>what kind of thing</i> it is. A wide
+window sees the whole topic of the sentence, so it learns <i>what it's
+associated with</i>. Small = <b>similarity</b>. Large = <b>relatedness</b>.
+Straight back to the coffee/tea vs coffee/cup distinction from Chapter 2.
+</div>
+
+
+<h2 id="s6">6 · Analogies — the parallelogram</h2>
+
+<div class="card">
+<p>For <code>a : a* :: b : b*</code>, compute <code>a* − a + b</code> and take
+the nearest word.</p>
+<div class="row">
+  <button onclick="ana(0)" class="on" id="an0">king − man + woman</button>
+  <button onclick="ana(1)" id="an1">Paris − France + Italy</button>
+  <button onclick="ana(2)" id="an2">Tokyo → Japan :: Paris → ?</button>
+</div>
+<div class="grid2">
+  <div><div class="out" id="anaout"></div></div>
+  <div style="display:flex;align-items:center;justify-content:center">
+    <svg id="anasvg" width="280" height="240" viewBox="0 0 280 240"></svg>
+  </div>
+</div>
+</div>
+
+<div class="card keypoint">
+<b>What the picture shows.</b> The vector from <i>man</i> to <i>king</i> and the
+vector from <i>woman</i> to <i>queen</i> are <b>the same arrow</b> — that arrow
+<i>is</i> the "royalty" relation, encoded as a direction in space. Add it to any
+word and you move along that relation. The method works with <b>both sparse and
+dense</b> embeddings (Turney &amp; Littman 2005; Mikolov et al. 2013b).
+</div>
+
+
+<h2 id="s7">7 · GloVe — count vs predict vs both</h2>
+
+<div class="card">
+<table>
+<tr><th></th><th>Count-based<br><span class="note">(LSA, raw co-occurrence)</span></th>
+    <th>Prediction-based<br><span class="note">(word2vec)</span></th>
+    <th>GloVe</th></tr>
+<tr><td><b>Uses</b></td><td class="warn-t">Global corpus statistics</td>
+    <td class="acc-t">Local context windows</td><td class="good-t"><b>Both</b></td></tr>
+<tr><td><b>Training</b></td><td>Fast</td><td>Slower, scales with corpus size</td><td class="good-t">Fast</td></tr>
+<tr><td><b>Statistics</b></td><td>Efficiently used</td><td>Inefficiently used</td><td class="good-t">Efficiently used</td></tr>
+</table>
+</div>
+
+<div class="card">
+<b>GloVe</b> = <b>Glo</b>bal <b>Ve</b>ctors for word representation. Stanford
+(Pennington, Socher, Manning).
+<p style="margin-top:10px"><b class="good-t">Key idea:</b> learning should be
+based on <b>ratios of co-occurrence probabilities</b>, rather than the
+probabilities themselves.</p>
+<div class="out">THE ONE-LINE EXAM ANSWER
+
+  The advantage of GloVe is that, unlike word2vec, it does not rely
+  only on LOCAL statistics (local context information of words) but
+  incorporates GLOBAL statistics (word-word co-occurrence) to obtain
+  word vectors.</div>
+</div>
+
+<div class="card trap">
+<b>Do not confuse two different axes.</b><br>
+<b>Axis 1 — sparse vs dense:</b> counting vs predicting. word2vec and GloVe are
+<b>both dense</b>.<br>
+<b>Axis 2 — static vs contextual:</b> word2vec and GloVe are both <b>static</b>
+(one vector per word <i>type</i>, so <i>bank</i> the river and <i>bank</i> the
+institution share it). ELMo and BERT are <b>contextual</b> (one vector per
+<i>token</i>, computed from its actual context).
+</div>
+
+
+<h2 id="s8">8 · Embeddings carry bias</h2>
+
+<div class="card">
+<p>Ask the parallelogram model for analogies and you get:</p>
+<table>
+<tr><th>Analogy</th><th>Answer</th><th></th></tr>
+<tr><td>Paris : France :: Tokyo : x</td><td>Japan</td><td class="good-t">✅ fine</td></tr>
+<tr><td>father : doctor :: mother : x</td><td><b>nurse</b></td><td class="bad-t">⚠️ bias</td></tr>
+<tr><td>man : computer programmer :: woman : x</td><td><b>homemaker</b></td><td class="bad-t">⚠️ bias</td></tr>
+</table>
+<p class="note">Bolukbasi et al., NeurIPS 2016 — <i>"Man is to computer programmer
+as woman is to homemaker? Debiasing word embeddings"</i>.</p>
+</div>
+
+<div class="card trap">
+<b>Why it matters, in one line.</b> Algorithms that use embeddings inside, say,
+a <b>hiring search for programmers</b> might therefore <b>lead to bias in
+hiring</b>. The embedding didn't invent the bias — it faithfully learned it from
+the corpus, which is exactly the problem.
+</div>
+
+<div class="card">
+<b>Embeddings as a historical instrument.</b> Train on different decades
+(~30 million books, 1850–1990, Google Books) and you can watch meanings shift
+(Hamilton, Leskovec &amp; Jurafsky, ACL 2016). Garg et al. (PNAS 2018) scored
+adjectives for gender/ethnic bias per decade:
+<ul>
+<li><b>Competence</b> adjectives (smart, wise, brilliant, resourceful, thoughtful,
+logical) were biased toward men — a bias slowly <b>decreasing 1960–1990</b>.</li>
+<li><b>Dehumanizing</b> adjectives (barbaric, monstrous, bizarre) were biased
+toward Asians in the 1930s, decreasing across the 20th century.</li>
+</ul>
+<span class="note">These match the results of <b>actual surveys done in the
+1930s</b> — which is what makes the method credible rather than a curiosity.</span>
+</div>
+
+
+<h2 id="s9">9 · Quiz yourself</h2>
+<div id="quiz"></div>
+
+<div class="card" style="margin-top:34px">
+<b>Next:</b> <code>../ch04-ngram-language-models.md</code> ·
+<a href="ch04-ngrams-smoothing-perplexity.html" style="color:var(--accent)">explainer</a>
+— back to counting, but counting <i>sequences</i> this time.
+</div>
+
+</div>
+
+<script>
+/* ---------- 2. direction ---------- */
+function dirMode(m){
+  document.getElementById('bSG').className = m==='sg'?'on':'';
+  document.getElementById('bCB').className = m==='cb'?'on':'';
+  const el=document.getElementById('dirout');
+  if(m==='sg'){
+    el.textContent =
+`SKIP-GRAM   centre word  ---->  context words
+
+    ...lemon, a [tablespoon  of   APRICOT   jam,   a]  pinch...
+                     c1      c2   [target]  c3     c4
+
+    GIVEN   : apricot
+    PREDICT : tablespoon, of, jam, a
+
+    One input, several outputs. The model is asked
+    "what lives around this word?"`;
+  } else {
+    el.textContent =
+`CBOW (Continuous Bag Of Words)   context words  ---->  centre word
+
+    corpus: "I am happy because I am learning"
+
+      context words              centre word
+      ---------------------      -----------
+      I am     / because I   ->  HAPPY
+      am happy / I am        ->  BECAUSE
+      happy because / am learning -> I
+
+    Several inputs, one output. The model is asked
+    "what word fills this hole?"`;
+  }
+}
+dirMode('sg');
+
+/* ---------- 3. training pairs ---------- */
+const S3=['lemon','a','tablespoon','of','apricot','jam','a','pinch'];
+const LEX=['aardvark','Tolstoy','matrix','zebra','pimples','idiot','turnip','oxygen','ledger','comet'];
+let t3=4;
+function renderS3(){
+  const s=document.getElementById('sent3'); s.innerHTML='';
+  S3.forEach((w,i)=>{
+    const d=document.createElement('div'); d.className='tok'; d.textContent=w;
+    if(i===t3) d.className+=' target';
+    else if(Math.abs(i-t3)<=2) d.className+=' ctx';
+    d.onclick=()=>{t3=i;renderS3();buildPairs();};
+    s.appendChild(d);
+  });
+}
+function buildPairs(){
+  const k=+document.getElementById('kslider').value;
+  document.getElementById('kval').textContent=k;
+  const tw=S3[t3], ctx=[];
+  for(let j=Math.max(0,t3-2);j<=Math.min(S3.length-1,t3+2);j++) if(j!==t3) ctx.push(S3[j]);
+  let s='target word: "'+tw+'"   window ±2\n\nPOSITIVE examples  (t = 1)\n';
+  ctx.forEach(c=>{ s+='  ('+tw+', '+c+')\n'; });
+  s+='\nNEGATIVE examples  (t = 0)   k = '+k+' per positive\n';
+  let n=0;
+  ctx.forEach((c,ci)=>{
+    for(let j=0;j<k;j++){
+      s+='  ('+tw+', '+LEX[(ci*k+j)%LEX.length]+')\n'; n++;
+    }
+  });
+  s+='\n  '+ctx.length+' positives  +  '+n+' negatives  =  '+(ctx.length+n)+' training examples\n';
+  s+='  from ONE position in the corpus. Negatives are sampled BY FREQUENCY.';
+  document.getElementById('pairout').textContent=s;
+}
+renderS3(); buildPairs();
+
+/* ---------- 4. SGNS step ---------- */
+const W_NED=[-0.018,0.404,-0.317];
+const CTX=[
+ {n:'stark',   v:[0.116,0.723,-0.689], t:1},
+ {n:'pimples', v:[-0.94,0.601,0.146],  t:0},
+ {n:'zebra',   v:[-0.622,0.811,0.64],  t:0},
+ {n:'idiot',   v:[-0.077,-0.375,-0.056],t:0}
+];
+let sgStage=1;
+function sigmoid(x){return 1/(1+Math.exp(-x));}
+function sgStep(n){ sgStage=n; for(let i=1;i<=5;i++)
+  document.getElementById('sg'+i).className=(i===n?'on':''); sgns(); }
+function sgns(){
+  const eta=(+document.getElementById('lr').value)/100;
+  document.getElementById('lrval').textContent=eta.toFixed(2);
+  const rows=CTX.map(c=>{
+    const dot=c.v[0]*W_NED[0]+c.v[1]*W_NED[1]+c.v[2]*W_NED[2];
+    const sg=sigmoid(dot);
+    return {n:c.n,v:c.v,t:c.t,dot:dot,sg:sg,err:sg-c.t};
+  });
+  const grad=[0,0,0];
+  rows.forEach(r=>{ for(let i=0;i<3;i++) grad[i]+=r.err*r.v[i]; });
+  const wNew=W_NED.map((x,i)=>x-eta*grad[i]);
+  const pad=(s,n)=>String(s).padEnd(n);
+  let out='';
+  if(sgStage>=1){
+    out+='(a) FORWARD PASS   dot product  ->  sigmoid\n\n';
+    out+='    context      w · c        sigma(w·c)\n';
+    rows.forEach(r=>{ out+='    '+pad(r.n,12)+pad(r.dot.toFixed(3),13)+r.sg.toFixed(3)+
+      (r.t?'   <- the POSITIVE':'')+'\n'; });
+  }
+  if(sgStage>=2){
+    out+='\n(b) PREDICTION ERROR   sigma - t\n\n';
+    out+='    context      sigma    t     error\n';
+    rows.forEach(r=>{ out+='    '+pad(r.n,12)+pad(r.sg.toFixed(3),9)+pad(r.t,6)+
+      (r.err>0?'+':'')+r.err.toFixed(3)+
+      (r.err<0?'   <- NEGATIVE: pull together':'   <- positive: push apart')+'\n'; });
+  }
+  if(sgStage>=3){
+    out+='\n(c) GRADIENT w.r.t. the input word embedding\n\n';
+    out+='    dL/dw = SUM_j (sigma_j - t_j) * c_j\n';
+    out+='          = [ '+grad.map(g=>g.toFixed(5)).join(',  ')+' ]\n';
+  }
+  if(sgStage>=4){
+    out+='\n(d) UPDATE the input word embedding   (eta = '+eta.toFixed(2)+')\n\n';
+    out+='    w_new = w_old - eta * dL/dw\n';
+    out+='          = [ '+W_NED.map(x=>x.toFixed(3)).join(', ')+' ]\n';
+    out+='            - '+eta.toFixed(2)+' * [ '+grad.map(g=>g.toFixed(5)).join(', ')+' ]\n';
+    out+='          = [ '+wNew.map(x=>x.toFixed(3)).join(',  ')+' ]\n';
+  }
+  if(sgStage>=5){
+    out+='\n(e) UPDATE the context embeddings   c_new = c_old - eta*(sigma-t)*w_old\n\n';
+    out+='    word         old c                         new c\n';
+    rows.forEach(r=>{
+      const cn=r.v.map((x,i)=>x-eta*r.err*W_NED[i]);
+      out+='    '+pad(r.n,12)+pad('['+r.v.map(x=>x.toFixed(3)).join(', ')+']',30)+
+           '['+cn.map(x=>x.toFixed(3)).join(', ')+']\n';
+    });
+    out+='\n    Notice: "stark" moved TOWARD ned; the three negatives moved AWAY.';
+  }
+  document.getElementById('sgout').textContent=out;
+}
+sgns();
+
+/* ---------- 5. window size ---------- */
+function winDemo(n){
+  document.getElementById('wn2').className=n===2?'on':'';
+  document.getElementById('wn5').className=n===5?'on':'';
+  const el=document.getElementById('winout');
+  if(n===2){
+    el.textContent =
+`SMALL WINDOW   C = ± 2
+
+  Nearest neighbours are SYNTACTICALLY similar words
+  in the SAME TAXONOMY.
+
+  "Hogwarts"  ->  Sunnydale, Evernight, Blandings
+                  (other FICTIONAL SCHOOLS — the same KIND of thing)
+
+  This gives you SIMILARITY.`;
+  } else {
+    el.textContent =
+`LARGE WINDOW   C = ± 5
+
+  Nearest neighbours are RELATED words in the
+  SAME SEMANTIC FIELD.
+
+  "Hogwarts"  ->  Dumbledore, half-blood, Malfoy
+                  (the HARRY POTTER WORLD — the same TOPIC)
+
+  This gives you RELATEDNESS.`;
+  }
+}
+winDemo(2);
+
+/* ---------- 6. analogies ---------- */
+const ANA=[
+ {a:'man',as:'king',b:'woman',bs:'queen',rel:'royalty'},
+ {a:'France',as:'Paris',b:'Italy',bs:'Rome',rel:'capital-of'},
+ {a:'Tokyo',as:'Japan',b:'Paris',bs:'France',rel:'country-of'}
+];
+function ana(i){
+  for(let j=0;j<3;j++) document.getElementById('an'+j).className=(j===i?'on':'');
+  const A=ANA[i];
+  document.getElementById('anaout').textContent =
+`problem:   ${A.a} : ${A.as}  ::  ${A.b} : ____
+
+THE PARALLELOGRAM METHOD
+
+    b^*  =  argmax_x  cos( x ,  a* - a + b )
+
+    compute:   ${A.as} - ${A.a} + ${A.b}
+    nearest word:  ${A.bs.toUpperCase()}
+
+WHY IT WORKS
+
+    ( ${A.as} - ${A.a} )  is a DIRECTION in the vector space.
+    That direction IS the "${A.rel}" relation.
+    Add it to "${A.b}" and you land on "${A.bs}".
+
+    Works with BOTH sparse and dense embeddings
+    (Turney & Littman 2005; Mikolov et al. 2013b)`;
+  drawPara(A);
+}
+function drawPara(A){
+  const svg=document.getElementById('anasvg');
+  const P={ax:60,ay:190, asx:150,asy:80, bx:130,by:210, bsx:220,bsy:100};
+  svg.innerHTML=`
+   <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3"
+      orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#b78cff"/></marker>
+      <marker id="ah2" markerWidth="9" markerHeight="9" refX="7" refY="3"
+      orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#3ddc97"/></marker></defs>
+   <line x1="${P.ax}" y1="${P.ay}" x2="${P.asx}" y2="${P.asy}" stroke="#b78cff"
+         stroke-width="2.5" marker-end="url(#ah)"/>
+   <line x1="${P.bx}" y1="${P.by}" x2="${P.bsx}" y2="${P.bsy}" stroke="#3ddc97"
+         stroke-width="2.5" marker-end="url(#ah2)"/>
+   <line x1="${P.ax}" y1="${P.ay}" x2="${P.bx}" y2="${P.by}" stroke="#2b3446"
+         stroke-width="1.5" stroke-dasharray="4 4"/>
+   <line x1="${P.asx}" y1="${P.asy}" x2="${P.bsx}" y2="${P.bsy}" stroke="#2b3446"
+         stroke-width="1.5" stroke-dasharray="4 4"/>
+   <circle cx="${P.ax}" cy="${P.ay}" r="4" fill="#93a1b8"/>
+   <circle cx="${P.asx}" cy="${P.asy}" r="4" fill="#b78cff"/>
+   <circle cx="${P.bx}" cy="${P.by}" r="4" fill="#93a1b8"/>
+   <circle cx="${P.bsx}" cy="${P.bsy}" r="5" fill="#3ddc97"/>
+   <text x="${P.ax-6}" y="${P.ay+18}" fill="#93a1b8" font-size="12" text-anchor="middle">${A.a}</text>
+   <text x="${P.asx}" y="${P.asy-10}" fill="#b78cff" font-size="12" text-anchor="middle">${A.as}</text>
+   <text x="${P.bx+4}" y="${P.by+18}" fill="#93a1b8" font-size="12" text-anchor="middle">${A.b}</text>
+   <text x="${P.bsx+6}" y="${P.bsy-10}" fill="#3ddc97" font-size="12" text-anchor="middle">${A.bs}</text>
+   <text x="140" y="20" fill="#93a1b8" font-size="11" text-anchor="middle">the two arrows are the SAME vector</text>
+   <text x="140" y="34" fill="#93a1b8" font-size="11" text-anchor="middle">— that vector is the "${A.rel}" relation</text>`;
+}
+ana(0);
+
+/* ---------- 9. quiz ---------- */
+const QS=[
+ {q:'The core word2vec trick is…',
+  a:['Count co-occurrences and normalise','Train a binary classifier, throw it away, keep its weights',
+     'Factorise the co-occurrence matrix','Cluster words by edit distance'],c:1,
+  e:'We do not care about the classification task at all. The learned weights ARE the embeddings.'},
+ {q:'The name for "the corpus provides its own labels" is…',
+  a:['Unsupervised learning','Self-supervision','Transfer learning','Active learning'],c:1,
+  e:'A word that genuinely occurs near "apricot" acts as the gold correct answer. No human labels needed.'},
+ {q:'Skip-gram predicts…',
+  a:['the centre word from the context','the context from the centre word','the next sentence','the POS tag'],c:1,
+  e:'Skip-gram SKIPS OUTWARD: centre → context. CBOW collects inward: context → centre.'},
+ {q:'Which is better on rare words, and which trains faster?',
+  a:['Skip-gram better on rare words; CBOW faster','CBOW better on rare words; skip-gram faster',
+     'Both the same','GloVe on both counts'],c:0,
+  e:'Skip-gram works well with small data and represents rare words/phrases well. CBOW is several times faster and slightly better on frequent words.'},
+ {q:'With k = 3 negatives and 4 positive pairs from one target, how many training examples?',
+  a:['3','7','12 negatives + 4 positives = 16','4'],c:2,
+  e:'k is per POSITIVE example. 4 positives × 3 = 12 negatives, plus the 4 positives = 16.'},
+ {q:'How many embedding matrices does SGNS learn?',
+  a:['One','Two — target W and context C','Three','One per layer'],c:1,
+  e:'Target matrix W and context matrix C, each with an embedding for every one of the |V| words. It is common to add them: word i = w_i + c_i.'},
+ {q:'The function that turns w·c into a probability is…',
+  a:['softmax','sigmoid','tanh','ReLU'],c:1,
+  e:'P(+|w,c) = σ(w·c). Cosine is not a probability either, so we squash the dot product with the logistic sigmoid.'},
+ {q:'In one SGNS step, the positive pair has error σ−t = −0.376. This means the update will…',
+  a:['push the vectors apart','pull the vectors together','leave them unchanged','flip their signs'],c:1,
+  e:'A negative error means the update pulls target and context closer (higher future dot product). Positive errors on the negative samples push them apart.'},
+ {q:'A ±2 window gives you neighbours that are…',
+  a:['related, same semantic field','syntactically similar, same taxonomy','random','antonyms'],c:1,
+  e:'Small window → Hogwarts gives Sunnydale, Evernight, Blandings (other fictional schools). Large window (±5) → Dumbledore, half-blood, Malfoy.'},
+ {q:'GloVe stands for, and its advantage over word2vec is…',
+  a:['Global Vectors; it uses global co-occurrence statistics, not just local context',
+     'Gradient Loss Vectors; it trains faster',
+     'Global Vectors; it produces sparse vectors',
+     'Grouped Lexical Vectors; it handles rare words'],c:0,
+  e:'GloVe aggregates the global word-word co-occurrence matrix and learns from RATIOS of co-occurrence probabilities, so it uses statistics word2vec never sees.'},
+ {q:'word2vec and GloVe are both…',
+  a:['sparse and contextual','dense and static','dense and contextual','sparse and static'],c:1,
+  e:'Both are DENSE (prediction-based) and both are STATIC (one vector per word type). ELMo and BERT are the contextual ones.'},
+ {q:'For "Tokyo : Japan :: Paris : x", the parallelogram expression is…',
+  a:['cos(x, Tokyo − Japan + Paris)','cos(x, Japan − Tokyo + Paris)','cos(x, Paris − Japan + Tokyo)','cos(x, Japan + Tokyo − Paris)'],c:1,
+  e:'For a : a* :: b : b*, compute a* − a + b. Here a=Tokyo, a*=Japan, b=Paris → Japan − Tokyo + Paris → France.'},
+ {q:'"man : computer programmer :: woman : homemaker" demonstrates that…',
+  a:['the analogy method is broken','embeddings faithfully learn the biases in their training corpus',
+     'GloVe is better than word2vec','the window was too large'],c:1,
+  e:'Bolukbasi et al. 2016. The embedding did not invent the bias — it learned it from the text, which is exactly why using embeddings in e.g. hiring searches can lead to biased hiring.'}
+];
+(function(){
+  const root=document.getElementById('quiz');
+  QS.forEach((item,qi)=>{
+    const d=document.createElement('div'); d.className='quiz';
+    let h='<div class="q">'+(qi+1)+'. '+item.q+'</div><div class="row">';
+    item.a.forEach((opt,k)=>{h+='<button onclick="ans('+qi+','+k+',this)">'+opt+'</button>';});
+    h+='</div><div class="fb" id="fb'+qi+'"></div>';
+    d.innerHTML=h; root.appendChild(d);
+  });
+})();
+function ans(qi,k,btn){
+  const item=QS[qi], fb=document.getElementById('fb'+qi);
+  const ok=k===item.c;
+  fb.className='fb '+(ok?'ok':'no');
+  fb.innerHTML=(ok?'✅ Correct. ':'❌ Not quite — the answer is <b>'+item.a[item.c]+'</b>. ')+item.e;
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.className='');
+  btn.className='on';
+}
+</script>
+</body>
+</html>

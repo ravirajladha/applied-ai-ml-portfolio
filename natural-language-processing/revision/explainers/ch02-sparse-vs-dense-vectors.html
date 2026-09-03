@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch 2 — Sparse vs Dense Vectors, visually</title>
+<style>
+  :root{
+    --bg:#0e1117; --panel:#161b26; --panel2:#1d2432; --line:#2b3446;
+    --ink:#e6edf7; --dim:#93a1b8;
+    --accent:#5aa9ff; --good:#3ddc97; --warn:#ffb454; --bad:#ff6b6b; --violet:#b78cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 20px 90px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.4px}
+  .sub{color:var(--dim);margin:0 0 30px}
+  h2{font-size:21px;margin:48px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:22px 0 8px;color:var(--accent)}
+  code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:14px;
+       font-family:ui-monospace,Consolas,monospace}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+        padding:18px 20px;margin:18px 0}
+  .analogy{border-left:3px solid var(--warn);background:#1b1a14}
+  .analogy b{color:var(--warn)}
+  .keypoint{border-left:3px solid var(--good);background:#111d19}
+  .keypoint b{color:var(--good)}
+  .trap{border-left:3px solid var(--bad);background:#1d1416}
+  .trap b{color:var(--bad)}
+  button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+         border-radius:8px;padding:8px 14px;cursor:pointer;font-size:14px;
+         font-family:inherit;transition:.12s}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.on{background:var(--accent);color:#08111d;border-color:var(--accent);font-weight:600}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--dim);font-weight:600}
+  td.num{text-align:right;font-family:ui-monospace,Consolas,monospace}
+  .out{font-family:ui-monospace,Consolas,monospace;font-size:14px;background:#0a0e15;
+       border:1px solid var(--line);border-radius:8px;padding:14px;white-space:pre-wrap;
+       line-height:1.75;margin-top:12px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+  .lbl{color:var(--dim);font-size:13px;min-width:130px}
+  .flow{display:flex;align-items:center;justify-content:center;gap:10px;
+        flex-wrap:wrap;margin:16px 0}
+  .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+       padding:12px 16px;text-align:center;font-size:14px;min-width:110px}
+  .box b{display:block;color:var(--accent);font-size:13px;margin-bottom:2px}
+  .arrowc{color:var(--dim);font-size:22px}
+  .quiz{background:var(--panel2);border-radius:10px;padding:14px;margin:12px 0;
+        border:1px solid var(--line)}
+  .quiz .q{font-weight:600;margin-bottom:8px}
+  .fb{margin-top:10px;font-size:14px;display:none;padding:10px;border-radius:6px}
+  .fb.ok{display:block;background:#12312a;color:var(--good)}
+  .fb.no{display:block;background:#33161a;color:#ffb0b0}
+  .toc a{color:var(--accent);text-decoration:none;display:block;padding:3px 0;font-size:14px}
+  .toc a:hover{text-decoration:underline}
+  /* sentence window */
+  .sent{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0;font-size:15px}
+  .tok{padding:6px 10px;border-radius:7px;border:1px solid var(--line);
+       background:var(--panel2);cursor:pointer;transition:.12s;font-family:ui-monospace,Consolas,monospace}
+  .tok:hover{border-color:var(--accent)}
+  .tok.target{background:var(--violet);color:#12081f;border-color:var(--violet);font-weight:700}
+  .tok.ctx{background:#16303f;border-color:var(--accent);color:var(--accent)}
+  /* vector strips */
+  .strip{display:flex;gap:2px;flex-wrap:wrap;margin:8px 0 4px}
+  .cell{width:15px;height:26px;border-radius:2px;background:#0a0e15;
+        border:1px solid #202a3a;position:relative}
+  .cell.z{background:#0a0e15}
+  .cell.nz{background:var(--accent)}
+  .dcell{width:26px;height:26px;border-radius:3px;display:flex;align-items:center;
+         justify-content:center;font-size:10px;font-family:ui-monospace,Consolas,monospace;
+         color:#08111d;font-weight:700}
+  .legend{font-size:12px;color:var(--dim);margin-top:2px}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.split{grid-template-columns:1fr}}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;
+        border:1px solid var(--line);color:var(--dim);margin-left:6px}
+  .pill.sp{border-color:var(--warn);color:var(--warn)}
+  .pill.de{border-color:var(--good);color:var(--good)}
+  select,input[type=number]{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+    border-radius:8px;padding:7px 10px;font-family:inherit;font-size:14px}
+  .big{font-size:22px;font-weight:700;font-family:ui-monospace,Consolas,monospace}
+  .good-t{color:var(--good)} .bad-t{color:var(--bad)} .warn-t{color:var(--warn)}
+  .vio-t{color:var(--violet)} .acc-t{color:var(--accent)} .dim-t{color:var(--dim)}
+  .note{font-size:13px;color:var(--dim);margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Sparse vs Dense Vectors</h1>
+<p class="sub">NLP Session 2 — Vector Semantics. Click everything. No maths wall.
+Written notes: <code>../ch02-vector-semantics-tfidf.md</code></p>
+
+<div class="card toc">
+  <b>What's in here</b>
+  <a href="#s1">1 · Why turn a word into numbers at all?</a>
+  <a href="#s2">2 · The one idea: you are known by the company you keep</a>
+  <a href="#s3">3 · Build a co-occurrence row yourself</a>
+  <a href="#s4">4 · ⭐ Sparse vs dense — see the difference</a>
+  <a href="#s5">5 · Why dense wins: the car / automobile problem</a>
+  <a href="#s6">6 · Cosine playground — the angle between two words</a>
+  <a href="#s7">7 · TF-IDF calculator</a>
+  <a href="#s8">8 · The map of everything</a>
+  <a href="#s9">9 · Quiz yourself</a>
+</div>
+
+
+<h2 id="s1">1 · Why turn a word into numbers at all?</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> Imagine you run a music shop and you file every album by its
+<i>title string</i>. A customer asks for "something like Pink Floyd". Your filing
+system is useless — the letters in "Pink Floyd" tell you nothing about which
+other album is <i>similar</i>. Now imagine instead you filed every album by a few
+numbers: how loud, how fast, how sad, how long. Suddenly "find me something
+nearby" is a trivial question. <b>That is the entire move this chapter makes,
+applied to words instead of albums.</b>
+</div>
+
+<p>Here is the concrete failure. A sentiment classifier that uses <i>word
+identity</i> as a feature:</p>
+
+<div class="card">
+<div class="row">
+  <span class="lbl">Trained on the word:</span>
+  <button class="on" id="trainw">terrible</button>
+</div>
+<div class="row">
+  <span class="lbl">At test time it sees:</span>
+  <button onclick="tryWord('terrible')">terrible</button>
+  <button onclick="tryWord('awful')">awful</button>
+  <button onclick="tryWord('horrible')">horrible</button>
+  <button onclick="tryWord('delightful')">delightful</button>
+</div>
+<div class="out" id="idout">Click a test word above.</div>
+</div>
+
+<div class="card keypoint">
+<b>The point.</b> With word identity, only the <i>exact same string</i> fires the
+feature. With word <i>vectors</i>, a nearby vector still (partly) fires it — so
+the model <b>generalises to words it never saw in training</b>. That is the whole
+reason vector semantics exists.
+</div>
+
+
+<h2 id="s2">2 · The one idea: you are known by the company you keep</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> You have never met my friend Ravi. But I tell you he is always
+seen at the gym, always carrying a protein shake, always talking about
+deadlifts. You now know roughly what kind of person Ravi is — not from a
+definition, but <b>from the company he keeps</b>. Words work the same way.
+</div>
+
+<p><b>The distributional hypothesis</b> — <i>words that occur in similar contexts
+tend to have similar meanings</i>. Zellig Harris, 1954.</p>
+
+<h3>Try it: what is "ongchoi"?</h3>
+<div class="card">
+<p class="note">Reveal the sentences one at a time and watch your own guess sharpen.</p>
+<div class="row">
+  <button onclick="ong(1)">Sentence 1</button>
+  <button onclick="ong(2)">Sentence 2</button>
+  <button onclick="ong(3)">Sentence 3</button>
+  <button onclick="ong(0)">Reset</button>
+</div>
+<div class="out" id="ongout">(nothing revealed yet)</div>
+</div>
+
+
+<h2 id="s3">3 · Build a co-occurrence row yourself</h2>
+
+<p>A <b>term–term matrix</b> counts how often each word appears in a window
+around each other word. Click a word below to make it the <span class="vio-t">target</span>,
+and its <span class="acc-t">±2 window</span> lights up.</p>
+
+<div class="card">
+  <div class="row">
+    <span class="lbl">Window size:</span>
+    <button class="on" id="w2" onclick="setWin(2)">± 2</button>
+    <button id="w5" onclick="setWin(5)">± 5</button>
+  </div>
+  <div class="sent" id="sent"></div>
+  <div class="out" id="coout">Click any word above.</div>
+</div>
+
+<div class="card analogy">
+<b>Window size changes what "similar" even means.</b><br>
+<b>Small window (±2)</b> → neighbours are <i>syntactically</i> similar, same
+taxonomy. <code>Hogwarts</code> → Sunnydale, Evernight, Blandings (other
+fictional schools).<br>
+<b>Large window (±5)</b> → neighbours are <i>related</i>, same semantic field.
+<code>Hogwarts</code> → Dumbledore, half-blood, Malfoy (the Harry Potter world).
+</div>
+
+
+<h2 id="s4">4 · ⭐ Sparse vs dense — see the difference</h2>
+
+<p>Now do that counting for <i>every</i> word against <i>every</i> word. Each row
+of that giant table is one word's <b>sparse vector</b>. Below, each little box is
+one number in the vector.</p>
+
+<div class="card">
+  <div class="row">
+    <span class="lbl">Vocabulary size:</span>
+    <select id="vsize" onchange="drawVecs()">
+      <option value="60">60 words (toy)</option>
+      <option value="120" selected>120 words</option>
+      <option value="300">300 words</option>
+    </select>
+    <span class="lbl">Word:</span>
+    <select id="vword" onchange="drawVecs()">
+      <option>cherry</option><option>digital</option><option>information</option>
+    </select>
+  </div>
+
+  <h3>Sparse vector <span class="pill sp">built by COUNTING</span></h3>
+  <div class="strip" id="sparseStrip"></div>
+  <div class="legend" id="sparseLegend"></div>
+
+  <h3>Dense vector <span class="pill de">built by PREDICTING</span></h3>
+  <div class="strip" id="denseStrip"></div>
+  <div class="legend" id="denseLegend"></div>
+</div>
+
+<div class="card">
+<table>
+<tr><th></th><th>Sparse (long) vectors</th><th>Dense (short) vectors</th></tr>
+<tr><td><b>Built by</b></td><td class="warn-t">Counting — "frequency-based"</td><td class="good-t">Predicting — "prediction-based"</td></tr>
+<tr><td><b>Length</b></td><td>|V| = <b>20,000 – 50,000</b></td><td><b>50 – 1000</b></td></tr>
+<tr><td><b>Contents</b></td><td>Mostly <b>zeros</b></td><td>Mostly <b>non-zero</b>, real-valued</td></tr>
+<tr><td><b>What a dimension means</b></td><td>Something nameable: <i>"how often <code>pie</code> appeared nearby"</i></td><td>Nothing nameable — learned, uninterpretable</td></tr>
+<tr><td><b>Methods</b></td><td>Count vector, <b>TF-IDF</b>, co-occurrence, PPMI</td><td><b>word2vec</b> (skip-gram, CBOW), <b>GloVe</b></td></tr>
+<tr><td><b>Session</b></td><td>2 (this one)</td><td>3 (next one)</td></tr>
+</table>
+</div>
+
+<div class="card trap">
+<b>Exam trap.</b> "Sparse" does <b>not</b> mean "small" — it means <b>mostly
+zero</b>. A sparse vector is the <i>longer</i> of the two. And sparse is not
+"bad": TF-IDF vectors are still the standard for <b>information retrieval</b>,
+because a dimension you can <i>name</i> is a dimension you can <i>search</i>.
+Dense wins as <b>features for machine learning</b>.
+</div>
+
+
+<h2 id="s5">5 · Why dense wins: the car / automobile problem</h2>
+
+<p>This is the argument the exam wants written out in full. Click to see it happen.</p>
+
+<div class="card">
+  <p>Two sentences that clearly mean almost the same thing:</p>
+  <div class="out">A: "I parked the <span class="vio-t">car</span> outside."
+B: "I parked the <span class="vio-t">automobile</span> outside."</div>
+  <div class="row" style="margin-top:14px">
+    <button onclick="synMode('sparse')" id="btnSp" class="on">Show as SPARSE</button>
+    <button onclick="synMode('dense')" id="btnDe">Show as DENSE</button>
+  </div>
+  <div class="out" id="synout"></div>
+</div>
+
+<div class="card keypoint">
+<b>Write this in the exam.</b> In a sparse vector, <code>car</code> and
+<code>automobile</code> are <b>two distinct, unrelated dimensions</b>. A word
+whose neighbour is <i>car</i> and a word whose neighbour is <i>automobile</i> get
+counts in two different slots — so the sparse representation shows
+<b>zero overlap</b> and fails to see that they are similar. A dense vector has no
+per-word slot, so both training signals push the <i>same</i> numbers in the same
+direction and the two words collapse into nearly the same vector.
+</div>
+
+<h3>The other three reasons dense wins</h3>
+<div class="card">
+<table>
+<tr><th>#</th><th>Reason</th><th>In plain terms</th></tr>
+<tr><td>1</td><td>Fewer weights to tune</td><td>300 weights per class instead of 50,000. Easier to train, less overfitting.</td></tr>
+<tr><td>2</td><td>Generalise better than explicit counts</td><td>Similar words share numbers, so evidence transfers.</td></tr>
+<tr><td>3</td><td><b>Capture synonymy</b> (above)</td><td>The one you must be able to argue.</td></tr>
+<tr><td>4</td><td>In practice they simply work better</td><td>The honest empirical answer.</td></tr>
+</table>
+</div>
+
+<div class="card analogy">
+<b>The worst sparse vector of all: one-hot.</b> Length |V|, a single 1, rest
+zeros. Every pair of one-hot vectors is <b>orthogonal</b>, so the dot product of
+any two <i>different</i> words is exactly 0 — one-hot says <i>apple</i> and
+<i>orange</i> are as unrelated as <i>apple</i> and <i>king</i>. It carries
+<b>no similarity information at all</b>.
+</div>
+
+
+<h2 id="s6">6 · Cosine playground — the angle between two words</h2>
+
+<p>The real term–term counts from the slide. Pick two rows and watch the geometry.</p>
+
+<div class="card">
+<table>
+<tr><th></th><th class="num">pie</th><th class="num">data</th><th class="num">computer</th></tr>
+<tr><td><b>cherry</b></td><td class="num">442</td><td class="num">8</td><td class="num">2</td></tr>
+<tr><td><b>digital</b></td><td class="num">5</td><td class="num">1683</td><td class="num">1670</td></tr>
+<tr><td><b>information</b></td><td class="num">5</td><td class="num">3982</td><td class="num">3325</td></tr>
+</table>
+
+<div class="row" style="margin-top:14px">
+  <span class="lbl">Word A:</span>
+  <select id="wa" onchange="cosCalc()">
+    <option>cherry</option><option>digital</option><option>information</option>
+  </select>
+  <span class="lbl">Word B:</span>
+  <select id="wb" onchange="cosCalc()">
+    <option>cherry</option><option selected>information</option><option>digital</option>
+  </select>
+</div>
+
+<div class="split">
+  <div><div class="out" id="cosout"></div></div>
+  <div style="display:flex;align-items:center;justify-content:center">
+    <svg id="angsvg" width="260" height="220" viewBox="0 0 260 220"></svg>
+  </div>
+</div>
+</div>
+
+<div class="card trap">
+<b>Why not just the dot product?</b> The dot product <b>favours long vectors</b>,
+and a vector is long when its counts are big. Frequent words like <i>the</i>
+co-occur with everything, so their vectors are enormous and the raw dot product
+declares <i>the</i> similar to <b>everything</b>. Cosine divides out both lengths,
+so it measures <b>only the angle</b> — the <i>pattern</i> of co-occurrence rather
+than its <i>volume</i>.
+</div>
+
+<div class="card keypoint">
+<b>Reading the numbers.</b> Because raw counts are never negative, cosine on a
+term–term matrix is confined to <b>0 … 1</b>. You will never see a negative
+cosine here — if you do, you made an arithmetic error.
+</div>
+
+
+<h2 id="s7">7 · TF-IDF calculator</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> You are told three facts about a stranger: <i>"they breathe"</i>,
+<i>"they own a phone"</i>, <i>"they play the bassoon"</i>. Only the third one
+tells you anything, because the first two are true of nearly everyone.
+<b>TF-IDF is exactly this instinct as arithmetic</b> — a word that appears in
+every document is told to shut up.
+</div>
+
+<div class="card">
+<div class="row">
+  <span class="lbl">count(t, d)</span><input type="number" id="tf_c" value="20" min="0" oninput="tfidf()">
+  <span class="lbl">N (total docs)</span><input type="number" id="tf_N" value="37" min="1" oninput="tfidf()">
+  <span class="lbl">df (docs with t)</span><input type="number" id="tf_df" value="34" min="1" oninput="tfidf()">
+</div>
+<div class="row">
+  <button onclick="preset(20,37,34)">"wit" (slide example)</button>
+  <button onclick="preset(114,37,37)">"good" (in every play)</button>
+  <button onclick="preset(13,37,21)">"battle"</button>
+  <button onclick="preset(9,37,1)">"Romeo" (one play only)</button>
+</div>
+<div class="out" id="tfout"></div>
+</div>
+
+<div class="card trap">
+<b>Two traps.</b><br>
+<b>1.</b> <code>df</code> counts <b>documents</b>, not occurrences. A word
+appearing 500 times inside one document has <code>df = 1</code>.<br>
+<b>2.</b> A word in <b>every</b> document has <code>idf = log(N/N) = 0</code>, so
+its <b>tf-idf is 0</b> no matter how often it occurs. Say that explicitly — it is
+usually worth a mark.
+</div>
+
+
+<h2 id="s8">8 · The map of everything</h2>
+
+<div class="card">
+<div class="flow">
+  <div class="box"><b>a word</b>"cherry"</div>
+  <div class="arrowc">→</div>
+  <div class="box"><b>count it</b>term–document<br>or term–term</div>
+  <div class="arrowc">→</div>
+  <div class="box" style="border-color:var(--warn)"><b class="warn-t">SPARSE</b>|V| ≈ 50,000<br>mostly zeros</div>
+</div>
+<div class="flow">
+  <div class="box"><b>weight it</b>TF-IDF or PPMI</div>
+  <div class="arrowc">→</div>
+  <div class="box" style="border-color:var(--warn)"><b class="warn-t">still SPARSE</b>just better weighted</div>
+  <div class="arrowc">→</div>
+  <div class="box"><b>compare</b>cosine</div>
+</div>
+<div class="flow">
+  <div class="box"><b>OR: predict it</b>train a classifier,<br>throw it away</div>
+  <div class="arrowc">→</div>
+  <div class="box" style="border-color:var(--good)"><b class="good-t">DENSE</b>50–1000 dims<br>word2vec, GloVe</div>
+  <div class="arrowc">→</div>
+  <div class="box" style="border-color:var(--violet)"><b class="vio-t">CONTEXTUAL</b>ELMo, BERT<br>(Session 11)</div>
+</div>
+<p class="note">Session 2 is the top two rows. Session 3 is the third row's left
+half. Everything after that in the course is the third row's right half.</p>
+</div>
+
+<div class="card keypoint">
+<b>Static vs contextual — the 2-mark question.</b> word2vec and GloVe are
+<b>static</b>: one fixed vector per word <i>type</i>, so <i>bank</i> (river) and
+<i>bank</i> (money) share a single vector. ELMo and BERT are <b>contextual</b>:
+a distinct embedding for each <i>token</i>, computed from its actual context.
+</div>
+
+
+<h2 id="s9">9 · Quiz yourself</h2>
+<div id="quiz"></div>
+
+<div class="card" style="margin-top:34px">
+<b>Next:</b> <code>../ch03-word-embeddings-word2vec-glove.md</code> — the dense
+half. word2vec, skip-gram with negative sampling, CBOW, GloVe.
+</div>
+
+</div>
+
+<script>
+/* ---------- 1. word identity vs vector ---------- */
+const vecs = {
+  terrible:[0.91,0.12,-0.44], awful:[0.88,0.17,-0.41],
+  horrible:[0.86,0.09,-0.48], delightful:[-0.83,0.21,0.55]
+};
+function cosv(a,b){
+  let d=0,na=0,nb=0;
+  for(let i=0;i<a.length;i++){d+=a[i]*b[i];na+=a[i]*a[i];nb+=b[i]*b[i];}
+  return d/(Math.sqrt(na)*Math.sqrt(nb));
+}
+function tryWord(w){
+  const same = (w==='terrible');
+  const c = cosv(vecs.terrible, vecs[w]).toFixed(3);
+  const idLine = same
+    ? '  identity feature  ->  FIRES   (exact string match)'
+    : '  identity feature  ->  SILENT  (different string, model has nothing)';
+  const strength = c>0.9?'fires strongly':(c>0.5?'fires partly':'correctly stays quiet');
+  document.getElementById('idout').textContent =
+`test word: "${w}"
+
+WORD IDENTITY representation
+${idLine}
+
+WORD VECTOR representation
+  vec("terrible") = [${vecs.terrible.join(', ')}]
+  vec("${w}")${' '.repeat(Math.max(0,10-w.length))} = [${vecs[w].join(', ')}]
+  cosine = ${c}   ->  ${strength}`;
+}
+tryWord('awful');
+
+/* ---------- 2. ongchoi ---------- */
+const ongLines = [
+ 'Ong choi is delicious sautéed with garlic.',
+ 'Ong choi is superb over rice.',
+ 'Ong choi leaves with salty sauces.'
+];
+const ongHints = [
+ 'clue words so far: delicious, sautéed, garlic\n   -> some kind of FOOD you cook',
+ 'clue words so far: delicious, sautéed, garlic, rice\n   -> a food served OVER RICE, so probably a side / vegetable',
+ 'clue words so far: delicious, sautéed, garlic, rice, LEAVES, salty sauces\n   -> it has LEAVES. Compare with what you already know:\n        "…spinach sautéed with garlic over rice"\n        "Chard stems and LEAVES are delicious"\n        "Collard greens and other SALTY LEAFY greens"\n\n   CONCLUSION: ongchoi is a LEAFY GREEN, like spinach / chard / collard greens.\n   You never saw a definition. You inferred it purely from context.'
+];
+function ong(n){
+  const el = document.getElementById('ongout');
+  if(n===0){ el.textContent='(nothing revealed yet)'; return; }
+  let s='';
+  for(let i=0;i<n;i++) s += ongLines[i]+'\n';
+  el.textContent = s + '\n' + ongHints[n-1];
+}
+
+/* ---------- 3. co-occurrence window ---------- */
+const words = ['ong','choi','is','delicious','sauteed','with','garlic','over','rice'];
+let winSize = 2, targetIdx = -1;
+function setWin(n){
+  winSize=n;
+  document.getElementById('w2').className = n===2?'on':'';
+  document.getElementById('w5').className = n===5?'on':'';
+  if(targetIdx>=0) pickTok(targetIdx); else renderSent();
+}
+function renderSent(){
+  const s=document.getElementById('sent'); s.innerHTML='';
+  words.forEach((w,i)=>{
+    const d=document.createElement('div');
+    d.className='tok'; d.textContent=w;
+    if(i===targetIdx) d.className+=' target';
+    else if(targetIdx>=0 && Math.abs(i-targetIdx)<=winSize) d.className+=' ctx';
+    d.onclick=()=>pickTok(i);
+    s.appendChild(d);
+  });
+}
+function pickTok(i){
+  targetIdx=i; renderSent();
+  const ctx=[];
+  for(let j=Math.max(0,i-winSize); j<=Math.min(words.length-1,i+winSize); j++)
+    if(j!==i) ctx.push(words[j]);
+  let row = 'row of the term-term matrix for "'+words[i]+'"  (window ±'+winSize+')\n\n';
+  words.forEach(w=>{
+    const c = ctx.filter(x=>x===w).length;
+    row += '  '+w.padEnd(11)+' : '+c+(c===0?'':'   <-- counted')+'\n';
+  });
+  const zeros = words.filter(w=>ctx.indexOf(w)<0).length;
+  row += '\n  '+zeros+' of '+words.length+' cells are ZERO — and this is a 9-word vocabulary.\n'
+       + '  With |V| = 50,000 the same row would be >99% zeros.  THAT is "sparse".';
+  document.getElementById('coout').textContent=row;
+}
+renderSent();
+
+/* ---------- 4. sparse vs dense strips ---------- */
+const nzPattern = {
+  cherry:      ['pie','dessert','tree','sweet','jam','red'],
+  digital:     ['data','computer','camera','signal','media','device'],
+  information: ['data','computer','system','retrieval','science','theory']
+};
+function seeded(i){ const x=Math.sin(i*127.1)*43758.5453; return x-Math.floor(x); }
+function drawVecs(){
+  const V = +document.getElementById('vsize').value;
+  const w = document.getElementById('vword').value;
+  const nz = nzPattern[w];
+  // sparse
+  const sp=document.getElementById('sparseStrip'); sp.innerHTML='';
+  const nzIdx = nz.map((_,k)=>Math.floor(seeded(k+ (w.length*7) )*V));
+  let nzCount=0;
+  for(let i=0;i<V;i++){
+    const d=document.createElement('div');
+    const on = nzIdx.indexOf(i)>=0;
+    if(on) nzCount++;
+    d.className='cell '+(on?'nz':'z');
+    d.title = on ? 'dimension '+i+' = a real count' : 'dimension '+i+' = 0';
+    sp.appendChild(d);
+  }
+  document.getElementById('sparseLegend').innerHTML =
+    'length <b>'+V+'</b> &nbsp;·&nbsp; non-zero: <b class="warn-t">'+nzCount+'</b> &nbsp;·&nbsp; zeros: <b>'+(V-nzCount)+'</b> ('+
+    (100*(V-nzCount)/V).toFixed(1)+'%) &nbsp;·&nbsp; each blue cell is a nameable count, e.g. &ldquo;'+nz[0]+'&rdquo;';
+  // dense
+  const de=document.getElementById('denseStrip'); de.innerHTML='';
+  const D=12;
+  for(let i=0;i<D;i++){
+    const v = (seeded(i + w.length*31)*2-1);
+    const d=document.createElement('div');
+    d.className='dcell';
+    const pos = v>0;
+    d.style.background = pos ? 'rgba(61,220,151,'+(0.35+0.6*Math.abs(v))+')'
+                             : 'rgba(255,107,107,'+(0.35+0.6*Math.abs(v))+')';
+    d.textContent = v.toFixed(1);
+    d.title = 'dimension '+i+' = '+v.toFixed(3)+' (no nameable meaning)';
+    de.appendChild(d);
+  }
+  document.getElementById('denseLegend').innerHTML =
+    'length <b>'+D+'</b> (real ones are 50–1000) &nbsp;·&nbsp; non-zero: <b class="good-t">'+D+'</b> &nbsp;·&nbsp; zeros: <b>0</b> &nbsp;·&nbsp; '+
+    'no cell means anything you can name — hover one and see';
+}
+drawVecs();
+
+/* ---------- 5. synonymy ---------- */
+function synMode(m){
+  document.getElementById('btnSp').className = m==='sparse'?'on':'';
+  document.getElementById('btnDe').className = m==='dense'?'on':'';
+  const el=document.getElementById('synout');
+  if(m==='sparse'){
+    el.textContent =
+`SPARSE — one dimension per vocabulary word
+
+                    ...  dim[car]  dim[automobile]  dim[outside]  ...
+  vec("parked")A    ...     1            0                1       ...
+  vec("parked")B    ...     0            1                1       ...
+
+  overlap on the car/automobile dimensions:  1x0 + 0x1  =  0
+
+  The two sentences MEAN the same thing, but the representation sees
+  ZERO shared evidence about the vehicle. car and automobile are two
+  separate, unrelated slots. Sparse vectors CANNOT capture synonymy.`;
+  } else {
+    el.textContent =
+`DENSE — no per-word slots at all, just 300 learned numbers
+
+  vec("car")         =  [ 0.42, -0.11,  0.77,  0.03, ... ]
+  vec("automobile")  =  [ 0.40, -0.13,  0.75,  0.05, ... ]
+                          ^^^^   ^^^^   ^^^^   ^^^^
+                          nearly the SAME numbers
+
+  cosine(car, automobile)  ~  0.98
+
+  Both words occur in the same contexts during training, so the SAME
+  300 numbers get pushed in the SAME direction. The two words collapse
+  into nearly one point. Dense vectors DO capture synonymy.`;
+  }
+}
+synMode('sparse');
+
+/* ---------- 6. cosine playground ---------- */
+const rows = {
+  cherry:[442,8,2], digital:[5,1683,1670], information:[5,3982,3325]
+};
+function cosCalc(){
+  const A=document.getElementById('wa').value, B=document.getElementById('wb').value;
+  const a=rows[A], b=rows[B];
+  const dot = a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+  const la = Math.sqrt(a[0]**2+a[1]**2+a[2]**2);
+  const lb = Math.sqrt(b[0]**2+b[1]**2+b[2]**2);
+  const c  = dot/(la*lb);
+  const ang = Math.acos(Math.min(1,Math.max(-1,c)))*180/Math.PI;
+  let verdict;
+  if(c>0.9) verdict='NEARLY IDENTICAL direction  ->  these are similar words';
+  else if(c>0.4) verdict='partly aligned  ->  somewhat related';
+  else verdict='ESSENTIALLY ORTHOGONAL  ->  unrelated words';
+  document.getElementById('cosout').textContent =
+`A = ${A.padEnd(12)} [${a.join(', ')}]
+B = ${B.padEnd(12)} [${b.join(', ')}]
+
+STEP 1  lengths
+  |A| = sqrt(${a[0]}^2 + ${a[1]}^2 + ${a[2]}^2) = ${la.toFixed(2)}
+  |B| = sqrt(${b[0]}^2 + ${b[1]}^2 + ${b[2]}^2) = ${lb.toFixed(2)}
+
+STEP 2  dot product
+  A·B = ${a[0]}*${b[0]} + ${a[1]}*${b[1]} + ${a[2]}*${b[2]}
+      = ${dot.toLocaleString()}
+
+STEP 3  cosine
+  cos = ${dot.toLocaleString()} / (${la.toFixed(2)} x ${lb.toFixed(2)})
+      = ${c.toFixed(4)}
+
+  angle = ${ang.toFixed(1)} degrees
+  ${verdict}`;
+  drawAngle(ang, c);
+}
+function drawAngle(ang, c){
+  const svg=document.getElementById('angsvg');
+  const ox=30, oy=190, L=155;
+  const col = c>0.9?'#3ddc97':(c>0.4?'#ffb454':'#ff6b6b');
+  const a2 = ang*Math.PI/180;
+  const x2 = ox + L*Math.cos(a2), y2 = oy - L*Math.sin(a2);
+  svg.innerHTML =
+   `<line x1="${ox}" y1="${oy}" x2="${ox+L}" y2="${oy}" stroke="#5aa9ff" stroke-width="3"/>
+    <text x="${ox+L-6}" y="${oy+18}" fill="#5aa9ff" font-size="12" text-anchor="end">A</text>
+    <line x1="${ox}" y1="${oy}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="3"/>
+    <text x="${x2+4}" y="${y2-6}" fill="${col}" font-size="12">B</text>
+    <path d="M ${ox+40} ${oy} A 40 40 0 0 0 ${ox+40*Math.cos(a2)} ${oy-40*Math.sin(a2)}"
+          fill="none" stroke="${col}" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <text x="${ox+52}" y="${oy-16}" fill="${col}" font-size="13" font-weight="700">${ang.toFixed(1)}°</text>
+    <text x="130" y="20" fill="#93a1b8" font-size="12" text-anchor="middle">cosine = ${c.toFixed(3)}</text>`;
+}
+cosCalc();
+
+/* ---------- 7. tf-idf ---------- */
+function preset(c,N,df){
+  document.getElementById('tf_c').value=c;
+  document.getElementById('tf_N').value=N;
+  document.getElementById('tf_df').value=df;
+  tfidf();
+}
+function tfidf(){
+  const c=+document.getElementById('tf_c').value;
+  const N=+document.getElementById('tf_N').value;
+  let df=+document.getElementById('tf_df').value;
+  if(df<1) df=1; if(df>N) df=N;
+  const tf = Math.log10(c+1);
+  const idf = Math.log10(N/df);
+  const w = tf*idf;
+  let comment;
+  if(df===N) comment='\n  df = N, so idf = log10(1) = 0.\n  ==> TF-IDF IS EXACTLY ZERO. The word appears in every document,\n      so it is uninformative and gets thrown away entirely —\n      no matter how big its raw count is.';
+  else if(df===1) comment='\n  df = 1: the term appears in only ONE document.\n  ==> maximum idf, maximum distinctiveness. This is your "Romeo" case.';
+  else if(idf<0.05) comment='\n  Very low idf: the term is spread across nearly all documents,\n  so it is squashed hard even with a large raw count.';
+  else comment='\n  A healthy weight: frequent enough to matter, rare enough to be distinctive.';
+  document.getElementById('tfout').textContent =
+`tf  = log10(count + 1) = log10(${c} + 1) = log10(${c+1}) = ${tf.toFixed(3)}
+idf = log10(N / df)    = log10(${N} / ${df}) = log10(${(N/df).toFixed(3)}) = ${idf.toFixed(3)}
+
+TF-IDF = tf x idf = ${tf.toFixed(3)} x ${idf.toFixed(3)} = ${w.toFixed(4)}
+${comment}`;
+}
+tfidf();
+
+/* ---------- 9. quiz ---------- */
+const QS=[
+ {q:'A vector of length 50,000 that is 99% zeros is called…',
+  a:['Dense','Sparse','Contextual','One-hot only'],c:1,
+  e:'Sparse means MOSTLY ZERO — and it is the longer of the two kinds, not the shorter.'},
+ {q:'Sparse vectors are built by ___ ; dense vectors are built by ___.',
+  a:['predicting / counting','counting / predicting','counting / counting','training / freezing'],c:1,
+  e:'Frequency-based (counting) = sparse. Prediction-based (learning a classifier) = dense.'},
+ {q:'Which is NOT a sparse method?',
+  a:['TF-IDF vector','Co-occurrence vector','GloVe','Count vector'],c:2,
+  e:'GloVe is prediction/learning-based and produces DENSE vectors, alongside word2vec.'},
+ {q:'Why does the raw dot product make a bad similarity metric?',
+  a:['It can be negative','It favours long vectors, so it favours frequent words','It is slow to compute','It ignores the counts'],c:1,
+  e:'Frequent words like "the" co-occur with everything, so their vectors are long and win every dot product. Cosine divides the lengths out.'},
+ {q:'A word appears in every one of the 37 documents. Its TF-IDF is…',
+  a:['Very high','Equal to its tf','Exactly 0','Undefined'],c:2,
+  e:'idf = log10(37/37) = log10(1) = 0, so tf x 0 = 0. The word is discarded entirely.'},
+ {q:'df is the number of…',
+  a:['times the term occurs in the collection','documents the term occurs in','distinct words in the collection','documents in the collection'],c:1,
+  e:'df = DOCUMENT frequency = how many documents contain the term. It is NOT the total count (that is collection frequency), and N is the document total.'},
+ {q:'The strongest argument that dense vectors capture synonymy is…',
+  a:['They are shorter','car and automobile are unrelated dimensions in a sparse vector','They contain no zeros','They are faster to compute'],c:1,
+  e:'In sparse form the two synonyms occupy separate, unrelated slots so their overlap is zero. Dense has no per-word slots, so both words end up with nearly the same numbers.'},
+ {q:'cos(digital, information) = 0.996. What does that mean?',
+  a:['They are opposite in meaning','Their vectors are ~5 degrees apart, so they are similar words','They occur equally often','One is a synonym of the other by definition'],c:1,
+  e:'Cosine near 1 = nearly the same direction = the same pattern of co-occurrence. cos(cherry, information) = 0.018 is ~89 degrees, i.e. unrelated.'},
+ {q:'word2vec gives one fixed vector per word type. BERT gives one per token-in-context. The names for these are…',
+  a:['sparse / dense','static / contextual','count / predict','frozen / fine-tuned'],c:1,
+  e:'Static embeddings (word2vec, GloVe) vs contextual embeddings (ELMo, BERT). Both are dense — the sparse/dense split is a different axis.'},
+ {q:'"coffee, cup" is an example of…',
+  a:['Synonymy','Similarity','Relatedness, not similarity','Antonymy'],c:2,
+  e:'coffee/tea are SIMILAR. coffee/cup are RELATED (same semantic frame) but not similar. This exact pair is on the slide.'}
+];
+(function(){
+  const root=document.getElementById('quiz');
+  QS.forEach((item,qi)=>{
+    const d=document.createElement('div'); d.className='quiz';
+    let h='<div class="q">'+(qi+1)+'. '+item.q+'</div><div class="row">';
+    item.a.forEach((opt,ai)=>{
+      h+='<button onclick="ans('+qi+','+ai+',this)">'+opt+'</button>';
+    });
+    h+='</div><div class="fb" id="fb'+qi+'"></div>';
+    d.innerHTML=h; root.appendChild(d);
+  });
+})();
+function ans(qi,ai,btn){
+  const item=QS[qi], fb=document.getElementById('fb'+qi);
+  const ok = ai===item.c;
+  fb.className = 'fb '+(ok?'ok':'no');
+  fb.innerHTML = (ok?'✅ Correct. ':'❌ Not quite — the answer is <b>'+item.a[item.c]+'</b>. ')+item.e;
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.className='');
+  btn.className='on';
+}
+</script>
+</body>
+</html>

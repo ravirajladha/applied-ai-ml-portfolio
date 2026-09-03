@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLP Pre-Midsem — Every Q1 & Q2 Solved</title>
+<style>
+:root{--bg:#0e1117;--panel:#161b26;--panel2:#1d2432;--line:#2b3446;--ink:#e6edf7;
+      --dim:#93a1b8;--accent:#5aa9ff;--good:#3ddc97;--warn:#ffb454;--bad:#ff6b6b;--violet:#b78cff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 22px 120px}
+h1{font-size:31px;margin:38px 0 10px;letter-spacing:-.4px;padding-bottom:10px;
+   border-bottom:2px solid var(--accent)}
+h2{font-size:23px;margin:40px 0 12px;padding-top:16px;border-top:1px solid var(--line);color:#cfe3ff}
+h3{font-size:17px;margin:24px 0 8px;color:var(--accent)}
+p{margin:12px 0}
+a{color:var(--accent)}
+code{background:var(--panel2);padding:2px 6px;border-radius:4px;font-size:14px;
+     font-family:ui-monospace,Consolas,monospace;color:#ffd9a0}
+pre{background:#0a0e15;border:1px solid var(--line);border-radius:10px;padding:16px;
+    overflow-x:auto;line-height:1.65}
+pre code{background:none;padding:0;color:#c8d6e8;font-size:13.5px}
+table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14.5px;
+      display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:#b9c8dd;font-weight:600}
+tr:nth-child(even) td{background:#121724}
+blockquote{border-left:3px solid var(--warn);background:#1b1a14;margin:16px 0;
+           padding:12px 18px;border-radius:0 10px 10px 0}
+blockquote p{margin:8px 0}
+blockquote strong{color:var(--warn)}
+hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+ul,ol{padding-left:26px}
+li{margin:5px 0}
+details{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+        padding:12px 16px;margin:14px 0}
+details[open]{border-color:var(--good);background:#111d19}
+summary{cursor:pointer;font-weight:600;color:var(--good);outline:none}
+summary:hover{color:#7ff0bd}
+strong{color:#fff}
+#toc{position:fixed;top:0;right:0;width:250px;height:100vh;overflow-y:auto;
+     background:var(--panel);border-left:1px solid var(--line);padding:20px 16px;font-size:13px}
+#toc b{display:block;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;
+       font-size:11px;margin-bottom:10px}
+#toc a{display:block;padding:5px 8px;border-radius:6px;text-decoration:none;color:#a9bdd6}
+#toc a:hover{background:var(--panel2);color:var(--accent)}
+#toc a.h1{font-weight:700;color:var(--ink);margin-top:8px}
+#toc a.h2{padding-left:18px;font-size:12.5px}
+#bar{position:fixed;top:14px;left:14px;z-index:99;display:flex;gap:8px}
+#bar button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+  border-radius:8px;padding:8px 14px;cursor:pointer;font:600 13px inherit}
+#bar button:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:1400px){#toc{display:none}}
+
+/* ---------- PRINT / PDF ---------- */
+@media print{
+  #toc,#bar{display:none!important}
+  body{background:#fff;color:#111;font-size:10.5pt}
+  .wrap{max-width:100%;padding:0}
+  h1{font-size:19pt;color:#000;border-bottom:2px solid #333;page-break-after:avoid;
+     page-break-before:always;margin-top:0}
+  h1:first-of-type{page-break-before:avoid}
+  h2{font-size:14pt;color:#000;border-top:1px solid #999;page-break-after:avoid}
+  h3{font-size:11.5pt;color:#1a4d80;page-break-after:avoid}
+  a{color:#1a4d80;text-decoration:none}
+  code{background:#eef1f5;color:#7a3d00;border:1px solid #dde3ea}
+  pre{background:#f6f8fa;border:1px solid #c9d1d9;color:#111;page-break-inside:avoid;
+      font-size:9pt;line-height:1.45}
+  pre code{color:#111;font-size:9pt}
+  table{font-size:9pt;display:table;page-break-inside:avoid}
+  th{background:#e8edf3!important;color:#000}
+  td{background:#fff!important}
+  tr:nth-child(even) td{background:#f7f9fb!important}
+  th,td{border:1px solid #b6c0cc;padding:5px 7px}
+  blockquote{background:#fffdf3;border-left:3px solid #d19a20;color:#111;
+             page-break-inside:avoid}
+  blockquote strong{color:#8a5a00}
+  strong{color:#000}
+  details{background:#f4faf7;border:1px solid #b9d9c9;page-break-inside:avoid}
+  details[open]{background:#f4faf7}
+  summary{color:#14663f}
+  hr{border-top:1px solid #bbb}
+  ul,ol{padding-left:20px}
+}
+@page{size:A4;margin:14mm 12mm}
+</style></head>
+<body>
+<div id="bar">
+  <button onclick="doPrint()">&#128424; Print / Save as PDF</button>
+  <button id="tgl" onclick="toggleAll()">Show all answers</button>
+</div>
+<nav id="toc"><b>Jump to</b><div id="toclinks"></div></nav>
+<div class="wrap"><h1 id="nlp-pre-midsem--every-q1--q2-solved">NLP Pre-Midsem — Every Q1 &amp; Q2 Solved</h1>
+<p><strong>AIMLCLZG525 · End-Semester · Q1 + Q2 = 10 of 40 marks</strong></p>
+<p>Every <strong>real</strong> Q1 and Q2 from all four past papers, with the question exactly as
+printed and the solution worked line by line — then fresh practice questions.</p>
+<p>Read <a href="CHEATSHEET.md"><code>CHEATSHEET.md</code></a> first if you don't know the theory.</p>
+<blockquote>
+<p><strong>The pattern, across all four papers:</strong>
+<strong>Q1</strong> = bigram Laplace probability <strong>+</strong> a neural-LM forward pass ending in softmax.
+<strong>Q2</strong> = an HMM — <strong>Viterbi</strong> (best tag sequence) or <strong>Forward</strong> (total probability).
+Nothing else from pre-midsem has ever appeared.</p>
+</blockquote>
+<h2 id="contents">Contents</h2>
+<ul>
+<li><a href="#q1--feb-2026-regular">Q1 — Feb 2026: Laplace + ReLU network</a></li>
+<li><a href="#q1--mar-2026-makeup">Q1 — Mar 2026: bigram + Sigmoid network</a></li>
+<li><a href="#q2--feb-2026-regular">Q2 — Feb 2026: Viterbi + Forward</a></li>
+<li><a href="#q2--mar-2026-makeup">Q2 — Mar 2026: Viterbi + Forward + prediction</a></li>
+<li><a href="#q1q2--oct-2024-regular">Q1/Q2 — Oct 2024: two Forward questions</a></li>
+<li><a href="#q1q2--undated-paper">Q1/Q2 — Undated paper: two Viterbi questions</a></li>
+<li><a href="#practice-questions">Practice questions</a></li>
+</ul>
+<hr />
+<hr />
+<h1 id="q1--feb-2026-regular">Q1 — Feb 2026 (regular)</h1>
+<h3 id="2--3--5-marks"><code>[2 + 3 = 5 Marks]</code></h3>
+<blockquote>
+<p>You are developing a text completion system and want to compare a statistical
+Bigram model against a simple Feedforward Neural Language Model (FFNN-LM).
+The training data consists of only these three sentences:</p>
+<pre><code>&lt;s&gt; deep learning &lt;/s&gt;
+&lt;s&gt; machine learning &lt;/s&gt;
+&lt;s&gt; deep thought &lt;/s&gt;
+</code></pre>
+<p>You need to predict the next word following the context word <strong>&quot;deep&quot;</strong>.</p>
+<p><strong>Part A [2 Marks]:</strong> Calculate the <strong>Laplace Smoothed</strong> probability of the word
+&quot;learning&quot; occurring after &quot;deep&quot;. (Assume the Vocabulary V consists of all
+unique words in the corpus, <strong>including <code>&lt;s&gt;</code> and <code>&lt;/s&gt;</code></strong>.)</p>
+<p><strong>Part B [3 Marks]:</strong> Model architecture — Input: word embedding for &quot;deep&quot;
+<code>x = [0.4, -0.2]</code>. Hidden layer: 1 neuron with <strong>ReLU</strong>. Weights <code>w = [0.5, -0.5]</code>,
+bias <code>b = 0.1</code>. Output layer computes unnormalized scores:
+<code>z(learning) = 2*h</code>, <code>z(thought) = 0.5*h</code>.
+Perform the forward pass to calculate the final <strong>Softmax probability</strong> for &quot;learning&quot;.</p>
+</blockquote>
+<h2 id="solution--part-a-2-marks">Solution — Part A <code>[2 marks]</code></h2>
+<pre><code>STEP 1  Identify the vocabulary V                              (0.5 marks)
+
+        Unique tokens, INCLUDING &lt;s&gt; and &lt;/s&gt;:
+            &lt;s&gt; , &lt;/s&gt; , deep , learning , machine , thought
+
+            V = 6
+
+STEP 2  Get the counts                                         (0.5 marks)
+
+        count(&quot;deep learning&quot;) = 1      (sentence 1 only)
+        count(&quot;deep&quot;)          = 2      (sentences 1 and 3)
+
+STEP 3  Substitute into the Laplace formula                    (0.5 marks)
+
+                    count(deep learning) + 1        1 + 1
+        P  =  ------------------------------  =  ---------
+                    count(deep) + V                2 + 6
+
+STEP 4  Final answer                                           (0.5 marks)
+
+        P  =  2 / 8  =  0.25      (or 1/4)
+</code></pre>
+<blockquote>
+<p><strong>Compare with unsmoothed MLE:</strong> <code>1/2 = 0.5</code>. Laplace halved it, because it
+had to give probability mass to the four words that never follow <em>deep</em>.</p>
+</blockquote>
+<h2 id="solution--part-b-3-marks">Solution — Part B <code>[3 marks]</code></h2>
+<pre><code>STEP 1  Pre-activation (the weighted sum)                      (1.0 mark)
+
+        z = (w1 × x1) + (w2 × x2) + b
+          = (0.5 × 0.4) + (-0.5 × -0.2) + 0.1
+          = 0.20 + 0.10 + 0.10
+          = 0.40
+                        ^^^^ note: negative × negative = POSITIVE
+
+STEP 2  Apply ReLU                                             (0.5 marks)
+
+        h = ReLU(0.4) = max(0.4, 0) = 0.4
+
+STEP 3  Output layer scores                                    (0.5 marks)
+
+        z(learning) = 2   × 0.4 = 0.8
+        z(thought)  = 0.5 × 0.4 = 0.2
+
+STEP 4  Softmax                                                (1.0 mark)
+
+        e^0.8 = 2.2255
+        e^0.2 = 1.2214
+        sum   = 3.4469
+
+                          e^0.8            2.2255
+        P(learning) = ------------- = ------------- = 0.6457
+                      e^0.8 + e^0.2      3.4469
+
+        P(learning) ≈ 0.65
+</code></pre>
+<p><em>(Official key: 0.4 / 0.4 / 0.8 and 0.2 / ≈0.645 — all confirmed.)</em></p>
+<hr />
+<hr />
+<h1 id="q1--mar-2026-makeup">Q1 — Mar 2026 (makeup)</h1>
+<h3 id="2--3--5-marks"><code>[2 + 3 = 5 Marks]</code></h3>
+<blockquote>
+<p>Comparing a Bigram model against an FFNN-LM for a weather prediction system.</p>
+<pre><code>&lt;s&gt; sun hot &lt;/s&gt;
+&lt;s&gt; rain cold &lt;/s&gt;
+&lt;s&gt; sun bright &lt;/s&gt;
+</code></pre>
+<p>Predict the next word following <strong>&quot;sun&quot;</strong>.</p>
+<p><strong>Part A [2 Marks]:</strong> Calculate the probability of &quot;bright&quot; occurring after &quot;sun&quot;.
+(Assume V consists of all unique words in the corpus, including <code>&lt;s&gt;</code> and <code>&lt;/s&gt;</code>.)</p>
+<p><strong>Part B [3 Marks]:</strong> Input <code>x = [0.5, 1.0]</code>. Hidden layer: 1 neuron with
+<strong>Sigmoid</strong>. Weights <code>w = [0.2, 0.4]</code>, bias <code>b = -0.5</code>.
+<code>z(bright) = 1.5*h</code>, <code>z(hot) = 0.5*h</code>. Find the softmax probability of &quot;bright&quot;.</p>
+</blockquote>
+<h2 id="solution--part-a-2-marks">Solution — Part A <code>[2 marks]</code></h2>
+<pre><code>Vocabulary:  &lt;s&gt; , &lt;/s&gt; , sun , hot , rain , cold , bright     -&gt;  V = 7
+
+Counts:      count(&quot;sun bright&quot;) = 1        count(&quot;sun&quot;) = 2
+
+UNSMOOTHED (MLE):
+        P = 1 / 2 = 0.50
+
+LAPLACE (add-1):
+             1 + 1        2
+        P = -------- = ------- = 0.2222
+             2 + 7        9
+</code></pre>
+<blockquote>
+<p>⚠️ <strong>The question is ambiguous here.</strong> Unlike the Feb paper it does not say the
+word &quot;Laplace&quot; — but it <em>does</em> hand you V and tell you to include <code>&lt;s&gt;</code>/<code>&lt;/s&gt;</code>,
+which is only needed for smoothing. <strong>Give the Laplace answer (0.2222) as your
+main one, show the MLE (0.5) in one line, and state your assumption.</strong> That
+covers you either way, and &quot;state assumptions clearly&quot; is printed on the front
+of your exam paper.</p>
+</blockquote>
+<h2 id="solution--part-b-3-marks">Solution — Part B <code>[3 marks]</code></h2>
+<pre><code>STEP 1  z = (0.2 × 0.5) + (0.4 × 1.0) + (-0.5)
+          = 0.10 + 0.40 - 0.50
+          = 0.00
+
+STEP 2  h = sigmoid(0) = 1 / (1 + e^0) = 1 / (1 + 1) = 0.5
+                                                        ^^^ sigmoid(0) is ALWAYS 0.5
+
+STEP 3  z(bright) = 1.5 × 0.5 = 0.75
+        z(hot)    = 0.5 × 0.5 = 0.25
+
+STEP 4  e^0.75 = 2.1170
+        e^0.25 = 1.2840
+        sum    = 3.4010
+
+        P(bright) = 2.1170 / 3.4010 = 0.6225   ≈ 0.62
+</code></pre>
+<hr />
+<hr />
+<h1 id="q2--feb-2026-regular">Q2 — Feb 2026 (regular)</h1>
+<h3 id="3--2--5-marks"><code>[3 + 2 = 5 Marks]</code></h3>
+<blockquote>
+<p><strong>(A)</strong> An HMM-based POS tagger uses the following probabilities.</p>
+<p>| Current / Next | DT | NN | VB |
+|---|---|---|---|
+| <strong>START</strong> | 0.4 | 0.4 | 0.2 |
+| <strong>DT</strong> | 0.2 | 0.7 | 0.1 |
+| <strong>NN</strong> | 0.1 | 0.3 | 0.6 |
+| <strong>VB</strong> | 0.5 | 0.4 | 0.1 |</p>
+<p>| Tag / Word | &quot;a&quot; | &quot;dog&quot; | &quot;barks&quot; |
+|---|---|---|---|
+| <strong>DT</strong> | 0.85 | 0.10 | 0.05 |
+| <strong>NN</strong> | 0.10 | 0.80 | 0.10 |
+| <strong>VB</strong> | 0.05 | 0.10 | 0.85 |</p>
+<p>For the phrase <strong>&quot;a dog barks&quot;</strong>, determine the most likely sequence of POS
+tags using the <strong>Viterbi</strong> algorithm. Show all intermediate calculations,
+including initialization, recursion and termination. <strong>[3 Marks]</strong></p>
+<p><strong>(B)</strong> A speech recognition system uses an HMM with states Vowel (V),
+Consonant (C), Silence (S). <code>π(V)=0.5, π(C)=0.3, π(S)=0.2</code>.</p>
+<p>| From / To | V | C | S |  | Observation | V | C | S |
+|---|---|---|---|---|---|---|---|---|
+| <strong>V</strong> | 0.6 | 0.3 | 0.1 | | <strong>&quot;ah&quot;</strong> | 0.8 | 0.1 | 0.1 |
+| <strong>C</strong> | 0.4 | 0.4 | 0.2 | | <strong>&quot;sh&quot;</strong> | 0.1 | 0.7 | 0.2 |
+| <strong>S</strong> | 0.3 | 0.3 | 0.4 | | <strong>sil</strong> | 0.05 | 0.05 | 0.9 |</p>
+<p>Observed <code>O = (&quot;ah&quot;,&quot;sh&quot;)</code>. Compute the posterior distribution over hidden
+states at time step 2 using the <strong>Forward</strong> algorithm <strong>[1 Mark]</strong>, and say
+which state is most likely and why <strong>[1 Mark]</strong>.</p>
+</blockquote>
+<h2 id="solution--a-viterbi-3-marks">Solution — (A) Viterbi <code>[3 marks]</code></h2>
+<p><strong>1. Initialization — word 1 = &quot;a&quot;</strong>   <code>P(tag|START) × P(a|tag)</code></p>
+<pre><code>DT:  0.4 × 0.85  =  0.34         &lt;- only real survivor
+NN:  0.4 × 0.10  =  0.04
+VB:  0.2 × 0.05  =  0.01
+</code></pre>
+<p><strong>2. Recursion — word 2 = &quot;dog&quot;</strong>   <code>max(prev × transition) × P(dog|tag)</code></p>
+<pre><code>DT at &quot;dog&quot;:   from DT 0.34 × 0.2 = 0.068    &lt;- max
+               from NN 0.04 × 0.1 = 0.004
+               from VB 0.01 × 0.5 = 0.005
+               0.068 × 0.10  =  0.0068                 backpointer: DT
+
+NN at &quot;dog&quot;:   from DT 0.34 × 0.7 = 0.238    &lt;- max
+               from NN 0.04 × 0.3 = 0.012
+               from VB 0.01 × 0.4 = 0.004
+               0.238 × 0.80  =  0.1904                 backpointer: DT
+
+VB at &quot;dog&quot;:   from DT 0.34 × 0.1 = 0.034    &lt;- max
+               from NN 0.04 × 0.6 = 0.024
+               from VB 0.01 × 0.1 = 0.001
+               0.034 × 0.10  =  0.0034                 backpointer: DT
+</code></pre>
+<p><strong>3. Recursion — word 3 = &quot;barks&quot;</strong></p>
+<pre><code>DT:  max(0.0068×0.2, 0.1904×0.1, 0.0034×0.5) = 0.01904 × 0.05 = 0.000952   bp: NN
+NN:  max(0.0068×0.7, 0.1904×0.3, 0.0034×0.4) = 0.05712 × 0.10 = 0.005712   bp: NN
+VB:  max(0.0068×0.1, 0.1904×0.6, 0.0034×0.1) = 0.11424 × 0.85 = 0.097104   bp: NN
+                                 ^^^^^^^^^^^ max
+</code></pre>
+<p><strong>Completed table</strong></p>
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th>a</th>
+  <th>dog</th>
+  <th>barks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>DT</strong></td>
+  <td><strong>0.34</strong></td>
+  <td>0.0068</td>
+  <td>0.000952</td>
+</tr>
+<tr>
+  <td><strong>NN</strong></td>
+  <td>0.04</td>
+  <td><strong>0.1904</strong></td>
+  <td>0.005712</td>
+</tr>
+<tr>
+  <td><strong>VB</strong></td>
+  <td>0.01</td>
+  <td>0.0034</td>
+  <td><strong>0.097104</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>4. Termination and backtrace</strong></p>
+<pre><code>Largest final cell:  VB  =  0.097104
+    VB  &lt;- backpointer NN  &lt;- backpointer DT
+
+ANSWER:   a/DT    dog/NN    barks/VB
+</code></pre>
+<h2 id="solution--b-forward-2-marks">Solution — (B) Forward <code>[2 marks]</code></h2>
+<pre><code>alpha1 (after &quot;ah&quot;)  =  pi(state) × P(ah|state)
+
+    V:  0.5 × 0.8  =  0.40
+    C:  0.3 × 0.1  =  0.03
+    S:  0.2 × 0.1  =  0.02
+
+alpha2 (after &quot;sh&quot;)  =  [ SUM over i of alpha1(i) × a(i-&gt;j) ] × P(sh|j)
+                          ^^^ SUM, because this is FORWARD, not Viterbi
+
+    V:  [0.40×0.6 + 0.03×0.4 + 0.02×0.3] × 0.1
+      = [0.240 + 0.012 + 0.006] × 0.1  =  0.258 × 0.1  =  0.0258
+
+    C:  [0.40×0.3 + 0.03×0.4 + 0.02×0.3] × 0.7
+      = [0.120 + 0.012 + 0.006] × 0.7  =  0.138 × 0.7  =  0.0966
+
+    S:  [0.40×0.1 + 0.03×0.2 + 0.02×0.4] × 0.2
+      = [0.040 + 0.006 + 0.008] × 0.2  =  0.054 × 0.2  =  0.0108
+
+P(O)  =  0.0258 + 0.0966 + 0.0108  =  0.1332
+
+POSTERIOR  =  each alpha2 divided by the total:
+
+    P(V2 | O)  =  0.0258 / 0.1332  =  0.194
+    P(C2 | O)  =  0.0966 / 0.1332  =  0.725     &lt;- highest
+    P(S2 | O)  =  0.0108 / 0.1332  =  0.081
+</code></pre>
+<p><strong>Most likely state at time 2: Consonant (C).</strong></p>
+<blockquote>
+<p><strong>Why:</strong> the observation <em>&quot;sh&quot;</em> has a <strong>very high emission probability from the
+Consonant state (0.7)</strong>, and sufficient probability mass transitions into C
+from the earlier states.</p>
+</blockquote>
+<hr />
+<hr />
+<h1 id="q2--mar-2026-makeup">Q2 — Mar 2026 (makeup)</h1>
+<h3 id="3--2--5-marks"><code>[3 + 2 = 5 Marks]</code></h3>
+<blockquote>
+<p><strong>(A)</strong> Same setup, tags DT / NN / VB:</p>
+<p>| Current / Next | DT | NN | VB |
+|---|---|---|---|
+| <strong>START</strong> | 0.3 | 0.4 | 0.3 |
+| <strong>DT</strong> | 0.2 | 0.5 | 0.3 |
+| <strong>NN</strong> | 0.1 | 0.3 | 0.6 |
+| <strong>VB</strong> | 0.4 | 0.4 | 0.2 |</p>
+<p>| Tag / Word | &quot;that&quot; | &quot;fish&quot; | &quot;swims&quot; |
+|---|---|---|---|
+| <strong>DT</strong> | 0.6 | 0.2 | 0.2 |
+| <strong>NN</strong> | 0.2 | 0.6 | 0.2 |
+| <strong>VB</strong> | 0.1 | 0.3 | 0.6 |</p>
+<p>For <strong>&quot;that fish swims&quot;</strong>, apply Viterbi. Show initialization, recursion and
+backtracking. <strong>[3 Marks]</strong></p>
+<p><strong>(B)</strong> HMM with states V, C, N. <code>π(V)=0.2, π(C)=0.5, π(N)=0.3</code>.</p>
+<p>| From / To | V | C | N | | Obs | V | C | N |
+|---|---|---|---|---|---|---|---|---|
+| <strong>V</strong> | 0.1 | 0.7 | 0.2 | | <strong>&quot;ah&quot;</strong> | 0.4 | 0.4 | 0.2 |
+| <strong>C</strong> | 0.6 | 0.2 | 0.2 | | <strong>&quot;sh&quot;</strong> | 0.2 | 0.2 | 0.6 |
+| <strong>N</strong> | 0.3 | 0.3 | 0.4 | | <strong>&quot;uh&quot;</strong> | 0.6 | 0.1 | 0.3 |</p>
+<p><code>O = (&quot;ah&quot;,&quot;sh&quot;,&quot;uh&quot;)</code>. Compute the filtered posterior <code>P(q₂ | o₁,o₂)</code>
+<strong>[1 Mark]</strong>. Then, <strong>without any new forward computation</strong>, determine
+<code>P(q₃ | o₁,o₂)</code> — the one-step prediction before observing &quot;uh&quot;. <strong>[1 Mark]</strong></p>
+</blockquote>
+<h2 id="solution--a-viterbi-3-marks">Solution — (A) Viterbi <code>[3 marks]</code></h2>
+<p><strong>1. Initialization — &quot;that&quot;</strong></p>
+<pre><code>DT:  0.3 × 0.6  =  0.18        &lt;- best
+NN:  0.4 × 0.2  =  0.08
+VB:  0.3 × 0.1  =  0.03
+</code></pre>
+<p><strong>2. Recursion — &quot;fish&quot;</strong></p>
+<pre><code>DT:  max(0.18×0.2, 0.08×0.1, 0.03×0.4) = max(0.036, 0.008, 0.012)
+     = 0.036 × 0.2  =  0.0072                            bp: DT
+
+NN:  max(0.18×0.5, 0.08×0.3, 0.03×0.4) = max(0.090, 0.024, 0.012)
+     = 0.090 × 0.6  =  0.054                             bp: DT
+
+VB:  max(0.18×0.3, 0.08×0.6, 0.03×0.2) = max(0.054, 0.048, 0.006)
+     = 0.054 × 0.3  =  0.0162                            bp: DT
+</code></pre>
+<p><strong>3. Recursion — &quot;swims&quot;</strong></p>
+<pre><code>DT:  max(0.0072×0.2, 0.054×0.1, 0.0162×0.4) = max(0.00144, 0.0054, 0.00648)
+     = 0.00648 × 0.2  =  0.001296                        bp: VB
+
+NN:  max(0.0072×0.5, 0.054×0.3, 0.0162×0.4) = max(0.0036, 0.0162, 0.00648)
+     = 0.0162 × 0.2  =  0.00324                          bp: NN
+
+VB:  max(0.0072×0.3, 0.054×0.6, 0.0162×0.2) = max(0.00216, 0.0324, 0.00324)
+     = 0.0324 × 0.6  =  0.01944                          bp: NN
+                            ^^^^^^^ largest
+</code></pre>
+<p><strong>4. Backtracking</strong></p>
+<pre><code>Highest final probability = VB (0.01944)
+    VB  &lt;-  NN  &lt;-  DT
+
+ANSWER:   that/DT   fish/NN   swims/VB
+</code></pre>
+<h2 id="solution--b-forward--prediction-2-marks">Solution — (B) Forward + prediction <code>[2 marks]</code></h2>
+<pre><code>alpha1 (after &quot;ah&quot;):
+    V:  0.2 × 0.4  =  0.08
+    C:  0.5 × 0.4  =  0.20
+    N:  0.3 × 0.2  =  0.06
+
+alpha2 (after &quot;sh&quot;):
+    V:  [0.08×0.1 + 0.20×0.6 + 0.06×0.3] × 0.2
+      = [0.008 + 0.120 + 0.018] × 0.2 = 0.146 × 0.2 = 0.0292
+
+    C:  [0.08×0.7 + 0.20×0.2 + 0.06×0.3] × 0.2
+      = [0.056 + 0.040 + 0.018] × 0.2 = 0.114 × 0.2 = 0.0228
+
+    N:  [0.08×0.2 + 0.20×0.2 + 0.06×0.4] × 0.6
+      = [0.016 + 0.040 + 0.024] × 0.6 = 0.080 × 0.6 = 0.0480
+
+Total = 0.0292 + 0.0228 + 0.0480 = 0.1000        (conveniently exactly 0.1)
+
+FILTERED POSTERIOR  P(q2 | o1,o2):
+    V:  0.0292 / 0.1  =  0.292
+    C:  0.0228 / 0.1  =  0.228
+    N:  0.0480 / 0.1  =  0.480      &lt;- most likely at t=2
+</code></pre>
+<p><strong>One-step prediction — no new forward computation needed.</strong> Just push the
+posterior through the transition matrix:</p>
+<pre><code>P(q3 = j | o1,o2)  =  SUM over i of  P(q2 = i | o1,o2) × a(i -&gt; j)
+
+V:  0.292×0.1 + 0.228×0.6 + 0.480×0.3
+  = 0.0292 + 0.1368 + 0.1440  =  0.310
+
+C:  0.292×0.7 + 0.228×0.2 + 0.480×0.3
+  = 0.2044 + 0.0456 + 0.1440  =  0.394      &lt;- most likely at t=3
+
+N:  0.292×0.2 + 0.228×0.2 + 0.480×0.4
+  = 0.0584 + 0.0456 + 0.1920  =  0.296
+
+    P(q3 | o1,o2)  =  ( V = 0.310 , C = 0.394 , N = 0.296 )
+    check: 0.310 + 0.394 + 0.296 = 1.000  ✓
+</code></pre>
+<blockquote>
+<p><strong>The trick this question tests:</strong> <em>prediction</em> = take the posterior you already
+have and multiply by the transition matrix. <strong>No emission is involved</strong>, because
+you haven't observed the next symbol yet.</p>
+</blockquote>
+<hr />
+<hr />
+<h1 id="q1q2--oct-2024-regular">Q1/Q2 — Oct 2024 (regular)</h1>
+<h2 id="q1-5-marks--forward-algorithm">Q1 <code>[5 Marks]</code> — Forward algorithm</h2>
+<blockquote>
+<p>Emission probabilities:</p>
+<p>| Word | Noun | Verb | Adj |
+|---|---|---|---|
+| &quot;cat&quot; | 0.9 | – | 0.1 |
+| &quot;jumps&quot; | 0.3 | 0.7 | – |
+| &quot;quickly&quot; | – | 0.3 | 0.7 |</p>
+<p>Transitions: <code>Noun→Noun 0.5</code>, <code>Noun→Verb 0.5</code>, <code>Verb→Verb 0.7</code>, <code>Verb→Adj 0.3</code>.
+Using the <strong>forward algorithm</strong>, calculate the probability of the observation
+sequence <strong>&quot;cat jumps quickly&quot;</strong>.</p>
+</blockquote>
+<h3 id="solution">Solution</h3>
+<pre><code>1. Initialization
+   Initial state equally likely for Noun or Verb  -&gt;  P = 1/2 each
+   (state this assumption — the question doesn't give initial probabilities)
+
+2. Forward step 1 — &quot;cat&quot;
+   P(Noun) = 1/2 × 0.9 = 0.45
+   Verb is not an option: the emission for &quot;cat&quot; as a Verb is &quot;–&quot; (zero)
+
+3. Forward step 2 — &quot;jumps&quot;
+   P(Verb) = P(Noun) × P(Noun→Verb) × P(jumps|Verb)
+           = 0.45 × 0.5 × 0.7
+           = 0.1575
+
+4. Forward step 3 — &quot;quickly&quot;
+   P(Adj)  = P(Verb) × P(Verb→Adj) × P(quickly|Adj)
+           = 0.1575 × 0.3 × 0.7
+           = 0.033075
+
+5. Conclusion
+   P(&quot;cat jumps quickly&quot;) = 0.0331
+</code></pre>
+<blockquote>
+<p>Only one path survives, because every other route hits a <code>–</code> (zero emission).
+That's why the sums collapse to single terms here.</p>
+</blockquote>
+<hr />
+<h2 id="q2-5-marks--forward-algorithm--official-answer-contains-an-error">Q2 <code>[5 Marks]</code> — Forward algorithm ⚠️ <em>official answer contains an error</em></h2>
+<blockquote>
+<p>| Transitions | S1 | S2 | | Emissions | S1 | S2 |
+|---|---|---|---|---|---|---|
+| <strong>S1</strong> | 0.7 | 0.3 | | <strong>&quot;X&quot;</strong> | 0.6 | 0.4 |
+| <strong>S2</strong> | 0.6 | 0.4 | | <strong>&quot;Y&quot;</strong> | 0.3 | 0.7 |</p>
+<p>Use the <strong>Forward</strong> algorithm for the sequence <strong>&quot;X Y&quot;</strong>, with initial
+probabilities <code>P(S1)=0.6</code>, <code>P(S2)=0.4</code>.</p>
+</blockquote>
+<h3 id="solution">Solution</h3>
+<pre><code>1. Initialization (observation &quot;X&quot;)
+   alpha1(S1) = 0.6 × 0.6 = 0.36
+   alpha1(S2) = 0.4 × 0.4 = 0.16
+
+2. Forward step (observation &quot;Y&quot;)
+
+   alpha2(S1) = [ alpha1(S1) × a(S1-&gt;S1)  +  alpha1(S2) × a(S2-&gt;S1) ] × P(Y|S1)
+              = [ 0.36 × 0.7  +  0.16 × 0.6 ] × 0.3
+              = [ 0.252 + 0.096 ] × 0.3
+              = 0.348 × 0.3  =  0.1044
+
+   alpha2(S2) = [ alpha1(S1) × a(S1-&gt;S2)  +  alpha1(S2) × a(S2-&gt;S2) ] × P(Y|S2)
+              = [ 0.36 × 0.3  +  0.16 × 0.4 ] × 0.7
+              = [ 0.108 + 0.064 ] × 0.7
+              = 0.172 × 0.7  =  0.1204
+
+3. Total
+   P(&quot;X Y&quot;) = 0.1044 + 0.1204 = 0.2248
+</code></pre>
+<blockquote>
+<h3 id="-read-this--the-printed-answer-key-is-wrong">⚠️ Read this — the printed answer key is wrong</h3>
+<p>The official solution writes:</p>
+<pre><code>P(S1) = (0.36 × 0.7 × 0.3) + (0.16 × 0.4 × 0.3) = 0.0756
+P(S2) = (0.36 × 0.3 × 0.7) + (0.16 × 0.6 × 0.7) = 0.1032
+</code></pre>
+<p>It used <strong><code>a(S2→S2) = 0.4</code></strong> where it needed <strong><code>a(S2→S1) = 0.6</code></strong>, and
+<strong><code>a(S2→S1) = 0.6</code></strong> where it needed <strong><code>a(S2→S2) = 0.4</code></strong> — the two second
+terms are swapped. Its printed totals don't even match its own arithmetic.</p>
+<p><strong>Use the method above, not those numbers.</strong> To reach state <code>j</code>, you sum over
+every predecessor <code>i</code> using <strong><code>a(i → j)</code></strong> — the arrow must <em>point at</em> the state
+you are computing. If a marker challenges you, that one sentence is your defence.</p>
+</blockquote>
+<hr />
+<hr />
+<h1 id="q1q2--undated-paper">Q1/Q2 — Undated paper</h1>
+<h2 id="q1-221--5-marks--viterbi">Q1 <code>[2+2+1 = 5 Marks]</code> — Viterbi</h2>
+<blockquote>
+<p>| Transitions | Noun | Verb | Adj | | Emissions | Noun | Verb | Adj |
+|---|---|---|---|---|---|---|---|---|
+| <strong>Noun</strong> | 0.4 | 0.3 | 0.3 | | <strong>&quot;run&quot;</strong> | 0.8 | 0.2 | – |
+| <strong>Verb</strong> | 0.1 | 0.8 | 0.1 | | <strong>&quot;fast&quot;</strong> | 0.6 | – | 0.4 |
+| <strong>Adj</strong> | 0.6 | 0.3 | 0.1 | | <strong>&quot;dog&quot;</strong> | 0.7 | 0.3 | – |</p>
+<p>Find the most likely POS tag sequence for <strong>&quot;run fast&quot;</strong> using Viterbi.</p>
+</blockquote>
+<h3 id="solution">Solution</h3>
+<pre><code>No initial probabilities given  -&gt;  assume equal, 1/3 each. STATE THIS.
+
+t = 1  (&quot;run&quot;)
+    V(Noun) = 1/3 × 0.8 = 0.2667
+    V(Verb) = 1/3 × 0.2 = 0.0667
+    V(Adj)  = 1/3 × 0   = 0            (&quot;run&quot; is never an Adj)
+
+t = 2  (&quot;fast&quot;)
+
+    For Noun:   from Noun  0.2667 × 0.4 × 0.6 = 0.0640    &lt;- max
+                from Verb  0.0667 × 0.1 × 0.6 = 0.0040
+                from Adj   0      × 0.6 × 0.6 = 0
+                =&gt; 0.0640, backpointer Noun
+
+    For Verb:   emission P(fast|Verb) is &quot;–&quot; = 0
+                =&gt; every path is 0. Verb is impossible here.
+
+    For Adj:    from Noun  0.2667 × 0.3 × 0.4 = 0.0320    &lt;- max
+                from Verb  0.0667 × 0.1 × 0.4 = 0.0027
+                from Adj   0                  = 0
+                =&gt; 0.0320, backpointer Noun
+
+Highest final value: Noun (0.0640), ahead of Adj (0.0320).
+Backtracking gives Noun at t=1 too.
+
+ANSWER:   run/Noun    fast/Noun
+</code></pre>
+<hr />
+<h2 id="q2-5-marks--viterbi">Q2 <code>[5 Marks]</code> — Viterbi</h2>
+<blockquote>
+<p>| Transitions | S1 | S2 | | Emissions | S1 | S2 |
+|---|---|---|---|---|---|---|
+| <strong>S1</strong> | 0.6 | 0.4 | | <strong>&quot;A&quot;</strong> | 0.5 | 0.5 |
+| <strong>S2</strong> | 0.3 | 0.7 | | <strong>&quot;B&quot;</strong> | 0.4 | 0.6 |</p>
+<p>Using <strong>Viterbi</strong>, calculate the most probable hidden state sequence for the
+observation sequence <strong>&quot;A B&quot;</strong>.</p>
+</blockquote>
+<h3 id="solution">Solution</h3>
+<pre><code>STEP 1  Initialization (&quot;A&quot;) — initial probabilities assumed equal (0.5 each)
+
+    P(S1) = 0.5 × 0.5 = 0.25
+    P(S2) = 0.5 × 0.5 = 0.25
+
+STEP 2  Recursion (&quot;B&quot;) — take the MAX path into each state
+
+    For S1:  max( 0.25 × 0.6 , 0.25 × 0.3 ) × 0.4
+           = max( 0.150 , 0.075 ) × 0.4
+           = 0.150 × 0.4  =  0.06            backpointer: S1
+
+    For S2:  max( 0.25 × 0.4 , 0.25 × 0.7 ) × 0.6
+           = max( 0.100 , 0.175 ) × 0.6
+           = 0.175 × 0.6  =  0.105           backpointer: S2
+
+STEP 3  Termination
+
+    P(S2) = 0.105  &gt;  P(S1) = 0.06
+    =&gt; the most probable final state is S2, and its backpointer is S2
+
+ANSWER:   S2  S2
+</code></pre>
+<hr />
+<hr />
+<h1 id="practice-questions">Practice questions</h1>
+<p>Fresh numbers, same shapes. Attempt before revealing.</p>
+<h3 id="p1--laplace-2-marks">P1 — Laplace <code>[2 marks]</code></h3>
+<pre><code>Corpus:  &lt;s&gt; big data &lt;/s&gt;
+         &lt;s&gt; big model &lt;/s&gt;
+         &lt;s&gt; open data &lt;/s&gt;
+</code></pre>
+<p>Calculate the <strong>Laplace smoothed</strong> probability of <strong>&quot;data&quot;</strong> following <strong>&quot;big&quot;</strong>.
+Include <code>&lt;s&gt;</code> and <code>&lt;/s&gt;</code> in V.</p>
+<details><summary><b>Answer P1</b></summary>
+
+<pre><code>Vocabulary: &lt;s&gt;, &lt;/s&gt;, big, data, model, open      -&gt;  V = 6
+
+count(&quot;big data&quot;) = 1          count(&quot;big&quot;) = 2
+
+           1 + 1       2
+    P  =  ------- =  ----- =  0.25
+           2 + 6       8
+
+(unsmoothed MLE would be 1/2 = 0.5)
+</code></pre>
+</details>
+
+<hr />
+<h3 id="p2--forward-pass-with-relu-3-marks">P2 — Forward pass with ReLU <code>[3 marks]</code></h3>
+<p>Input <code>x = [1.0, -0.5]</code>, weights <code>w = [0.3, 0.4]</code>, bias <code>b = 0.1</code>, <strong>ReLU</strong>.
+Scores: <code>z(A) = 3*h</code>, <code>z(B) = 1*h</code>. Find <code>P(A)</code>.
+<em>(Given <code>e^0.3 = 1.3499</code>, <code>e^0.1 = 1.1052</code>.)</em></p>
+<details><summary><b>Answer P2</b></summary>
+
+<pre><code>z = (0.3 × 1.0) + (0.4 × -0.5) + 0.1
+  = 0.30 - 0.20 + 0.10
+  = 0.20
+
+h = ReLU(0.2) = 0.2
+
+z(A) = 3 × 0.2 = 0.6
+z(B) = 1 × 0.2 = 0.2
+
+e^0.6 = 1.8221     e^0.2 = 1.2214     sum = 3.0435
+
+P(A) = 1.8221 / 3.0435 = 0.5987  ≈ 0.60
+</code></pre>
+<p><em>(The e-values in the question were a distractor — you need e^0.6 and e^0.2.
+In the exam, if a needed value isn't given, compute it or leave the fraction
+symbolically and say so.)</em></p>
+</details>
+
+<hr />
+<h3 id="p3--forward-pass-with-a-negative-z-2-marks">P3 — Forward pass with a negative z <code>[2 marks]</code></h3>
+<p>Input <code>x = [0.2, 0.1]</code>, weights <code>w = [0.5, -1.0]</code>, bias <code>b = -0.3</code>, <strong>ReLU</strong>.
+Scores <code>z(A) = 2*h</code>, <code>z(B) = 4*h</code>. Find <code>P(A)</code>.</p>
+<details><summary><b>Answer P3</b></summary>
+
+<pre><code>z = (0.5 × 0.2) + (-1.0 × 0.1) + (-0.3)
+  = 0.10 - 0.10 - 0.30
+  = -0.30
+
+h = ReLU(-0.3) = max(-0.3, 0) = 0        &lt;-- the neuron is DEAD
+
+z(A) = 2 × 0 = 0        z(B) = 4 × 0 = 0
+
+P(A) = e^0 / (e^0 + e^0) = 1 / 2 = 0.5
+</code></pre>
+<blockquote>
+<p><strong>The lesson:</strong> when ReLU kills the neuron, both scores are 0 and softmax
+returns <strong>exactly 0.5</strong> — the model has no opinion. If you get 0.5, check
+whether <code>z</code> went negative. That's a real answer here, not a mistake.</p>
+</details>
+
+</blockquote>
+<hr />
+<h3 id="p4--viterbi-3-marks">P4 — Viterbi <code>[3 marks]</code></h3>
+<p>Tags <strong>N</strong> and <strong>V</strong>. Sentence <strong>&quot;time flies&quot;</strong>.</p>
+<pre><code>Transitions           N     V          Emissions       time   flies
+   START           | 0.6   0.4            N          |  0.5    0.3
+   N               | 0.3   0.7            V          |  0.1    0.6
+   V               | 0.5   0.5
+</code></pre>
+<p>Find the most likely tag sequence.</p>
+<details><summary><b>Answer P4</b></summary>
+
+<pre><code>Initialization (&quot;time&quot;):
+    N:  0.6 × 0.5  =  0.30      &lt;- best
+    V:  0.4 × 0.1  =  0.04
+
+Recursion (&quot;flies&quot;):
+    N:  max( 0.30 × 0.3 , 0.04 × 0.5 ) × 0.3
+      = max( 0.090 , 0.020 ) × 0.3
+      = 0.090 × 0.3  =  0.027                 bp: N
+
+    V:  max( 0.30 × 0.7 , 0.04 × 0.5 ) × 0.6
+      = max( 0.210 , 0.020 ) × 0.6
+      = 0.210 × 0.6  =  0.126                 bp: N
+                                 ^^^^^ largest
+
+Backtrace:  V  &lt;-  N
+
+ANSWER:   time/N    flies/V
+</code></pre>
+</details>
+
+<hr />
+<h3 id="p5--forward-3-marks">P5 — Forward <code>[3 marks]</code></h3>
+<p>Same numbers as P4. Compute <code>P(&quot;time flies&quot;)</code> using the <strong>Forward</strong> algorithm,
+and note how the working differs from P4.</p>
+<details><summary><b>Answer P5</b></summary>
+
+<pre><code>alpha1 (&quot;time&quot;):
+    N:  0.6 × 0.5  =  0.30
+    V:  0.4 × 0.1  =  0.04
+
+alpha2 (&quot;flies&quot;)  —  SUM this time, not MAX:
+
+    N:  [ 0.30 × 0.3  +  0.04 × 0.5 ] × 0.3
+      = [ 0.090 + 0.020 ] × 0.3  =  0.110 × 0.3  =  0.033
+
+    V:  [ 0.30 × 0.7  +  0.04 × 0.5 ] × 0.6
+      = [ 0.210 + 0.020 ] × 0.6  =  0.230 × 0.6  =  0.138
+
+P(&quot;time flies&quot;) = 0.033 + 0.138 = 0.171
+</code></pre>
+<blockquote>
+<p><strong>The difference from P4:</strong> identical setup, identical multiplications — the
+only change is <code>max</code> → <code>sum</code>, and there are <strong>no backpointers</strong> because you are
+not choosing a path. Viterbi gave 0.126 (the best <em>single</em> path); Forward gives
+0.171 (the total over <em>all</em> paths). Forward is always ≥ Viterbi.</p>
+</details>
+
+</blockquote>
+<hr />
+<h1 id="self-check">Self-check</h1>
+<table>
+<thead>
+<tr>
+  <th>Skill</th>
+  <th>Can do unaided</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Identify V correctly (including <code>&lt;s&gt;</code>, <code>&lt;/s&gt;</code>)</td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>Laplace formula with <code>+ V</code> on the bottom</td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>Weighted sum <code>z</code> with negative numbers</td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>ReLU vs Sigmoid, including ReLU(negative) = 0</td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>Two-way softmax</td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>Viterbi initialization column</td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>Viterbi recursion with backpointers</td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>Viterbi backtrace</td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>Forward = the same but SUM</td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>Posterior = each alpha ÷ the total</td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>One-step prediction (posterior × transitions, no emission)</td>
+  <td>☐</td>
+</tr>
+</tbody>
+</table>
+<p><strong>All ticked → your 10 pre-midsem marks are secure.</strong> Go back to the
+post-midsem pack, which is worth 30.</p>
+</div>
+<script>
+var wasOpen = [];
+function openAll(){
+  wasOpen = [];
+  document.querySelectorAll("details").forEach(function(d,i){
+    wasOpen[i] = d.open; d.open = true;
+  });
+}
+function restoreAll(){
+  document.querySelectorAll("details").forEach(function(d,i){ d.open = wasOpen[i]; });
+}
+window.addEventListener("beforeprint", openAll);
+window.addEventListener("afterprint", restoreAll);
+
+function doPrint(){ openAll(); window.print(); }
+function toggleAll(){
+  var ds = document.querySelectorAll("details");
+  var anyClosed = Array.prototype.some.call(ds, function(d){ return !d.open; });
+  ds.forEach(function(d){ d.open = anyClosed; });
+  document.getElementById("tgl").textContent = anyClosed ? "Hide all answers" : "Show all answers";
+}
+
+var out = "";
+document.querySelectorAll(".wrap h1, .wrap h2").forEach(function(h){
+  if(!h.id) return;
+  out += '<a class="' + h.tagName.toLowerCase() + '" href="#' + h.id + '">' +
+         h.textContent.replace(/^[0-9]+[.]\s*/, "") + "</a>";
+});
+document.getElementById("toclinks").innerHTML = out;
+</script>
+</body></html>

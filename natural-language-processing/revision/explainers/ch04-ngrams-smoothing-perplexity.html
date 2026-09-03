@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch 4 — N-grams, Smoothing &amp; Perplexity, visually</title>
+<style>
+  :root{
+    --bg:#0e1117; --panel:#161b26; --panel2:#1d2432; --line:#2b3446;
+    --ink:#e6edf7; --dim:#93a1b8;
+    --accent:#5aa9ff; --good:#3ddc97; --warn:#ffb454; --bad:#ff6b6b; --violet:#b78cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 20px 90px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.4px}
+  .sub{color:var(--dim);margin:0 0 30px}
+  h2{font-size:21px;margin:48px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:22px 0 8px;color:var(--accent)}
+  code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:14px;
+       font-family:ui-monospace,Consolas,monospace}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+        padding:18px 20px;margin:18px 0}
+  .analogy{border-left:3px solid var(--warn);background:#1b1a14}
+  .analogy b{color:var(--warn)}
+  .keypoint{border-left:3px solid var(--good);background:#111d19}
+  .keypoint b{color:var(--good)}
+  .trap{border-left:3px solid var(--bad);background:#1d1416}
+  .trap b{color:var(--bad)}
+  button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+         border-radius:8px;padding:8px 14px;cursor:pointer;font-size:14px;
+         font-family:inherit;transition:.12s}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.on{background:var(--accent);color:#08111d;border-color:var(--accent);font-weight:600}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--dim);font-weight:600}
+  td.num{text-align:right;font-family:ui-monospace,Consolas,monospace}
+  td.zero{color:var(--bad);font-weight:700;background:#1d1416}
+  td.hit{color:var(--good);font-weight:700}
+  .out{font-family:ui-monospace,Consolas,monospace;font-size:14px;background:#0a0e15;
+       border:1px solid var(--line);border-radius:8px;padding:14px;white-space:pre-wrap;
+       line-height:1.75;margin-top:12px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+  .lbl{color:var(--dim);font-size:13px;min-width:130px}
+  .quiz{background:var(--panel2);border-radius:10px;padding:14px;margin:12px 0;
+        border:1px solid var(--line)}
+  .quiz .q{font-weight:600;margin-bottom:8px}
+  .fb{margin-top:10px;font-size:14px;display:none;padding:10px;border-radius:6px}
+  .fb.ok{display:block;background:#12312a;color:var(--good)}
+  .fb.no{display:block;background:#33161a;color:#ffb0b0}
+  .toc a{color:var(--accent);text-decoration:none;display:block;padding:3px 0;font-size:14px}
+  .toc a:hover{text-decoration:underline}
+  select,input[type=number],input[type=range],input[type=text]{background:var(--panel2);
+    color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;
+    font-family:inherit;font-size:14px}
+  input[type=range]{padding:0;height:26px}
+  input[type=text]{font-family:ui-monospace,Consolas,monospace;min-width:280px}
+  .good-t{color:var(--good)} .bad-t{color:var(--bad)} .warn-t{color:var(--warn)}
+  .vio-t{color:var(--violet)} .acc-t{color:var(--accent)} .dim-t{color:var(--dim)}
+  .note{font-size:13px;color:var(--dim);margin-top:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .bar{height:22px;border-radius:4px;background:var(--accent);transition:.25s}
+  .barrow{display:flex;align-items:center;gap:10px;margin:4px 0;font-size:13px}
+  .barrow .bl{width:120px;color:var(--dim);font-family:ui-monospace,Consolas,monospace}
+  .barrow .bv{width:70px;text-align:right;font-family:ui-monospace,Consolas,monospace}
+  .flow{display:flex;align-items:center;justify-content:center;gap:10px;
+        flex-wrap:wrap;margin:16px 0}
+  .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+       padding:12px 16px;text-align:center;font-size:14px;min-width:110px}
+  .box b{display:block;color:var(--accent);font-size:13px;margin-bottom:2px}
+  .arrowc{color:var(--dim);font-size:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>N-grams, Smoothing &amp; Perplexity</h1>
+<p class="sub">NLP Session 4 — Language Modelling. The most arithmetic-heavy
+chapter before Viterbi. Written notes: <code>../ch04-ngram-language-models.md</code></p>
+
+<div class="card toc">
+  <b>What's in here</b>
+  <a href="#s1">1 · What a language model actually does</a>
+  <a href="#s2">2 · Why the chain rule alone fails</a>
+  <a href="#s3">3 · ⭐ Build a bigram table from a corpus</a>
+  <a href="#s4">4 · The zero problem — watch it kill everything</a>
+  <a href="#s5">5 · ⭐ Add-1 smoothing, and the damage it does</a>
+  <a href="#s6">6 · Backoff vs interpolation</a>
+  <a href="#s7">7 · ⭐ Perplexity — the branching factor</a>
+  <a href="#s8">8 · Unknown words and &lt;UNK&gt;</a>
+  <a href="#s9">9 · Quiz yourself</a>
+</div>
+
+
+<h2 id="s1">1 · What a language model actually does</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> Your phone keyboard suggesting the next word. That's it. That's a
+language model. It has seen a lot of text, and it knows that after "I'll be there
+in five" the word <i>minutes</i> is far likelier than <i>elephants</i>. Everything
+in this chapter is that idea plus arithmetic.
+</div>
+
+<div class="card">
+<p>A model that computes <b>P(W)</b> — the probability of a sentence — or
+<b>P(wₙ | w₁ … wₙ₋₁)</b> — the probability of an upcoming word — is a
+<b>language model</b>.</p>
+<table>
+<tr><th>Application</th><th>What the LM decides</th></tr>
+<tr><td><b>Machine translation</b></td><td><code>P(high winds tonight) &gt; P(large winds tonight)</code></td></tr>
+<tr><td><b>Spell correction</b></td><td><code>P(about fifteen minutes from) &gt; P(about fifteen minuets from)</code></td></tr>
+<tr><td><b>Speech recognition</b></td><td><code>P(I saw a van) &gt;&gt; P(eyes awe of an)</code></td></tr>
+</table>
+<p class="note">Look hard at the third one — those two candidates sound almost
+identical out loud. <b>Only the language model can tell them apart.</b></p>
+</div>
+
+
+<h2 id="s2">2 · Why the chain rule alone fails</h2>
+
+<div class="card">
+<p>The chain rule is exactly correct:</p>
+<div class="out">P(its water is so transparent) =
+      P(its)
+    × P(water | its)
+    × P(is    | its water)
+    × P(so    | its water is)
+    × P(transparent | its water is so)</div>
+<p style="margin-top:14px">…and every factor is estimated by counting:</p>
+<div class="out">P(the | its water is so transparent)
+    = count(its water is so transparent the)
+      -----------------------------------------
+      count(its water is so transparent)</div>
+</div>
+
+<div class="card trap">
+<b>Why it cannot work.</b> You would never see most of those long strings even
+<b>once</b> in any corpus, so almost every numerator is 0. Too many parameters,
+far too little data. <b>Fix: the Markov assumption</b> — limit the history to a
+fixed number of words.
+</div>
+
+<div class="card">
+<div class="row">
+  <span class="lbl">n =</span>
+  <button class="on" id="ng1" onclick="ngram(1)">1 · unigram</button>
+  <button id="ng2" onclick="ngram(2)">2 · bigram</button>
+  <button id="ng3" onclick="ngram(3)">3 · trigram</button>
+</div>
+<div class="out" id="ngout"></div>
+</div>
+
+<div class="card trap">
+<b>Do not forget <code>&lt;s&gt;</code> and <code>&lt;/s&gt;</code>.</b> The start
+symbol gives the first word a context; the end symbol makes the probabilities of
+all sentences of all lengths sum to 1. <b>Dropping <code>&lt;/s&gt;</code> is the
+single most common lost mark in this chapter.</b>
+</div>
+
+<div class="card analogy">
+<b>Why n-grams are, in general, insufficient.</b> The slide's example:<br>
+<i>"The <b>computer(s)</b> which I had just put into the machine room on the
+fifth floor <b>is (are)</b> crashing."</i><br>
+The agreement is decided by a word <b>nine positions back</b>. No practical
+n-gram sees that far. (This is precisely the gap neural LMs and then
+Transformers close.)
+</div>
+
+
+<h2 id="s3">3 · ⭐ Build a bigram table from a corpus</h2>
+
+<p>Edit the corpus, or pick a preset. The counts and MLE probabilities update live.</p>
+
+<div class="card">
+<div class="row">
+  <button onclick="corpPreset(0)" class="on" id="cp0">Sam corpus (J&amp;M)</button>
+  <button onclick="corpPreset(1)" id="cp1">the cat / the dog</button>
+  <button onclick="corpPreset(2)" id="cp2">tiny (2 sentences)</button>
+</div>
+<div class="out" id="corpshow" style="margin-bottom:10px"></div>
+
+<h3>Bigram counts &nbsp;<span class="note">rows = first word, columns = second word</span></h3>
+<div id="counttab"></div>
+
+<h3>Bigram MLE probabilities &nbsp;<code>P(wᵢ|wᵢ₋₁) = c(wᵢ₋₁,wᵢ) / c(wᵢ₋₁)</code></h3>
+<div id="probtab"></div>
+</div>
+
+<h3>Score a sentence</h3>
+<div class="card">
+<div class="row">
+  <span class="lbl">sentence</span>
+  <input type="text" id="testsent" value="I am Sam" oninput="scoreSent()">
+</div>
+<div class="row">
+  <button onclick="setSent('I am Sam')">I am Sam</button>
+  <button onclick="setSent('Sam I am')">Sam I am</button>
+  <button onclick="setSent('I do not like green eggs and ham')">I do not like…</button>
+  <button onclick="setSent('Sam am I')">Sam am I <span class="bad-t">(has a zero)</span></button>
+</div>
+<div class="out" id="sentout"></div>
+</div>
+
+
+<h2 id="s4">4 · The zero problem — watch it kill everything</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> A judge scores a gymnast by <b>multiplying</b> her marks for six
+apparatus. She's brilliant on five and the sixth judge simply never saw her
+perform, so writes 0. Final score: <b>zero</b>. Not "slightly lower" — zero.
+That is what one unseen bigram does to a whole test set.
+</div>
+
+<div class="card">
+<div class="out">Training set                    Test set
+… denied the allegations        … denied the offer
+… denied the reports            … denied the loan
+… denied the claims
+… denied the request
+
+    P("offer" | denied the) = 0</div>
+<div class="row" style="margin-top:12px">
+  <button onclick="zeroDemo(0)" class="on" id="z0">All bigrams seen</button>
+  <button onclick="zeroDemo(1)" id="z1">One bigram unseen</button>
+</div>
+<div class="out" id="zeroout"></div>
+</div>
+
+<div class="card trap">
+<b>The real reason smoothing is non-optional.</b> It isn't that the model becomes
+<i>inaccurate</i>. It's that perplexity is <code>1/P</code>, so
+<code>P = 0</code> makes perplexity <b>infinite</b> — you cannot even
+<b>evaluate</b> the model. It stops being bad and starts being undefined.
+</div>
+
+
+<h2 id="s5">5 · ⭐ Add-1 smoothing, and the damage it does</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> A new restaurant has 3 reviews, all 5 stars. Is it really the
+best restaurant in the city? Add-1 smoothing is the site quietly adding one
+imaginary average review to everybody, so three real 5-stars can't beat three
+hundred. It <b>protects you from zeros</b>, but it also <b>punishes genuinely
+strong evidence</b> — and that is exactly the complaint against it.
+</div>
+
+<div class="card">
+<div class="row">
+  <button id="smNone" class="on" onclick="smMode(0)">MLE (no smoothing)</button>
+  <button id="smAdd1" onclick="smMode(1)">Add-1 (Laplace)</button>
+</div>
+<div class="row">
+  <span class="lbl">V (unique words)</span>
+  <input type="range" id="vslider" min="2" max="40" value="7" oninput="smRender()" style="width:200px">
+  <span id="vval" class="acc-t" style="font-family:ui-monospace">7</span>
+  <span class="note">watch what a bigger vocabulary does</span>
+</div>
+<div id="smtab"></div>
+<div class="out" id="smout"></div>
+</div>
+
+<div class="card">
+<h3>The Berkeley Restaurant numbers, straight off the slide</h3>
+<table>
+<tr><th>Bigram</th><th class="num">MLE</th><th class="num">Add-1 (V=1446)</th><th></th></tr>
+<tr><td><code>P(want|i)</code></td><td class="num">827/2533 = 0.33</td><td class="num">828/3979 = 0.21</td><td class="warn-t">cut</td></tr>
+<tr><td><code>P(to|i)</code></td><td class="num zero">0/2533 = 0</td><td class="num hit">1/3979 = 0.00025</td><td class="good-t">rescued</td></tr>
+<tr><td><code>P(eat|i)</code></td><td class="num">9/2533 = 0.0036</td><td class="num">10/3979 = 0.0025</td><td class="warn-t">cut</td></tr>
+<tr><td><code>P(to|want)</code></td><td class="num">608/927 = <b>0.66</b></td><td class="num">609/2373 = <b>0.26</b></td><td class="bad-t">crushed −60%</td></tr>
+<tr><td><code>P(eat|to)</code></td><td class="num">686/2417 = 0.28</td><td class="num">687/3863 = 0.18</td><td class="warn-t">cut</td></tr>
+</table>
+<div class="out">RECONSTITUTED COUNT — what the smoothed count "would have been"
+
+    c*(i,want) = (827 + 1) x 2533 / (2533 + 1446)
+               = 828 x 2533 / 3979
+               = 2,097,324 / 3979
+               = 527          (down from 827!)</div>
+</div>
+
+<div class="card trap">
+<b>Two traps in one formula.</b><br>
+<b>1.</b> The denominator adds <b>V</b>, not 1. And <code>V</code> is the number
+of <b>unique words (types)</b> — not the corpus size.<br>
+<b>2.</b> <code>P(to|want)</code> fell from 0.66 to 0.26. Add-1 took a
+well-attested bigram and cut it by 60%, because it had to hand probability mass
+to 1446 words that never followed <i>want</i>.
+</div>
+
+<div class="card keypoint">
+<b>The conclusion the slide draws.</b> <b>Add-1 is NOT used for n-grams</b> —
+better methods exist (Good-Turing, Kneser-Ney). But add-1 <b>is</b> used to
+smooth other NLP models: text classification, and any domain where the number of
+zeros isn't so huge.
+</div>
+
+
+<h2 id="s6">6 · Backoff vs interpolation</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> You're asked to guess someone's salary.
+<b>Backoff:</b> if you know their exact job title and city, use that; if not,
+fall back to just their job title; if not, fall back to the national average —
+one source at a time.
+<b>Interpolation:</b> always blend all three, weighted. <b>Interpolation works
+better</b>, because even a good trigram estimate benefits from a little
+smoothing by its shorter cousins.
+</div>
+
+<div class="card">
+<div class="row">
+  <button id="biB" class="on" onclick="biMode('b')">Backoff</button>
+  <button id="biI" onclick="biMode('i')">Interpolation</button>
+  <button id="biS" onclick="biMode('s')">Stupid backoff</button>
+</div>
+<div class="out" id="biout"></div>
+</div>
+
+<div class="card">
+<h3>Setting the lambdas</h3>
+<div class="flow">
+  <div class="box"><b>Training Data</b>fix the n-gram<br>probabilities here</div>
+  <div class="arrowc">→</div>
+  <div class="box" style="border-color:var(--good)"><b class="good-t">Held-Out Data</b>search for the λs<br>that maximise P here</div>
+  <div class="arrowc">→</div>
+  <div class="box"><b>Test Data</b>never touched<br>until the end</div>
+</div>
+<p class="note">Three splits, not two. The λs are hyperparameters — tuning them on
+the test set would be cheating.</p>
+</div>
+
+
+<h2 id="s7">7 · ⭐ Perplexity — the branching factor</h2>
+
+<div class="card analogy">
+<b>Analogy — the only intuition you need.</b> Perplexity is <b>"how many equally
+likely options does the model feel like it's choosing between at each word?"</b>
+A model with perplexity 10 is as confused as someone guessing a random digit
+0–9. A model with perplexity 2 is basically flipping a coin. <b>Lower = more
+confident = better.</b>
+</div>
+
+<div class="card">
+<h3>The Shannon game</h3>
+<div class="out">I always order pizza with cheese and ____
+
+    mushrooms  0.1
+    pepperoni  0.1
+    anchovies  0.01
+    ...
+    fried rice 0.0001
+    ...
+    and        1e-100
+
+The 33rd President of the US was ____
+I saw a ____</div>
+<p class="note"><b>Unigrams are terrible at this game.</b> Why? They ignore the
+context completely and always predict the same distribution — "cheese and" tells
+them nothing.</p>
+</div>
+
+<h3>Calculator</h3>
+<div class="card">
+<div class="row">
+  <span class="lbl">per-word probabilities</span>
+  <input type="text" id="ppinput" value="0.5, 0.25, 0.5, 0.125" oninput="ppCalc()">
+</div>
+<div class="row">
+  <button onclick="ppSet('0.5, 0.25, 0.5, 0.125')">worked example</button>
+  <button onclick="ppSet('0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1')">uniform 1/10 ×10</button>
+  <button onclick="ppSet('0.9, 0.85, 0.92, 0.88')">confident model</button>
+  <button onclick="ppSet('0.9, 0.85, 0.0, 0.88')">one zero</button>
+</div>
+<div class="out" id="ppout"></div>
+</div>
+
+<div class="card">
+<h3>Lower perplexity = better model</h3>
+<p class="note">Trained on 38 M words of WSJ, tested on 1.5 M words:</p>
+<div id="ppbars"></div>
+</div>
+
+<div class="card">
+<h3>Extrinsic vs intrinsic evaluation</h3>
+<table>
+<tr><th></th><th>Extrinsic (in-vivo)</th><th>Intrinsic</th></tr>
+<tr><td><b>How</b></td><td>Put each model in a real task (speller, ASR, MT) and compare accuracy</td><td>Compute <b>perplexity</b> on a test set</td></tr>
+<tr><td><b>Pro</b></td><td class="good-t">The <b>best</b> evaluation for comparing two models</td><td>Fast</td></tr>
+<tr><td><b>Con</b></td><td class="bad-t">Time-consuming — <b>days or weeks</b></td><td class="bad-t">A bad approximation unless the test data looks just like the training data; generally only useful in pilot experiments</td></tr>
+</table>
+</div>
+
+
+<h2 id="s8">8 · Unknown words and &lt;UNK&gt;</h2>
+
+<div class="card">
+<table>
+<tr><td><b>Closed vocabulary task</b></td><td>We know all the words in advance; V is fixed</td></tr>
+<tr><td><b>Open vocabulary task</b></td><td>We don't. Unseen words are <b>OOV</b> — Out Of Vocabulary</td></tr>
+</table>
+<div class="out">THE &lt;UNK&gt; RECIPE
+
+  1. Create a fixed lexicon L of size V.
+  2. At the TEXT NORMALISATION phase, change any training word
+     NOT in L to  &lt;UNK&gt;.
+  3. Now TRAIN &lt;UNK&gt;'s probabilities LIKE A NORMAL WORD.
+  4. At decoding time, use the &lt;UNK&gt; probabilities for any
+     unseen input word.</div>
+<p class="note">Step 3 is the clever bit — you deliberately create training
+examples of "a word I've never seen" so the model has a real estimate for it.</p>
+</div>
+
+<div class="card keypoint">
+<b>Also worth a mark: work in log space.</b>
+<code>log(p₁ × p₂ × p₃) = log p₁ + log p₂ + log p₃</code>.
+Two reasons: <b>avoid underflow</b> (multiplying thousands of small
+probabilities drives the product to 0 in floating point), and <b>adding is
+faster than multiplying</b>.
+</div>
+
+
+<h2 id="s9">9 · Quiz yourself</h2>
+<div id="quiz"></div>
+
+<div class="card" style="margin-top:34px">
+<b>Next:</b> <code>../ch05-neural-networks-neural-lm.md</code> ·
+<a href="ch05-neural-nets-xor.html" style="color:var(--accent)">explainer</a>
+— same task, but the counting is replaced by a network.
+</div>
+
+</div>
+
+<script>
+/* ---------- 2. n-gram order ---------- */
+function ngram(n){
+  for(let i=1;i<=3;i++) document.getElementById('ng'+i).className=(i===n?'on':'');
+  const el=document.getElementById('ngout');
+  if(n===1) el.textContent=
+`UNIGRAM   n = 1        P(w1...wn) = PROD P(wi)
+
+  P(I want to eat healthy food)
+    = P(I) P(want) P(to) P(eat) P(healthy) P(food)
+
+  Ignores context completely. "food healthy eat to want I" scores
+  EXACTLY THE SAME. Useless for word prediction.`;
+  else if(n===2) el.textContent=
+`BIGRAM   n = 2         P(w1...wn) = PROD P(wi | wi-1)
+
+  P(I want to eat healthy food)
+    = P(I|<s>) P(want|I) P(to|want) P(eat|to)
+      P(healthy|eat) P(food|healthy) P(</s>|food)
+
+  Each word sees ONE word of history.
+  Note the <s> at the front and </s> at the end.`;
+  else el.textContent=
+`TRIGRAM   n = 3        P(w1...wn) = PROD P(wi | wi-2, wi-1)
+
+  P(I want to eat healthy food)
+    = P(I|<s>,<s>) P(want|<s>,I) P(to|I,want)
+      P(eat|want,to) P(healthy|to,eat) P(food|eat,healthy)
+      P(</s>|healthy,food)
+
+  More context = better predictions, but far more parameters
+  and far more zeros. This is the fundamental trade-off.`;
+}
+ngram(1);
+
+/* ---------- 3. corpus -> bigram table ---------- */
+const CORPORA=[
+ ['I am Sam','Sam I am','I do not like green eggs and ham'],
+ ['the cat sat','the cat ran','a dog sat'],
+ ['the dog barks','the cat sleeps']
+];
+let corpus=CORPORA[0], uni={}, bi={}, vocab=[];
+function corpPreset(i){
+  for(let j=0;j<3;j++) document.getElementById('cp'+j).className=(j===i?'on':'');
+  corpus=CORPORA[i]; build();
+  setSent(i===0?'I am Sam':(i===1?'the cat sat':'the dog barks'));
+}
+function build(){
+  uni={}; bi={};
+  const set=new Set();
+  corpus.forEach(s=>{
+    const t=['<s>'].concat(s.split(/\s+/)).concat(['</s>']);
+    t.forEach(w=>set.add(w));
+    for(let i=0;i<t.length-1;i++){
+      uni[t[i]]=(uni[t[i]]||0)+1;
+      bi[t[i]+'|'+t[i+1]]=(bi[t[i]+'|'+t[i+1]]||0)+1;
+    }
+  });
+  vocab=Array.from(set);
+  vocab.sort((a,b)=> a==='<s>'?-1 : b==='<s>'?1 : a==='</s>'?1 : b==='</s>'?-1 : a.localeCompare(b));
+  document.getElementById('corpshow').textContent =
+    'CORPUS\n\n'+corpus.map(s=>'  <s> '+s+' </s>').join('\n')+
+    '\n\ncontext counts:  '+vocab.filter(w=>uni[w]).map(w=>'c('+w+')='+uni[w]).join('   ');
+  const rows=vocab.filter(w=>w!=='</s>'), cols=vocab.filter(w=>w!=='<s>');
+  let h='<table><tr><th></th>'+cols.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr>';
+  rows.forEach(r=>{
+    h+='<tr><th>'+esc(r)+'</th>';
+    cols.forEach(c=>{
+      const v=bi[r+'|'+c]||0;
+      h+='<td class="num '+(v?'hit':'zero')+'">'+v+'</td>';
+    });
+    h+='</tr>';
+  });
+  document.getElementById('counttab').innerHTML=h+'</table>';
+  let p='<table><tr><th></th>'+cols.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr>';
+  rows.forEach(r=>{
+    p+='<tr><th>'+esc(r)+'</th>';
+    cols.forEach(c=>{
+      const v=(bi[r+'|'+c]||0)/(uni[r]||1);
+      p+='<td class="num '+(v?'hit':'zero')+'">'+(v?v.toFixed(2):'0')+'</td>';
+    });
+    p+='</tr>';
+  });
+  document.getElementById('probtab').innerHTML=p+'</table>';
+  scoreSent();
+}
+function esc(s){return s.replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function setSent(s){ document.getElementById('testsent').value=s; scoreSent(); }
+function scoreSent(){
+  const s=document.getElementById('testsent').value.trim();
+  if(!s){document.getElementById('sentout').textContent='(type a sentence)';return;}
+  const t=['<s>'].concat(s.split(/\s+/)).concat(['</s>']);
+  let out='P( <s> '+s+' </s> )\n\n', prod=1, anyZero=false;
+  for(let i=0;i<t.length-1;i++){
+    const c=bi[t[i]+'|'+t[i+1]]||0, d=uni[t[i]]||0;
+    const p=d? c/d : 0;
+    if(p===0) anyZero=true;
+    prod*=p;
+    out+='  P('+t[i+1].padEnd(9)+'| '+t[i].padEnd(9)+') = '+c+'/'+(d||0)+
+         ' = '+p.toFixed(4)+(p===0?'   <-- ZERO':'')+'\n';
+  }
+  out+='\n  product = '+(prod===0?'0':prod.toFixed(6));
+  if(anyZero) out+='\n\n  ONE ZERO KILLED THE WHOLE SENTENCE.\n'+
+    '  Perplexity = P^(-1/N) = 1/0 -> INFINITE. The model cannot even be evaluated.';
+  document.getElementById('sentout').textContent=out;
+}
+build();
+
+/* ---------- 4. zero demo ---------- */
+function zeroDemo(k){
+  document.getElementById('z0').className=k===0?'on':'';
+  document.getElementById('z1').className=k===1?'on':'';
+  const ps = k===0? [0.31,0.22,0.18,0.4] : [0.31,0.22,0.0,0.4];
+  let prod=1; ps.forEach(p=>prod*=p);
+  const N=ps.length;
+  const pp = prod>0 ? Math.pow(prod,-1/N) : Infinity;
+  document.getElementById('zeroout').textContent =
+`per-word probabilities: [ ${ps.join(', ')} ]
+
+P(test set) = ${ps.join(' x ')}
+            = ${prod===0?'0':prod.toFixed(6)}
+
+Perplexity  = P^(-1/N) = ${prod===0?'1/0  ->  INFINITE':pp.toFixed(3)}
+
+${prod===0
+? 'The model is not merely BAD. It is UNDEFINED.\nYou cannot compare it to anything. This is why smoothing exists.'
+: 'Everything is finite and comparable. This is the model we can evaluate.'}`;
+}
+zeroDemo(0);
+
+/* ---------- 5. smoothing ---------- */
+let smOn=0;
+function smMode(m){
+  smOn=m;
+  document.getElementById('smNone').className=m===0?'on':'';
+  document.getElementById('smAdd1').className=m===1?'on':'';
+  smRender();
+}
+function smRender(){
+  const V=+document.getElementById('vslider').value;
+  document.getElementById('vval').textContent=V;
+  // small fixed demo corpus: the cat sat / the cat ran / a dog sat
+  const ctx='the', cnt={cat:2, dog:0, sat:0, ran:0, a:0, the:0};
+  const cctx=2;
+  let h='<table><tr><th>bigram</th><th class="num">count</th><th class="num">'+
+        (smOn?'add-1 probability':'MLE probability')+'</th><th></th></tr>';
+  Object.keys(cnt).forEach(w=>{
+    const c=cnt[w];
+    const p = smOn ? (c+1)/(cctx+V) : c/cctx;
+    const cls = p===0?'zero':(p>0.5?'hit':'');
+    h+='<tr><td><code>P('+w+'|'+ctx+')</code></td><td class="num">'+c+'</td>'+
+       '<td class="num '+cls+'">'+(smOn?'('+c+'+1)/('+cctx+'+'+V+') = ':'' )+p.toFixed(4)+'</td>'+
+       '<td>'+(c>0&&smOn?'<span class="bad-t">discounted</span>':(c===0&&smOn?'<span class="good-t">rescued</span>':''))+'</td></tr>';
+  });
+  document.getElementById('smtab').innerHTML=h+'</table>';
+  const pMLE=2/cctx, pAdd=(2+1)/(cctx+V);
+  const cstar=(2+1)*cctx/(cctx+V);
+  document.getElementById('smout').textContent =
+`corpus:  <s> the cat sat </s>   <s> the cat ran </s>   <s> a dog sat </s>
+context: "the"   c(the) = ${cctx}   V = ${V}
+
+P(cat|the)   MLE   = 2/${cctx} = ${pMLE.toFixed(3)}
+P(cat|the)   add-1 = (2+1)/(${cctx}+${V}) = 3/${cctx+V} = ${pAdd.toFixed(3)}
+                     ${(100*(pMLE-pAdd)/pMLE).toFixed(0)}% of the evidence thrown away
+
+P(dog|the)   MLE   = 0        <- infinite perplexity
+P(dog|the)   add-1 = 1/${cctx+V} = ${(1/(cctx+V)).toFixed(4)}   <- rescued
+
+RECONSTITUTED COUNT
+  c*(the,cat) = (2+1) x ${cctx} / (${cctx}+${V}) = ${cstar.toFixed(3)}
+  The real count of 2 is revised DOWN to ${cstar.toFixed(2)}.
+
+Push V higher with the slider: as the vocabulary grows, the smoothing
+mass swamps the evidence entirely. THAT is why add-1 is "a blunt
+instrument" and is not used for n-grams.`;
+}
+smRender();
+
+/* ---------- 6. backoff vs interpolation ---------- */
+function biMode(m){
+  document.getElementById('biB').className=m==='b'?'on':'';
+  document.getElementById('biI').className=m==='i'?'on':'';
+  document.getElementById('biS').className=m==='s'?'on':'';
+  const el=document.getElementById('biout');
+  if(m==='b') el.textContent=
+`BACKOFF   use ONE source — the longest you have evidence for
+
+    Do you have good evidence for the TRIGRAM?
+        yes -> use P(w | w-2, w-1)
+        no  -> Do you have the BIGRAM?
+                   yes -> use P(w | w-1)
+                   no  -> use the UNIGRAM P(w)
+
+  "Condition on less context for contexts you haven't
+   learned much about."`;
+  else if(m==='i') el.textContent=
+`INTERPOLATION   MIX all orders, always
+
+    P^(wn | wn-2, wn-1) = L1 * P(wn | wn-2 wn-1)
+                        + L2 * P(wn | wn-1)
+                        + L3 * P(wn)
+
+    subject to   L1 + L2 + L3 = 1
+
+  Lambdas can also be conditional on the context bucket:
+    P^(wn|wn-2 wn-1) = L1(wn-2^n-1) P(wn|wn-2 wn-1) + ...
+
+  INTERPOLATION WORKS BETTER than backoff.`;
+  else el.textContent=
+`STUPID BACKOFF   (Brants et al. 2007) — for web-scale n-grams
+
+    No discounting. Just relative frequencies:
+
+                       count(wi-k+1 ... wi)
+    S(wi | context) =  --------------------    if count > 0
+                       count(wi-k+1 ... wi-1)
+
+    S(wi | context) =  0.4 x S(wi | shorter context)   otherwise
+
+  It is NOT a real probability distribution — hence "stupid".
+  At Google N-gram scale it works as well as anything principled.
+
+  PRUNING is the other web-scale trick:
+    only store n-grams with count > threshold
+    remove singletons of higher-order n-grams`;
+}
+biMode('b');
+
+/* ---------- 7. perplexity ---------- */
+function ppSet(s){ document.getElementById('ppinput').value=s; ppCalc(); }
+function ppCalc(){
+  const raw=document.getElementById('ppinput').value;
+  const ps=raw.split(/[, ]+/).filter(x=>x.length).map(Number).filter(x=>!isNaN(x));
+  if(!ps.length){document.getElementById('ppout').textContent='(enter some probabilities)';return;}
+  const N=ps.length;
+  let prod=1; ps.forEach(p=>prod*=p);
+  if(prod<=0){
+    document.getElementById('ppout').textContent =
+`N = ${N} words
+P(W) = ${ps.join(' x ')} = 0
+
+PP = P(W)^(-1/N) = 1/0  ->  INFINITE
+
+A single zero makes the model impossible to evaluate.
+That is the whole argument for smoothing.`;
+    return;
+  }
+  const pp=Math.pow(prod,-1/N);
+  const logsum=ps.reduce((a,p)=>a+Math.log(p),0);
+  document.getElementById('ppout').textContent =
+`N = ${N} words
+P(W) = ${ps.join(' x ')}
+     = ${prod.toExponential(4)}
+
+PP(W) = P(W)^(-1/N)
+      = (${prod.toExponential(4)})^(-1/${N})
+      = ${pp.toFixed(3)}
+
+in log space (what you actually compute):
+      PP = exp( -(1/N) * SUM ln P(wi) )
+         = exp( -(1/${N}) * ${logsum.toFixed(4)} )
+         = ${pp.toFixed(3)}
+
+READ IT OUT LOUD
+  "At each word, this model is about as uncertain as
+   someone choosing uniformly among ${pp.toFixed(1)} options."
+
+  That number is the BRANCHING FACTOR. Lower = better.`;
+}
+ppCalc();
+(function(){
+  const data=[['Unigram',962],['Bigram',170],['Trigram',109]];
+  const max=1000;
+  document.getElementById('ppbars').innerHTML = data.map(d=>
+    '<div class="barrow"><span class="bl">'+d[0]+'</span>'+
+    '<div class="bar" style="width:'+(100*d[1]/max*4.2)+'px;background:'+
+    (d[1]>500?'#ff6b6b':(d[1]>140?'#ffb454':'#3ddc97'))+'"></div>'+
+    '<span class="bv">'+d[1]+'</span></div>').join('')+
+    '<p class="note">More context → lower perplexity → better model. '+
+    'This is the single table most likely to appear as a one-mark recall question.</p>';
+})();
+
+/* ---------- 9. quiz ---------- */
+const QS=[
+ {q:'A language model computes…',
+  a:['The POS tag of a word','P(W) or P(wn | w1…wn−1)','The cosine between two words','The parse tree'],c:1,
+  e:'Either the probability of a whole sentence, or the probability of an upcoming word given its history.'},
+ {q:'Why can we not just apply the chain rule with raw counts?',
+  a:['It is too slow','Long word strings never occur, so almost every count is 0',
+     'The chain rule is mathematically wrong','It needs smoothing first'],c:1,
+  e:'The chain rule is exactly correct — the problem is data. You would never see "its water is so transparent the" even once.'},
+ {q:'The Markov assumption says…',
+  a:['Words are independent','Limit the history to a fixed number of previous words',
+     'All n-grams are equally likely','Probabilities must sum to 1'],c:1,
+  e:'P(wi | w1…wi−1) ≈ P(wi | wi−n+1…wi−1). That single approximation is what makes n-gram models computable.'},
+ {q:'The bigram MLE formula is…',
+  a:['c(wi) / N','c(wi−1, wi) / c(wi−1)','c(wi−1, wi) / N','c(wi) / c(wi−1)'],c:1,
+  e:'Count the bigram, divide by the count of the CONTEXT word. The denominator is always the count of the conditioning thing.'},
+ {q:'Why do we compute in log space?',
+  a:['Logs are more accurate','To avoid underflow, and adding is faster than multiplying',
+     'To make probabilities positive','It is required by the Markov assumption'],c:1,
+  e:'Multiplying thousands of small probabilities drives the product to 0 in floating point. Sum of logs avoids that entirely.'},
+ {q:'A single unseen bigram in the test set makes perplexity…',
+  a:['Slightly higher','Slightly lower','Infinite','Unchanged'],c:2,
+  e:'P(test set) becomes exactly 0 because you are multiplying, and PP = P^(−1/N) = a root of 1/0. The model becomes impossible to evaluate, not just bad.'},
+ {q:'In add-1 smoothing, the denominator is c(wi−1) + …?',
+  a:['1','N (corpus size)','V (number of UNIQUE words)','the number of bigrams'],c:2,
+  e:'V is the vocabulary size = the count of distinct word TYPES. In the Berkeley corpus V = 1446, which is why every smoothed probability drops so hard.'},
+ {q:'Add-1 changed P(to|want) from 0.66 to 0.26. What does that show?',
+  a:['Add-1 fixed a zero','Add-1 is a blunt instrument — it crushes well-attested bigrams',
+     'The corpus was too small','V was set incorrectly'],c:1,
+  e:'It had to hand probability mass to 1446 words that never followed "want". Hence: add-1 is NOT used for n-grams, though it is used for text classification.'},
+ {q:'Backoff vs interpolation — which works better?',
+  a:['Backoff','Interpolation','They are identical','Stupid backoff'],c:1,
+  e:'Backoff uses one source at a time; interpolation always blends all orders with weights λ summing to 1. The slide states plainly that interpolation works better.'},
+ {q:'How are the interpolation lambdas set?',
+  a:['Always 1/3 each','By maximising the probability of a HELD-OUT corpus',
+     'By maximising accuracy on the test set','By counting'],c:1,
+  e:'Three splits: fix the n-gram probabilities on training data, then search for the λs that give the largest probability to held-out data. Tuning on test would be cheating.'},
+ {q:'Perplexity of a model that assigns 1/10 to each of 10 random digits is…',
+  a:['0.1','1','10','100'],c:2,
+  e:'PP = ((1/10)^N)^(−1/N) = 10. Perplexity IS the branching factor — how many equally likely options the model feels like it is choosing between.'},
+ {q:'Which is true?',
+  a:['Higher perplexity = better model','Lower perplexity = better model',
+     'Perplexity is independent of the model','Perplexity only applies to unigrams'],c:1,
+  e:'Minimising perplexity is the same as maximising probability. WSJ figures: unigram 962, bigram 170, trigram 109.'},
+ {q:'The <UNK> recipe involves…',
+  a:['Deleting unknown words','Creating a fixed lexicon L, mapping unseen training words to <UNK>, and training it as a normal word',
+     'Assigning unknown words probability 0','Backing off to the unigram'],c:1,
+  e:'Step 3 is the clever part — you deliberately create training examples of "a word I have never seen" so the model gets a real estimate for OOV items.'},
+ {q:'Extrinsic evaluation is the best way to compare two LMs, but…',
+  a:['it requires smoothing','it is time-consuming — days or weeks',
+     'it only works for bigrams','it needs a held-out set'],c:1,
+  e:'Hence we often fall back on intrinsic evaluation (perplexity), which is fast but a bad approximation unless the test data looks just like the training data.'}
+];
+(function(){
+  const root=document.getElementById('quiz');
+  QS.forEach((item,qi)=>{
+    const d=document.createElement('div'); d.className='quiz';
+    let h='<div class="q">'+(qi+1)+'. '+item.q+'</div><div class="row">';
+    item.a.forEach((opt,k)=>{h+='<button onclick="ans('+qi+','+k+',this)">'+opt+'</button>';});
+    h+='</div><div class="fb" id="fb'+qi+'"></div>';
+    d.innerHTML=h; root.appendChild(d);
+  });
+})();
+function ans(qi,k,btn){
+  const item=QS[qi], fb=document.getElementById('fb'+qi);
+  const ok=k===item.c;
+  fb.className='fb '+(ok?'ok':'no');
+  fb.innerHTML=(ok?'✅ Correct. ':'❌ Not quite — the answer is <b>'+item.a[item.c]+'</b>. ')+item.e;
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.className='');
+  btn.className='on';
+}
+</script>
+</body>
+</html>

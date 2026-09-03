@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLP Post-Midsem — Chapter Cheat Sheet</title>
+<style>
+:root{--bg:#0e1117;--panel:#161b26;--panel2:#1d2432;--line:#2b3446;--ink:#e6edf7;
+      --dim:#93a1b8;--accent:#5aa9ff;--good:#3ddc97;--warn:#ffb454;--bad:#ff6b6b;--violet:#b78cff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 22px 120px}
+h1{font-size:31px;margin:38px 0 10px;letter-spacing:-.4px;padding-bottom:10px;
+   border-bottom:2px solid var(--accent)}
+h2{font-size:23px;margin:40px 0 12px;padding-top:16px;border-top:1px solid var(--line);color:#cfe3ff}
+h3{font-size:17px;margin:24px 0 8px;color:var(--accent)}
+p{margin:12px 0}
+a{color:var(--accent)}
+code{background:var(--panel2);padding:2px 6px;border-radius:4px;font-size:14px;
+     font-family:ui-monospace,Consolas,monospace;color:#ffd9a0}
+pre{background:#0a0e15;border:1px solid var(--line);border-radius:10px;padding:16px;
+    overflow-x:auto;line-height:1.65}
+pre code{background:none;padding:0;color:#c8d6e8;font-size:13.5px}
+table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14.5px;
+      display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:#b9c8dd;font-weight:600}
+tr:nth-child(even) td{background:#121724}
+blockquote{border-left:3px solid var(--warn);background:#1b1a14;margin:16px 0;
+           padding:12px 18px;border-radius:0 10px 10px 0}
+blockquote p{margin:8px 0}
+blockquote strong{color:var(--warn)}
+hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+ul,ol{padding-left:26px}
+li{margin:5px 0}
+details{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+        padding:12px 16px;margin:14px 0}
+details[open]{border-color:var(--good);background:#111d19}
+summary{cursor:pointer;font-weight:600;color:var(--good);outline:none}
+summary:hover{color:#7ff0bd}
+strong{color:#fff}
+#toc{position:fixed;top:0;right:0;width:250px;height:100vh;overflow-y:auto;
+     background:var(--panel);border-left:1px solid var(--line);padding:20px 16px;font-size:13px}
+#toc b{display:block;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;
+       font-size:11px;margin-bottom:10px}
+#toc a{display:block;padding:5px 8px;border-radius:6px;text-decoration:none;color:#a9bdd6}
+#toc a:hover{background:var(--panel2);color:var(--accent)}
+#toc a.h1{font-weight:700;color:var(--ink);margin-top:8px}
+#toc a.h2{padding-left:18px;font-size:12.5px}
+#bar{position:fixed;top:14px;left:14px;z-index:99;display:flex;gap:8px}
+#bar button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+  border-radius:8px;padding:8px 14px;cursor:pointer;font:600 13px inherit}
+#bar button:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:1400px){#toc{display:none}}
+
+/* ---------- PRINT / PDF ---------- */
+@media print{
+  #toc,#bar{display:none!important}
+  body{background:#fff;color:#111;font-size:10.5pt}
+  .wrap{max-width:100%;padding:0}
+  h1{font-size:19pt;color:#000;border-bottom:2px solid #333;page-break-after:avoid;
+     page-break-before:always;margin-top:0}
+  h1:first-of-type{page-break-before:avoid}
+  h2{font-size:14pt;color:#000;border-top:1px solid #999;page-break-after:avoid}
+  h3{font-size:11.5pt;color:#1a4d80;page-break-after:avoid}
+  a{color:#1a4d80;text-decoration:none}
+  code{background:#eef1f5;color:#7a3d00;border:1px solid #dde3ea}
+  pre{background:#f6f8fa;border:1px solid #c9d1d9;color:#111;page-break-inside:avoid;
+      font-size:9pt;line-height:1.45}
+  pre code{color:#111;font-size:9pt}
+  table{font-size:9pt;display:table;page-break-inside:avoid}
+  th{background:#e8edf3!important;color:#000}
+  td{background:#fff!important}
+  tr:nth-child(even) td{background:#f7f9fb!important}
+  th,td{border:1px solid #b6c0cc;padding:5px 7px}
+  blockquote{background:#fffdf3;border-left:3px solid #d19a20;color:#111;
+             page-break-inside:avoid}
+  blockquote strong{color:#8a5a00}
+  strong{color:#000}
+  details{background:#f4faf7;border:1px solid #b9d9c9;page-break-inside:avoid}
+  details[open]{background:#f4faf7}
+  summary{color:#14663f}
+  hr{border-top:1px solid #bbb}
+  ul,ol{padding-left:20px}
+}
+@page{size:A4;margin:14mm 12mm}
+</style></head>
+<body>
+<div id="bar">
+  <button onclick="doPrint()">&#128424; Print / Save as PDF</button>
+  <button id="tgl" onclick="toggleAll()">Show all answers</button>
+</div>
+<nav id="toc"><b>Jump to</b><div id="toclinks"></div></nav>
+<div class="wrap"><h1 id="nlp-post-midsem--chapter-wise-cheat-sheet">NLP Post-Midsem — Chapter-wise Cheat Sheet</h1>
+<p><strong>Only what you need to answer the exam questions. Nothing else.</strong></p>
+<p>You have not done the theory. That is fine — there is far less of it than the
+slides suggest. Each chapter below is <strong>one page</strong>: what it's for, the words you
+must know, the recipe, one tiny worked example, and the trap.</p>
+<p>Read a chapter (5 min) → do that question in <code>PRACTICE-PAPER</code> → come back if stuck.</p>
+<table>
+<thead>
+<tr>
+  <th>Ch</th>
+  <th>Session</th>
+  <th>Exam Q</th>
+  <th>Page</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>9</td>
+  <td>Parsing</td>
+  <td>Q3</td>
+  <td><a href="#ch-9--parsing">↓</a></td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>Dependency Parsing</td>
+  <td>Q3</td>
+  <td><a href="#ch-10--dependency-parsing">↓</a></td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>Contextual Embeddings &amp; Attention</td>
+  <td>Q4</td>
+  <td><a href="#ch-11--contextual-embeddings--attention">↓</a></td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>WordNet &amp; Word Sense Disambiguation</td>
+  <td>Q5</td>
+  <td><a href="#ch-12--wordnet--word-sense-disambiguation">↓</a></td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>Semantic Web (RDF / OWL)</td>
+  <td>Q6</td>
+  <td><a href="#ch-13--semantic-web-rdf--owl">↓</a></td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>RAG</td>
+  <td>Q6</td>
+  <td><a href="#ch-14--rag">↓</a></td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>Text Summarization</td>
+  <td>Q7</td>
+  <td><a href="#ch-15--text-summarization">↓</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="ch-9--parsing">Ch 9 — Parsing</h1>
+<h3 id="what-its-for">What it's for</h3>
+<p><strong>Parsing = working out the grammatical structure of a sentence.</strong> Like the
+sentence diagrams from school: which words group together, and what role each
+group plays.</p>
+<h3 id="words-you-must-know">Words you must know</h3>
+<table>
+<thead>
+<tr>
+  <th>Word</th>
+  <th>Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Grammar (CFG)</strong></td>
+  <td>A list of rules like <code>S → NP VP</code> — &quot;a Sentence is a Noun Phrase followed by a Verb Phrase&quot;</td>
+</tr>
+<tr>
+  <td><strong>Non-terminal</strong></td>
+  <td>A category: <code>S</code>, <code>NP</code>, <code>VP</code>, <code>PP</code>, <code>Det</code>, <code>N</code>, <code>V</code></td>
+</tr>
+<tr>
+  <td><strong>Terminal</strong></td>
+  <td>An actual word: <em>the</em>, <em>dog</em></td>
+</tr>
+<tr>
+  <td><strong>NP / VP / PP</strong></td>
+  <td>Noun Phrase (<em>the dog</em>) / Verb Phrase (<em>chased the cat</em>) / Prepositional Phrase (<em>with a fork</em>)</td>
+</tr>
+<tr>
+  <td><strong>Det</strong></td>
+  <td>Determiner — <em>the</em>, <em>a</em></td>
+</tr>
+<tr>
+  <td><strong>Top-down</strong></td>
+  <td>Start at <code>S</code>, expand rules downward until you hit the words</td>
+</tr>
+<tr>
+  <td><strong>Backtracking</strong></td>
+  <td>You guessed the wrong rule, so you go back and try the other one</td>
+</tr>
+<tr>
+  <td><strong>PCFG</strong></td>
+  <td>A grammar where every rule carries a <strong>probability</strong></td>
+</tr>
+<tr>
+  <td><strong>Ambiguity</strong></td>
+  <td>The same sentence has <strong>two valid structures</strong> — the thing PCFGs resolve</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-exam-asks-one-of-two-things">The exam asks one of two things</h3>
+<hr />
+<p><strong>(A) Top-down parse table.</strong> <em>&quot;Parse until 'The small dog' using depth-first top-down parsing.&quot;</em></p>
+<p>A <strong>state</strong> is <code>((symbols still to find) position)</code>. Position = which word you're up to.</p>
+<pre><code>1. Leftmost symbol is a CATEGORY  -&gt; replace it with a rule's right-hand side.
+                                     Two rules fit? Take one, PUT THE OTHER IN &quot;BACKUP&quot;.
+2. Leftmost symbol MATCHES the current word -&gt; delete it, position + 1.
+3. It does NOT match -&gt; THROW AWAY this state, POP the backup.   &lt;- the marks are here
+4. Nothing left to find -&gt; done.
+</code></pre>
+<p>Mini example — grammar <code>NP → Det AP N</code> (try first), <code>NP → Det N</code>; <em>&quot;The small dog&quot;</em>:</p>
+<table>
+<thead>
+<tr>
+  <th>Step</th>
+  <th>State</th>
+  <th>Backup</th>
+  <th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td><code>((NP VP) 1)</code></td>
+  <td></td>
+  <td>start</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>((Det AP N VP) 1)</code></td>
+  <td><code>((Det N VP) 1)</code></td>
+  <td>took rule 1, saved rule 2</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>((AP N VP) 2)</code></td>
+  <td><code>((Det N VP) 1)</code></td>
+  <td><em>The</em> is a Det ✓</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>((Adv Adj N VP) 2)</code></td>
+  <td>+<code>((Adj N VP) 2)</code></td>
+  <td>expanded AP</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><strong>FAIL</strong></td>
+  <td></td>
+  <td><em>small</em> is not an Adv ✗</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>((Adj N VP) 2)</code></td>
+  <td></td>
+  <td><strong>popped the backup</strong></td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>((N VP) 3)</code></td>
+  <td></td>
+  <td><em>small</em> is an Adj ✓</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>((VP) 4)</code></td>
+  <td></td>
+  <td><em>dog</em> is an N ✓ — parsed</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><strong>(B) PCFG probability.</strong> <em>&quot;Two parses — compute both probabilities, which wins?&quot;</em></p>
+<pre><code>P(tree) = MULTIPLY the probability of EVERY rule used in that tree.
+Higher probability wins.
+</code></pre>
+<p>The classic case: <em>&quot;saw the girl <strong>with the telescope</strong>&quot;</em> — did he <em>use</em> the
+telescope (PP attaches to the <strong>verb</strong>) or did <em>she have</em> it (PP attaches to the
+<strong>noun</strong>)?</p>
+<pre><code>VP attachment: uses rule  VP -&gt; VP PP   [0.4]
+NP attachment: uses rule  NP -&gt; NP PP   [0.3]
+
+Everything else in the two trees is IDENTICAL, so 0.4 beats 0.3
+-&gt; VP attachment wins.
+</code></pre>
+<blockquote>
+<p><strong>Shortcut:</strong> the two parses differ in <strong>exactly one rule</strong>. Find it, compare
+those two numbers, and you know the answer before multiplying. Then multiply
+anyway to show working.</p>
+</blockquote>
+<h3 id="trap">Trap</h3>
+<p>In (A), <strong>you must show the failure and the pop.</strong> A clean table with no
+backtracking hasn't demonstrated the algorithm and loses most of the marks.</p>
+<hr />
+<hr />
+<h1 id="ch-10--dependency-parsing">Ch 10 — Dependency Parsing</h1>
+<h3 id="what-its-for">What it's for</h3>
+<p>The <em>other</em> way to show sentence structure. Instead of grouping words into
+phrases, you <strong>draw an arrow from each word to the word it depends on</strong>.</p>
+<pre><code>     ROOT ──► chase ──► Dogs      &quot;Dogs&quot; depends on &quot;chase&quot;
+                └────► cats       &quot;cats&quot; depends on &quot;chase&quot;
+</code></pre>
+<h3 id="words-you-must-know">Words you must know</h3>
+<table>
+<thead>
+<tr>
+  <th>Word</th>
+  <th>Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Head</strong></td>
+  <td>The boss word (<em>chase</em>)</td>
+</tr>
+<tr>
+  <td><strong>Dependent</strong></td>
+  <td>The word that hangs off it (<em>Dogs</em>)</td>
+</tr>
+<tr>
+  <td><strong>ROOT</strong></td>
+  <td>An imaginary word at the top; the main verb hangs off it</td>
+</tr>
+<tr>
+  <td><strong>The 3 rules</strong></td>
+  <td>Every word has <strong>exactly one head</strong> · <strong>no cycles</strong> · <strong>everything reaches ROOT</strong></td>
+</tr>
+<tr>
+  <td><strong>Transition-based</strong></td>
+  <td>Build the tree left-to-right, greedily. Fast. Algorithm: <strong>arc-eager / MaltParser</strong></td>
+</tr>
+<tr>
+  <td><strong>Graph-based</strong></td>
+  <td>Score every possible arrow, then pick the best overall tree. Algorithm: <strong>Chu-Liu-Edmonds</strong></td>
+</tr>
+<tr>
+  <td><strong>MST</strong></td>
+  <td>Maximum Spanning Tree — the highest-scoring set of arrows that obeys the 3 rules</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-exam-asks-chu-liu-edmonds">The exam asks: Chu-Liu-Edmonds</h3>
+<p>You get a table of arrow scores. Find the best tree.</p>
+<pre><code>STEP 1  For EVERY word, keep only its single BEST incoming arrow.
+STEP 2  No cycle?  -&gt;  that's your answer, done.
+STEP 3  Cycle?     -&gt;  for each arrow coming INTO the cycle from outside:
+                          new score = its score - (score of the arrow it replaces)
+                       pick the biggest.
+STEP 4  Enter the cycle there; DELETE the cycle arrow pointing at that node;
+        KEEP the other cycle arrow.
+</code></pre>
+<p>Mini example — R=ROOT, A, B. Scores: <code>R→A 3</code>, <code>R→B 9</code>, <code>A→B 5</code>, <code>B→A 8</code>.</p>
+<pre><code>Step 1   Best into A:  R-&gt;A 3 vs B-&gt;A 8   -&gt;  B-&gt;A (8)
+         Best into B:  R-&gt;B 9 vs A-&gt;B 5   -&gt;  R-&gt;B (9)
+
+Step 2   A's head is B, B's head is R.  No cycle!  DONE.
+
+ANSWER:  R-&gt;B (9),  B-&gt;A (8).   Total = 17
+</code></pre>
+<p>If instead <code>A→B</code> had been 12, you'd get a cycle <code>A↔B</code> and would need steps 3–4.</p>
+<h3 id="also-asked-constituency-vs-dependency-a-table">Also asked: Constituency vs Dependency (a table)</h3>
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th>Constituency</th>
+  <th>Dependency</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Structure</strong></td>
+  <td>Nested <strong>phrases</strong>; words only at the leaves</td>
+  <td><strong>Word-to-word</strong> arrows, no phrase nodes</td>
+</tr>
+<tr>
+  <td><strong>Good for</strong></td>
+  <td>Fixed word order (English)</td>
+  <td><strong>Free word order</strong> (Hindi, Czech)</td>
+</tr>
+<tr>
+  <td><strong>Used in</strong></td>
+  <td>Grammar checking</td>
+  <td><strong>Relation extraction, QA, machine translation</strong></td>
+</tr>
+<tr>
+  <td><strong>Algorithms</strong></td>
+  <td>CKY, chart, PCFG</td>
+  <td>Arc-eager (transition), Chu-Liu-Edmonds (graph)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="trap">Trap</h3>
+<p>Check your final answer against the <strong>3 rules</strong>: one head per word, nothing
+points <em>into</em> ROOT, and following arrows backwards from any word must reach ROOT.</p>
+<hr />
+<hr />
+<h1 id="ch-11--contextual-embeddings--attention">Ch 11 — Contextual Embeddings &amp; Attention</h1>
+<blockquote>
+<p><strong>This is the easiest 6 marks in the paper.</strong> It is one weighted average.
+If you learn one chapter today, learn this one.</p>
+</blockquote>
+<h3 id="what-its-for">What it's for</h3>
+<p>An <strong>embedding</strong> is a word turned into a list of numbers, so a computer can do
+maths on it.</p>
+<ul>
+<li><strong>Static embedding</strong> (Word2Vec): <em>bank</em> gets <strong>one</strong> list of numbers forever —
+river bank and money bank share it. Bad.</li>
+<li><strong>Contextual embedding</strong> (BERT): <em>bank</em> gets a <strong>different</strong> list of numbers in
+every sentence, worked out from its neighbours. Good.</li>
+</ul>
+<p><strong>Attention</strong> is how it does that: to represent a word, <strong>take a weighted average
+of the words around it</strong>, giving more weight to the ones that matter.</p>
+<h3 id="words-you-must-know">Words you must know</h3>
+<table>
+<thead>
+<tr>
+  <th>Word</th>
+  <th>Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Embedding</strong></td>
+  <td>A word represented as a list of numbers, e.g. <code>[0.7, 0.8]</code></td>
+</tr>
+<tr>
+  <td><strong>Attention weights (α)</strong></td>
+  <td>How much to listen to each word. <strong>They always add up to 1</strong></td>
+</tr>
+<tr>
+  <td><strong>Value vectors (v)</strong></td>
+  <td>The numbers being averaged</td>
+</tr>
+<tr>
+  <td><strong>Head</strong></td>
+  <td>One attention calculation. Models run several in parallel</td>
+</tr>
+<tr>
+  <td><strong>Multi-head</strong></td>
+  <td>Several heads, results glued together and squashed back down by a matrix <code>W_O</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-exam-asks-compute-the-contextual-embedding">The exam asks: compute the contextual embedding</h3>
+<pre><code>Output = α₁ × v₁  +  α₂ × v₂  +  α₃ × v₃
+
+That's it. Multiply each vector by its weight, add them up.
+</code></pre>
+<p>Mini example — <code>α = [0.5, 0.5]</code>, <code>v₁ = [2, 0]</code>, <code>v₂ = [0, 4]</code>:</p>
+<pre><code>= 0.5 × [2,0]  +  0.5 × [0,4]
+= [1, 0]       +  [0, 2]
+= [1, 2]
+</code></pre>
+<p><strong>Free check: the weights must sum to 1.</strong> <code>0.5 + 0.5 = 1</code> ✓</p>
+<h3 id="then-it-may-ask-multi-head">Then it may ask: multi-head</h3>
+<p>Glue the head outputs into one long list, then multiply by <code>W_O</code>.</p>
+<pre><code>head₁ = [1.1, 2.2] ,  head₂ = [0.5, 0.8]
+
+Concatenate  -&gt;  [1.1, 2.2, 0.5, 0.8]      (4 numbers, so W_O has 4 rows)
+
+Multiply by W_O: for each COLUMN of W_O, multiply down and add.
+    column 1: 1.1×0.2 + 2.2×0.4 + 0.5×0.6 + 0.8×0.1 = 1.48
+</code></pre>
+<h3 id="the-theory-half-3-of-the-6-marks--memorise-these">The theory half (3 of the 6 marks — memorise these)</h3>
+<p><strong>What are contextual embeddings?</strong> Vector representations of words that
+<strong>change based on the surrounding context</strong>. Important because they capture
+<strong>word sense disambiguation</strong>, better <strong>semantic relationships</strong>, and improve
+<strong>downstream tasks</strong>.</p>
+<p><strong>Static vs contextual?</strong> Static = one fixed vector per word, <strong>cannot handle
+polysemy</strong> (words with several meanings). Contextual = dynamic, different vector
+per sentence, <strong>computed using attention</strong>.</p>
+<p><strong>Why multiple heads?</strong> Different <strong>representation subspaces</strong> · different
+<strong>relationship types</strong> (syntactic, semantic, positional) · <strong>diverse patterns</strong>
+· more capacity for little extra compute.</p>
+<h3 id="trap">Trap</h3>
+<p>None, really — just don't forget to check that α sums to 1.</p>
+<hr />
+<hr />
+<h1 id="ch-12--wordnet--word-sense-disambiguation">Ch 12 — WordNet &amp; Word Sense Disambiguation</h1>
+<h3 id="what-its-for">What it's for</h3>
+<p>Many words have several meanings. <strong>WSD = deciding which meaning is being used.</strong>
+<em>&quot;I went to the bank&quot;</em> — money, or river?</p>
+<h3 id="words-you-must-know">Words you must know</h3>
+<table>
+<thead>
+<tr>
+  <th>Word</th>
+  <th>Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Sense</strong></td>
+  <td>One meaning of a word</td>
+</tr>
+<tr>
+  <td><strong>Homonymy</strong></td>
+  <td>Same spelling, <strong>unrelated</strong> meanings. <em>bat</em> (stick) vs <em>bat</em> (animal)</td>
+</tr>
+<tr>
+  <td><strong>Polysemy</strong></td>
+  <td>Same word, <strong>related</strong> meanings. <em>bank</em> the building vs <em>bank</em> the company</td>
+</tr>
+<tr>
+  <td><strong>Synonym</strong></td>
+  <td>Same meaning. <em>couch / sofa</em></td>
+</tr>
+<tr>
+  <td><strong>Antonym</strong></td>
+  <td>Opposite. <em>hot / cold</em></td>
+</tr>
+<tr>
+  <td><strong>Hyponym</strong></td>
+  <td>More specific. <em>car</em> is a hyponym of <em>vehicle</em></td>
+</tr>
+<tr>
+  <td><strong>Hypernym</strong></td>
+  <td>More general. <em>vehicle</em> is a hypernym of <em>car</em></td>
+</tr>
+<tr>
+  <td><strong>WordNet</strong></td>
+  <td>A big dictionary/thesaurus database of all these relations</td>
+</tr>
+<tr>
+  <td><strong>Synset</strong></td>
+  <td>WordNet's word for a <strong>set of synonyms</strong> = one concept</td>
+</tr>
+<tr>
+  <td><strong>Gloss</strong></td>
+  <td>The dictionary definition text of a sense</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-exam-asks-one-of-two-things">The exam asks one of two things</h3>
+<hr />
+<p><strong>(A) Lesk algorithm.</strong> <em>&quot;Which sense fits? Compute the overlap.&quot;</em></p>
+<pre><code>1. Write down the words in the SENTENCE (drop the target word and the/a/is...).
+2. Write down the words in EACH sense's definition.
+3. COUNT how many words appear in BOTH.
+4. Highest count wins.
+</code></pre>
+<p>Mini example — <em>&quot;The crane at the construction site lifted a heavy load.&quot;</em></p>
+<pre><code>Context: [ construction, site, lifted, heavy, load ]
+
+Sense 1 (bird)    : tall, bird, long, neck, wetland      -&gt; overlap 0
+Sense 2 (machine) : machine, lifting, heavy, construction, site, load
+                     matches: construction, site, heavy, load  -&gt; overlap 4
+
+4 &gt; 0  =&gt;  SENSE 2, the machine.
+</code></pre>
+<hr />
+<p><strong>(B) Cosine similarity.</strong> <em>&quot;Here are vectors for each sense and the target. Which sense?&quot;</em></p>
+<p><strong>Cosine</strong> measures whether two lists of numbers <strong>point the same way</strong>.
+1.0 = identical direction. 0 = unrelated.</p>
+<pre><code>              (multiply matching numbers and add them up)
+cosine  =  ---------------------------------------------------
+            (length of a)  ×  (length of b)
+
+length of [1,3,2] = √(1² + 3² + 2²) = √14 = 3.742
+</code></pre>
+<p>Mini example — target <code>[1,3,2]</code>, sense S1 <code>[2,6,4]</code>:</p>
+<pre><code>top    = 1×2 + 3×6 + 2×4 = 2 + 18 + 8 = 28
+|S1|   = √(4+36+16) = √56 = 7.483
+cosine = 28 / (3.742 × 7.483) = 1.0     &lt;- perfect match, pick S1
+</code></pre>
+<h3 id="trap---this-one-costs-marks-every-year">Trap ⚠️ — this one costs marks every year</h3>
+<p><strong>Do not just pick the biggest &quot;top&quot; number.</strong> A sense with big numbers wins the
+multiplication without being the right meaning. <strong>You must divide by both
+lengths.</strong> In the real 2024 paper, the wrong sense had the larger top number.</p>
+<hr />
+<hr />
+<h1 id="ch-13--semantic-web-rdf--owl">Ch 13 — Semantic Web (RDF / OWL)</h1>
+<h3 id="what-its-for">What it's for</h3>
+<p>Web pages are written for humans. A computer sees <em>&quot;Anita studies Data Science&quot;</em>
+as a meaningless string. <strong>The semantic web writes facts in a form computers can
+reason about.</strong></p>
+<h3 id="words-you-must-know">Words you must know</h3>
+<table>
+<thead>
+<tr>
+  <th>Word</th>
+  <th>Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Triple</strong></td>
+  <td>A fact in three parts: <strong>subject – predicate – object</strong>. <em>(Anita, enrolledIn, DataScience)</em></td>
+</tr>
+<tr>
+  <td><strong>RDF</strong></td>
+  <td>Resource Description Framework — the language for writing <strong>facts</strong> as triples</td>
+</tr>
+<tr>
+  <td><strong>RDFS</strong></td>
+  <td>RDF Schema — adds <code>Class</code>, <code>subClassOf</code>, <code>domain</code>, <code>range</code></td>
+</tr>
+<tr>
+  <td><strong>OWL</strong></td>
+  <td>Web Ontology Language — adds <strong>rules and logic</strong>, so a computer can <strong>reason</strong></td>
+</tr>
+<tr>
+  <td><strong>Ontology</strong></td>
+  <td>A formal description of the concepts in a domain and how they relate</td>
+</tr>
+<tr>
+  <td><strong>SPARQL</strong></td>
+  <td>The query language for RDF (like SQL for databases)</td>
+</tr>
+<tr>
+  <td><strong>Inference</strong></td>
+  <td>A fact <strong>nobody wrote down</strong> but which follows logically</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-exam-asks-write-triples-and-rdf-vs-owl">The exam asks: write triples, and RDF vs OWL</h3>
+<p><strong>Writing triples</strong> — just split each English sentence into three parts:</p>
+<pre><code>&quot;Anita is enrolled in Data Science&quot;        -&gt; ( Anita , enrolledIn , DataScience )
+&quot;Data Science is taught by Dr. Rao&quot;        -&gt; ( DataScience , taughtBy , DrRao )
+&quot;Dr. Rao is a member of the CS Department&quot; -&gt; ( DrRao , memberOf , CSDepartment )
+</code></pre>
+<p>And name the parts: <strong>Subjects</strong> = Anita, DataScience, DrRao. <strong>Predicates</strong> =
+enrolledIn, taughtBy, memberOf. <strong>Objects</strong> = DataScience, DrRao, CSDepartment.</p>
+<p><strong>⭐ RDF vs OWL — learn this sentence:</strong></p>
+<blockquote>
+<p><strong>RDF handles data representation; OWL handles logic and consistency checking.</strong>
+Storing facts → <strong>RDF</strong> (simple subject–predicate–object triples).
+Checking a constraint like <em>&quot;every book must have an author&quot;</em> → <strong>OWL</strong>,
+because OWL supports <strong>restrictions and reasoning</strong>.</p>
+</blockquote>
+<p><strong>Derived inference</strong> — if asked to spot one:</p>
+<pre><code>Given:  Tesla is a  ElectricCar
+        ElectricCar is a  Car
+        Car is a  Vehicle
+
+INFERRED (nobody wrote it):   Tesla is a  Vehicle
+because &quot;is a / subClassOf&quot; is TRANSITIVE.
+</code></pre>
+<p>Label that arrow <strong>&quot;inferred&quot;</strong> on your diagram — that's what the marks are for.</p>
+<h3 id="trap">Trap</h3>
+<p>Don't mix them up. <strong>RDF = facts. OWL = rules.</strong> If the question says
+<em>&quot;must&quot;, &quot;every&quot;, &quot;at least one&quot;, &quot;constraint&quot;</em> → the answer is OWL.</p>
+<hr />
+<hr />
+<h1 id="ch-14--rag">Ch 14 — RAG</h1>
+<h3 id="what-its-for">What it's for</h3>
+<p>An LLM like ChatGPT has three problems: its knowledge <strong>stops at its training
+date</strong>, it <strong>makes things up</strong> (hallucinates), and it <strong>doesn't know your private
+documents</strong>.</p>
+<p><strong>RAG's fix:</strong> don't retrain it. Before answering, <strong>go and fetch the relevant
+documents and paste them into the prompt.</strong></p>
+<h3 id="words-you-must-know">Words you must know</h3>
+<table>
+<thead>
+<tr>
+  <th>Word</th>
+  <th>Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Retriever</strong></td>
+  <td>The part that <strong>finds</strong> relevant documents</td>
+</tr>
+<tr>
+  <td><strong>Generator</strong></td>
+  <td>The LLM that <strong>writes</strong> the answer using them</td>
+</tr>
+<tr>
+  <td><strong>Chunk</strong></td>
+  <td>A document sliced into a bite-sized piece</td>
+</tr>
+<tr>
+  <td><strong>Token</strong></td>
+  <td>Roughly a word — how LLM input is measured</td>
+</tr>
+<tr>
+  <td><strong>Context length</strong></td>
+  <td>The <strong>maximum tokens</strong> the LLM can accept at once</td>
+</tr>
+<tr>
+  <td><strong>Semantic search</strong></td>
+  <td>Finds by <strong>meaning</strong>, not exact words — so <em>&quot;laptop repair cost&quot;</em> finds <em>&quot;computer hardware pricing&quot;</em></td>
+</tr>
+<tr>
+  <td><strong>Hallucination</strong></td>
+  <td>The LLM confidently making something up</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-exam-asks-two-bits-of-arithmetic">The exam asks: two bits of arithmetic</h3>
+<hr />
+<p><strong>(A) How many chunks fit?</strong></p>
+<pre><code>1. fixed     = query tokens + system prompt tokens
+2. available = context length - fixed
+3. chunks    = available ÷ chunk size , ROUNDED DOWN   (&quot;floor&quot;)
+4. total sent = fixed + (chunks used × chunk size)
+</code></pre>
+<p>Mini example — query 160, prompt 240, context 4096, chunk 480:</p>
+<pre><code>fixed     = 160 + 240 = 400
+available = 4096 - 400 = 3696
+chunks    = 3696 ÷ 480 = 7.7  -&gt;  7        (a part-chunk doesn't fit)
+total     = 400 + 7×480 = 400 + 3360 = 3760
+</code></pre>
+<hr />
+<p><strong>(B) Precision.</strong></p>
+<pre><code>              how many retrieved chunks were RELEVANT
+precision = ------------------------------------------
+                 how many chunks you retrieved
+</code></pre>
+<p>Mini example — you keep everything scoring ≥ 0.75 from
+<code>0.92, 0.86, 0.79, 0.71</code> → <strong>3 chunks kept</strong>. All relevant → <code>3/3 = 1.0</code>.
+If one turns out irrelevant → <code>2/3 = 0.67</code>.</p>
+<p><strong>The comment they always want:</strong></p>
+<blockquote>
+<p>Lower precision means <strong>more irrelevant text in the context</strong>, which
+<strong>increases noise</strong> and <strong>raises the risk of hallucination</strong>, degrading
+generation quality. Fewer but more relevant chunks generally <strong>improves</strong>
+factual grounding.</p>
+</blockquote>
+<h3 id="trap">Trap</h3>
+<p><strong>Always round DOWN.</strong> 7.7 chunks → 7, never 8. Write the word <em>&quot;floor&quot;</em> — it's
+a marked step.</p>
+<hr />
+<hr />
+<h1 id="ch-15--text-summarization">Ch 15 — Text Summarization</h1>
+<h3 id="what-its-for">What it's for</h3>
+<p>Turning long text into short text. The exam cares about <strong>which kind</strong> of
+summarization, and one <strong>formula</strong> for picking sentences.</p>
+<h3 id="words-you-must-know">Words you must know</h3>
+<table>
+<thead>
+<tr>
+  <th>Word</th>
+  <th>Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Extractive</strong></td>
+  <td>Summary is built from <strong>sentences copied out of</strong> the original</td>
+</tr>
+<tr>
+  <td><strong>Abstractive</strong></td>
+  <td>Summary is written in <strong>new words</strong></td>
+</tr>
+<tr>
+  <td><strong>Single-document</strong></td>
+  <td>Summarises <strong>one</strong> document</td>
+</tr>
+<tr>
+  <td><strong>Multi-document</strong></td>
+  <td>Summarises <strong>many documents about the same event</strong> — must remove repetition</td>
+</tr>
+<tr>
+  <td><strong>Generic</strong></td>
+  <td>A general summary, no particular question in mind</td>
+</tr>
+<tr>
+  <td><strong>Query-focused</strong></td>
+  <td>Summarises only the parts answering <strong>a specific question</strong></td>
+</tr>
+<tr>
+  <td><strong>Redundancy</strong></td>
+  <td>Repeating what the summary already says</td>
+</tr>
+<tr>
+  <td><strong>MMR</strong></td>
+  <td>Maximal Marginal Relevance — the formula for picking the next sentence</td>
+</tr>
+<tr>
+  <td><strong>ROUGE</strong></td>
+  <td>The score for grading a summary against human-written ones</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-exam-asks-one-of-two-things">The exam asks one of two things</h3>
+<hr />
+<p><strong>(A) MMR.</strong> <em>&quot;Which sentence gets picked next?&quot;</em></p>
+<p>The idea: a good next sentence must be <strong>about the topic</strong> AND <strong>not repeat what
+you already have</strong>.</p>
+<pre><code>MMR = λ × sim(s,q)   −   (1−λ) × sim(s,S)
+      \___________/       \______________/
+       relevance           redundancy
+      (to the query)      (to what's already picked)
+
+Pick the HIGHEST. That's it.
+</code></pre>
+<p>Mini example — λ = 0.5. S1: relevance 0.8, redundancy 0.6. S2: relevance 0.7, redundancy 0.2.</p>
+<pre><code>MMR(S1) = 0.5 × 0.8 − 0.5 × 0.6 = 0.40 − 0.30 = 0.10
+MMR(S2) = 0.5 × 0.7 − 0.5 × 0.2 = 0.35 − 0.10 = 0.25
+
+S2 wins — even though S1 is MORE relevant, it repeats the summary too much.
+</code></pre>
+<p><strong>The justification they want (2 marks):</strong> <em>although S1 is more relevant, it is
+highly similar to the already-selected sentence, making it redundant; S2 adds
+new complementary information, giving a higher MMR score.</em></p>
+<hr />
+<p><strong>(B) Identify the summarization type.</strong> Just match the scenario:</p>
+<pre><code>ONE document, wants a headline/abstract   -&gt;  Single-document, GENERIC
+MANY documents on the same event          -&gt;  MULTI-DOCUMENT
+&quot;Summarize only the parts about X&quot;        -&gt;  QUERY-FOCUSED
+</code></pre>
+<p><strong>Also learn: the 3 stages of summarization</strong></p>
+<pre><code>1. Content selection    — pick which sentences to use
+2. Information ordering — decide what order to put them in
+3. Sentence realization — tidy up the wording
+</code></pre>
+<p><strong>ROUGE-2</strong>, if asked: <em>what fraction of the bigrams (word pairs) in the human
+reference summaries also appear in the system summary?</em></p>
+<pre><code>                bigrams matched
+ROUGE-2  =  ------------------------
+             total reference bigrams
+</code></pre>
+<h3 id="trap">Trap</h3>
+<p>In MMR, the <strong>more relevant sentence often loses</strong>. That's the whole point of
+the formula — don't just pick the biggest <code>sim(s,q)</code>. But it isn't a rule: if
+<strong>λ is large</strong> (0.8+), relevance dominates and the more relevant one <em>does</em> win.
+<strong>Do the arithmetic, don't guess.</strong></p>
+<hr />
+<hr />
+<h1 id="the-whole-exam-on-one-page">The whole exam on one page</h1>
+<table>
+<thead>
+<tr>
+  <th>Q</th>
+  <th>Chapter</th>
+  <th>The one formula / recipe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>3</strong></td>
+  <td>9 Parsing</td>
+  <td><code>P(tree) = multiply all rule probabilities</code> · or the top-down table <strong>with a backtrack</strong></td>
+</tr>
+<tr>
+  <td><strong>3</strong></td>
+  <td>10 Dependency</td>
+  <td>Best incoming arc per word → cycle? → contract → <code>score − replaced score</code></td>
+</tr>
+<tr>
+  <td><strong>4</strong></td>
+  <td>11 Attention</td>
+  <td><code>Output = Σ αᵢ × vᵢ</code> — <strong>weights sum to 1</strong></td>
+</tr>
+<tr>
+  <td><strong>5</strong></td>
+  <td>12 WSD</td>
+  <td>Lesk: <strong>count shared words</strong>. Cosine: <strong>divide by both lengths</strong></td>
+</tr>
+<tr>
+  <td><strong>6</strong></td>
+  <td>13 Semantic Web</td>
+  <td>Triples = subject–predicate–object. <strong>RDF = facts, OWL = rules</strong></td>
+</tr>
+<tr>
+  <td><strong>6</strong></td>
+  <td>14 RAG</td>
+  <td><code>floor((context − query − prompt) ÷ chunk)</code> · <code>precision = relevant/retrieved</code></td>
+</tr>
+<tr>
+  <td><strong>7</strong></td>
+  <td>15 Summarization</td>
+  <td><code>MMR = λ·relevance − (1−λ)·redundancy</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-5-things-that-cost-marks">The 5 things that cost marks</h3>
+<ol>
+<li><strong>Cosine — divide by the lengths.</strong> Biggest dot product is often the wrong sense.</li>
+<li><strong>RAG — round DOWN.</strong> Always.</li>
+<li><strong>MMR — do the arithmetic.</strong> The more relevant sentence frequently loses.</li>
+<li><strong>Top-down parsing — show the failure and the pop.</strong></li>
+<li><strong>Dependency — one head per word, nothing into ROOT, everything reaches ROOT.</strong></li>
+</ol>
+<h3 id="do-them-in-this-order-not-paper-order">Do them in this order (not paper order)</h3>
+<pre><code>Q4  Attention      ~5 min   easiest marks in the paper
+Q7  MMR            ~7 min   two multiplications
+Q6  RAG            ~10 min  arithmetic + recall
+Q5  Lesk/cosine    ~10 min  counting
+Q3  Parsing        longest — leave it the remaining time
+</code></pre>
+<hr />
+<p><strong>Next:</strong> open <code>PRACTICE-PAPER</code> and do <strong>Set A</strong>. Come back here when stuck.
+Full worked past-paper solutions are in <code>SOLVED-NUMERICALS</code>.</p>
+</div>
+<script>
+var wasOpen = [];
+function openAll(){
+  wasOpen = [];
+  document.querySelectorAll("details").forEach(function(d,i){
+    wasOpen[i] = d.open; d.open = true;
+  });
+}
+function restoreAll(){
+  document.querySelectorAll("details").forEach(function(d,i){ d.open = wasOpen[i]; });
+}
+window.addEventListener("beforeprint", openAll);
+window.addEventListener("afterprint", restoreAll);
+
+function doPrint(){ openAll(); window.print(); }
+function toggleAll(){
+  var ds = document.querySelectorAll("details");
+  var anyClosed = Array.prototype.some.call(ds, function(d){ return !d.open; });
+  ds.forEach(function(d){ d.open = anyClosed; });
+  document.getElementById("tgl").textContent = anyClosed ? "Hide all answers" : "Show all answers";
+}
+
+var out = "";
+document.querySelectorAll(".wrap h1, .wrap h2").forEach(function(h){
+  if(!h.id) return;
+  out += '<a class="' + h.tagName.toLowerCase() + '" href="#' + h.id + '">' +
+         h.textContent.replace(/^[0-9]+[.]\s*/, "") + "</a>";
+});
+document.getElementById("toclinks").innerHTML = out;
+</script>
+</body></html>

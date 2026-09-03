@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch 8 — Prompting, Transfer Learning &amp; Fine-Tuning</title>
+<style>
+  :root{
+    --bg:#0e1117; --panel:#161b26; --panel2:#1d2432; --line:#2b3446;
+    --ink:#e6edf7; --dim:#93a1b8;
+    --accent:#5aa9ff; --good:#3ddc97; --warn:#ffb454; --bad:#ff6b6b; --violet:#b78cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 20px 90px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.4px}
+  .sub{color:var(--dim);margin:0 0 30px}
+  h2{font-size:21px;margin:48px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:22px 0 8px;color:var(--accent)}
+  code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:14px;
+       font-family:ui-monospace,Consolas,monospace}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+        padding:18px 20px;margin:18px 0}
+  .analogy{border-left:3px solid var(--warn);background:#1b1a14}
+  .analogy b{color:var(--warn)}
+  .keypoint{border-left:3px solid var(--good);background:#111d19}
+  .keypoint b{color:var(--good)}
+  .trap{border-left:3px solid var(--bad);background:#1d1416}
+  .trap b{color:var(--bad)}
+  button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+         border-radius:8px;padding:8px 14px;cursor:pointer;font-size:14px;
+         font-family:inherit;transition:.12s}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.on{background:var(--accent);color:#08111d;border-color:var(--accent);font-weight:600}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--dim);font-weight:600}
+  .out{font-family:ui-monospace,Consolas,monospace;font-size:14px;background:#0a0e15;
+       border:1px solid var(--line);border-radius:8px;padding:14px;white-space:pre-wrap;
+       line-height:1.75;margin-top:12px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+  .lbl{color:var(--dim);font-size:13px;min-width:130px}
+  .quiz{background:var(--panel2);border-radius:10px;padding:14px;margin:12px 0;
+        border:1px solid var(--line)}
+  .quiz .q{font-weight:600;margin-bottom:8px}
+  .fb{margin-top:10px;font-size:14px;display:none;padding:10px;border-radius:6px}
+  .fb.ok{display:block;background:#12312a;color:var(--good)}
+  .fb.no{display:block;background:#33161a;color:#ffb0b0}
+  .toc a{color:var(--accent);text-decoration:none;display:block;padding:3px 0;font-size:14px}
+  .toc a:hover{text-decoration:underline}
+  select,input[type=number]{background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:8px;padding:7px 10px;
+    font-family:inherit;font-size:14px}
+  .good-t{color:var(--good)} .bad-t{color:var(--bad)} .warn-t{color:var(--warn)}
+  .vio-t{color:var(--violet)} .acc-t{color:var(--accent)} .dim-t{color:var(--dim)}
+  .note{font-size:13px;color:var(--dim);margin-top:6px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:16px 0}
+  @media(max-width:820px){.grid3{grid-template-columns:1fr}}
+  .col{border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+       background:var(--panel2);transition:.2s;cursor:pointer}
+  .col:hover{border-color:var(--accent)}
+  .col.sel{border-color:var(--good);background:#12312a}
+  .col h4{margin:0 0 6px;font-size:15px}
+  .col .w{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+  .col ul{margin:8px 0 0;padding-left:18px;font-size:13px}
+  .spectrum{display:flex;align-items:center;justify-content:space-between;
+            font-size:12px;color:var(--dim);margin-top:6px}
+  .ladder{display:grid;gap:8px;margin:14px 0}
+  .rung{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+        padding:12px 16px;cursor:pointer;transition:.15s}
+  .rung:hover{border-color:var(--accent)}
+  .rung.open{border-color:var(--accent);background:#16222f}
+  .rung h4{margin:0;font-size:15px;color:var(--violet);display:flex;
+           justify-content:space-between;gap:10px}
+  .rung .tag{font-size:11px;color:var(--dim);font-weight:400}
+  .rung .body{display:none;margin-top:8px;font-size:14px}
+  .rung.open .body{display:block}
+  .freeze{color:#7fd1ff}
+  .thaw{color:#ffb454}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Prompting, Transfer Learning &amp; Fine-Tuning</h1>
+<p class="sub">NLP Session 8 — LLMs and Generative AI. <b>Theory only.</b>
+Cheap marks, one focused hour. Written notes:
+<code>../ch08-llm-prompt-engineering.md</code></p>
+
+<div class="card toc">
+  <b>What's in here</b>
+  <a href="#s1">1 · Traditional ML vs LLM development</a>
+  <a href="#s2">2 · What a prompt is</a>
+  <a href="#s3">3 · ⭐ Zero-shot vs few-shot — build one</a>
+  <a href="#s4">4 · ⭐⭐ The three ways to make a model do your task</a>
+  <a href="#s5">5 · Transductive vs inductive — the sorter drill</a>
+  <a href="#s6">6 · Generative AI and the assistant ladder</a>
+  <a href="#s7">7 · Pick the right approach</a>
+  <a href="#s8">8 · Quiz yourself</a>
+</div>
+
+
+<h2 id="s1">1 · Traditional ML vs LLM development</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> Traditional ML is <b>building a car from parts</b> — you source
+the components, assemble it, tune the engine. LLM development is
+<b>hiring a taxi and telling the driver where to go</b>. The car already exists
+and is better than anything you'd build. Your whole job becomes
+<b>giving good directions</b>.
+</div>
+
+<div class="card">
+<table>
+<tr><th></th><th>Traditional ML</th><th>LLM development</th></tr>
+<tr><td><b>Expertise</b></td><td>Need <b>ML knowledge</b></td><td class="good-t">Use a <b>pre-trained model / API</b></td></tr>
+<tr><td><b>Data</b></td><td><b>Collect training data</b></td><td class="good-t"><b>No large dataset needed</b></td></tr>
+<tr><td><b>Model</b></td><td>Choose and <b>train a model</b></td><td class="good-t"><b>No training from scratch</b></td></tr>
+<tr><td><b>Resources</b></td><td>More <b>time + GPU / hardware</b></td><td class="good-t">Far less</td></tr>
+<tr><td><b>The work</b></td><td><b>Minimize a loss function</b></td><td class="good-t"><b>Focus on prompt writing</b></td></tr>
+</table>
+<p class="note"><b>The one-line summary:</b> LLMs move the effort from
+<i>training a model</i> to <i>writing an instruction</i>.</p>
+</div>
+
+<div class="card trap">
+<b>Why transfer learning exists at all — the numbers.</b> Deep learning methods
+are <b>data-hungry</b>: <b>&gt;50K data items</b> needed for training. The
+distributions of source and target data <b>must be the same</b>. And labelled
+data in the target domain <b>may be limited</b>.
+<b>This problem is typically addressed with transfer learning.</b>
+</div>
+
+
+<h2 id="s2">2 · What a prompt is</h2>
+
+<div class="card">
+<div class="out" style="margin-top:0">    PROMPT  ---->  [ model ]  ---->  COMPLETION
+
+    prompt     = what you send in
+    completion = what the model generates back</div>
+<p style="margin-top:14px"><b>Definition to quote:</b> a <b>prompt</b> refers to
+the <b>input or query provided to the AI model to generate a response</b>. It can
+be a sentence, a question, or a combination of multiple sentences.
+<b>The prompt sets the context and guides the model in understanding the desired
+task or the information it needs to generate its response.</b></p>
+<p><b>Prompt engineering</b> is the practice of designing and refining prompts so
+the model produces the output you want — choosing the wording, the format, the
+context supplied, and the examples included.</p>
+</div>
+
+
+<h2 id="s3">3 · ⭐ Zero-shot vs few-shot — build one</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> Asking a new colleague to "summarise these tickets" and hoping
+they guess your house style — that's <b>zero-shot</b>. Showing them three
+summaries you already like, then asking — that's <b>few-shot</b>. Neither one
+retrains the colleague. They just read the examples in front of them, do the
+job, and forget. <b>That's why it's called IN-CONTEXT learning.</b>
+</div>
+
+<div class="card">
+<div class="row">
+  <span class="lbl">task</span>
+  <select id="pk_task" onchange="promptBuild()">
+    <option value="sent">sentiment classification</option>
+    <option value="ner">extract the company name</option>
+    <option value="pos">POS tagging (Ch 7's example)</option>
+  </select>
+  <span class="lbl">examples</span>
+  <select id="pk_n" onchange="promptBuild()">
+    <option value="0">0 — zero-shot</option>
+    <option value="2">2 — few-shot</option>
+    <option value="4">4 — few-shot</option>
+  </select>
+</div>
+<div class="out" id="pkout"></div>
+</div>
+
+<div class="card">
+<table>
+<tr><th></th><th>Zero-shot inference</th><th>Few-shot inference</th></tr>
+<tr><td><b>Examples in the prompt</b></td><td><b>None</b></td><td><b>A few</b> (typically 1–5)</td></tr>
+<tr><td><b>What you give</b></td><td>The instruction only</td><td>The instruction <b>plus worked examples</b></td></tr>
+<tr><td><b>Use when</b></td><td>The task is common and clearly describable</td><td>The task is unusual, or you need a <b>specific output format</b></td></tr>
+<tr><td><b>Weights updated?</b></td><td class="bad-t"><b>No</b></td><td class="bad-t"><b>No</b></td></tr>
+</table>
+</div>
+
+<div class="card keypoint">
+<b>The key point.</b> In <b>neither</b> case are any model weights updated.
+Nothing is trained; the examples simply sit in the context window. That is the
+crucial contrast with <b>fine-tuning</b> in §4 — and exactly the distinction the
+POS-tagging slides in Chapter 7 were drawing.
+</div>
+
+
+<h2 id="s4">4 · ⭐⭐ The three ways to make a model do your task</h2>
+
+<p><b>If you remember one diagram from this chapter, make it this one.</b>
+Click a column.</p>
+
+<div class="grid3" id="threeway"></div>
+<div class="spectrum"><span>◀ cheapest</span><span>most capable ▶</span></div>
+<div class="out" id="twout"></div>
+
+<div class="card trap">
+<b>THE trap of this chapter.</b> Transfer learning and fine-tuning are constantly
+confused. There is exactly <b>one</b> distinguishing question:
+<div class="out" style="background:#1d1416;border-color:var(--bad)">    ARE THE PRE-TRAINED WEIGHTS ALLOWED TO CHANGE?
+
+      <span class="freeze">FROZEN</span>   ->  transfer learning
+      <span class="thaw">UPDATED</span>  ->  fine-tuning
+      nothing trained at all  ->  in-context learning / prompting</div>
+</div>
+
+<div class="card">
+<h3>Definitions to quote</h3>
+<table>
+<tr><td><b>Transfer learning</b></td>
+    <td>Using a <b>pre-trained model as a starting point</b> for a new task or domain. Leverage the knowledge acquired on a large dataset and apply it to a <b>related task with a smaller dataset</b>, <b>saving time and computational resources</b>. It involves <b>freezing the pre-trained model's weights and only training the new layers</b>.<br>
+    <span class="note">Slide's example: in image classification, knowledge gained while learning to recognise <b>cars</b> could be applied when trying to recognise <b>trucks</b>.</span></td></tr>
+<tr><td><b>Fine-tuning</b></td>
+    <td><b>Takes it a step further by allowing the pre-trained layers to be updated.</b> Beneficial when the new dataset is <b>large enough</b> and <b>similar</b> to the original dataset the model was pre-trained on.</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h3>Applications of transfer learning</h3>
+<p>Image classification · <b>Named entity recognition</b> · <b>Sentiment
+analysis</b> · <b>Cross-lingual learning</b> · Gaming · Image recognition ·
+Speech recognition.</p>
+</div>
+
+
+<h2 id="s5">5 · Transductive vs inductive — the sorter drill</h2>
+
+<div class="card">
+<table>
+<tr><th></th><th>Transductive transfer</th><th>Inductive transfer</th></tr>
+<tr><td><b>Labelled target data</b></td><td class="bad-t"><b>None available</b></td><td class="good-t"><b>Available</b></td></tr>
+<tr><td><b>Goal</b></td><td>Adapt to the new domain</td><td><b>Improve performance on the target task by training on other task(s)</b></td></tr>
+<tr><td><b>Examples</b></td><td><b>Domain adaptation</b> — the focus of most transfer research in NLP</td><td><b>Multi-task learning</b> (jointly training on &gt;1 task); <b>pre-training</b> (e.g. word embeddings)</td></tr>
+</table>
+<p class="note"><b>Mnemonic:</b> trans<b>D</b>uctive = <b>D</b>omain adaptation,
+no target labels. <b>In</b>ductive = labels are <b>in</b> hand.</p>
+</div>
+
+<div class="card">
+<div class="out" id="tdsent" style="font-size:15px;margin-top:0"></div>
+<div class="row" style="margin-top:12px">
+  <button onclick="tdAns('transductive')">Transductive</button>
+  <button onclick="tdAns('inductive')">Inductive</button>
+</div>
+<div class="fb" id="tdfb"></div>
+<div class="row"><button onclick="nextTd()">Next →</button>
+<span class="note" id="tdscore"></span></div>
+</div>
+
+
+<h2 id="s6">6 · Generative AI and the assistant ladder</h2>
+
+<div class="card">
+<p><b>Generative AI</b> = models that produce <b>new content</b> — text, images,
+code, audio — rather than only classifying or scoring existing content.</p>
+<p class="note">Other examples on the slides: <b>PaintBox</b> (generative imagery)
+and <b>CodeAid</b> (code generation).</p>
+</div>
+
+<p>The five levels of AI assistant, in increasing capability. Click each.</p>
+<div class="ladder" id="assist"></div>
+
+
+<h2 id="s7">7 · Pick the right approach</h2>
+
+<p>Two questions, one recommendation — exactly the shape of the exam question.</p>
+
+<div class="card">
+<div class="row">
+  <span class="lbl">Labelled examples</span>
+  <select id="d_n" onchange="decide()">
+    <option value="0">none</option>
+    <option value="200">~200</option>
+    <option value="500000">~500,000</option>
+  </select>
+  <span class="lbl">Similar to pre-training data?</span>
+  <select id="d_sim" onchange="decide()">
+    <option value="yes">yes, same kind of text</option>
+    <option value="no">no, very different domain</option>
+  </select>
+</div>
+<div class="out" id="decout"></div>
+</div>
+
+
+<h2 id="s8">8 · Quiz yourself</h2>
+<div id="quiz"></div>
+
+<div class="card" style="margin-top:34px">
+<b>Pre-midsem complete.</b> Chapters 1–8 cover the whole syllabus. What is left
+is not reading, it is <b>speed</b> — the "You try" sections you have not
+attempted, plus one timed pass over
+<a href="ch06-viterbi-drill.html" style="color:var(--accent)">the Viterbi drill</a>
+and the smoothing table in
+<a href="ch04-ngrams-smoothing-perplexity.html" style="color:var(--accent)">Chapter 4</a>.
+<br><br>Post-midsem picks up at <b>Session 9 — Parsing</b>:
+<code>../../notes/parsing/README.md</code>
+</div>
+
+</div>
+
+<script>
+/* ---------- 3. prompt builder ---------- */
+const TASKS={
+ sent:{
+  instr:'Classify the sentiment of this review as positive or negative.',
+  ex:[['"Screen cracked in a week."','negative'],
+      ['"Arrived early and works great."','positive'],
+      ['"Stopped charging after two days."','negative'],
+      ['"Best purchase I have made all year."','positive']],
+  q:'"The battery lasted two days. Excellent."',
+  qlabel:'Review', alabel:'Sentiment',
+  why:'Without examples the model may answer "Positive." / "positive" / "The sentiment is positive" inconsistently across 100 reviews. Two examples pin the format to a single bare word.'},
+ ner:{
+  instr:'Extract the company name from the following news headline. Output only the company name.',
+  ex:[['"Globex to acquire rival for $2bn"','Globex'],
+      ['"Initech faces antitrust probe in the EU"','Initech'],
+      ['"Umbrella Corp posts record quarterly loss"','Umbrella Corp'],
+      ['"Regulators clear Soylent Industries merger"','Soylent Industries']],
+  q:'"Acme Corp shares fall 8% after weak guidance"',
+  qlabel:'Headline', alabel:'Company',
+  why:'The examples pin down the output format — bare company name, no explanation, no punctuation — which a zero-shot instruction often fails to enforce consistently.'},
+ pos:{
+  instr:'Tag the following sentence using the Penn Treebank tagset. Output only the word/tag pairs.',
+  ex:[['"The dog barks."','The/DT dog/NN barks/VBZ ./.'],
+      ['"A happy bird sang."','A/DT happy/JJ bird/NN sang/VBD ./.'],
+      ['"She quickly left."','She/PRP quickly/RB left/VBD ./.'],
+      ['"Old men sail boats."','Old/JJ men/NNS sail/VBP boats/NNS ./.']],
+  q:'"The concert was great."',
+  qlabel:'Sentence', alabel:'Tags',
+  why:'This is the Chapter 7 example verbatim. Zero-shot works here because the Penn tagset is famous enough to be describable by name — a rarer tagset would need the examples.'}
+};
+function promptBuild(){
+  const t=TASKS[document.getElementById('pk_task').value];
+  const n=+document.getElementById('pk_n').value;
+  let s = (n===0?'ZERO-SHOT PROMPT':'FEW-SHOT PROMPT  ('+n+' examples)')+'\n\n';
+  s+='    '+t.instr+'\n';
+  if(n>0){ s+='\n'; for(let i=0;i<n;i++)
+    s+='    '+t.qlabel+': '+t.ex[i][0]+'\n    '+t.alabel+': '+t.ex[i][1]+'\n\n'; }
+  else s+='\n';
+  s+='    '+t.qlabel+': '+t.q+'\n    '+t.alabel+':\n';
+  s+='\n\nWEIGHTS UPDATED:  NONE.  Nothing is trained.\n';
+  s+='The examples simply sit in the CONTEXT WINDOW. This is\n';
+  s+='IN-CONTEXT LEARNING — the model reads them, does the job,\n';
+  s+='and retains nothing afterwards.\n';
+  if(n>0) s+='\nWHY FEW-SHOT HELPS HERE\n\n  '+t.why;
+  else s+='\nWHEN ZERO-SHOT IS ENOUGH\n\n  The task is common and clearly describable. Switch to\n'+
+          '  few-shot above if you need the OUTPUT FORMAT pinned down.';
+  document.getElementById('pkout').textContent=s;
+}
+promptBuild();
+
+/* ---------- 4. three-way ---------- */
+const THREE=[
+ {k:'prompt',t:'PROMPTING',w:'no weights change',col:'var(--violet)',
+  li:['zero-shot / few-shot','examples live in the prompt','data needed: <b>none</b>','also called in-context learning'],
+  d:`PROMPTING  (in-context learning)
+
+  WEIGHTS CHANGED : none at all
+  DATA NEEDED     : none
+  WHAT YOU SUPPLY : a well-written natural-language instruction,
+                    optionally a few examples
+  COST            : cheapest — no training run whatsoever
+
+  Zero-shot = instruction only.
+  Few-shot  = instruction + 1-5 worked examples.
+
+  In NEITHER case are model weights updated. The examples sit
+  in the context window and are forgotten afterwards.
+
+  USE WHEN: you have no labelled data, or too few items to
+  justify any training run at all.`},
+ {k:'transfer',t:'TRANSFER LEARNING',w:'some weights change',col:'var(--accent)',
+  li:['also called feature extraction','<span class="freeze">FREEZE</span> the backbone','train only the new head layers','data: <b>small</b>'],
+  d:`TRANSFER LEARNING  (feature extraction)
+
+  WEIGHTS CHANGED : only the NEW LAYERS you added
+  PRE-TRAINED     : FROZEN
+  DATA NEEDED     : small
+  COST            : moderate
+
+  "Using a pre-trained model as a starting point for a new task
+   or domain. Leverage the knowledge acquired by the pre-trained
+   model on a large dataset and apply it to a RELATED TASK WITH A
+   SMALLER DATASET, saving time and computational resources.
+
+   Transfer learning involves FREEZING the pre-trained model's
+   weights and ONLY TRAINING THE NEW LAYERS."
+
+  SLIDE'S EXAMPLE: knowledge gained while learning to recognise
+  CARS could be applied when trying to recognise TRUCKS.
+
+  USE WHEN: you have a few hundred to a few thousand labelled
+  examples — enough to train a head, not enough to safely move
+  the whole model.`},
+ {k:'finetune',t:'FINE-TUNING',w:'all / most change',col:'var(--good)',
+  li:['<span class="thaw">UNFREEZE</span> pre-trained layers','update them too','data: <b>large AND similar</b>','most capable'],
+  d:`FINE-TUNING
+
+  WEIGHTS CHANGED : the pre-trained layers TOO
+  PRE-TRAINED     : UPDATED
+  DATA NEEDED     : large AND similar to the source
+  COST            : highest
+
+  "Fine-tuning takes it A STEP FURTHER by allowing the
+   pre-trained layers to be UPDATED.
+
+   Beneficial when the new dataset is LARGE ENOUGH and SIMILAR
+   to the original dataset on which the pre-trained model was
+   trained."
+
+  Both conditions matter:
+    - LARGE ENOUGH  -> otherwise you overfit and destroy the
+                       knowledge you were trying to reuse
+    - SIMILAR       -> otherwise the pre-trained features are
+                       not the right starting point anyway
+
+  USE WHEN: >50K labelled items of the same kind of text, and
+  you want the last few points of accuracy. This is what
+  Chapter 7's BERT POS tagger does.`}
+];
+(function(){
+  const r=document.getElementById('threeway');
+  THREE.forEach((c,i)=>{
+    const d=document.createElement('div'); d.className='col'+(i===0?' sel':'');
+    d.innerHTML='<div class="w">'+c.w+'</div><h4 style="color:'+c.col+'">'+c.t+'</h4>'+
+                '<ul>'+c.li.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
+    d.onclick=()=>{
+      r.querySelectorAll('.col').forEach(x=>x.className='col');
+      d.className='col sel';
+      document.getElementById('twout').textContent=c.d;
+    };
+    r.appendChild(d);
+  });
+  document.getElementById('twout').textContent=THREE[0].d;
+})();
+
+/* ---------- 5. transductive / inductive drill ---------- */
+const TD=[
+ {s:'Training a sentiment model on product reviews and applying it to restaurant reviews, with NO restaurant labels.',
+  a:'transductive',
+  e:'No labelled data in the target domain — this is domain adaptation, which the slide names as the focus of most transfer research in NLP.'},
+ {s:'Jointly training a model on POS tagging AND named entity recognition, to improve NER.',
+  a:'inductive',
+  e:'Labelled target-task data IS available, and the goal is to improve the target task by training on another task. That is multi-task learning — an inductive-transfer example.'},
+ {s:'Initialising a model with pre-trained word embeddings.',
+  a:'inductive',
+  e:'Pre-training is listed explicitly as an inductive-transfer example on the slide.'},
+ {s:'Adapting an English news parser to English legal contracts, with no annotated contracts available.',
+  a:'transductive',
+  e:'Same task, different domain, no target labels. Textbook domain adaptation.'},
+ {s:'Fine-tuning BERT on your own labelled 60,000-sentence POS corpus.',
+  a:'inductive',
+  e:'You have labelled target-domain data, so it is inductive. (Note the DIFFERENT axis: this is also fine-tuning rather than frozen transfer, because the pre-trained weights get updated.)'},
+ {s:'Training a speech model on read audiobooks and deploying it on noisy call-centre audio, with no labelled call-centre data.',
+  a:'transductive',
+  e:'No labels in the target domain — transductive. The distribution shift between source and target is exactly the problem transfer learning was introduced to address.'}
+];
+let ti=0, tScore=[0,0];
+function showTd(){
+  document.getElementById('tdsent').textContent=TD[ti].s;
+  document.getElementById('tdfb').className='fb';
+}
+function tdAns(v){
+  const item=TD[ti], fb=document.getElementById('tdfb');
+  const ok=v===item.a;
+  tScore[1]++; if(ok) tScore[0]++;
+  fb.className='fb '+(ok?'ok':'no');
+  fb.innerHTML=(ok?'✅ Correct — <b>'+item.a+'</b>. ':'❌ It is <b>'+item.a+'</b>. ')+item.e;
+  document.getElementById('tdscore').textContent='score: '+tScore[0]+' / '+tScore[1];
+}
+function nextTd(){ ti=(ti+1)%TD.length; showTd(); }
+showTd();
+
+/* ---------- 6. assistant ladder ---------- */
+const ASSIST=[
+ {n:'Autonomous Organization of Assistants',tag:'top',
+  d:'A <b>group of AI assistants that know every customer personally</b>, eventually running <b>large parts of company operations</b> — from lead generation through marketing, sales, HR and finance.'},
+ {n:'Personalized Assistant',tag:'knows you',
+  d:'<b>Knows you in much more detail.</b> Quickly checks a few final things before giving you a quote <b>tailored to your actual situation</b>.'},
+ {n:'Contextual Assistant',tag:'remembers the conversation',
+  d:'Uses the <b>context of the conversation</b> so far, rather than treating each message in isolation.'},
+ {n:'FAQ Assistant',tag:'answers known questions',
+  d:'Answers questions it has an answer for. No memory, no personalisation.'},
+ {n:'Notification Assistant',tag:'bottom',
+  d:'Pushes information at you. One-way.'}
+];
+(function(){
+  const r=document.getElementById('assist');
+  ASSIST.forEach(L=>{
+    const d=document.createElement('div'); d.className='rung';
+    d.innerHTML='<h4><span>'+L.n+'</span><span class="tag">'+L.tag+'</span></h4>'+
+                '<div class="body">'+L.d+'</div>';
+    d.onclick=()=>d.classList.toggle('open');
+    r.appendChild(d);
+  });
+})();
+
+/* ---------- 7. decide ---------- */
+function decide(){
+  const n=+document.getElementById('d_n').value;
+  const sim=document.getElementById('d_sim').value==='yes';
+  let rec, why;
+  if(n===0){
+    rec='PROMPTING  (zero-shot, or few-shot to pin the format)';
+    why=`No labelled data means there is nothing to train on — and any
+training run would cost more than it saves.
+
+  weights changed : NONE
+  what you supply : a well-written instruction
+
+Use FEW-SHOT rather than zero-shot if the output format matters
+and zero-shot answers come back inconsistent.`;
+  } else if(n===200){
+    rec='TRANSFER LEARNING  (freeze the backbone, train a head)';
+    why=`200 examples is far too little to update a large model's weights
+without overfitting — you would destroy the very knowledge you
+were trying to reuse.
+
+  weights changed : ONLY the new layers you added
+  pre-trained     : FROZEN
+
+"Transfer learning involves freezing the pre-trained model's
+ weights and only training the new layers."`;
+  } else if(sim){
+    rec='FINE-TUNING      <-- both conditions met';
+    why=`Both of the slide's conditions are satisfied:
+
+  LARGE ENOUGH : 500,000 items is well past the >50K threshold
+  SIMILAR      : same kind of text as the pre-training corpus
+
+"Fine-tuning takes it a step further by ALLOWING THE PRE-TRAINED
+ LAYERS TO BE UPDATED. Beneficial when the new dataset is large
+ enough and similar to the original dataset on which the
+ pre-trained model was trained."
+
+  weights changed : the pre-trained layers TOO`;
+  } else {
+    rec='TRANSFER LEARNING first, then CAUTIOUS fine-tuning';
+    why=`You have the volume (500,000 > 50K) but NOT the similarity — the
+domain is very different from the pre-training corpus.
+
+The slide's condition for fine-tuning is large enough AND similar.
+With a big distribution gap, unfreezing everything risks
+CATASTROPHIC FORGETTING: the pre-trained features are not the
+right starting point, so the model discards them and effectively
+trains from scratch anyway.
+
+  Safer: freeze first, train the head, and only then unfreeze
+  the upper layers gradually with a small learning rate.
+
+  Note this is exactly the case the slide flags as a real-life
+  challenge: "the distributions of the source and target data
+  must be the same."`;
+  }
+  document.getElementById('decout').textContent =
+    'RECOMMENDATION\n\n  '+rec+'\n\nWHY\n\n'+why;
+}
+decide();
+
+/* ---------- 8. quiz ---------- */
+const QS=[
+ {q:'In traditional ML you minimise a loss function. In LLM development you…',
+  a:['collect more data','focus on prompt writing','choose an architecture','tune hyperparameters'],c:1,
+  e:'Straight off the comparison slide. The effort moves from training a model to writing an instruction.'},
+ {q:'A prompt is…',
+  a:['the model\'s output','the input or query given to the model, which SETS THE CONTEXT and guides it',
+     'a training example','a fine-tuning dataset'],c:1,
+  e:'"It can be a sentence, a question, or a combination of multiple sentences." What comes back is the COMPLETION.'},
+ {q:'Zero-shot inference means…',
+  a:['no training at all','the prompt contains NO examples','the model has zero parameters','zero accuracy'],c:1,
+  e:'Instruction only. Few-shot adds a few worked examples. Both are in-context learning; neither trains anything.'},
+ {q:'In few-shot in-context learning, the model weights are…',
+  a:['updated slightly','updated fully','NOT updated at all','frozen except the head'],c:2,
+  e:'This is THE distinction from fine-tuning. The examples sit in the context window and are forgotten afterwards.'},
+ {q:'The single question that distinguishes transfer learning from fine-tuning is…',
+  a:['How much data do you have?','ARE THE PRE-TRAINED WEIGHTS ALLOWED TO CHANGE?',
+     'Is the model a Transformer?','Do you have a GPU?'],c:1,
+  e:'Frozen → transfer learning. Updated → fine-tuning. Nothing trained at all → prompting.'},
+ {q:'In transfer learning, what trains?',
+  a:['The whole model','Only the NEW layers you added','Only the embeddings','Nothing'],c:1,
+  e:'"Transfer learning involves freezing the pre-trained model\'s weights and only training the new layers."'},
+ {q:'Fine-tuning is beneficial when the new dataset is…',
+  a:['small and different','large enough AND similar to the original','any size','labelled by experts'],c:1,
+  e:'Both conditions. Too small → overfitting destroys the reused knowledge. Too different → the pre-trained features are the wrong starting point.'},
+ {q:'How much data do deep learning methods typically need?',
+  a:['>500 items','>5,000 items','>50K items','>5 million items'],c:2,
+  e:'">50K data items needed for training" — this is the number that motivates transfer learning in the first place.'},
+ {q:'Applying a product-review sentiment model to restaurant reviews with no restaurant labels is…',
+  a:['inductive transfer','transductive transfer','fine-tuning','few-shot learning'],c:1,
+  e:'No labelled target-domain data = transductive. This is domain adaptation, the focus of most transfer research in NLP.'},
+ {q:'Jointly training on POS tagging and NER to improve NER is…',
+  a:['transductive transfer','inductive transfer','zero-shot','prompting'],c:1,
+  e:'Labelled target data IS available, and the goal is to improve the target task by training on other tasks — multi-task learning, an inductive example.'},
+ {q:'Which is the focus of most transfer research in NLP?',
+  a:['Inductive','Transductive (domain adaptation)','Multi-task learning','Pre-training'],c:1,
+  e:'Named explicitly on the slide. Labelled target data is usually the scarce resource, which is exactly the transductive case.'},
+ {q:'You have 200 labelled legal contracts and need a clause classifier. Best approach?',
+  a:['Fine-tuning','Transfer learning — freeze the backbone, train a head','Train from scratch','Zero-shot only'],c:1,
+  e:'200 examples is far too little to update a large model\'s weights without overfitting. Freeze the pre-trained layers and train a small classification head.'},
+ {q:'You have 500,000 labelled medical notes and need maximum NER accuracy. Best approach?',
+  a:['Prompting','Transfer learning','Fine-tuning','Bi-LSTM-CRF from scratch'],c:2,
+  e:'The dataset is large (well past >50K) and similar in kind to the pre-training text — exactly the condition the slide gives for fine-tuning being beneficial.'},
+ {q:'Generative AI is…',
+  a:['models that classify text','models that produce NEW CONTENT rather than only classifying',
+     'another name for an LLM','a training technique'],c:1,
+  e:'Text, images, code, audio. The slides give PaintBox (imagery) and CodeAid (code) as examples.'},
+ {q:'The highest level on the AI-assistant ladder is…',
+  a:['Contextual Assistant','Personalized Assistant','Autonomous Organization of Assistants','FAQ Assistant'],c:2,
+  e:'A group of AI assistants that know every customer personally, eventually running large parts of company operations — lead generation, marketing, sales, HR, finance.'}
+];
+(function(){
+  const root=document.getElementById('quiz');
+  QS.forEach((item,qi)=>{
+    const d=document.createElement('div'); d.className='quiz';
+    let h='<div class="q">'+(qi+1)+'. '+item.q+'</div><div class="row">';
+    item.a.forEach((opt,k)=>{h+='<button onclick="ans('+qi+','+k+',this)">'+opt+'</button>';});
+    h+='</div><div class="fb" id="fb'+qi+'"></div>';
+    d.innerHTML=h; root.appendChild(d);
+  });
+})();
+function ans(qi,k,btn){
+  const item=QS[qi], fb=document.getElementById('fb'+qi);
+  const ok=k===item.c;
+  fb.className='fb '+(ok?'ok':'no');
+  fb.innerHTML=(ok?'✅ Correct. ':'❌ Not quite — the answer is <b>'+item.a[item.c]+'</b>. ')+item.e;
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.className='');
+  btn.className='on';
+}
+</script>
+</body>
+</html>

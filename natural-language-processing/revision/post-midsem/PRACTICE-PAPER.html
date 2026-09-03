@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLP Post-Midsem — Practice Papers</title>
+<style>
+:root{--bg:#0e1117;--panel:#161b26;--panel2:#1d2432;--line:#2b3446;--ink:#e6edf7;
+      --dim:#93a1b8;--accent:#5aa9ff;--good:#3ddc97;--warn:#ffb454;--bad:#ff6b6b;--violet:#b78cff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 22px 120px}
+h1{font-size:31px;margin:38px 0 10px;letter-spacing:-.4px;padding-bottom:10px;
+   border-bottom:2px solid var(--accent)}
+h2{font-size:23px;margin:40px 0 12px;padding-top:16px;border-top:1px solid var(--line);color:#cfe3ff}
+h3{font-size:17px;margin:24px 0 8px;color:var(--accent)}
+p{margin:12px 0}
+a{color:var(--accent)}
+code{background:var(--panel2);padding:2px 6px;border-radius:4px;font-size:14px;
+     font-family:ui-monospace,Consolas,monospace;color:#ffd9a0}
+pre{background:#0a0e15;border:1px solid var(--line);border-radius:10px;padding:16px;
+    overflow-x:auto;line-height:1.65}
+pre code{background:none;padding:0;color:#c8d6e8;font-size:13.5px}
+table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14.5px;
+      display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:#b9c8dd;font-weight:600}
+tr:nth-child(even) td{background:#121724}
+blockquote{border-left:3px solid var(--warn);background:#1b1a14;margin:16px 0;
+           padding:12px 18px;border-radius:0 10px 10px 0}
+blockquote p{margin:8px 0}
+blockquote strong{color:var(--warn)}
+hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+ul,ol{padding-left:26px}
+li{margin:5px 0}
+details{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+        padding:12px 16px;margin:14px 0}
+details[open]{border-color:var(--good);background:#111d19}
+summary{cursor:pointer;font-weight:600;color:var(--good);outline:none}
+summary:hover{color:#7ff0bd}
+strong{color:#fff}
+#toc{position:fixed;top:0;right:0;width:250px;height:100vh;overflow-y:auto;
+     background:var(--panel);border-left:1px solid var(--line);padding:20px 16px;font-size:13px}
+#toc b{display:block;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;
+       font-size:11px;margin-bottom:10px}
+#toc a{display:block;padding:5px 8px;border-radius:6px;text-decoration:none;color:#a9bdd6}
+#toc a:hover{background:var(--panel2);color:var(--accent)}
+#toc a.h1{font-weight:700;color:var(--ink);margin-top:8px}
+#toc a.h2{padding-left:18px;font-size:12.5px}
+#bar{position:fixed;top:14px;left:14px;z-index:99;display:flex;gap:8px}
+#bar button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+  border-radius:8px;padding:8px 14px;cursor:pointer;font:600 13px inherit}
+#bar button:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:1400px){#toc{display:none}}
+
+/* ---------- PRINT / PDF ---------- */
+@media print{
+  #toc,#bar{display:none!important}
+  body{background:#fff;color:#111;font-size:10.5pt}
+  .wrap{max-width:100%;padding:0}
+  h1{font-size:19pt;color:#000;border-bottom:2px solid #333;page-break-after:avoid;
+     page-break-before:always;margin-top:0}
+  h1:first-of-type{page-break-before:avoid}
+  h2{font-size:14pt;color:#000;border-top:1px solid #999;page-break-after:avoid}
+  h3{font-size:11.5pt;color:#1a4d80;page-break-after:avoid}
+  a{color:#1a4d80;text-decoration:none}
+  code{background:#eef1f5;color:#7a3d00;border:1px solid #dde3ea}
+  pre{background:#f6f8fa;border:1px solid #c9d1d9;color:#111;page-break-inside:avoid;
+      font-size:9pt;line-height:1.45}
+  pre code{color:#111;font-size:9pt}
+  table{font-size:9pt;display:table;page-break-inside:avoid}
+  th{background:#e8edf3!important;color:#000}
+  td{background:#fff!important}
+  tr:nth-child(even) td{background:#f7f9fb!important}
+  th,td{border:1px solid #b6c0cc;padding:5px 7px}
+  blockquote{background:#fffdf3;border-left:3px solid #d19a20;color:#111;
+             page-break-inside:avoid}
+  blockquote strong{color:#8a5a00}
+  strong{color:#000}
+  details{background:#f4faf7;border:1px solid #b9d9c9;page-break-inside:avoid}
+  details[open]{background:#f4faf7}
+  summary{color:#14663f}
+  hr{border-top:1px solid #bbb}
+  ul,ol{padding-left:20px}
+}
+@page{size:A4;margin:14mm 12mm}
+</style></head>
+<body>
+<div id="bar">
+  <button onclick="doPrint()">&#128424; Print / Save as PDF</button>
+  <button id="tgl" onclick="toggleAll()">Show all answers</button>
+</div>
+<nav id="toc"><b>Jump to</b><div id="toclinks"></div></nav>
+<div class="wrap"><h1 id="nlp-post-midsem--practice-papers-exam-format">NLP Post-Midsem — Practice Papers (exam format)</h1>
+<p><strong>AIMLCLZG525 · End-Semester Test · Open Book · Q3–Q7 = 30 marks</strong></p>
+<p>Three full mock sets of <strong>Q3–Q7</strong>, written in the exact format of your real
+papers — same question numbering, same mark splits, same phrasing style. Numbers
+are <strong>fresh</strong> so this is real practice, not memory.</p>
+<blockquote>
+<p><strong>How to use this today.</strong>
+Do <strong>Set A</strong> closed-book against a clock: <strong>45 minutes for the five questions.</strong>
+Mark it. Then do <strong>Set B</strong>, then <strong>Set C</strong>. Reveal an answer only after you have
+written something. Reading a solved sum feels like learning and isn't.</p>
+</blockquote>
+<p>Every answer here was recomputed independently. Full method write-ups live in
+<a href="SOLVED-NUMERICALS.md"><code>SOLVED-NUMERICALS.md</code></a> — go there when an answer surprises you.</p>
+<hr />
+<hr />
+<h1 id="set-a">SET A</h1>
+<h2 id="question-3-2--2--2--6-marks">Question 3. [2 + 2 + 2 = 6 Marks]</h2>
+<p>Consider the sentence <strong>&quot;Dogs chase cats&quot;</strong> with the following possible
+dependency arc scores. Let <code>R</code> be the ROOT node, <code>A</code> = Dogs, <code>B</code> = chase,
+<code>C</code> = cats.</p>
+<table>
+<thead>
+<tr>
+  <th>Head → Dependent</th>
+  <th>Score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>R → A</td>
+  <td>3</td>
+</tr>
+<tr>
+  <td>R → B</td>
+  <td>9</td>
+</tr>
+<tr>
+  <td>R → C</td>
+  <td>4</td>
+</tr>
+<tr>
+  <td>A → B</td>
+  <td>5</td>
+</tr>
+<tr>
+  <td>B → A</td>
+  <td>8</td>
+</tr>
+<tr>
+  <td>C → A</td>
+  <td>2</td>
+</tr>
+<tr>
+  <td>B → C</td>
+  <td>7</td>
+</tr>
+<tr>
+  <td>C → B</td>
+  <td>10</td>
+</tr>
+</tbody>
+</table>
+<p><strong>(a)</strong> For each node (A, B, C), pick the incoming arc with the highest score.
+Identify the cycle that forms. <strong>[2 Marks]</strong></p>
+<p><strong>(b)</strong> Apply Chu-Liu-Edmonds: show the calculation for the &quot;contracted&quot; node
+scores after detecting the cycle. <strong>[2 Marks]</strong></p>
+<p><strong>(c)</strong> Write down the final Maximum Spanning Tree (MST) arcs and the total
+score. <strong>[2 Marks]</strong></p>
+<details><summary><b>Show answer — Q3 Set A</b></summary>
+
+<p><strong>(a) Best incoming arc per node [2 marks]</strong></p>
+<pre><code>For A:  R-&gt;A = 3 ,  B-&gt;A = 8 ,  C-&gt;A = 2      -&gt;  BEST = B-&gt;A  (8)
+For B:  R-&gt;B = 9 ,  A-&gt;B = 5 ,  C-&gt;B = 10     -&gt;  BEST = C-&gt;B  (10)
+For C:  R-&gt;C = 4 ,  B-&gt;C = 7                  -&gt;  BEST = B-&gt;C  (7)
+</code></pre>
+<p>Greedy selection = <code>{B→A, C→B, B→C}</code>.</p>
+<blockquote>
+<p><strong>CYCLE DETECTED: B → C → B</strong> (B points to C, C points back to B).</p>
+</blockquote>
+<p><strong>(b) Contract the cycle {B, C} [2 marks]</strong></p>
+<p>Arcs entering the cycle come from <code>R</code> and <code>A</code>. Subtract the score of the arc
+each would replace inside the cycle:</p>
+<pre><code>Enter at B:  R-&gt;B = 9 ,  would replace C-&gt;B (10)   -&gt;  9 - 10 = -1
+Enter at C:  R-&gt;C = 4 ,  would replace B-&gt;C (7)    -&gt;  4 -  7 = -3
+Enter at B:  A-&gt;B = 5 ,  would replace C-&gt;B (10)   -&gt;  5 - 10 = -5
+
+BEST ENTRY = R -&gt; B   (-1 is the largest)
+</code></pre>
+<p><strong>(c) Final MST [2 marks]</strong></p>
+<pre><code>1. Select R -&gt; B                                     (9)
+2. Entering at B breaks the cycle arc into B, i.e. C -&gt; B (10)  -&gt; DROP
+3. Keep the other cycle arc:  B -&gt; C                 (7)
+4. A still needs a head — its best was B -&gt; A        (8)
+</code></pre>
+<table>
+<thead>
+<tr>
+  <th>Final arc</th>
+  <th>Meaning</th>
+  <th>Score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>ROOT → B</td>
+  <td>ROOT → <strong>chase</strong></td>
+  <td>9</td>
+</tr>
+<tr>
+  <td>B → C</td>
+  <td>chase → <strong>cats</strong></td>
+  <td>7</td>
+</tr>
+<tr>
+  <td>B → A</td>
+  <td>chase → <strong>Dogs</strong></td>
+  <td>8</td>
+</tr>
+<tr>
+  <td></td>
+  <td><strong>TOTAL</strong></td>
+  <td><strong>24</strong></td>
+</tr>
+</tbody>
+</table>
+<p><em>Verified: 24 is the true maximum over all valid spanning arborescences.</em></p>
+</details>
+
+<hr />
+<h2 id="question-4-15--15--3--6-marks">Question 4. [1.5 + 1.5 + 3 = 6 Marks]</h2>
+<p>Consider the sentence: <strong>&quot;Birds build nests&quot;</strong></p>
+<p>You are given:</p>
+<ul>
+<li>Attention weights for <strong>'build'</strong>: <code>α = [0.3, 0.5, 0.2]</code> (for Birds, build, nests)</li>
+<li>Value vectors: <code>v_Birds = [2,1]</code>, <code>v_build = [1,3]</code>, <code>v_nests = [0,2]</code></li>
+</ul>
+<p><strong>(a)</strong> Explain what contextual embeddings are and why they are important in
+NLP. <strong>[1.5 marks]</strong></p>
+<p><strong>(b)</strong> How do contextual embeddings differ from static word embeddings like
+Word2Vec? <strong>[1.5 marks]</strong></p>
+<p><strong>(c)</strong> Using the given attention weights and value vectors, calculate the
+contextual embedding (output) for the word <strong>'build'</strong>. Then, given a second
+attention head produced <code>head₂ = [0.5, 0.8]</code>, compute the final multi-head
+output using
+<code>W_O = [[0.2,0.5],[0.4,0.1],[0.6,0.3],[0.1,0.2]]</code>. Show all steps. <strong>[3 marks]</strong></p>
+<details><summary><b>Show answer — Q4 Set A</b></summary>
+
+<p><strong>(a)</strong> Contextual embeddings are <strong>vector representations of words that change
+based on the surrounding context</strong>. Unlike static embeddings, the same word can
+have different representations in different sentences.
+<strong>Importance:</strong> capture <strong>word sense disambiguation</strong> (<em>bank</em> financial vs river);
+enable better understanding of <strong>semantic relationships</strong>; <strong>improve performance
+on downstream NLP tasks</strong>.</p>
+<p><strong>(b)</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Static (Word2Vec, GloVe)</th>
+  <th>Contextual (BERT, ELMo)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>One fixed vector per word</strong>, regardless of context</td>
+  <td><strong>Dynamic</strong> vectors that change with context</td>
+</tr>
+<tr>
+  <td><strong>Cannot handle polysemy</strong></td>
+  <td>Same word gets different representations per sentence</td>
+</tr>
+<tr>
+  <td>One vector per word <strong>type</strong></td>
+  <td>One vector per word <strong>token</strong></td>
+</tr>
+<tr>
+  <td>Trained by prediction over a window</td>
+  <td><strong>Computed using attention</strong> over the whole sequence</td>
+</tr>
+</tbody>
+</table>
+<p><strong>(c) [3 marks]</strong></p>
+<pre><code>Step 1 — contextual embedding = weighted sum of value vectors
+
+  Output = 0.3 x [2,1]  +  0.5 x [1,3]  +  0.2 x [0,2]
+         = [0.6, 0.3]   +  [0.5, 1.5]   +  [0, 0.4]
+         = [ 0.6+0.5+0 , 0.3+1.5+0.4 ]
+         = [ 1.1 , 2.2 ]                    &lt;- head_1
+
+  (check: weights sum to 0.3+0.5+0.2 = 1.0 ✓)
+
+Step 2 — concatenate the two heads
+
+  Concat(head_1, head_2) = [1.1, 2.2, 0.5, 0.8]      (4-vector, matches W_O's 4 rows ✓)
+
+Step 3 — project through W_O
+
+  c1 = 1.1x0.2 + 2.2x0.4 + 0.5x0.6 + 0.8x0.1
+     = 0.22 + 0.88 + 0.30 + 0.08 = 1.48
+
+  c2 = 1.1x0.5 + 2.2x0.1 + 0.5x0.3 + 0.8x0.2
+     = 0.55 + 0.22 + 0.15 + 0.16 = 1.08
+
+  FINAL MULTI-HEAD OUTPUT = [1.48 , 1.08]
+</code></pre>
+</details>
+
+<hr />
+<h2 id="question-5-3--3--6-marks">Question 5. [3 + 3 = 6 Marks]</h2>
+<p><strong>(a)</strong> Suppose you are using the <strong>Lesk Algorithm</strong> for Word Sense
+Disambiguation. Given the following definitions and sentence, calculate the
+overlap score and find which sense is more suitable for the ambiguous word
+<strong>&quot;crane&quot;</strong>. <strong>[3 marks]</strong></p>
+<pre><code>Crane (sense 1): A tall bird with a long neck.
+   Definition: tall, bird, long, neck, wetland, wading
+Crane (sense 2): A machine for lifting heavy objects.
+   Definition: machine, lifting, heavy, construction, site, load
+</code></pre>
+<p>Sentence: <strong>&quot;The crane at the construction site lifted a heavy load.&quot;</strong></p>
+<p><strong>(b)</strong> The contextual embeddings for the senses of a target word are given
+below. The contextual embedding for the target word in a specific sentence was
+derived as <strong><code>[1, 3, 2]</code></strong>. What is the sense of the target word? <strong>[3 marks]</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Sense</th>
+  <th>Vector</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>S1</td>
+  <td><code>[2, 6, 4]</code></td>
+</tr>
+<tr>
+  <td>S2</td>
+  <td><code>[3, 1, 1]</code></td>
+</tr>
+<tr>
+  <td>S3</td>
+  <td><code>[0, 4, 1]</code></td>
+</tr>
+</tbody>
+</table>
+<details><summary><b>Show answer — Q5 Set A</b></summary>
+
+<p><strong>(a) Lesk [3 marks]</strong></p>
+<pre><code>Context words (target and stop words removed):
+
+    [ construction , site , lifted , heavy , load ]
+
+SENSE 1 overlap:  none of {tall, bird, long, neck, wetland, wading}   -&gt;  0
+
+SENSE 2 overlap:  construction ✓ , site ✓ , heavy ✓ , load ✓          -&gt;  4
+                  (5 if &quot;lifted&quot;/&quot;lifting&quot; are stemmed to the same root)
+
+4 &gt; 0  =&gt;  SENSE 2, the machine for lifting heavy objects.
+</code></pre>
+<p><em>State your stemming assumption — it is a marked step.</em></p>
+<p><strong>(b) Cosine [3 marks]</strong></p>
+<pre><code>              a . b
+  cos(a,b) = ---------           |target| = sqrt(1+9+4) = sqrt(14) = 3.742
+              |a| |b|
+</code></pre>
+<table>
+<thead>
+<tr>
+  <th>Sense</th>
+  <th>Dot with <code>[1,3,2]</code></th>
+  <th>|sense|</th>
+  <th>cosine</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>S1 <code>[2,6,4]</code></strong></td>
+  <td>2+18+8 = <strong>28</strong></td>
+  <td>√56 = 7.483</td>
+  <td>28/(3.742×7.483) = <strong>1.0000</strong> ⭐</td>
+</tr>
+<tr>
+  <td>S2 <code>[3,1,1]</code></td>
+  <td>3+3+2 = 8</td>
+  <td>√11 = 3.317</td>
+  <td>8/(3.742×3.317) = 0.6447</td>
+</tr>
+<tr>
+  <td>S3 <code>[0,4,1]</code></td>
+  <td>0+12+2 = 14</td>
+  <td>√17 = 4.123</td>
+  <td>14/(3.742×4.123) = 0.9075</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Answer: sense S1</strong>, cosine = 1.0.
+Note <code>[2,6,4] = 2 × [1,3,2]</code> — the <strong>same direction</strong>, so cosine is exactly 1.
+Cosine measures direction, never magnitude.</p>
+</details>
+
+</blockquote>
+<hr />
+<h2 id="question-6-3--3--6-marks">Question 6. [3 + 3 = 6 Marks]</h2>
+<p><strong>(a)</strong> A Retrieval Augmented Generation (RAG) system uses the following
+configuration: <strong>[3 marks]</strong></p>
+<pre><code>Query tokens              = 180
+System prompt tokens      = 320
+Maximum LLM context length = 8192 tokens
+Size of each retrieved chunk = 600 tokens
+</code></pre>
+<p>(i) Calculate the maximum number of document chunks that can be retrieved
+without exceeding the context limit.
+(ii) If only 60% of that maximum is actually retrieved, calculate the total
+number of tokens passed to the LLM.</p>
+<p><strong>(b)</strong> A RAG retriever computes the similarity scores
+<code>0.91, 0.84, 0.78, 0.73, 0.69, 0.61</code>. The system applies a similarity threshold
+of <strong>0.75</strong>. <strong>[3 marks]</strong>
+(i) How many chunks are passed to the LLM after thresholding?
+(ii) Assuming all selected chunks are relevant, compute the precision.
+(iii) If one of the selected chunks is in fact irrelevant, recompute the
+precision and comment on the impact on generation quality.</p>
+<details><summary><b>Show answer — Q6 Set A</b></summary>
+
+<p><strong>(a)</strong></p>
+<pre><code>(i) Total fixed tokens      = 180 + 320 = 500
+    Available for retrieval = 8192 - 500 = 7692
+    Maximum chunks          = floor(7692 / 600) = floor(12.82) = 12
+
+    check: 12 x 600 = 7200 &lt;= 7692 ✓   13 x 600 = 7800 &gt; 7692 ✗
+
+(ii) 60% of 12 = 7.2  -&gt;  rounded DOWN to 7 chunks
+     Tokens from chunks   = 7 x 600 = 4200
+     Total passed to LLM  = 500 + 4200 = 4700 tokens
+</code></pre>
+<blockquote>
+<p><strong>Both roundings are FLOOR.</strong> Say &quot;floor&quot; explicitly — it is a marked step.</p>
+</blockquote>
+<p><strong>(b)</strong></p>
+<pre><code>(i)  Scores &gt;= 0.75 :  0.91 , 0.84 , 0.78        -&gt;  3 chunks
+     (0.73, 0.69, 0.61 fall below the threshold)
+
+(ii) Precision = relevant / retrieved = 3 / 3 = 1.0
+
+(iii) If one selected chunk is actually irrelevant:
+      relevant = 2 , retrieved = 3
+      New precision = 2 / 3 = 0.67
+
+      The drop in precision INCREASES CONTEXTUAL NOISE. The LLM is now
+      grounding partly on irrelevant text, which raises hallucination risk
+      and degrades generation quality.
+</code></pre>
+</details>
+
+<hr />
+<h2 id="question-7-3--1--2--6-marks">Question 7. [3 + 1 + 2 = 6 Marks]</h2>
+<p>Consider a document summarization task with the topic (query):</p>
+<blockquote>
+<p><strong>q:</strong> <em>&quot;Impact of electric vehicles on urban air quality.&quot;</em></p>
+</blockquote>
+<p>One sentence has already been selected in the summary:</p>
+<blockquote>
+<p><strong>S</strong> = {<em>&quot;Electric vehicles reduce tailpipe emissions in city centres.&quot;</em>}</p>
+</blockquote>
+<p>Two candidate sentences are being evaluated next:</p>
+<ul>
+<li><strong>S1:</strong> <em>&quot;EV adoption has cut nitrogen dioxide levels across major metropolitan areas.&quot;</em></li>
+<li><strong>S2:</strong> <em>&quot;Electric cars produce no exhaust emissions in urban areas.&quot;</em></li>
+</ul>
+<table>
+<thead>
+<tr>
+  <th>Sentence</th>
+  <th>sim(s, q)</th>
+  <th>sim(s, S)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>S1</td>
+  <td>0.85</td>
+  <td>0.60</td>
+</tr>
+<tr>
+  <td>S2</td>
+  <td>0.78</td>
+  <td>0.25</td>
+</tr>
+</tbody>
+</table>
+<p>Given <strong>λ = 0.7</strong>:</p>
+<ol>
+<li>Compute the MMR score for both sentences. <strong>[3 marks]</strong></li>
+<li>Identify which sentence will be selected next. <strong>[1 mark]</strong></li>
+<li>Justify your answer logically (relevance vs redundancy). <strong>[2 marks]</strong></li>
+</ol>
+<details><summary><b>Show answer — Q7 Set A</b></summary>
+
+<pre><code>MMR(s) = lambda * sim(s,q)  -  (1 - lambda) * sim(s,S)
+
+lambda = 0.7 ,  (1 - lambda) = 0.3
+
+1. MMR(S1) = 0.7 x 0.85  -  0.3 x 0.60
+           = 0.595       -  0.18
+           = 0.415                                  (1.5 marks)
+
+   MMR(S2) = 0.7 x 0.78  -  0.3 x 0.25
+           = 0.546       -  0.075
+           = 0.471                                  (1.5 marks)
+
+2. MMR(S2) &gt; MMR(S1)  =&gt;  SENTENCE S2 IS SELECTED.   (1 mark)
+</code></pre>
+<p><strong>3. Justification [2 marks]</strong></p>
+<blockquote>
+<p>Although <strong>S1 is more relevant</strong> to the topic (0.85 vs 0.78), it is <strong>far more
+similar to the already-selected sentence</strong> (0.60 vs 0.25), making it
+<strong>redundant</strong> — it would largely repeat information the summary already
+contains. <strong>S2 contributes lower redundancy</strong> and therefore achieves a higher
+MMR score. MMR deliberately trades a little relevance for <strong>novelty</strong>, so the
+summary covers more distinct information overall.</p>
+</details>
+
+</blockquote>
+<hr />
+<hr />
+<h1 id="set-b">SET B</h1>
+<h2 id="question-3-2--3--1--6-marks">Question 3. [2 + 3 + 1 = 6 Marks]</h2>
+<p>Consider the following PCFG:</p>
+<table>
+<thead>
+<tr>
+  <th>Rule</th>
+  <th>Prob</th>
+  <th>Rule</th>
+  <th>Prob</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1. S → NP VP</td>
+  <td>[1.0]</td>
+  <td>7. Det → the</td>
+  <td>[1.0]</td>
+</tr>
+<tr>
+  <td>2. NP → Det N</td>
+  <td>[0.4]</td>
+  <td>8. N → man</td>
+  <td>[0.5]</td>
+</tr>
+<tr>
+  <td>3. NP → NP PP</td>
+  <td>[0.3]</td>
+  <td>9. N → girl</td>
+  <td>[0.2]</td>
+</tr>
+<tr>
+  <td>4. NP → PropN</td>
+  <td>[0.3]</td>
+  <td>10. N → telescope</td>
+  <td>[0.3]</td>
+</tr>
+<tr>
+  <td>5. VP → V NP</td>
+  <td>[0.6]</td>
+  <td>11. V → saw</td>
+  <td>[1.0]</td>
+</tr>
+<tr>
+  <td>6. VP → VP PP</td>
+  <td>[0.4]</td>
+  <td>12. P → with</td>
+  <td>[1.0]</td>
+</tr>
+<tr>
+  <td></td>
+  <td></td>
+  <td>13. PP → P NP</td>
+  <td>[1.0]</td>
+</tr>
+</tbody>
+</table>
+<p>Sentence: <strong>&quot;The man saw the girl with the telescope.&quot;</strong></p>
+<p><strong>(a)</strong> Provide the two distinct bracketed parses for the sentence. <strong>[2 Marks]</strong>
+<strong>(b)</strong> Calculate the probability for both parses. Show your multiplication
+steps clearly. <strong>[3 Marks]</strong>
+<strong>(c)</strong> Which interpretation does the PCFG select as the most likely, and
+why? <strong>[1 Mark]</strong></p>
+<details><summary><b>Show answer — Q3 Set B</b></summary>
+
+<p><strong>(a) The two parses [2 marks]</strong></p>
+<pre><code>PARSE 1 — VP ATTACHMENT  (he USED the telescope to see)
+
+  (S (NP (Det the)(N man))
+     (VP (VP (V saw) (NP (Det the)(N girl)))
+         (PP (P with) (NP (Det the)(N telescope)))))
+
+PARSE 2 — NP ATTACHMENT  (the GIRL had the telescope)
+
+  (S (NP (Det the)(N man))
+     (VP (V saw)
+         (NP (NP (Det the)(N girl))
+             (PP (P with) (NP (Det the)(N telescope))))))
+</code></pre>
+<p><strong>(b) Probabilities [3 marks]</strong></p>
+<pre><code>PARSE 1 (VP attachment)
+  S -&gt; NP VP            1.0
+  NP -&gt; Det N           0.4 x 1.0 x 0.5      (the man)
+  VP -&gt; VP PP           0.4                  &lt;-- attachment decision
+    VP -&gt; V NP          0.6
+      V -&gt; saw          1.0
+      NP -&gt; Det N       0.4 x 1.0 x 0.2      (the girl)
+    PP -&gt; P NP          1.0
+      P -&gt; with         1.0
+      NP -&gt; Det N       0.4 x 1.0 x 0.3      (the telescope)
+
+  P = 1.0 x (0.4x0.5) x [0.4 x (0.6 x (0.4x0.2)) x (1.0 x (0.4x0.3))]
+    = 1.0 x 0.2 x [0.4 x 0.048 x 0.12]
+    = 0.00046080
+
+PARSE 2 (NP attachment)
+  S -&gt; NP VP            1.0
+  NP -&gt; Det N           0.4 x 1.0 x 0.5      (the man)
+  VP -&gt; V NP            0.6
+    V -&gt; saw            1.0
+    NP -&gt; NP PP         0.3                  &lt;-- attachment decision
+      NP -&gt; Det N       0.4 x 1.0 x 0.2      (the girl)
+      PP -&gt; P NP        1.0 x 1.0 x (0.4 x 1.0 x 0.3)
+
+  P = 1.0 x 0.2 x [0.6 x (0.3 x 0.08 x 0.12)]
+    = 0.00034560
+</code></pre>
+<p><strong>(c) [1 mark]</strong></p>
+<blockquote>
+<p><strong>The VP-attachment parse (Parse 1)</strong> is selected, because
+<strong>0.00046080 &gt; 0.00034560</strong>. The two parses use identical rules except the
+attachment rule: Parse 1 uses <code>VP → VP PP</code> at <strong>0.4</strong>, Parse 2 uses
+<code>NP → NP PP</code> at <strong>0.3</strong>. Everything else cancels, so the higher-probability
+attachment rule decides it (ratio 0.4/0.3 = <strong>1.333</strong>, and indeed
+0.0004608/0.0003456 = 1.333).</p>
+<p>Interpretation: the grammar prefers <em>&quot;the man used the telescope to see&quot;</em>.</p>
+</details>
+
+</blockquote>
+<hr />
+<h2 id="question-4-6-marks">Question 4. [6 Marks]</h2>
+<p>Given the sentence <strong>&quot;Deep learning&quot;</strong> and the information below, demonstrate
+the mathematical application of a <strong>single attention head</strong> to derive Self
+Attention. Detail all steps, applying <strong>score normalization, masking and
+softmax</strong>.</p>
+<pre><code>Embeddings                  Weight matrix Wq       Weight matrix Wk       Weight matrix Wv
+  Deep     = [1  0]            [1  1]                  [1  0]                 [1  2]
+  learning = [0  1]            [0  1]                  [1  1]                 [2  1]
+</code></pre>
+<p>Compute all fractions to two decimal places. Given: <code>e^0.71 = 2.034</code>, <code>e^0 = 1</code>.</p>
+<details><summary><b>Show answer — Q4 Set B</b></summary>
+
+<pre><code>STEP 1 — Input                                                  (0.5 marks)
+    X = [1 0]      (Deep)
+        [0 1]      (learning)
+
+STEP 2 — Compute Q, K, V                                        (1 mark)
+    Q = X Wq = [1 0][1 1]  =  [1 1]
+               [0 1][0 1]     [0 1]
+
+    K = X Wk = [1 0][1 0]  =  [1 0]
+               [0 1][1 1]     [1 1]
+
+    V = X Wv = [1 0][1 2]  =  [1 2]
+               [0 1][2 1]     [2 1]
+
+STEP 3 — Scores Q K^T                                           (1 mark)
+    K^T = [1 1]
+          [0 1]
+
+    Q K^T = [1 1][1 1]  =  [1x1+1x0 , 1x1+1x1]  =  [1 2]
+            [0 1][0 1]     [0x1+1x0 , 0x1+1x1]     [0 1]
+
+STEP 4 — Normalize by sqrt(d_k), d_k = 2, sqrt(2) = 1.41        (1 mark)
+    [1/1.41  2/1.41]     [0.71  1.41]
+    [0/1.41  1/1.41]  =  [0.00  0.71]
+
+STEP 5 — Masking (a token must not see the future)              (1 mark)
+    [0.71   -1.00E+99]
+    [0.00    0.71    ]
+
+STEP 6 — Softmax each row                                       (1 mark)
+    Row 1:  e^0.71 = 2.034 ,  e^-inf = 0 ,  sum = 2.034
+            -&gt; [2.034/2.034 , 0] = [1.00 , 0.00]
+
+    Row 2:  e^0.00 = 1.000 ,  e^0.71 = 2.034 ,  sum = 3.034
+            -&gt; [1.000/3.034 , 2.034/3.034] = [0.33 , 0.67]
+
+STEP 7 — Multiply by V                                          (0.5 marks)
+    Row 1 = 1.00 x [1 2] + 0.00 x [2 1] = [1.00 , 2.00]
+    Row 2 = 0.33 x [1 2] + 0.67 x [2 1] = [0.33+1.34 , 0.66+0.67]
+                                        = [1.67 , 1.33]
+
+    OUTPUT = [1.00  2.00]
+             [1.67  1.33]
+</code></pre>
+<blockquote>
+<p><strong>Read the result:</strong> row 1 (&quot;Deep&quot;) attends only to itself because masking
+blocks the future. Row 2 (&quot;learning&quot;) mixes both, weighted <strong>0.33 / 0.67</strong>
+toward itself. That asymmetry is exactly what masking is for.</p>
+</details>
+
+</blockquote>
+<hr />
+<h2 id="question-5-2--2--2--6-marks">Question 5. [2 + 2 + 2 = 6 Marks]</h2>
+<p><strong>(a)</strong> Define <strong>homonymy</strong> and <strong>polysemy</strong>, giving one example of each, and
+state why homonymy causes problems for NLP applications. Name two such
+applications. <strong>[2 marks]</strong></p>
+<p><strong>(b)</strong> Why does <strong>WordNet</strong> perform poorly in domain-specific texts (e.g.
+medical or legal)? Suggest one solution. <strong>[2 marks]</strong></p>
+<p><strong>(c)</strong> Explain the difference between the <strong>lexical sample task</strong> and the
+<strong>all-words task</strong> in Word Sense Disambiguation. <strong>[2 marks]</strong></p>
+<details><summary><b>Show answer — Q5 Set B</b></summary>
+
+<p><strong>(a) [2 marks]</strong></p>
+<blockquote>
+<p><strong>Homonymy</strong> — lexemes that <strong>share a form</strong> (phonological, orthographic or
+both) but have <strong>unrelated, distinct meanings</strong>.
+Example: <em>bat</em> (wooden stick) vs <em>bat</em> (flying mammal); <em>bank</em> (financial
+institution) vs <em>bank</em> (riverside).</p>
+<p><strong>Polysemy</strong> — a <strong>single lexeme with multiple related meanings</strong>.
+Example: <em>bank</em> the building vs <em>bank</em> the financial institution.</p>
+<p><strong>Why homonymy is a problem:</strong> the same form must be resolved to different
+meanings or pronunciations.</p>
+<ul>
+<li><strong>Text-to-speech</strong> — same orthographic form, different phonological form
+(<em>bass</em> the fish vs <em>bass</em> the voice).</li>
+<li><strong>Information retrieval</strong> — the query <em>&quot;bat care&quot;</em> is ambiguous.</li>
+<li>Also <strong>machine translation</strong> and <strong>speech recognition</strong>.</li>
+</ul>
+</blockquote>
+<p><strong>(b) [2 marks]</strong></p>
+<blockquote>
+<p>WordNet performs poorly in domain-specific texts because it is a
+<strong>general-purpose lexical database</strong> and <strong>lacks specialised technical
+vocabulary</strong>. Many medical or legal terms are missing or insufficiently
+defined.
+<strong>Solution:</strong> combine WordNet with a <strong>domain-specific ontology or lexicon</strong>,
+which improves accuracy by adding expert domain knowledge.</p>
+</blockquote>
+<p><strong>(c) [2 marks]</strong></p>
+<blockquote>
+<p><strong>Lexical sample task</strong> — a <strong>small pre-selected set of target words</strong>, with an
+inventory of senses for each. Because the word set and sense set are small,
+simple supervised classification approaches work very well.</p>
+<p><strong>All-words task</strong> — the system is given <strong>entire texts</strong> plus a lexicon with a
+sense inventory for each entry, and must disambiguate <strong>every word</strong> in the
+text (or sometimes just every content word).</p>
+</details>
+
+</blockquote>
+<hr />
+<h2 id="question-6-2--2--2--6-marks">Question 6. [2 + 2 + 2 = 6 Marks]</h2>
+<p>A hospital wants to build a <strong>semantic-web-based patient information system</strong>
+integrating data about patients, doctors and departments.</p>
+<p><strong>(a)</strong> Identify the entities (subjects), properties (predicates) and values
+(objects) required to model this system using <strong>RDF</strong>. <strong>[2 marks]</strong></p>
+<p><strong>(b)</strong> Write any three RDF triples to represent: <strong>[2 marks]</strong></p>
+<ul>
+<li>A patient named <strong>Meera</strong> is treated by <strong>Dr. Iyer</strong></li>
+<li><strong>Dr. Iyer</strong> works in the <strong>Cardiology</strong> department</li>
+<li>The <strong>Cardiology</strong> department is located in <strong>Building B</strong></li>
+</ul>
+<p><strong>(c)</strong> The hospital also wants to enforce the rule <em>&quot;every patient must have at
+least one assigned doctor&quot;</em>, and to record simple factual data. Which task suits
+<strong>RDF</strong> and which suits <strong>OWL</strong>? Explain briefly. <strong>[2 marks]</strong></p>
+<details><summary><b>Show answer — Q6 Set B</b></summary>
+
+<p><strong>(a) RDF components [2 marks]</strong></p>
+<pre><code>Entities (Subjects):          Properties (Predicates):     Values (Objects):
+   Patient    (Meera)            treatedBy                    Dr. Iyer
+   Doctor     (Dr. Iyer)         worksIn                      Cardiology
+   Department (Cardiology)       locatedIn                    Building B
+   Building   (Building B)
+</code></pre>
+<p><strong>(b) Three RDF triples [2 marks]</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Subject</th>
+  <th>Predicate</th>
+  <th>Object</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>Meera</code></td>
+  <td><code>treatedBy</code></td>
+  <td><code>DrIyer</code></td>
+</tr>
+<tr>
+  <td><code>DrIyer</code></td>
+  <td><code>worksIn</code></td>
+  <td><code>Cardiology</code></td>
+</tr>
+<tr>
+  <td><code>Cardiology</code></td>
+  <td><code>locatedIn</code></td>
+  <td><code>BuildingB</code></td>
+</tr>
+</tbody>
+</table>
+<p>As a graph:</p>
+<pre><code>  Meera ──treatedBy──► DrIyer ──worksIn──► Cardiology ──locatedIn──► BuildingB
+</code></pre>
+<p><strong>(c) RDF vs OWL [2 marks]</strong></p>
+<blockquote>
+<p><strong>Recording simple factual data</strong> is best suited to <strong>RDF</strong>, as RDF represents
+information as simple <strong>subject–predicate–object triples</strong>.</p>
+<p><strong>Enforcing the constraint</strong> <em>&quot;every patient must have at least one assigned
+doctor&quot;</em> suits <strong>OWL</strong>, because OWL supports <strong>restrictions and reasoning</strong>
+(here, an <code>owl:minCardinality</code> restriction of 1 on the <code>treatedBy</code> property).</p>
+<p>Thus <strong>RDF handles data representation, while OWL handles logic and
+consistency checking.</strong></p>
+</details>
+
+</blockquote>
+<hr />
+<h2 id="question-7-2--2--2--6-marks">Question 7. [2 + 2 + 2 = 6 Marks]</h2>
+<p><strong>(a)</strong> Define <strong>ROUGE</strong> and state what <strong>ROUGE-2</strong> measures. <strong>[2 marks]</strong></p>
+<p><strong>(b)</strong> Compute the <strong>ROUGE-2</strong> score for the system summary below. <strong>[2 marks]</strong></p>
+<pre><code>Reference 1: &quot;The company reported record profits this quarter&quot;
+Reference 2: &quot;Record quarterly profits were announced by the company&quot;
+
+System X   : &quot;The company announced record profits this quarter&quot;
+</code></pre>
+<p><strong>(c)</strong> State the three stages of summarization and name one technique used in
+the first stage. <strong>[2 marks]</strong></p>
+<details><summary><b>Show answer — Q7 Set B</b></summary>
+
+<p><strong>(a) [2 marks]</strong></p>
+<blockquote>
+<p><strong>ROUGE</strong> = <strong>Recall-Oriented Understudy for Gisting Evaluation</strong>. An
+<strong>intrinsic</strong> metric for automatically evaluating summaries, based on <strong>BLEU</strong>
+(a machine-translation metric). Not as good as human evaluation, <strong>but much
+more convenient</strong>.</p>
+<p><strong>ROUGE-2:</strong> given a document D and an automatic summary X, have N humans
+produce reference summaries. It measures <strong>what percentage of the bigrams from
+the reference summaries appear in X</strong>.</p>
+</blockquote>
+<p><strong>(b) [2 marks]</strong></p>
+<pre><code>System bigrams (6):
+   the company | company announced | announced record |
+   record profits | profits this | this quarter
+
+Reference 1 bigrams (6):
+   the company ✓ | company reported | reported record |
+   record profits ✓ | profits this ✓ | this quarter ✓        -&gt; 4 matched
+
+Reference 2 bigrams (7):
+   record quarterly | quarterly profits | profits were |
+   were announced | announced by | by the | the company ✓     -&gt; 1 matched
+
+                     4 + 1          5
+   ROUGE-2  =  ---------------  =  ----  =  0.3846  =  38.5%
+                     6 + 7          13
+</code></pre>
+<p><strong>(c) [2 marks]</strong></p>
+<pre><code>1. CONTENT SELECTION    — choose sentences to extract from the document
+2. INFORMATION ORDERING — choose an order to place them in the summary
+3. SENTENCE REALIZATION — clean up the sentences
+</code></pre>
+<blockquote>
+<p><strong>Technique for stage 1:</strong> frequency as an indicator of importance (the topic
+is repeated many times), implemented as the <strong>greedy frequency method</strong> or via
+<strong>tf-idf</strong> sentence weighting; or graph representations with nodes as
+sentences and arcs between similar sentences; or <strong>MMR</strong> for non-redundancy.</p>
+</details>
+
+</blockquote>
+<hr />
+<hr />
+<h1 id="set-c">SET C</h1>
+<h2 id="question-3-6-marks">Question 3. [6 Marks]</h2>
+<p>Consider the statement: <strong>&quot;The small dog barked loudly&quot;</strong></p>
+<p>Using <strong>Depth-First, Simple Top-Down parsing</strong>, work out the steps only till the
+noun-phrase <strong>&quot;The small dog&quot;</strong> is successfully parsed. Provide one line of
+explanation for each step.</p>
+<pre><code>CFG Rules                       Lexicon
+1. S  -&gt; NP VP                    Det -&gt; the
+2. NP -&gt; Det AP N                 Adj -&gt; small
+3. NP -&gt; Det N                    N   -&gt; dog
+4. AP -&gt; Adv Adj                  V   -&gt; barked
+5. AP -&gt; Adj                      Adv -&gt; loudly
+</code></pre>
+<p>The parser applies rules in the order listed (rule 2 before rule 3, rule 4
+before rule 5).</p>
+<details><summary><b>Show answer — Q3 Set C</b></summary>
+
+<pre><code>    1 The  2 small  3 dog  4 barked  5 loudly 6
+</code></pre>
+<table>
+<thead>
+<tr>
+  <th>Step</th>
+  <th>State</th>
+  <th>Backup</th>
+  <th>Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td><code>((S) 1)</code></td>
+  <td></td>
+  <td>Start of the process</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>((NP VP) 1)</code></td>
+  <td></td>
+  <td>Expand <code>S → NP VP</code> (Rule 1)</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>((Det AP N VP) 1)</code></td>
+  <td><code>((Det N VP) 1)</code></td>
+  <td>NP expanded — Rule 2 taken, <strong>Rule 3 pushed to backup</strong></td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>((AP N VP) 2)</code></td>
+  <td><code>((Det N VP) 1)</code></td>
+  <td><code>The</code> matches Det → advance to position 2</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>((Adv Adj N VP) 2)</code></td>
+  <td><code>((Det N VP) 1)</code>, <code>((Adj N VP) 2)</code></td>
+  <td>AP expanded — Rule 4 taken, <strong>Rule 5 pushed to backup</strong></td>
+</tr>
+<tr>
+  <td>6</td>
+  <td>— <strong>FAIL</strong> —</td>
+  <td></td>
+  <td>Position 2 is <code>small</code>, which is <strong>not</strong> an Adv. <strong>Discard this state.</strong></td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>((Adj N VP) 2)</code></td>
+  <td><code>((Det N VP) 1)</code></td>
+  <td><strong>Pop from backup</strong></td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>((N VP) 3)</code></td>
+  <td><code>((Det N VP) 1)</code></td>
+  <td><code>small</code> matches Adj → advance</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>((VP) 4)</code></td>
+  <td></td>
+  <td><code>dog</code> matches N → advance. <strong>&quot;The small dog&quot; is fully parsed</strong> ✅</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>The marks are for <strong>showing the failure and the pop</strong>. A table with no
+backtracking hasn't demonstrated depth-first parsing with backup.</p>
+</details>
+
+</blockquote>
+<hr />
+<h2 id="question-4-2--2--2--6-marks">Question 4. [2 + 2 + 2 = 6 Marks]</h2>
+<p>In a transformer model processing the sentence <strong>&quot;The cat sat&quot;</strong>:</p>
+<ul>
+<li>Attention weights for <strong>'sat'</strong>: <code>α = [0.2, 0.3, 0.5]</code> (for The, cat, sat)</li>
+<li>Value vectors: <code>v_The = [1,2]</code>, <code>v_cat = [2,0]</code>, <code>v_sat = [0,3]</code></li>
+</ul>
+<p><strong>(a)</strong> Explain why transformers use <strong>multiple attention heads</strong> instead of a
+single head. <strong>[2 marks]</strong></p>
+<p><strong>(b)</strong> Calculate the contextual embedding (output) for the word <strong>'sat'</strong>.
+Show all steps. <strong>[2 marks]</strong></p>
+<p><strong>(c)</strong> Given that Head 1 has attention weights <code>[0.1, 0.2, 0.7]</code> and Head 2 has
+<code>[0.6, 0.2, 0.2]</code> for positions (The, cat, sat), what might each head be
+specialising in? <strong>[2 marks]</strong></p>
+<details><summary><b>Show answer — Q4 Set C</b></summary>
+
+<p><strong>(a) [2 marks]</strong> Multiple attention heads allow the model to:</p>
+<blockquote>
+<ul>
+<li>Attend to information from <strong>different representation subspaces</strong></li>
+<li>Capture <strong>different types of relationships</strong> (syntactic, semantic, positional)</li>
+<li><strong>Learn diverse patterns</strong> — one head might focus on adjacent words, another
+on subject–verb relationships</li>
+<li><strong>Increase model capacity</strong> without proportionally increasing computation</li>
+</ul>
+</blockquote>
+<p><strong>(b) [2 marks]</strong></p>
+<pre><code>Output = SUM alpha_i x v_i
+
+       = 0.2 x [1,2]  +  0.3 x [2,0]  +  0.5 x [0,3]
+       = [0.2, 0.4]   +  [0.6, 0]     +  [0, 1.5]
+       = [ 0.2+0.6+0 , 0.4+0+1.5 ]
+       = [ 0.8 , 1.9 ]
+
+(check: 0.2 + 0.3 + 0.5 = 1.0 ✓)
+</code></pre>
+<p><strong>(c) [2 marks]</strong></p>
+<pre><code>Head 1 weights [0.1, 0.2, 0.7] -&gt; highest attention on 'sat' (position 3)
+   =&gt; Head 1 focuses on the VERB / action word (syntactic relationship)
+
+Head 2 weights [0.6, 0.2, 0.2] -&gt; highest attention on 'The' (position 1)
+   =&gt; Head 2 focuses on the DETERMINER / article (grammatical structure)
+
+This demonstrates how different heads specialise in capturing different
+linguistic patterns.
+</code></pre>
+</details>
+
+<hr />
+<h2 id="question-5-3--3--6-marks">Question 5. [3 + 3 = 6 Marks]</h2>
+<p><strong>(a)</strong> The contextual embeddings for the senses of the word <strong>&quot;mouse&quot;</strong> are
+given below. The contextual embedding for the target word in a specific sentence
+was derived as <strong><code>[3, 1, 4]</code></strong>. What is the sense of the target word? Show your
+calculation. <strong>[3 marks]</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Sense</th>
+  <th>Meaning</th>
+  <th>Vector</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>mouse_N1</td>
+  <td>small rodent</td>
+  <td><code>[6, 2, 8]</code></td>
+</tr>
+<tr>
+  <td>mouse_N2</td>
+  <td>computer pointing device</td>
+  <td><code>[1, 5, 2]</code></td>
+</tr>
+<tr>
+  <td>mouse_N3</td>
+  <td>timid person</td>
+  <td><code>[2, 2, 1]</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>(b)</strong> Define <strong>hyponymy</strong> and <strong>hypernymy</strong> with one example each, and explain
+what a <strong>synset</strong> is in WordNet. <strong>[3 marks]</strong></p>
+<details><summary><b>Show answer — Q5 Set C</b></summary>
+
+<p><strong>(a) [3 marks]</strong></p>
+<pre><code>|target| = sqrt(3^2 + 1^2 + 4^2) = sqrt(9+1+16) = sqrt(26) = 5.099
+</code></pre>
+<table>
+<thead>
+<tr>
+  <th>Sense</th>
+  <th>Dot with <code>[3,1,4]</code></th>
+  <th>|sense|</th>
+  <th>cosine</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>N1 <code>[6,2,8]</code></strong></td>
+  <td>18+2+32 = <strong>52</strong></td>
+  <td>√104 = 10.198</td>
+  <td>52/(5.099×10.198) = <strong>1.0000</strong> ⭐</td>
+</tr>
+<tr>
+  <td>N2 <code>[1,5,2]</code></td>
+  <td>3+5+8 = 16</td>
+  <td>√30 = 5.477</td>
+  <td>16/(5.099×5.477) = 0.5729</td>
+</tr>
+<tr>
+  <td>N3 <code>[2,2,1]</code></td>
+  <td>6+2+4 = 12</td>
+  <td>√9 = 3.000</td>
+  <td>12/(5.099×3.000) = 0.7845</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Answer: <code>mouse_N1</code>, the small rodent</strong> (cosine = 1.0).</p>
+<p><strong>Trap avoided:</strong> N1 also has the largest dot product here, but that is not
+the reason — always divide by the magnitudes. <code>[6,2,8] = 2 × [3,1,4]</code>, the
+same direction, hence cosine exactly 1.</p>
+</blockquote>
+<p><strong>(b) [3 marks]</strong></p>
+<blockquote>
+<p><strong>Hyponymy</strong> — one sense is a <strong>hyponym</strong> of another if the first is <strong>more
+specific</strong>, denoting a <strong>subclass</strong> of the other.
+<em>car</em> is a hyponym of <em>vehicle</em>; <em>dog</em> is a hyponym of <em>animal</em>;
+<em>mango</em> is a hyponym of <em>fruit</em>.</p>
+<p><strong>Hypernymy</strong> — the converse relation, the <strong>superordinate</strong>.
+<em>vehicle</em> is a hypernym of <em>car</em>; <em>animal</em> is a hypernym of <em>dog</em>.</p>
+<p><strong>Synset</strong> — the set of <strong>near-synonyms</strong> for a WordNet sense is called a
+<strong>synset</strong> (synonym set). It is WordNet's version of a <strong>sense or concept</strong>;
+all members share the same <strong>gloss</strong>, and for WordNet the meaning of that
+sense <em>is</em> this list.</p>
+</details>
+
+</blockquote>
+<hr />
+<h2 id="question-6-2--2--2--6-marks">Question 6. [2 + 2 + 2 = 6 Marks]</h2>
+<p><strong>(a)</strong> Name the three ontology languages in the Semantic Web stack and state in
+one line what each specifies. <strong>[2 marks]</strong></p>
+<p><strong>(b)</strong> Draw the knowledge graph for the RDF statements below and identify one
+<strong>derived inference</strong> — a fact that is <em>not</em> stated but can be concluded by a
+reasoner. <strong>[2 marks]</strong></p>
+<pre><code>ex:Vehicle     rdfs:subClassOf  ex:Machine .
+ex:Car         rdfs:subClassOf  ex:Vehicle .
+ex:ElectricCar rdfs:subClassOf  ex:Car .
+ex:Tesla       rdf:type         ex:ElectricCar .
+</code></pre>
+<p><strong>(c)</strong> You are building a <strong>research publication ontology</strong>. How would you
+model papers, authors and conferences using RDF and OWL? Explain
+briefly. <strong>[2 marks]</strong></p>
+<details><summary><b>Show answer — Q6 Set C</b></summary>
+
+<p><strong>(a) [2 marks]</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Language</th>
+  <th>Full name</th>
+  <th>Specifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>RDF</strong></td>
+  <td>Resource Description Framework</td>
+  <td><strong>Relationships between data</strong> — facts as subject–predicate–object triples</td>
+</tr>
+<tr>
+  <td><strong>RDFS</strong></td>
+  <td>RDF Schema</td>
+  <td><strong>Relationships between schema</strong> — <code>Class</code>, <code>Property</code>, <code>type</code>, <code>subClassOf</code>, <code>subPropertyOf</code>, <code>domain</code>, <code>range</code></td>
+</tr>
+<tr>
+  <td><strong>OWL</strong></td>
+  <td>Web Ontology Language</td>
+  <td><strong>More complex relationships between schema</strong>, based on <strong>description logics</strong> — restrictions, cardinality, reasoning</td>
+</tr>
+</tbody>
+</table>
+<p><strong>(b) [2 marks]</strong></p>
+<pre><code>    ex:Machine
+        ▲ subClassOf
+    ex:Vehicle
+        ▲ subClassOf
+    ex:Car
+        ▲ subClassOf
+    ex:ElectricCar
+        ▲ type
+    ex:Tesla
+
+DERIVED INFERENCE (not stated anywhere, concluded by the reasoner):
+
+    ex:Tesla  rdf:type  ex:Machine
+
+    because  Tesla : ElectricCar ⊑ Car ⊑ Vehicle ⊑ Machine
+
+Other valid derived inferences:
+    ex:ElectricCar rdfs:subClassOf ex:Machine
+    ex:Car         rdfs:subClassOf ex:Machine
+</code></pre>
+<blockquote>
+<p>Label the inferred arrow <strong>&quot;inferred&quot;</strong> on your diagram — that is what the
+marks are for. <code>subClassOf</code> is <strong>transitive</strong>, which is what makes the chain work.</p>
+</blockquote>
+<p><strong>(c) [2 marks]</strong></p>
+<blockquote>
+<p>In a research publication ontology, <strong>RDF</strong> is used to represent <strong>factual
+data</strong>, while <strong>OWL</strong> is used to define <strong>semantics and constraints</strong>.</p>
+<p><strong>Using RDF</strong>, entities such as <code>Paper</code>, <code>Author</code> and <code>Conference</code> are
+represented as resources and linked using triples:
+<code>(Paper1, hasAuthor, Author1)</code>, <code>(Paper1, presentedAt, Conference1)</code>.</p>
+<p><strong>Using OWL</strong>, classes and relationships are formally defined. Classes include
+<code>Paper</code>, <code>Author</code>, <code>Conference</code>; object properties include <code>hasAuthor</code> and
+<code>presentedAt</code>. OWL can also specify constraints such as <strong>every Paper must
+have at least one Author</strong>, enabling <strong>reasoning and consistency checking</strong>.</p>
+</details>
+
+</blockquote>
+<hr />
+<h2 id="question-7-3--15--15--6-marks">Question 7. [3 + 1.5 + 1.5 = 6 Marks]</h2>
+<p>A media monitoring company is building an NLP summarization system. It must
+support:</p>
+<ol>
+<li>An editor uploads <strong>a single long investigative report</strong> and wants a
+<strong>headline</strong> and a short <strong>abstract</strong>.</li>
+<li>An analyst supplies <strong>20 articles from different agencies</strong> covering the same
+election result and wants one concise overview.</li>
+<li>A lawyer uploads a contract and asks: <em>&quot;Summarize only the clauses relevant
+to <strong>termination penalties</strong>.&quot;</em></li>
+</ol>
+<p><strong>(a)</strong> Identify the type of summarization required for each scenario. <strong>[3 marks]</strong>
+<strong>(b)</strong> Justify your choices by explaining the key characteristics of each
+type. <strong>[1.5 marks]</strong>
+<strong>(c)</strong> Two candidate sentences are scored against a query with <code>λ = 0.8</code>:
+<code>S1: sim(q)=0.90, sim(S)=0.40</code> and <code>S2: sim(q)=0.70, sim(S)=0.15</code>. Compute both
+MMR scores and state which is selected. <strong>[1.5 marks]</strong></p>
+<details><summary><b>Show answer — Q7 Set C</b></summary>
+
+<p><strong>(a) [3 marks]</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Scenario</th>
+  <th>Required summarization type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td><strong>Single-document, Generic</strong> summarization</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><strong>Multi-document</strong> summarization</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><strong>Query-focused</strong> summarization</td>
+</tr>
+</tbody>
+</table>
+<p><strong>(b) [1.5 marks]</strong></p>
+<pre><code>1. SINGLE-DOCUMENT, GENERIC
+   - Operates on ONE document
+   - Produces outputs such as a headline, abstract, or outline
+   - Focuses on the OVERALL CONTENT, not a specific query
+
+2. MULTI-DOCUMENT
+   - Takes a group of documents related to the SAME EVENT
+   - Produces a gist of shared information, REMOVING REDUNDANCY and
+     resolving overlaps across sources
+   - Commonly used for news aggregation and event summarization
+
+3. QUERY-FOCUSED
+   - Tailors the summary to a SPECIFIC USER INFORMATION NEED
+   - Acts as a form of COMPLEX QUESTION ANSWERING
+   - Ignores unrelated sections of the document
+</code></pre>
+<p><strong>(c) [1.5 marks]</strong></p>
+<pre><code>MMR(s) = lambda x sim(s,q) - (1 - lambda) x sim(s,S)
+lambda = 0.8 ,  (1 - lambda) = 0.2
+
+MMR(S1) = 0.8 x 0.90 - 0.2 x 0.40 = 0.72 - 0.08 = 0.64
+MMR(S2) = 0.8 x 0.70 - 0.2 x 0.15 = 0.56 - 0.03 = 0.53
+
+MMR(S1) &gt; MMR(S2)  =&gt;  SENTENCE S1 IS SELECTED.
+</code></pre>
+<blockquote>
+<p><strong>Note the contrast with Set A.</strong> Here the <strong>more relevant</strong> sentence wins,
+because <strong>λ = 0.8</strong> weights relevance heavily and S1's redundancy (0.40) is
+not high enough to overcome its 0.20 relevance advantage. <strong>λ controls the
+trade-off</strong> — do not assume the less-relevant sentence always wins.</p>
+</details>
+
+</blockquote>
+<hr />
+<hr />
+<h1 id="self-marking-sheet">Self-marking sheet</h1>
+<p>Tick each as you get it right <strong>unaided</strong>. Anything unticked after a set is
+where your remaining study time should go.</p>
+<table>
+<thead>
+<tr>
+  <th>Skill</th>
+  <th>A</th>
+  <th>B</th>
+  <th>C</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Chu-Liu-Edmonds MST</td>
+  <td>☐</td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td>PCFG parse probability</td>
+  <td></td>
+  <td>☐</td>
+  <td></td>
+</tr>
+<tr>
+  <td>Top-down parse table with backup</td>
+  <td></td>
+  <td></td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>Attention weighted sum</td>
+  <td>☐</td>
+  <td></td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>Multi-head concat × W_O</td>
+  <td>☐</td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td>Full self-attention (Q,K,V, mask, softmax)</td>
+  <td></td>
+  <td>☐</td>
+  <td></td>
+</tr>
+<tr>
+  <td>Lesk overlap</td>
+  <td>☐</td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td>Cosine sense selection</td>
+  <td>☐</td>
+  <td></td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>WordNet theory (homonymy/polysemy/synset)</td>
+  <td></td>
+  <td>☐</td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>RDF triples</td>
+  <td></td>
+  <td>☐</td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>RDF vs OWL</td>
+  <td></td>
+  <td>☐</td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>Derived inference in a knowledge graph</td>
+  <td></td>
+  <td></td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>RAG token budget</td>
+  <td>☐</td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td>RAG precision</td>
+  <td>☐</td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td>MMR</td>
+  <td>☐</td>
+  <td></td>
+  <td>☐</td>
+</tr>
+<tr>
+  <td>ROUGE-2</td>
+  <td></td>
+  <td>☐</td>
+  <td></td>
+</tr>
+<tr>
+  <td>Summarization types</td>
+  <td></td>
+  <td></td>
+  <td>☐</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Target:</strong> 45 minutes per set. If a set takes you 90 minutes, you are
+<em>learning</em>, not <em>practising</em> — go back to
+<a href="SOLVED-NUMERICALS.md"><code>SOLVED-NUMERICALS.md</code></a> for that topic, then retry.</p>
+</div>
+<script>
+var wasOpen = [];
+function openAll(){
+  wasOpen = [];
+  document.querySelectorAll("details").forEach(function(d,i){
+    wasOpen[i] = d.open; d.open = true;
+  });
+}
+function restoreAll(){
+  document.querySelectorAll("details").forEach(function(d,i){ d.open = wasOpen[i]; });
+}
+window.addEventListener("beforeprint", openAll);
+window.addEventListener("afterprint", restoreAll);
+
+function doPrint(){ openAll(); window.print(); }
+function toggleAll(){
+  var ds = document.querySelectorAll("details");
+  var anyClosed = Array.prototype.some.call(ds, function(d){ return !d.open; });
+  ds.forEach(function(d){ d.open = anyClosed; });
+  document.getElementById("tgl").textContent = anyClosed ? "Hide all answers" : "Show all answers";
+}
+
+var out = "";
+document.querySelectorAll(".wrap h1, .wrap h2").forEach(function(h){
+  if(!h.id) return;
+  out += '<a class="' + h.tagName.toLowerCase() + '" href="#' + h.id + '">' +
+         h.textContent.replace(/^[0-9]+[.]\s*/, "") + "</a>";
+});
+document.getElementById("toclinks").innerHTML = out;
+</script>
+</body></html>

@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch 5 — Neural Nets, XOR &amp; Neural LMs, visually</title>
+<style>
+  :root{
+    --bg:#0e1117; --panel:#161b26; --panel2:#1d2432; --line:#2b3446;
+    --ink:#e6edf7; --dim:#93a1b8;
+    --accent:#5aa9ff; --good:#3ddc97; --warn:#ffb454; --bad:#ff6b6b; --violet:#b78cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 20px 90px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.4px}
+  .sub{color:var(--dim);margin:0 0 30px}
+  h2{font-size:21px;margin:48px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:22px 0 8px;color:var(--accent)}
+  code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:14px;
+       font-family:ui-monospace,Consolas,monospace}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+        padding:18px 20px;margin:18px 0}
+  .analogy{border-left:3px solid var(--warn);background:#1b1a14}
+  .analogy b{color:var(--warn)}
+  .keypoint{border-left:3px solid var(--good);background:#111d19}
+  .keypoint b{color:var(--good)}
+  .trap{border-left:3px solid var(--bad);background:#1d1416}
+  .trap b{color:var(--bad)}
+  button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+         border-radius:8px;padding:8px 14px;cursor:pointer;font-size:14px;
+         font-family:inherit;transition:.12s}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.on{background:var(--accent);color:#08111d;border-color:var(--accent);font-weight:600}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--dim);font-weight:600}
+  td.num{text-align:right;font-family:ui-monospace,Consolas,monospace}
+  .out{font-family:ui-monospace,Consolas,monospace;font-size:14px;background:#0a0e15;
+       border:1px solid var(--line);border-radius:8px;padding:14px;white-space:pre-wrap;
+       line-height:1.75;margin-top:12px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+  .lbl{color:var(--dim);font-size:13px;min-width:60px}
+  .quiz{background:var(--panel2);border-radius:10px;padding:14px;margin:12px 0;
+        border:1px solid var(--line)}
+  .quiz .q{font-weight:600;margin-bottom:8px}
+  .fb{margin-top:10px;font-size:14px;display:none;padding:10px;border-radius:6px}
+  .fb.ok{display:block;background:#12312a;color:var(--good)}
+  .fb.no{display:block;background:#33161a;color:#ffb0b0}
+  .toc a{color:var(--accent);text-decoration:none;display:block;padding:3px 0;font-size:14px}
+  .toc a:hover{text-decoration:underline}
+  select,input[type=number],input[type=range],input[type=text]{background:var(--panel2);
+    color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;
+    font-family:inherit;font-size:14px}
+  input[type=range]{padding:0;height:26px;width:150px}
+  .good-t{color:var(--good)} .bad-t{color:var(--bad)} .warn-t{color:var(--warn)}
+  .vio-t{color:var(--violet)} .acc-t{color:var(--accent)} .dim-t{color:var(--dim)}
+  .note{font-size:13px;color:var(--dim);margin-top:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr}}
+  .flow{display:flex;align-items:center;justify-content:center;gap:10px;
+        flex-wrap:wrap;margin:16px 0}
+  .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+       padding:12px 16px;text-align:center;font-size:14px;min-width:100px}
+  .box b{display:block;color:var(--accent);font-size:13px;margin-bottom:2px}
+  .arrowc{color:var(--dim);font-size:22px}
+  .mono{font-family:ui-monospace,Consolas,monospace}
+  .val{font-family:ui-monospace,Consolas,monospace;color:var(--accent);min-width:52px;
+       display:inline-block;text-align:right}
+  .sbar{height:20px;border-radius:4px;background:var(--good)}
+  .srow{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:13px}
+  .srow .sl{width:60px;color:var(--dim);font-family:ui-monospace,Consolas,monospace}
+  .srow .sv{width:60px;text-align:right;font-family:ui-monospace,Consolas,monospace}
+  .gate{text-align:center}
+  .gate h4{margin:0 0 6px;font-size:14px;color:var(--violet)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Neural Nets, XOR &amp; Neural Language Models</h1>
+<p class="sub">NLP Session 5. The bridge chapter — counting out, networks in.
+Written notes: <code>../ch05-neural-networks-neural-lm.md</code></p>
+
+<div class="card toc">
+  <b>What's in here</b>
+  <a href="#s1">1 · One neuron, with sliders</a>
+  <a href="#s2">2 · Activation functions, plotted</a>
+  <a href="#s3">3 · ⭐ The XOR problem — see why a line fails</a>
+  <a href="#s4">4 · ⭐ The XOR network — trace all four inputs</a>
+  <a href="#s5">5 · Softmax calculator</a>
+  <a href="#s6">6 · Feedforward nets for NLP tasks</a>
+  <a href="#s7">7 · ⭐ Why neural LMs beat n-grams (cat / dog)</a>
+  <a href="#s8">8 · Training: loss, gradients, backprop</a>
+  <a href="#s9">9 · Quiz yourself</a>
+</div>
+
+
+<h2 id="s1">1 · One neuron, with sliders</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> A neuron is a <b>weighted voting panel with a mood</b>. Each
+input votes, each vote is scaled by how much you trust that voter (the weight),
+you add a fixed personal bias, and then you squash the total into a decision.
+That's it. Everything called "deep learning" is millions of these stacked up.
+</div>
+
+<div class="card">
+<div class="grid2">
+<div>
+  <div class="row"><span class="lbl">w₁</span><input type="range" id="w1" min="-20" max="20" value="2" oninput="unit()"><span class="val" id="w1v">0.2</span></div>
+  <div class="row"><span class="lbl">w₂</span><input type="range" id="w2" min="-20" max="20" value="3" oninput="unit()"><span class="val" id="w2v">0.3</span></div>
+  <div class="row"><span class="lbl">w₃</span><input type="range" id="w3" min="-20" max="20" value="9" oninput="unit()"><span class="val" id="w3v">0.9</span></div>
+  <div class="row"><span class="lbl">b</span><input type="range" id="bb" min="-20" max="20" value="5" oninput="unit()"><span class="val" id="bbv">0.5</span></div>
+  <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+  <div class="row"><span class="lbl">x₁</span><input type="range" id="x1" min="-20" max="20" value="5" oninput="unit()"><span class="val" id="x1v">0.5</span></div>
+  <div class="row"><span class="lbl">x₂</span><input type="range" id="x2" min="-20" max="20" value="6" oninput="unit()"><span class="val" id="x2v">0.6</span></div>
+  <div class="row"><span class="lbl">x₃</span><input type="range" id="x3" min="-20" max="20" value="1" oninput="unit()"><span class="val" id="x3v">0.1</span></div>
+  <div class="row" style="margin-top:12px">
+    <button onclick="resetUnit()">Slide example (w=[.2,.3,.9], b=.5, x=[.5,.6,.1])</button>
+  </div>
+</div>
+<div>
+  <svg id="unitsvg" width="100%" height="240" viewBox="0 0 320 240"></svg>
+</div>
+</div>
+<div class="out" id="unitout"></div>
+</div>
+
+<div class="card keypoint">
+<b>Why the non-linearity is not optional.</b> Without <code>f</code>, a stack of
+layers is just <code>W₂(W₁x) = (W₂W₁)x</code> — one matrix. Depth would buy you
+<b>nothing</b>. The activation function is the entire reason deep networks are
+more expressive than a single linear model.
+</div>
+
+
+<h2 id="s2">2 · Activation functions, plotted</h2>
+
+<div class="card">
+<div class="row">
+  <button id="afS" class="on" onclick="plotAct('sigmoid')">Sigmoid</button>
+  <button id="afT" onclick="plotAct('tanh')">tanh</button>
+  <button id="afR" onclick="plotAct('relu')">ReLU <span class="good-t">(most common)</span></button>
+</div>
+<div class="grid2">
+  <div style="display:flex;align-items:center;justify-content:center">
+    <svg id="actsvg" width="300" height="230" viewBox="0 0 300 230"></svg>
+  </div>
+  <div><div class="out" id="actout"></div></div>
+</div>
+</div>
+
+
+<h2 id="s3">3 · ⭐ The XOR problem — see why a line fails</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> You're sorting a pile of coins into two trays with a single
+straight ruler laid on the table. AND and OR can be split by a ruler. XOR
+cannot — the two "yes" coins sit on <b>opposite diagonal corners</b>, and no
+straight line separates diagonals from diagonals. <b>You need a second step.</b>
+</div>
+
+<div class="card">
+<p><b>A perceptron</b> = a very simple unit: <b>binary output (0 or 1)</b>, and
+<b>no non-linear activation function</b>. Its equation
+<code>w₁x₁ + w₂x₂ + b = 0</code> is <b>the equation of a line</b> — a decision
+boundary.</p>
+
+<div class="row">
+  <span class="lbl" style="min-width:120px">Try the line:</span>
+  <button id="gA" class="on" onclick="gate('AND')">AND</button>
+  <button id="gO" onclick="gate('OR')">OR</button>
+  <button id="gX" onclick="gate('XOR')">XOR</button>
+</div>
+
+<div class="grid2">
+  <div style="display:flex;align-items:center;justify-content:center">
+    <svg id="gatesvg" width="260" height="260" viewBox="0 0 260 260"></svg>
+  </div>
+  <div><div class="out" id="gateout"></div></div>
+</div>
+</div>
+
+<div class="card trap">
+<b>Minsky and Papert, 1969.</b> Showing that a perceptron cannot compute XOR is
+the result that caused the first AI winter. <b>XOR is not a linearly separable
+function</b> — and that sentence is the answer to the exam question.
+</div>
+
+
+<h2 id="s4">4 · ⭐ The XOR network — trace all four inputs</h2>
+
+<div class="card">
+<div class="out" style="margin-top:0">W = [ 1  1 ]      b = [  0 ]      U = [ 1  -2 ]
+    [ 1  1 ]          [ -1 ]
+
+    h = relu( W x + b )
+    y = U · h</div>
+
+<div class="row">
+  <span class="lbl" style="min-width:70px">input x =</span>
+  <button onclick="xorTrace(0)" id="xr0" class="on">[0, 0]</button>
+  <button onclick="xorTrace(1)" id="xr1">[0, 1]</button>
+  <button onclick="xorTrace(2)" id="xr2">[1, 0]</button>
+  <button onclick="xorTrace(3)" id="xr3">[1, 1]</button>
+</div>
+<div class="grid2">
+  <div><div class="out" id="xorout"></div></div>
+  <div style="display:flex;align-items:center;justify-content:center">
+    <svg id="hsvg" width="240" height="230" viewBox="0 0 240 230"></svg>
+  </div>
+</div>
+</div>
+
+<div class="card keypoint">
+<b>The point of the hidden layer.</b> Watch the right-hand plot: the hidden
+layer maps <b>[0,1] and [1,0] onto the SAME point [1,0]</b>. In
+<code>h</code>-space the problem has become linearly separable, so a single
+output weight finishes the job. <b>With learning, hidden layers learn to form
+useful representations</b> — that sentence is the whole justification for deep
+learning, and it is worth quoting verbatim.
+</div>
+
+<div class="card trap">
+<b>Counting convention.</b> We do <b>not</b> count the input layer. A "2-layer
+network" has <b>one hidden layer and one output layer</b>. Also: a feedforward
+net is also called a <b>multi-layer perceptron (MLP)</b> for historical reasons
+— a misnomer, since its units are not perceptrons.
+</div>
+
+
+<h2 id="s5">5 · Softmax calculator</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> Sigmoid answers "yes or no?". Softmax answers "which of these
+<i>k</i> things?" — it takes any list of scores and turns it into a set of
+percentages that add up to 100%. Exponentiating first is what makes the biggest
+score dominate.
+</div>
+
+<div class="card">
+<div class="row">
+  <span class="lbl" style="min-width:70px">z =</span>
+  <input type="text" id="smin" value="1.0, 2.0, 0.5" oninput="softmax()" style="min-width:240px">
+  <button onclick="smSet('1.0, 2.0, 0.5')">example</button>
+  <button onclick="smSet('3, 3, 3')">all equal</button>
+  <button onclick="smSet('8, 1, 1, 1')">one dominant</button>
+</div>
+<div class="grid2">
+  <div><div class="out" id="smout"></div></div>
+  <div id="smbars" style="padding-top:12px"></div>
+</div>
+</div>
+
+<div class="card keypoint">
+<b>Sigmoid vs softmax — the one-liner.</b> <b>Sigmoid</b> for 2 classes (one
+output unit, a scalar). <b>Softmax</b> for more than 2 (one output unit per
+class, a vector that sums to 1). Softmax <i>is</i> the generalisation of sigmoid.
+</div>
+
+
+<h2 id="s6">6 · Feedforward nets for NLP tasks</h2>
+
+<div class="card">
+<h3>Three generations of the same sentiment task</h3>
+<table>
+<tr><th>Version</th><th>Input layer</th><th>Comment</th></tr>
+<tr><td>Logistic regression</td><td>Hand-built binary features</td><td>The baseline</td></tr>
+<tr><td>2-layer feedforward net</td><td>Same hand-built features + a hidden layer</td><td>The hidden layer lets the net use <b>non-linear interactions between features</b> — which <i>may or may not</i> help</td></tr>
+<tr><td><b class="good-t">Representation learning</b></td><td><b>Learned embeddings</b> e₁…eₙ</td><td>⭐ <b>The real power of deep learning comes from the ability to learn features from the data</b>, instead of hand-engineering them</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h3>Texts come in different sizes — three fixes</h3>
+<div class="row">
+  <button id="fx0" class="on" onclick="fixDemo(0)">1 · Pad / truncate</button>
+  <button id="fx1" onclick="fixDemo(1)">2 · Mean pooling</button>
+  <button id="fx2" onclick="fixDemo(2)">3 · Max pooling</button>
+</div>
+<div class="out" id="fixout"></div>
+</div>
+
+
+<h2 id="s7">7 · ⭐ Why neural LMs beat n-grams (cat / dog)</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> A trigram model is a colleague with a perfect memory and zero
+imagination — if it never heard the exact phrase, it has nothing. A neural LM is
+a colleague who <i>understands</i> that dogs and cats are both pets, so anything
+learned about one transfers to the other. <b>Same evidence, wildly different
+generalisation.</b>
+</div>
+
+<div class="card">
+<div class="out" style="margin-top:0">TRAINING DATA   "I have to make sure that the CAT gets fed."
+NEVER SEEN      "dog gets fed"
+TEST DATA       "I forgot to make sure that the DOG gets ____"</div>
+<div class="row">
+  <button id="lmN" class="on" onclick="lmMode('n')">N-gram LM</button>
+  <button id="lmU" onclick="lmMode('u')">Neural LM</button>
+</div>
+<div class="out" id="lmout"></div>
+</div>
+
+<div class="card">
+<h3>The neural LM architecture</h3>
+<div class="flow">
+  <div class="box"><b>3 context words</b>one-hot,<br>length |V|</div>
+  <div class="arrowc">→</div>
+  <div class="box"><b>× E</b>embedding<br>matrix (lookup)</div>
+  <div class="arrowc">→</div>
+  <div class="box"><b>concatenate</b>e</div>
+  <div class="arrowc">→</div>
+  <div class="box"><b>h = σ(We+b)</b>hidden</div>
+  <div class="arrowc">→</div>
+  <div class="box"><b>softmax(Uh)</b>|V| probabilities</div>
+</div>
+<p class="note"><b>Arbitrary length problem → sliding windows of fixed length.</b>
+A one-hot vector times <code>E</code> just selects one row, so in practice you use
+a specialised <b>lookup</b> function rather than a matrix multiply.</p>
+</div>
+
+<div class="card">
+<h3>Two ways to train the embedding layer E</h3>
+<table>
+<tr><th></th><th>What you do</th><th>When</th></tr>
+<tr><td><b>Freeze E</b></td><td>Initialise with word2vec, <b>hold it constant</b> — only modify W, U, b</td><td>Default; less data needed</td></tr>
+<tr><td><b>Learn E jointly</b></td><td>Train the embeddings <b>simultaneously</b> with the network</td><td>When the task (sentiment, translation, parsing) <b>places strong constraints</b> on what makes a good word representation</td></tr>
+</table>
+</div>
+
+<div class="card trap">
+<b>The honest conclusion on the slide.</b> Neural LMs handle longer histories,
+generalise over similar words and predict more accurately — but they are
+<b>more complex, slower, need more energy to train, and are less
+interpretable</b>. For many (especially smaller) tasks, <b>an n-gram language
+model is still the right tool</b>.
+</div>
+
+
+<h2 id="s8">8 · Training: loss, gradients, backprop</h2>
+
+<div class="card">
+<div class="out">CROSS-ENTROPY LOSS  (binary logistic regression)
+
+    L_CE(y^, y) = - [ y log y^  +  (1 - y) log(1 - y^) ]
+
+    "how far off the current answer is from the right answer"
+
+GRADIENT DESCENT WEIGHT UPDATE
+
+    theta_{t+1} = theta_t  -  eta * dL / d theta          eta = learning rate
+
+DERIVATIVE FOR ONE WEIGHT  (chain rule, f(x) = u(v(x)))
+
+    dL_CE / dw_j  =  ( sigma(w·x + b) - y ) * x_j
+                     \___________________/   \___/
+                      loss x activation     weighted sum</div>
+</div>
+
+<div class="card keypoint">
+<b>Why backpropagation exists — the summary sentence.</b> For training we need
+the derivative of the loss with respect to weights in <b>early</b> layers, but
+the loss is computed only at the <b>very end</b> of the network.
+<b>Backward differentiation</b> solves this: given a <b>computation graph</b> and
+the derivatives of all the functions in it, we can <b>automatically</b> compute
+the derivative of the loss with respect to those early weights.
+</div>
+
+
+<h2 id="s9">9 · Quiz yourself</h2>
+<div id="quiz"></div>
+
+<div class="card" style="margin-top:34px">
+<b>Next:</b> <code>../ch06-pos-tagging-hmm-viterbi.md</code> ·
+<a href="ch06-viterbi-drill.html" style="color:var(--accent)">the Viterbi drill</a>
+— the biggest numerical in the pre-midsem half.
+</div>
+
+</div>
+
+<script>
+const sig=x=>1/(1+Math.exp(-x));
+const th =x=>Math.tanh(x);
+const rl =x=>Math.max(0,x);
+
+/* ---------- 1. unit ---------- */
+function gv(id){return (+document.getElementById(id).value)/10;}
+function resetUnit(){
+  const set={w1:2,w2:3,w3:9,bb:5,x1:5,x2:6,x3:1};
+  for(const k in set) document.getElementById(k).value=set[k];
+  unit();
+}
+function unit(){
+  const w=[gv('w1'),gv('w2'),gv('w3')], b=gv('bb'), x=[gv('x1'),gv('x2'),gv('x3')];
+  ['w1','w2','w3','x1','x2','x3'].forEach((id,i)=>{
+    document.getElementById(id+'v').textContent=(i<3?w[i]:x[i-3]).toFixed(1);
+  });
+  document.getElementById('bbv').textContent=b.toFixed(1);
+  const z=b+w[0]*x[0]+w[1]*x[1]+w[2]*x[2];
+  document.getElementById('unitout').textContent =
+`STEP 1  weighted sum
+    z = b + w·x
+      = ${b.toFixed(1)} + (${w[0].toFixed(1)})(${x[0].toFixed(1)}) + (${w[1].toFixed(1)})(${x[1].toFixed(1)}) + (${w[2].toFixed(1)})(${x[2].toFixed(1)})
+      = ${b.toFixed(1)} + ${(w[0]*x[0]).toFixed(2)} + ${(w[1]*x[1]).toFixed(2)} + ${(w[2]*x[2]).toFixed(2)}
+      = ${z.toFixed(3)}
+
+STEP 2  activation
+    sigmoid(z) = 1/(1+e^-${z.toFixed(3)}) = ${sig(z).toFixed(4)}
+    tanh(z)    = ${th(z).toFixed(4)}
+    ReLU(z)    = max(${z.toFixed(3)}, 0) = ${rl(z).toFixed(4)}`;
+  drawUnit(w,b,x,z);
+}
+function drawUnit(w,b,x,z){
+  const s=document.getElementById('unitsvg');
+  const ys=[55,105,155], cx=190, cy=105;
+  let h='';
+  ys.forEach((y,i)=>{
+    const th_=1+Math.min(4,Math.abs(w[i])*3);
+    const col=w[i]>=0?'#5aa9ff':'#ff6b6b';
+    h+=`<line x1="55" y1="${y}" x2="${cx-26}" y2="${cy}" stroke="${col}" stroke-width="${th_}" opacity=".8"/>`;
+    h+=`<circle cx="45" cy="${y}" r="16" fill="#1d2432" stroke="#2b3446"/>`;
+    h+=`<text x="45" y="${y+4}" fill="#e6edf7" font-size="11" text-anchor="middle" font-family="monospace">${x[i].toFixed(1)}</text>`;
+    h+=`<text x="${(55+cx-26)/2}" y="${(y+cy)/2-4}" fill="${col}" font-size="10" text-anchor="middle" font-family="monospace">${w[i].toFixed(1)}</text>`;
+  });
+  h+=`<circle cx="45" cy="205" r="14" fill="#1d2432" stroke="#ffb454"/>`;
+  h+=`<text x="45" y="209" fill="#ffb454" font-size="11" text-anchor="middle">+1</text>`;
+  h+=`<line x1="55" y1="205" x2="${cx-26}" y2="${cy+18}" stroke="#ffb454" stroke-width="2" opacity=".8"/>`;
+  h+=`<text x="120" y="172" fill="#ffb454" font-size="10" font-family="monospace">b=${b.toFixed(1)}</text>`;
+  h+=`<circle cx="${cx}" cy="${cy}" r="26" fill="#16222f" stroke="#5aa9ff" stroke-width="2"/>`;
+  h+=`<text x="${cx}" y="${cy-2}" fill="#5aa9ff" font-size="10" text-anchor="middle">Σ then f</text>`;
+  h+=`<text x="${cx}" y="${cy+12}" fill="#e6edf7" font-size="11" text-anchor="middle" font-family="monospace">z=${z.toFixed(2)}</text>`;
+  h+=`<line x1="${cx+26}" y1="${cy}" x2="285" y2="${cy}" stroke="#3ddc97" stroke-width="3"/>`;
+  h+=`<text x="288" y="${cy-8}" fill="#3ddc97" font-size="11" font-family="monospace" text-anchor="end">y=${sig(z).toFixed(2)}</text>`;
+  h+=`<text x="160" y="228" fill="#93a1b8" font-size="10" text-anchor="middle">line thickness = |weight| · red = negative</text>`;
+  s.innerHTML=h;
+}
+resetUnit();
+
+/* ---------- 2. activation plot ---------- */
+function plotAct(k){
+  document.getElementById('afS').className=k==='sigmoid'?'on':'';
+  document.getElementById('afT').className=k==='tanh'?'on':'';
+  document.getElementById('afR').className=k==='relu'?'on':'';
+  const f = k==='sigmoid'?sig:(k==='tanh'?th:rl);
+  const s=document.getElementById('actsvg');
+  const X0=20,X1=280,Y0=210,Y1=20, cx=150, cy=(Y0+Y1)/2;
+  let d='';
+  for(let px=X0;px<=X1;px++){
+    const x=(px-cx)/26;
+    let y=f(x);
+    const yy = cy - y*55;
+    d+=(px===X0?'M':'L')+px+' '+Math.max(Y1,Math.min(Y0,yy))+' ';
+  }
+  s.innerHTML=`
+   <line x1="${X0}" y1="${cy}" x2="${X1}" y2="${cy}" stroke="#2b3446"/>
+   <line x1="${cx}" y1="${Y1}" x2="${cx}" y2="${Y0}" stroke="#2b3446"/>
+   <line x1="${X0}" y1="${cy-55}" x2="${X1}" y2="${cy-55}" stroke="#2b3446" stroke-dasharray="3 4"/>
+   <line x1="${X0}" y1="${cy+55}" x2="${X1}" y2="${cy+55}" stroke="#2b3446" stroke-dasharray="3 4"/>
+   <text x="${X0-2}" y="${cy-58}" fill="#93a1b8" font-size="10">+1</text>
+   <text x="${X0-2}" y="${cy+68}" fill="#93a1b8" font-size="10">−1</text>
+   <text x="${cx+4}" y="${cy+14}" fill="#93a1b8" font-size="10">0</text>
+   <path d="${d}" fill="none" stroke="#5aa9ff" stroke-width="2.5"/>`;
+  const info={
+   sigmoid:['sigma(z) = 1 / (1 + e^-z)','range  (0, 1)',
+    'The logistic function — same one used for\nlogistic regression, and the same one that\nturns w·c into a probability in word2vec.\n\nUsed for BINARY output.'],
+   tanh:['tanh(z) = (e^z - e^-z) / (e^z + e^-z)','range  (-1, 1)',
+    'A rescaled sigmoid, centred on zero.\nOften trains a little better than sigmoid\nbecause its outputs are zero-centred.'],
+   relu:['relu(z) = max(z, 0)','range  [0, inf)',
+    'Rectified Linear Unit. THE MOST COMMON.\n\nDead simple, no exponentials, and it does\nnot saturate for large positive z — which is\nwhy deep networks train with it and not\nwith sigmoid.']
+  }[k];
+  document.getElementById('actout').textContent =
+    info[0]+'\n'+info[1]+'\n\n'+info[2];
+}
+plotAct('sigmoid');
+
+/* ---------- 3. gates ---------- */
+const GATES={
+ AND:{pts:[[0,0,0],[0,1,0],[1,0,0],[1,1,1]], line:[1,1,-1.5], sep:true},
+ OR :{pts:[[0,0,0],[0,1,1],[1,0,1],[1,1,1]], line:[1,1,-0.5], sep:true},
+ XOR:{pts:[[0,0,0],[0,1,1],[1,0,1],[1,1,0]], line:[1,1,-0.5], sep:false}
+};
+function gate(g){
+  ['gA','gO','gX'].forEach((id,i)=>document.getElementById(id).className=
+    (['AND','OR','XOR'][i]===g?'on':''));
+  const G=GATES[g], s=document.getElementById('gatesvg');
+  const P=p=>[40+p*170, 220-p*170];
+  let h=`<rect x="40" y="50" width="170" height="170" fill="#0a0e15" stroke="#2b3446"/>`;
+  h+=`<text x="30" y="225" fill="#93a1b8" font-size="11">0</text>`;
+  h+=`<text x="30" y="55" fill="#93a1b8" font-size="11">1</text>`;
+  h+=`<text x="40" y="240" fill="#93a1b8" font-size="11">0</text>`;
+  h+=`<text x="206" y="240" fill="#93a1b8" font-size="11">1</text>`;
+  h+=`<text x="125" y="252" fill="#93a1b8" font-size="11" text-anchor="middle">x₁</text>`;
+  h+=`<text x="16" y="140" fill="#93a1b8" font-size="11">x₂</text>`;
+  // line
+  const [a,b_,c]=G.line;
+  const ly=x=>(-c-a*x)/b_;
+  const x0=-0.15, x1=1.15;
+  const p0=[40+x0*170, 220-ly(x0)*170], p1=[40+x1*170, 220-ly(x1)*170];
+  h+=`<line x1="${p0[0]}" y1="${p0[1]}" x2="${p1[0]}" y2="${p1[1]}"
+        stroke="${G.sep?'#3ddc97':'#ff6b6b'}" stroke-width="2.5"
+        stroke-dasharray="${G.sep?'':'6 4'}"/>`;
+  G.pts.forEach(p=>{
+    const [cx,cy]=[40+p[0]*170, 220-p[1]*170];
+    const col=p[2]?'#3ddc97':'#ff6b6b';
+    h+=`<circle cx="${cx}" cy="${cy}" r="11" fill="${col}" stroke="#0e1117" stroke-width="2"/>`;
+    h+=`<text x="${cx}" y="${cy+4}" fill="#08111d" font-size="12" font-weight="700" text-anchor="middle">${p[2]}</text>`;
+  });
+  h+=`<text x="125" y="28" fill="${G.sep?'#3ddc97':'#ff6b6b'}" font-size="13"
+        text-anchor="middle" font-weight="700">${g} — ${G.sep?'one line works ✓':'NO single line works ✗'}</text>`;
+  s.innerHTML=h;
+  document.getElementById('gateout').textContent =
+   g==='XOR'
+? `XOR truth table
+    x1  x2  |  y
+    0   0   |  0
+    0   1   |  1
+    1   0   |  1
+    1   1   |  0
+
+The two 1s sit on OPPOSITE DIAGONAL CORNERS.
+No straight line can put {(0,1),(1,0)} on one side
+and {(0,0),(1,1)} on the other.
+
+    XOR IS NOT A LINEARLY SEPARABLE FUNCTION.
+
+Perceptrons are linear classifiers:
+    w1x1 + w2x2 + b = 0
+  = x2 = (-w1/w2)x1 + (-b/w2)      <- the equation of a LINE
+
+Minsky and Papert (1969) proved this, and it
+caused the first AI winter.
+
+SOLUTION: a LAYERED network of units. See section 4.`
+: `${g} truth table
+    x1  x2  |  y
+${GATES[g].pts.map(p=>'    '+p[0]+'   '+p[1]+'   |  '+p[2]).join('\n')}
+
+A single straight line separates the 1s from the 0s,
+so ONE PERCEPTRON is enough.
+
+    ${g==='AND'?'x1 + x2 - 1.5 > 0  fires only for (1,1)'
+              :'x1 + x2 - 0.5 > 0  fires for anything but (0,0)'}
+
+Easy to build AND or OR with perceptrons. Now try XOR.`;
+}
+gate('AND');
+
+/* ---------- 4. XOR network ---------- */
+const XIN=[[0,0],[0,1],[1,0],[1,1]], XOUT=[0,1,1,0];
+let xsel=0;
+function xorTrace(i){
+  xsel=i;
+  for(let j=0;j<4;j++) document.getElementById('xr'+j).className=(j===i?'on':'');
+  const x=XIN[i];
+  const z=[x[0]*1+x[1]*1+0, x[0]*1+x[1]*1-1];
+  const h=[Math.max(0,z[0]),Math.max(0,z[1])];
+  const y=1*h[0]+(-2)*h[1];
+  document.getElementById('xorout').textContent =
+`x = [${x.join(', ')}]
+
+  Wx      = [ ${x[0]}·1 + ${x[1]}·1 , ${x[0]}·1 + ${x[1]}·1 ] = [${x[0]+x[1]}, ${x[0]+x[1]}]
+  Wx + b  = [${z[0]}, ${z[1]}]
+  h = relu(Wx + b) = [${h.join(', ')}]
+
+  y = U · h = (1)(${h[0]}) + (-2)(${h[1]}) = ${y}
+
+  XOR(${x[0]}, ${x[1]}) = ${XOUT[i]}      ${y===XOUT[i]?'✓ CORRECT':'✗'}`;
+  drawH();
+}
+function drawH(){
+  const s=document.getElementById('hsvg');
+  const pts=XIN.map(x=>{
+    const z=[x[0]+x[1], x[0]+x[1]-1];
+    return [Math.max(0,z[0]),Math.max(0,z[1])];
+  });
+  let h=`<rect x="35" y="40" width="170" height="170" fill="#0a0e15" stroke="#2b3446"/>
+    <text x="120" y="24" fill="#93a1b8" font-size="11" text-anchor="middle">the hidden layer h — same 4 inputs, new space</text>
+    <text x="120" y="228" fill="#93a1b8" font-size="11" text-anchor="middle">h₁</text>
+    <text x="16" y="128" fill="#93a1b8" font-size="11">h₂</text>`;
+  // separating line in h-space: y = h1 - 2h2 ; boundary at h1 = 2h2 -> use 0.5 threshold visually
+  h+=`<line x1="35" y1="118" x2="205" y2="48" stroke="#3ddc97" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="150" y="70" fill="#3ddc97" font-size="10">a line WORKS here</text>`;
+  pts.forEach((p,i)=>{
+    const cx=35+p[0]*72, cy=210-p[1]*72;
+    const col=XOUT[i]?'#3ddc97':'#ff6b6b';
+    const sel=(i===xsel);
+    h+=`<circle cx="${cx}" cy="${cy}" r="${sel?13:9}" fill="${col}"
+          stroke="${sel?'#e6edf7':'#0e1117'}" stroke-width="${sel?2.5:2}"/>`;
+    h+=`<text x="${cx}" y="${cy+4}" fill="#08111d" font-size="11" font-weight="700" text-anchor="middle">${XOUT[i]}</text>`;
+    h+=`<text x="${cx}" y="${cy-16}" fill="#93a1b8" font-size="9" text-anchor="middle">[${XIN[i].join(',')}]</text>`;
+  });
+  h+=`<text x="120" y="246" fill="#ffb454" font-size="10" text-anchor="middle">[0,1] and [1,0] land on the SAME point</text>`;
+  s.innerHTML=h;
+}
+xorTrace(0);
+
+/* ---------- 5. softmax ---------- */
+function smSet(s){document.getElementById('smin').value=s;softmax();}
+function softmax(){
+  const zs=document.getElementById('smin').value.split(/[, ]+/)
+      .filter(x=>x.length).map(Number).filter(x=>!isNaN(x));
+  if(!zs.length){document.getElementById('smout').textContent='(enter some numbers)';return;}
+  const ex=zs.map(z=>Math.exp(z)), S=ex.reduce((a,b)=>a+b,0);
+  const p=ex.map(e=>e/S);
+  document.getElementById('smout').textContent =
+`softmax(z_i) = e^(z_i) / SUM_j e^(z_j)
+
+${zs.map((z,i)=>'  e^'+z+String('').padEnd(1)+' = '+ex[i].toFixed(4)).join('\n')}
+  ----------------------------
+  sum         = ${S.toFixed(4)}
+
+${zs.map((z,i)=>'  softmax('+z+') = '+ex[i].toFixed(4)+' / '+S.toFixed(4)+' = '+p[i].toFixed(3)).join('\n')}
+
+  check: ${p.map(x=>x.toFixed(3)).join(' + ')} = ${p.reduce((a,b)=>a+b,0).toFixed(3)}  ✓
+
+Output is a PROBABILITY DISTRIBUTION: all in (0,1), summing to 1.`;
+  document.getElementById('smbars').innerHTML = p.map((v,i)=>
+    '<div class="srow"><span class="sl">z='+zs[i]+'</span>'+
+    '<div class="sbar" style="width:'+(v*160)+'px"></div>'+
+    '<span class="sv">'+(100*v).toFixed(1)+'%</span></div>').join('');
+}
+softmax();
+
+/* ---------- 6. length fixes ---------- */
+function fixDemo(n){
+  for(let i=0;i<3;i++) document.getElementById('fx'+i).className=(i===n?'on':'');
+  const el=document.getElementById('fixout');
+  if(n===0) el.textContent=
+`1 · PAD / TRUNCATE
+
+  Make the input the length of the LONGEST review.
+  If shorter -> pad with ZERO embeddings.
+  If longer at test time -> TRUNCATE.
+
+  review A: [great] [film] [0] [0] [0]      <- padded
+  review B: [a] [truly] [wonderful] [and] [moving]
+  review C: [a] [long] [rambling] [review] [that]  ...truncated
+
+  Simple, but wastes capacity on padding and loses the tail.`;
+  else if(n===1) el.textContent=
+`2 · MEAN POOLING
+
+  Create a single "sentence embedding" with the SAME
+  dimensionality as a word, by taking the MEAN of all
+  the word embeddings.
+
+  great  = [0.8, 0.1, 0.4]
+  film   = [0.2, 0.9, 0.3]
+  ----------------------------- mean
+  sent   = [0.5, 0.5, 0.35]
+
+  Fixed size regardless of length. Loses word order.`;
+  else el.textContent=
+`3 · MAX POOLING
+
+  Take the ELEMENT-WISE MAX of all the word embeddings.
+  For each dimension, pick the largest value across all words.
+
+  great  = [0.8, 0.1, 0.4]
+  film   = [0.2, 0.9, 0.3]
+  ----------------------------- element-wise max
+  sent   = [0.8, 0.9, 0.4]
+             ^    ^    ^
+           great film great
+
+  Keeps the STRONGEST signal per dimension — good when
+  one decisive word should dominate the whole review.`;
+}
+fixDemo(0);
+
+/* ---------- 7. neural LM ---------- */
+function lmMode(m){
+  document.getElementById('lmN').className=m==='n'?'on':'';
+  document.getElementById('lmU').className=m==='u'?'on':'';
+  document.getElementById('lmout').textContent = m==='n'
+? `N-GRAM LM
+
+  P(fed | dog gets) = count("dog gets fed") / count("dog gets")
+                    = 0 / 0
+
+  The trigram "dog gets fed" NEVER OCCURS in training.
+  The word is represented only by its IDENTITY, and
+  "dog" is simply a different string from "cat".
+
+  ==> N-GRAM LM CANNOT PREDICT "fed".
+
+  No amount of smoothing fixes this properly — smoothing
+  gives it a small floor probability, not the RIGHT answer.`
+: `NEURAL LM
+
+  input:  embeddings of [the] [dog] [gets]
+
+     vec(cat) = [ 0.31, -0.08,  0.62, ... ]
+     vec(dog) = [ 0.29, -0.11,  0.60, ... ]
+                  ^^^^   ^^^^   ^^^^
+                  nearly the SAME numbers
+
+  The hidden layer h = sigma(We + b) produces almost the
+  same activation it produced for the CAT example, so the
+  softmax still puts high probability on "fed".
+
+  ==> NEURAL LM PREDICTS "fed" CORRECTLY.
+
+  "Neural language models represent words in the prior
+   context by their EMBEDDINGS, rather than just by their
+   word identity as used in n-gram language models. Using
+   embeddings allows neural LMs to generalize better to
+   unseen data."`;
+}
+lmMode('n');
+
+/* ---------- 9. quiz ---------- */
+const QS=[
+ {q:'The weighted sum inside a neural unit is…',
+  a:['z = w · x','z = b + Σ wᵢxᵢ = w·x + b','z = f(w·x)','z = softmax(w·x)'],c:1,
+  e:'Weights times inputs, plus a bias. Then and only then does the activation f get applied: y = f(z).'},
+ {q:'Why is a non-linear activation function necessary?',
+  a:['To keep outputs positive','Without it, stacked layers collapse into a single linear map',
+     'To make training faster','To avoid overfitting'],c:1,
+  e:'W₂(W₁x) = (W₂W₁)x — one matrix. The non-linearity is the entire reason depth buys you expressiveness.'},
+ {q:'The most commonly used activation function is…',
+  a:['sigmoid','tanh','ReLU','softmax'],c:2,
+  e:'ReLU = max(z,0). Simple, no exponentials, and it does not saturate for large positive z — which is why deep nets train with it.'},
+ {q:'A perceptron is…',
+  a:['A unit with binary output and NO non-linear activation','A two-layer network',
+     'Another name for a neuron with ReLU','The output layer of an MLP'],c:0,
+  e:'Binary output (0 or 1), no non-linear activation. Its equation is the equation of a line, which is why it is a linear classifier.'},
+ {q:'Which function can a single perceptron NOT compute?',
+  a:['AND','OR','NOT','XOR'],c:3,
+  e:'XOR is not linearly separable — the two 1s sit on opposite diagonal corners. Minsky and Papert, 1969.'},
+ {q:'How is XOR solved?',
+  a:['A larger learning rate','A layered network — the hidden layer makes it separable',
+     'A different activation function','More training data'],c:1,
+  e:'The hidden layer maps [0,1] and [1,0] onto the SAME point, and in that new space one line suffices. "Hidden layers learn to form useful representations."'},
+ {q:'A "2-layer network" has…',
+  a:['2 hidden layers','1 hidden layer and 1 output layer','2 input layers','2 output units'],c:1,
+  e:'We do not count the input layer when counting layers. A feedforward net is also called a multi-layer perceptron (MLP), historically.'},
+ {q:'Sigmoid is to 2 classes as softmax is to…',
+  a:['1 class','more than 2 classes','regression','binary features'],c:1,
+  e:'Softmax generalises sigmoid. One output unit per class, producing a vector that sums to 1.'},
+ {q:'softmax([1.0, 2.0, 0.5]) ≈ …',
+  a:['[0.33, 0.33, 0.33]','[0.231, 0.629, 0.140]','[0.25, 0.50, 0.25]','[1.0, 2.0, 0.5] / 3.5'],c:1,
+  e:'e^1=2.718, e^2=7.389, e^0.5=1.649, sum=11.756. Dividing gives 0.231, 0.629, 0.140 — and they sum to 1.'},
+ {q:'Three ways to handle variable-length text in a feedforward net:',
+  a:['Pad/truncate, mean pooling, max pooling','Backoff, interpolation, smoothing',
+     'Freeze, fine-tune, prompt','Sigmoid, tanh, ReLU'],c:0,
+  e:'Pad with zero embeddings and truncate; or take the mean of all word embeddings; or take the element-wise max.'},
+ {q:'A neural LM handles arbitrary-length sequences using…',
+  a:['recursion','sliding windows of fixed length','padding only','the chain rule'],c:1,
+  e:'The task is predict wt given wt−1, wt−2, wt−3. The fixed-size input problem is solved with a sliding window.'},
+ {q:'Training saw "the cat gets fed" but never "dog gets fed". At test time, on "the dog gets ___":',
+  a:['Both models predict "fed"','The n-gram predicts "fed", the neural LM fails',
+     'The n-gram fails, the neural LM predicts "fed" via the cat/dog embedding similarity','Neither can predict it'],c:2,
+  e:'This is THE example for the chapter. The n-gram sees only word identity; the neural LM sees embeddings, and dog is near cat.'},
+ {q:'Freezing E vs learning E jointly — when do you learn it jointly?',
+  a:['Always','When the task places strong constraints on what makes a good word representation',
+     'When you have little data','Never, it overfits'],c:1,
+  e:'The slide names sentiment classification, translation and parsing as tasks with such constraints. Otherwise initialise from word2vec and hold it constant.'},
+ {q:'Backward differentiation exists because…',
+  a:['gradients are hard to compute','the loss is computed only at the END of the network, but we need gradients for EARLY layers',
+     'ReLU is not differentiable at 0','softmax has no closed form'],c:1,
+  e:'Given a computation graph and the derivatives of all its functions, backprop automatically produces the derivative of the loss w.r.t. early weights.'}
+];
+(function(){
+  const root=document.getElementById('quiz');
+  QS.forEach((item,qi)=>{
+    const d=document.createElement('div'); d.className='quiz';
+    let h='<div class="q">'+(qi+1)+'. '+item.q+'</div><div class="row">';
+    item.a.forEach((opt,k)=>{h+='<button onclick="ans('+qi+','+k+',this)">'+opt+'</button>';});
+    h+='</div><div class="fb" id="fb'+qi+'"></div>';
+    d.innerHTML=h; root.appendChild(d);
+  });
+})();
+function ans(qi,k,btn){
+  const item=QS[qi], fb=document.getElementById('fb'+qi);
+  const ok=k===item.c;
+  fb.className='fb '+(ok?'ok':'no');
+  fb.innerHTML=(ok?'✅ Correct. ':'❌ Not quite — the answer is <b>'+item.a[item.c]+'</b>. ')+item.e;
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.className='');
+  btn.className='on';
+}
+</script>
+</body>
+</html>

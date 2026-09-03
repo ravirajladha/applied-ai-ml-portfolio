@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch 1 — Levels of Language &amp; Ambiguity, visually</title>
+<style>
+  :root{
+    --bg:#0e1117; --panel:#161b26; --panel2:#1d2432; --line:#2b3446;
+    --ink:#e6edf7; --dim:#93a1b8;
+    --accent:#5aa9ff; --good:#3ddc97; --warn:#ffb454; --bad:#ff6b6b; --violet:#b78cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 20px 90px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.4px}
+  .sub{color:var(--dim);margin:0 0 30px}
+  h2{font-size:21px;margin:48px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:22px 0 8px;color:var(--accent)}
+  code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:14px;
+       font-family:ui-monospace,Consolas,monospace}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+        padding:18px 20px;margin:18px 0}
+  .analogy{border-left:3px solid var(--warn);background:#1b1a14}
+  .analogy b{color:var(--warn)}
+  .keypoint{border-left:3px solid var(--good);background:#111d19}
+  .keypoint b{color:var(--good)}
+  .trap{border-left:3px solid var(--bad);background:#1d1416}
+  .trap b{color:var(--bad)}
+  button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+         border-radius:8px;padding:8px 14px;cursor:pointer;font-size:14px;
+         font-family:inherit;transition:.12s}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.on{background:var(--accent);color:#08111d;border-color:var(--accent);font-weight:600}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--dim);font-weight:600}
+  td.num{text-align:right;font-family:ui-monospace,Consolas,monospace}
+  .out{font-family:ui-monospace,Consolas,monospace;font-size:14px;background:#0a0e15;
+       border:1px solid var(--line);border-radius:8px;padding:14px;white-space:pre-wrap;
+       line-height:1.75;margin-top:12px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+  .lbl{color:var(--dim);font-size:13px;min-width:130px}
+  .quiz{background:var(--panel2);border-radius:10px;padding:14px;margin:12px 0;
+        border:1px solid var(--line)}
+  .quiz .q{font-weight:600;margin-bottom:8px}
+  .fb{margin-top:10px;font-size:14px;display:none;padding:10px;border-radius:6px}
+  .fb.ok{display:block;background:#12312a;color:var(--good)}
+  .fb.no{display:block;background:#33161a;color:#ffb0b0}
+  .toc a{color:var(--accent);text-decoration:none;display:block;padding:3px 0;font-size:14px}
+  .toc a:hover{text-decoration:underline}
+  .ladder{display:grid;gap:8px;margin:14px 0}
+  .rung{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+        padding:13px 16px;cursor:pointer;transition:.15s}
+  .rung:hover{border-color:var(--accent)}
+  .rung.open{border-color:var(--accent);background:#16222f}
+  .rung h4{margin:0;font-size:15px;color:var(--violet);display:flex;
+           justify-content:space-between;align-items:center;gap:10px}
+  .rung .tag{font-size:11px;color:var(--dim);font-weight:400}
+  .rung .body{display:none;margin-top:10px;font-size:14px}
+  .rung.open .body{display:block}
+  .ex{font-family:ui-monospace,Consolas,monospace;background:#0a0e15;padding:8px 10px;
+      border-radius:6px;margin-top:8px;font-size:13px}
+  select,input[type=number]{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+    border-radius:8px;padding:7px 10px;font-family:inherit;font-size:14px}
+  .good-t{color:var(--good)} .bad-t{color:var(--bad)} .warn-t{color:var(--warn)}
+  .vio-t{color:var(--violet)} .acc-t{color:var(--accent)} .dim-t{color:var(--dim)}
+  .note{font-size:13px;color:var(--dim);margin-top:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .ctab td,.ctab th{text-align:center}
+  .ctab .tp{background:#12312a;color:var(--good);font-weight:700}
+  .ctab .tn{background:#12312a;color:var(--good);font-weight:700}
+  .ctab .fp{background:#33161a;color:#ffb0b0;font-weight:700}
+  .ctab .fn{background:#33161a;color:#ffb0b0;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Levels of Language &amp; Ambiguity</h1>
+<p class="sub">NLP Session 1 — Introduction. The two questions that actually get asked,
+made clickable. Written notes: <code>../ch01-intro-nlp.md</code></p>
+
+<div class="card toc">
+  <b>What's in here</b>
+  <a href="#s1">1 · What NLP even is</a>
+  <a href="#s2">2 · ⭐ The six levels — climb the ladder</a>
+  <a href="#s3">3 · The broken-sentence drill</a>
+  <a href="#s4">4 · ⭐ Three kinds of ambiguity</a>
+  <a href="#s5">5 · Evaluation — the contingency table, live</a>
+  <a href="#s6">6 · Pre-processing pipeline</a>
+  <a href="#s7">7 · Quiz yourself</a>
+</div>
+
+
+<h2 id="s1">1 · What NLP even is</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> Learning a foreign language, you don't just memorise a
+dictionary. You need to know how words are <i>built</i> (walk → walked), which
+strings are actually words (<i>friendship</i> yes, <i>beautyship</i> no), what
+order they go in, what they mean together, whether saying it makes sense
+<i>here</i>, and what the previous sentence was about. <b>Those six things are
+exactly the six levels of language analysis</b> — the course's spine.
+</div>
+
+<div class="card">
+<p><b>NLP</b> = analyse, understand and generate human languages just like humans
+do. <span class="dim-t">Started as a branch of AI; borrows from Linguistics,
+Psycholinguistics, Cognitive Science and Statistics.</span></p>
+<p class="note">The slogan on the slide: <i>make computers learn our language
+rather than we learn theirs.</i></p>
+</div>
+
+<div class="card">
+<b>The two halves of any NLP system</b>
+<table>
+<tr><th>Half</th><th>Direction</th><th>Course topics that live here</th></tr>
+<tr><td><b class="acc-t">NLU</b> — Natural Language Understanding</td><td>text → meaning</td><td>POS tagging, parsing, word sense disambiguation, semantic web</td></tr>
+<tr><td><b class="good-t">NLG</b> — Natural Language Generation</td><td>meaning → text</td><td>language modelling, summarization, LLM generation</td></tr>
+</table>
+</div>
+
+
+<h2 id="s2">2 · ⭐ The six levels — climb the ladder</h2>
+
+<p>Bottom to top. Click each rung. <b>Every rung assumes the ones below it
+already work.</b></p>
+
+<div class="ladder" id="ladder"></div>
+
+<div class="card keypoint">
+<b>The pattern to notice.</b> Each classic example sentence is <i>correct at the
+level below</i> and <i>broken at the level above</i>. So if an exam hands you a
+weird sentence and asks "what's wrong with it?", just <b>walk up the ladder</b>
+until something breaks. That's the whole technique.
+</div>
+
+
+<h2 id="s3">3 · The broken-sentence drill</h2>
+
+<p>Read the sentence, decide the <b>lowest level at which it breaks</b>, then check.</p>
+
+<div class="card">
+  <div class="out" id="drillSent" style="font-size:16px"></div>
+  <div class="row" style="margin-top:12px">
+    <button onclick="drillAns('morphological')">Morphological</button>
+    <button onclick="drillAns('lexical')">Lexical</button>
+    <button onclick="drillAns('syntactic')">Syntactic</button>
+    <button onclick="drillAns('semantic')">Semantic</button>
+    <button onclick="drillAns('pragmatic')">Pragmatic</button>
+    <button onclick="drillAns('discourse')">Discourse</button>
+  </div>
+  <div class="fb" id="drillFb"></div>
+  <div class="row"><button onclick="nextDrill()">Next sentence →</button>
+  <span class="note" id="drillScore"></span></div>
+</div>
+
+
+<h2 id="s4">4 · ⭐ Three kinds of ambiguity</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> "I saw her duck." Did you <i>watch a bird she owns</i>, or
+<i>watch her crouch</i>? Nothing is misspelled, nothing is ungrammatical — the
+sentence is simply two sentences wearing the same coat. English does this
+constantly, and every one of the hard problems in this course exists because
+of it.
+</div>
+
+<div class="card">
+<table>
+<tr><th>Type</th><th>What varies</th><th>Slide's example</th></tr>
+<tr><td><b class="vio-t">Structural</b></td><td>Which words attach to which — the parse tree</td>
+    <td><i>"Namrata thinks she understands me."</i><br><i>"Visiting relatives can be a nuisance."</i></td></tr>
+<tr><td><b class="acc-t">Grammatical</b></td><td>The grammatical category / inflection</td>
+    <td><i>can</i> = Noun (container) / Modal / Verb (<i>to can</i> = to pack)</td></tr>
+<tr><td><b class="warn-t">Lexical</b></td><td>Which <b>word sense</b> is meant</td>
+    <td><b>Polysemy:</b> <i>understand</i> (I get it)<br><b>Homonymy:</b> <i>bank</i> = river vs financial</td></tr>
+</table>
+</div>
+
+<h3>Sort these — click a sentence, then pick its type</h3>
+<div class="card">
+  <div class="out" id="ambSent" style="font-size:16px"></div>
+  <div class="row" style="margin-top:12px">
+    <button onclick="ambAns('structural')">Structural</button>
+    <button onclick="ambAns('grammatical')">Grammatical</button>
+    <button onclick="ambAns('lexical')">Lexical</button>
+  </div>
+  <div class="fb" id="ambFb"></div>
+  <div class="row"><button onclick="nextAmb()">Next →</button>
+  <span class="note" id="ambScore"></span></div>
+</div>
+
+<div class="card trap">
+<b>Exam trap — polysemy vs homonymy.</b> Both are <i>lexical</i> ambiguity.<br>
+<b>Polysemy</b> = one word, several <b>related</b> senses (<i>mouse</i> the
+rodent → <i>mouse</i> the device, named by resemblance).<br>
+<b>Homonymy</b> = same form, <b>unrelated</b> senses that just collided
+(<i>bank</i> the riverside vs <i>bank</i> the institution — different origins
+entirely).
+</div>
+
+
+<h2 id="s5">5 · Evaluation — the contingency table, live</h2>
+
+<div class="card analogy">
+<b>Analogy.</b> A metal detector on a beach. <b>Precision</b> = of everything you
+dug up, how much was actually treasure. <b>Recall</b> = of all the treasure that
+was buried, how much did you find. Turn the sensitivity up and recall rises while
+precision falls; turn it down and the reverse. <b>F1</b> is the score that
+refuses to let you cheat on either one.
+</div>
+
+<div class="card">
+<div class="row">
+  <span class="lbl">True items present</span><input type="number" id="e_act" value="40" min="0" oninput="evalCalc()">
+  <span class="lbl">Items you output</span><input type="number" id="e_out" value="50" min="0" oninput="evalCalc()">
+  <span class="lbl">Of those, correct</span><input type="number" id="e_tp" value="30" min="0" oninput="evalCalc()">
+</div>
+<div class="row">
+  <button onclick="evalPreset(40,50,30)">Balanced-ish</button>
+  <button onclick="evalPreset(40,10,10)">Cautious (high P, low R)</button>
+  <button onclick="evalPreset(40,200,40)">Trigger-happy (low P, high R)</button>
+  <button onclick="evalPreset(40,40,40)">Perfect</button>
+</div>
+
+<div class="grid2">
+<div>
+<table class="ctab">
+<tr><th></th><th>ACTUAL yes</th><th>ACTUAL no</th></tr>
+<tr><th>PRED yes</th><td class="tp" id="c_tp">30</td><td class="fp" id="c_fp">20</td></tr>
+<tr><th>PRED no</th><td class="fn" id="c_fn">10</td><td class="tn" id="c_tn">—</td></tr>
+</table>
+<p class="note">TN is unknowable here without a fixed candidate pool — which is
+exactly why extraction tasks report P/R/F1 rather than accuracy.</p>
+</div>
+<div><div class="out" id="evalout"></div></div>
+</div>
+</div>
+
+<div class="card keypoint">
+<b>Why the harmonic mean and not the average?</b> Because it punishes imbalance.
+A system with P = 1.0 and R = 0.0 has an arithmetic mean of 0.5 — which looks
+respectable — but <b>F1 = 0</b>, which is the truth. Try the "Cautious" preset
+and watch F1 sit well below the average of the two.
+</div>
+
+
+<h2 id="s6">6 · Pre-processing pipeline</h2>
+
+<div class="card">
+<p>Click each stage to apply it to the raw text.</p>
+<div class="row">
+  <button onclick="prep(0)" id="p0" class="on">Raw</button>
+  <button onclick="prep(1)" id="p1">1 · Remove punctuation</button>
+  <button onclick="prep(2)" id="p2">2 · Tokenize</button>
+  <button onclick="prep(3)" id="p3">3 · Remove stop words</button>
+  <button onclick="prep(4)" id="p4">4 · Lemmatize / Stem</button>
+</div>
+<div class="out" id="prepout"></div>
+</div>
+
+<div class="card trap">
+<b>Stemming vs lemmatization.</b> <b>Stemming</b> chops affixes with crude rules
+and can produce a non-word: <i>studies → studi</i>. <b>Lemmatization</b> uses a
+dictionary and returns a real form: <i>studies → study</i>. Stemming is fast and
+sloppy; lemmatization is slower and correct.
+</div>
+
+
+<h2 id="s7">7 · Quiz yourself</h2>
+<div id="quiz"></div>
+
+<div class="card" style="margin-top:34px">
+<b>Next:</b> <code>../ch02-vector-semantics-tfidf.md</code> and its explainer
+<a href="ch02-sparse-vs-dense-vectors.html" style="color:var(--accent)">ch02-sparse-vs-dense-vectors.html</a>
+— the first real machinery of the course.
+</div>
+
+</div>
+
+<script>
+/* ---------- 2. the ladder ---------- */
+const LEVELS=[
+ {n:'Discourse', tag:'top — needs everything below',
+  d:'Concerns how the <b>immediately preceding sentences</b> affect the interpretation of the next one.',
+  ex:'Chetana completed PhD at IIT Bombay. <b>She</b> is a Professor at BITS Pilani.\n\n"She" is only resolvable using the PREVIOUS sentence.'},
+ {n:'Pragmatic', tag:'meaning in use',
+  d:'Concerns how sentences are <b>used in different situations</b>, and how that use affects interpretation.',
+  ex:'"She cuts banana with a pen."\n\nSemantically correct — you can picture it — but PRAGMATICALLY incorrect,\nbecause it serves no useful purpose in any situation.'},
+ {n:'Semantic', tag:'context-INDEPENDENT meaning',
+  d:'Concerns <b>what words mean</b> and how those meanings combine in sentences to form sentence meanings.',
+  ex:'"Green ideas have large noses."\n\nSyntactically correct — but SEMANTICALLY incorrect. Ideas are not coloured\nand do not have noses.'},
+ {n:'Syntactic', tag:'word order &amp; structure',
+  d:'Concerns how words <b>can be put together</b> to form correct sentences: what structural role each word plays and which phrases are subparts of others.',
+  ex:'"Large have green ideas nose."\n\nLexically correct — every word is a real word — but SYNTACTICALLY incorrect.'},
+ {n:'Lexical', tag:'is it a word at all?',
+  d:'Concerns the <b>listing of words</b> and categorising them.',
+  ex:'friendful, beautyship   -> LEXICALLY INCORRECT (not words of English)\nfriendship, beautiful   -> correct'},
+ {n:'Morphological', tag:'bottom — how words are built',
+  d:'Concerns how words are constructed from basic meaning units called <b>morphemes</b>. A <b>morpheme</b> is the primitive unit of meaning in a language.',
+  ex:'"friendly" = noun "friend" + suffix "-ly"\n\nThe suffix transforms a NOUN into an ADJECTIVE.'}
+];
+(function(){
+  const r=document.getElementById('ladder');
+  LEVELS.forEach((L,i)=>{
+    const d=document.createElement('div'); d.className='rung';
+    d.innerHTML='<h4><span>'+L.n+'</span><span class="tag">'+L.tag+'</span></h4>'+
+                '<div class="body">'+L.d+'<div class="ex">'+L.ex+'</div></div>';
+    d.onclick=()=>d.classList.toggle('open');
+    r.appendChild(d);
+  });
+})();
+
+/* ---------- 3. broken sentence drill ---------- */
+const DRILL=[
+ {s:'"Colourless green ideas sleep furiously."',a:'semantic',
+  e:'Morphologically, lexically and syntactically fine (Adj Adj N V Adv). But the meanings cannot combine — ideas are not coloured and do not sleep.'},
+ {s:'"The beautyship of the sunset."',a:'lexical',
+  e:'"beauty" + "-ship" is a plausible construction morphologically, but beautyship is not a word of English. This is the slide\'s own example.'},
+ {s:'"Boy the ran quickly."',a:'syntactic',
+  e:'Every word is real (lexically fine), but a determiner cannot follow its noun in English word order.'},
+ {s:'"I microwaved the constitution for eleven minutes."',a:'pragmatic',
+  e:'Semantically interpretable — you can picture it — but the utterance serves no sensible purpose in any situation.'},
+ {s:'"Ravi bought a laptop. It weighed 40 tonnes."',a:'discourse',
+  e:'Each sentence alone is fine. The problem only appears when you link "It" back to the laptop from the PREVIOUS sentence.'},
+ {s:'"Large have green ideas nose."',a:'syntactic',
+  e:'All real words, so lexically fine — but the word order is not a possible English structure. The slide pairs this with "Green ideas have large noses", which IS syntactic but fails semantically.'},
+ {s:'"Green ideas have large noses."',a:'semantic',
+  e:'A perfectly formed sentence structurally (NP + V + NP). It breaks only when you try to combine the meanings.'},
+ {s:'"unhappilyness"',a:'morphological',
+  e:'The morphemes are stacked in an impossible order — English does not allow the noun-forming "-ness" after the adverb-forming "-ly". The construction fails before you even ask whether it is a listed word.'}
+];
+let di=0, dScore=[0,0];
+function showDrill(){
+  document.getElementById('drillSent').textContent=DRILL[di].s;
+  document.getElementById('drillFb').className='fb';
+  document.getElementById('drillScore').textContent =
+    dScore[1]? 'score: '+dScore[0]+' / '+dScore[1] : '';
+}
+function drillAns(v){
+  const item=DRILL[di], fb=document.getElementById('drillFb');
+  const ok = v===item.a;
+  dScore[1]++; if(ok) dScore[0]++;
+  fb.className='fb '+(ok?'ok':'no');
+  fb.innerHTML=(ok?'✅ Correct — <b>'+item.a+'</b>. ':'❌ The lowest broken level is <b>'+item.a+'</b>. ')+item.e;
+  document.getElementById('drillScore').textContent='score: '+dScore[0]+' / '+dScore[1];
+}
+function nextDrill(){ di=(di+1)%DRILL.length; showDrill(); }
+showDrill();
+
+/* ---------- 4. ambiguity sorter ---------- */
+const AMB=[
+ {s:'"I saw the man with the telescope."',a:'structural',
+  e:'Does "with the telescope" attach to "saw" (the instrument) or to "the man" (he was holding it)? Two different parse trees — that is structural ambiguity.'},
+ {s:'"He went to the bank."',a:'lexical',
+  e:'Lexical ambiguity, sub-type HOMONYMY — riverside vs financial institution are unrelated senses that happen to share a form.'},
+ {s:'"Book that flight."  (book = verb or noun?)',a:'grammatical',
+  e:'The ambiguity is over the grammatical CATEGORY. This is exactly what POS tagging in Session 6 exists to resolve.'},
+ {s:'"Visiting relatives can be a nuisance."',a:'structural',
+  e:'The relatives who visit, or the act of visiting them? The slide uses this one directly — two structures, same words.'},
+ {s:'"Can" — container, modal verb, or "to can" = to pack?',a:'grammatical',
+  e:'Three different grammatical categories for one form. Straight off the slide.'},
+ {s:'"I need a new mouse for my computer."',a:'lexical',
+  e:'Lexical ambiguity, sub-type POLYSEMY — the rodent sense and the device sense are RELATED (the device was named by resemblance), unlike bank/bank.'},
+ {s:'"Namrata thinks she understands me."',a:'structural',
+  e:'Is "she" Namrata, or a third person? The reading changes which structure you build. The slide lists it under structural.'}
+];
+let ai_=0, aScore=[0,0];
+function showAmb(){
+  document.getElementById('ambSent').textContent=AMB[ai_].s;
+  document.getElementById('ambFb').className='fb';
+}
+function ambAns(v){
+  const item=AMB[ai_], fb=document.getElementById('ambFb');
+  const ok=v===item.a;
+  aScore[1]++; if(ok) aScore[0]++;
+  fb.className='fb '+(ok?'ok':'no');
+  fb.innerHTML=(ok?'✅ Correct — <b>'+item.a+'</b>. ':'❌ It is <b>'+item.a+'</b>. ')+item.e;
+  document.getElementById('ambScore').textContent='score: '+aScore[0]+' / '+aScore[1];
+}
+function nextAmb(){ ai_=(ai_+1)%AMB.length; showAmb(); }
+showAmb();
+
+/* ---------- 5. evaluation ---------- */
+function evalPreset(a,o,t){
+  document.getElementById('e_act').value=a;
+  document.getElementById('e_out').value=o;
+  document.getElementById('e_tp').value=t;
+  evalCalc();
+}
+function evalCalc(){
+  let act=+document.getElementById('e_act').value;
+  let out=+document.getElementById('e_out').value;
+  let tp =+document.getElementById('e_tp').value;
+  tp = Math.min(tp, act, out);
+  const fp = out-tp, fn = act-tp;
+  document.getElementById('c_tp').textContent=tp;
+  document.getElementById('c_fp').textContent=fp;
+  document.getElementById('c_fn').textContent=fn;
+  const P = out? tp/out : 0;
+  const R = act? tp/act : 0;
+  const F = (P+R)? 2*P*R/(P+R) : 0;
+  const avg=(P+R)/2;
+  document.getElementById('evalout').textContent =
+`TP = ${tp}   FP = ${fp}   FN = ${fn}
+
+Precision = TP / (TP + FP) = ${tp} / ${out||0} = ${P.toFixed(3)}
+Recall    = TP / (TP + FN) = ${tp} / ${act||0} = ${R.toFixed(3)}
+
+F1 = 2PR / (P + R)
+   = 2(${P.toFixed(3)})(${R.toFixed(3)}) / (${P.toFixed(3)} + ${R.toFixed(3)})
+   = ${F.toFixed(3)}
+
+arithmetic mean of P and R = ${avg.toFixed(3)}
+F1 sits ${F<avg?'BELOW':'level with'} it${F<avg?' — the harmonic mean always leans\ntoward the WEAKER of the two scores. That is the point of it.':'.'}`;
+}
+evalCalc();
+
+/* ---------- 6. pre-processing ---------- */
+const RAW='The students were studying NLP, and they really enjoyed the classes!';
+function prep(n){
+  for(let i=0;i<5;i++) document.getElementById('p'+i).className = (i===n?'on':'');
+  const el=document.getElementById('prepout');
+  const noPunct='The students were studying NLP and they really enjoyed the classes';
+  const toks=noPunct.split(' ');
+  const stops=['the','were','and','they','really'];
+  const kept=toks.filter(t=>stops.indexOf(t.toLowerCase())<0);
+  const lem={'students':'student','studying':'study','enjoyed':'enjoy','classes':'class','NLP':'NLP'};
+  if(n===0) el.textContent='RAW\n\n  '+RAW;
+  else if(n===1) el.textContent='1 · REMOVE PUNCTUATION\n\n  '+noPunct+'\n\n  removed:  ,  !';
+  else if(n===2) el.textContent='2 · TOKENIZE  ('+toks.length+' tokens)\n\n  ['+toks.map(t=>'"'+t+'"').join(', ')+']';
+  else if(n===3) el.textContent='3 · REMOVE STOP WORDS\n\n  dropped: '+stops.map(s=>'"'+s+'"').join(', ')+
+      '\n\n  ['+kept.map(t=>'"'+t+'"').join(', ')+']\n\n  '+toks.length+' tokens -> '+kept.length+' tokens';
+  else el.textContent='4 · LEMMATIZE / STEM\n\n'+
+      kept.map(t=>'  '+t.padEnd(12)+' -> '+(lem[t]||t.toLowerCase())).join('\n')+
+      '\n\n  final: ['+kept.map(t=>'"'+(lem[t]||t.toLowerCase())+'"').join(', ')+']'+
+      '\n\n  NOTE  a STEMMER would give "studi" for "studying" (not a word).\n'+
+      '        a LEMMATIZER gives "study" (a real dictionary form).';
+}
+prep(0);
+
+/* ---------- 7. quiz ---------- */
+const QS=[
+ {q:'The six levels of language analysis, bottom-up, are…',
+  a:['Lexical, Morphological, Syntactic, Semantic, Discourse, Pragmatic',
+     'Morphological, Lexical, Syntactic, Semantic, Pragmatic, Discourse',
+     'Syntactic, Semantic, Lexical, Morphological, Pragmatic, Discourse',
+     'Morphological, Syntactic, Lexical, Pragmatic, Semantic, Discourse'],c:1,
+  e:'Morphological → Lexical → Syntactic → Semantic → Pragmatic → Discourse. Words are built, then listed, then ordered, then meant, then used, then linked across sentences.'},
+ {q:'A morpheme is…',
+  a:['A word in the vocabulary','The primitive unit of MEANING in a language','A part of speech','A sentence fragment'],c:1,
+  e:'"friendly" = friend + -ly, two morphemes. The suffix turns a noun into an adjective.'},
+ {q:'"Green ideas have large noses" is broken at which level?',
+  a:['Syntactic','Semantic','Lexical','Morphological'],c:1,
+  e:'It is perfectly well-formed syntactically. It fails when the meanings have to combine — that is the semantic level.'},
+ {q:'"She cuts banana with a pen" is broken at which level?',
+  a:['Semantic','Syntactic','Pragmatic','Discourse'],c:2,
+  e:'Semantically correct — you can picture it — but pragmatically incorrect, because it has no useful meaning in any situation.'},
+ {q:'The three types of ambiguity are…',
+  a:['Structural, Grammatical, Lexical','Syntactic, Semantic, Pragmatic','Polysemy, Homonymy, Synonymy','Morphological, Lexical, Discourse'],c:0,
+  e:'Structural (which words attach to which), Grammatical (which category), Lexical (which sense).'},
+ {q:'bank (river) vs bank (money) is an example of…',
+  a:['Polysemy','Homonymy','Structural ambiguity','Synonymy'],c:1,
+  e:'HOMONYMY — unrelated senses that happen to share a form. Polysemy would be RELATED senses, like mouse the rodent → mouse the device.'},
+ {q:'A system flags 50 items, 30 correctly, out of 40 true items. Precision is…',
+  a:['0.75','0.60','0.667','0.30'],c:1,
+  e:'Precision = TP/(TP+FP) = 30/50 = 0.60. Recall = 30/40 = 0.75, and F1 = 0.667.'},
+ {q:'Why use the harmonic mean (F1) rather than the arithmetic mean?',
+  a:['It is faster to compute','It punishes imbalance — P=1.0, R=0.0 gives F1=0','It is always higher','It handles negative values'],c:1,
+  e:'The arithmetic mean would report 0.5 for a system that finds nothing. F1 reports 0, which is the truth.'},
+ {q:'The four pre-processing steps, in order, are…',
+  a:['Tokenize, remove punctuation, stem, remove stop words',
+     'Remove punctuation, tokenize, remove stop words, lemmatize/stem',
+     'Lemmatize, tokenize, remove punctuation, remove stop words',
+     'Remove stop words, tokenize, remove punctuation, stem'],c:1,
+  e:'Straight off the slide: remove punctuation → tokenization → remove stop words → lemmatize/stem.'},
+ {q:'Stemming "studies" gives "studi"; lemmatizing gives "study". The difference is…',
+  a:['Stemming is dictionary-based, lemmatization is rule-based',
+     'Stemming chops affixes with rules and may produce a non-word; lemmatization uses a dictionary and returns a real form',
+     'They are the same thing','Lemmatization only works on verbs'],c:1,
+  e:'Stemming is fast and sloppy. Lemmatization is slower and returns an actual dictionary form.'},
+ {q:'How many open classes does English have, and which?',
+  a:['4 — Noun, Verb, Adjective, Adverb','8 — the traditional parts of speech','2 — Noun and Verb','45 — the Penn Treebank tags'],c:0,
+  e:'Open classes accept new members. English has exactly four: Nouns, Verbs, Adjectives, Adverbs. Prepositions, pronouns and auxiliaries are CLOSED classes.'},
+ {q:'NLU and NLG are…',
+  a:['Two competing theories','text → meaning, and meaning → text','Two evaluation metrics','Two Python libraries'],c:1,
+  e:'Natural Language UNDERSTANDING goes text → meaning (parsing, tagging, WSD). Natural Language GENERATION goes meaning → text (language modelling, summarization).'}
+];
+(function(){
+  const root=document.getElementById('quiz');
+  QS.forEach((item,qi)=>{
+    const d=document.createElement('div'); d.className='quiz';
+    let h='<div class="q">'+(qi+1)+'. '+item.q+'</div><div class="row">';
+    item.a.forEach((opt,k)=>{h+='<button onclick="ans('+qi+','+k+',this)">'+opt+'</button>';});
+    h+='</div><div class="fb" id="fb'+qi+'"></div>';
+    d.innerHTML=h; root.appendChild(d);
+  });
+})();
+function ans(qi,k,btn){
+  const item=QS[qi], fb=document.getElementById('fb'+qi);
+  const ok=k===item.c;
+  fb.className='fb '+(ok?'ok':'no');
+  fb.innerHTML=(ok?'✅ Correct. ':'❌ Not quite — the answer is <b>'+item.a[item.c]+'</b>. ')+item.e;
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.className='');
+  btn.className='on';
+}
+</script>
+</body>
+</html>
