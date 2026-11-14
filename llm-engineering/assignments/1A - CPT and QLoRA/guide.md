@@ -61,7 +61,7 @@ Each code cell ends with `assert` checks. If they pass, move on. If not, the mes
 
 | Notebook cell | Explainer | What you write | Marks |
 |---|---|---|---|
-| 0 Setup | – | nothing (turn on the GPU runtime, keep `USE_DRIVE=True`) | – |
+| 0 Setup | – | nothing (pick a GPU runtime; the cell detects Colab vs the institute server) | – |
 | 1a Download PDFs | §2 | nothing: 25 PDFs download automatically | |
 | 1b Extract pages | §2 | **TODO 1**: list of `page.get_text()` | |
 | 1c Clean | §2 | **TODO 2** length check · **TODO 3** md5 fingerprint · **TODO 4** `detect(...) == 'en'` | **2** |
@@ -90,7 +90,7 @@ questions to answer, so you never face a blank page.
 | 5 | Explainer §7–§10 + quiz Q7–Q10. B1 (TODO 15–16) + B2 (TODO 17). | ~15–25 min |
 | 6 | B3 + every remaining inference. Export HTML, zip the corpus, submit. | ~5 min |
 
-Colab disconnects when idle. Because `USE_DRIVE=True` puts everything on Drive, after a disconnect you re-run Cell 0 and
+Colab disconnects when idle. Because everything is saved to Drive (or your home folder off Colab), after a disconnect you re-run Cell 0 and
 continue from your step. Re-run the cells of your current step from its first cell.
 
 ---

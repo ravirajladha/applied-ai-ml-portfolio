@@ -18,6 +18,7 @@
 | # | Assignment | Status |
 |---|-----------|--------|
 | 1A | [CPT + QLoRA: IT helpdesk LLM (Variant 5)](assignments/1A%20-%20CPT%20and%20QLoRA/guide.md) | template ready |
+| 1B | [Adaptation + production optimization: decoding, speculative, 4-bit, cost](assignments/1B%20-%20Adaptation%20and%20Production%20Optimization/guide.md) | complete notebook, inferences to write |
 
 ## Session log
 

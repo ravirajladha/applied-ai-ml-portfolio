@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assignment 1B: from fine-tuned model to production, an interactive lesson</title>
+<style>
+:root{
+  --bg:#f4f6fb;--panel:#fff;--ink:#0f172a;--muted:#64748b;--edge:#e2e8f0;
+  --b:#3b82f6;--v:#8b5cf6;--g:#10b981;--y:#f59e0b;--r:#ef4444;--c:#06b6d4;
+  --shadow:0 8px 26px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.05);
+}
+html[data-theme="dark"]{
+  --bg:#0b1120;--panel:#151d2e;--ink:#e8eefc;--muted:#94a3b8;--edge:#26324a;
+  --shadow:0 8px 26px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.62;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;padding-bottom:80px}
+.wrap{max-width:860px;margin:0 auto;padding:0 18px}
+h1{font-size:clamp(26px,6vw,38px);letter-spacing:-.7px;line-height:1.12;margin:0 0 10px}
+h2{font-size:clamp(20px,4.4vw,26px);letter-spacing:-.4px;margin:0 0 6px}
+h3{font-size:16px;margin:22px 0 6px}
+p{margin:12px 0}
+code{background:color-mix(in srgb,var(--ink) 8%,transparent);padding:2px 6px;border-radius:5px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.87em}
+pre{background:color-mix(in srgb,var(--ink) 6%,transparent);padding:12px 14px;border-radius:10px;overflow:auto;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;white-space:pre-wrap}
+header{padding:44px 0 10px}
+.kicker{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--v);background:color-mix(in srgb,var(--v) 13%,transparent);padding:4px 11px;border-radius:99px;margin-bottom:12px}
+.lead{color:var(--muted);font-size:17px}
+section.card{background:var(--panel);border:1px solid var(--edge);border-radius:18px;box-shadow:var(--shadow);padding:24px 24px 20px;margin:22px 0}
+.num{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--b);color:#fff;font-weight:800;font-size:14px;margin-right:8px;vertical-align:3px}
+.analogy{border-left:4px solid var(--y);background:color-mix(in srgb,var(--y) 10%,transparent);padding:10px 14px;border-radius:8px;margin:14px 0}
+.analogy b:first-child{color:var(--y)}
+.note{border-left:4px solid var(--b);background:color-mix(in srgb,var(--b) 9%,transparent);padding:10px 14px;border-radius:8px;margin:14px 0}
+.warn{border-left:4px solid var(--r);background:color-mix(in srgb,var(--r) 9%,transparent);padding:10px 14px;border-radius:8px;margin:14px 0}
+.def{font-size:14px;color:var(--muted)}
+.def b{color:var(--ink)}
+button{font:inherit;font-size:14px;font-weight:600;border:1px solid var(--edge);background:var(--panel);color:var(--ink);padding:7px 13px;border-radius:9px;cursor:pointer;margin:3px 4px 3px 0;transition:.15s}
+button:hover{border-color:var(--b);color:var(--b)}
+button.on{background:var(--b);border-color:var(--b);color:#fff}
+input[type=range]{width:100%;accent-color:var(--b)}
+input[type=number]{font:inherit;width:100%;padding:7px 9px;border-radius:9px;border:1px solid var(--edge);background:var(--bg);color:var(--ink)}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0}
+th,td{border-bottom:1px solid var(--edge);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.3px}
+.big{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.muted{color:var(--muted)}
+.row{display:flex;gap:14px;flex-wrap:wrap}
+.row>*{flex:1 1 200px}
+.stat{background:var(--bg);border:1px solid var(--edge);border-radius:12px;padding:10px 14px}
+.stat small{color:var(--muted);display:block;font-size:12px}
+.pipe{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.pipe button{flex:1 1 100px;margin:0;padding:10px 6px;font-size:13px;line-height:1.25}
+.pipe button small{display:block;font-weight:500;opacity:.8;font-size:11px}
+.habits{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin:12px 0}
+.habit{border:1px solid var(--edge);border-radius:12px;padding:12px;background:var(--bg);cursor:pointer}
+.habit h4{margin:0 0 4px;font-size:15px}
+.habit .more{display:none;font-size:13.5px;color:var(--muted);margin-top:6px}
+.habit.open .more{display:block}
+.habit .n{color:var(--v);font-weight:800;margin-right:4px}
+.bars .bar{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:13px}
+.bars .lab{width:150px;font-family:ui-monospace,Menlo,Consolas,monospace;text-align:right;white-space:nowrap;overflow:hidden}
+.bars .fill{height:20px;border-radius:5px;background:var(--b);transition:width .25s,background .25s}
+.bars .fill.out{background:color-mix(in srgb,var(--muted) 35%,transparent)}
+.bars .fill.pick{background:var(--g)}
+.bars .p{width:56px;color:var(--muted)}
+.tok{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;padding:3px 7px;border-radius:6px;margin:2px;color:#fff}
+.tok.d{background:var(--v)}.tok.ok{background:var(--g)}.tok.no{background:var(--r);text-decoration:line-through}.tok.t{background:var(--b)}.tok.done{background:#64748b}
+.quiz .q{border:1px solid var(--edge);border-radius:12px;padding:12px 14px;margin:10px 0}
+.quiz .opts button{display:block;width:100%;text-align:left;margin:5px 0}
+.quiz .ok{background:var(--g);border-color:var(--g);color:#fff}
+.quiz .bad{background:var(--r);border-color:var(--r);color:#fff}
+.quiz .why{display:none;font-size:14px;color:var(--muted);margin-top:6px}
+#theme{position:fixed;top:14px;right:14px;z-index:9}
+nav.toc{font-size:14px;columns:2;column-gap:24px}
+nav.toc a{color:var(--b);text-decoration:none;display:block;padding:2px 0}
+</style>
+</head>
+<body>
+<button id="theme" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'':'dark'">◐ theme</button>
+<div class="wrap">
+<header>
+  <span class="kicker">LLM Engineering · Assignment 1B</span>
+  <h1>From a fine-tuned model to a product you can afford to run</h1>
+  <p class="lead">1A taught the model the domain. 1B asks the questions a production team asks next: <i>how do we make it answer, and
+  how fast and how cheaply can we serve it?</i> Read a section, play with the demo, then run the matching part of <code>practice.ipynb</code>.</p>
+  <nav class="toc">
+    <a href="#s1">1 · The big picture</a><a href="#s2">2 · How it was approached: the production process</a>
+    <a href="#s3">3 · Data (Part A1)</a><a href="#s4">4 · Baseline and the model (A2)</a>
+    <a href="#s5">5 · QLoRA recap (Part B)</a><a href="#s6">6 · Decoding strategies (C1)</a>
+    <a href="#s7">7 · Speculative decoding (C2)</a><a href="#s8">8 · 4-bit and honest benchmarking (C3)</a>
+    <a href="#s9">9 · Cost per 1M tokens (C3)</a><a href="#s10">10 · Quiz</a><a href="#s11">11 · Glossary</a>
+  </nav>
+</header>
+
+<section class="card" id="s1">
+  <h2><span class="num">1</span>The big picture</h2>
+  <div class="analogy"><b>Analogy.</b> 1A trained a new employee. 1B is the operations meeting afterwards: <i>is the employee useful
+  (B3)? How should they phrase answers, carefully or creatively (C1)? Can a junior draft the replies while the senior just checks
+  them (C2)? Can we fit them in a smaller office (C3, 4-bit)? And what does each answer cost us?</i></div>
+  <p>Click each stage:</p>
+  <div class="pipe" id="pipe"></div>
+  <div id="pipeOut" class="note"></div>
+  <table>
+    <tr><th></th><th>Assignment 1A</th><th>Assignment 1B</th></tr>
+    <tr><td>Focus</td><td>adapting the model (CPT + QLoRA)</td><td>adapting + <b>serving</b> (speed, memory, cost)</td></tr>
+    <tr><td>CPT?</td><td>yes</td><td>no, QLoRA straight on the base model</td></tr>
+    <tr><td>Model</td><td>Qwen2.5-0.5B</td><td>Qwen2.5-<b>1.5B</b> target + 0.5B <b>draft</b></td></tr>
+    <tr><td>Why bigger?</td><td>full CPT must fit a T4</td><td>speculative decoding needs a smaller draft with the same tokenizer</td></tr>
+  </table>
+</section>
+
+<section class="card" id="s2">
+  <h2><span class="num">2</span>How it was approached: the production process</h2>
+  <p>The notebook runs top to bottom. What makes it "production-level" is a set of habits that make every number in it <b>trustworthy
+  and reproducible</b>. These habits carry over to any ML project, so learn them more than the code. Click each card:</p>
+  <div class="habits" id="habits"></div>
+  <div class="note"><b>The one-line version:</b> fix everything → measure the baseline → change one thing → measure honestly → write down what you ran → decide with numbers.</div>
+</section>
+
+<section class="card" id="s3">
+  <h2><span class="num">3</span>Data <span class="muted" style="font-size:15px">· Part A1 · 1 mark</span></h2>
+  <p>The pipeline is identical to 1A: extract page by page → strip repeating headers → length filter → boilerplate/TOC filter →
+  md5 dedup → language filter. The <b>1A explainer §2</b> has the click-through demo. Two differences:</p>
+  <ul>
+    <li>The notebook <b>reuses 1A's downloaded PDFs</b> if it finds them. The production habit is to never redo expensive work that is already done and checked.</li>
+    <li>The assignment asks you to <b>justify</b> each threshold. The notebook states the reason next to each one; put that reason in your inference in your own words.</li>
+  </ul>
+  <p class="def"><b>Idempotent</b>: running the same step twice gives the same result and does no extra harm. For example, "download if missing" is idempotent; "append to file" is not.</p>
+</section>
+
+<section class="card" id="s4">
+  <h2><span class="num">4</span>Baseline and the model <span class="muted" style="font-size:15px">· Part A2 · 1 mark</span></h2>
+  <table>
+    <tr><th>Qwen2.5-1.5B (target)</th><th>value</th><th>Qwen2.5-0.5B (draft)</th></tr>
+    <tr><td>parameters</td><td>≈ 1.54 B</td><td>≈ 0.49 B</td></tr>
+    <tr><td>decoder layers</td><td>28</td><td>24</td></tr>
+    <tr><td>hidden size</td><td>1,536</td><td>896</td></tr>
+    <tr><td>attention / KV heads</td><td>12 / 2</td><td>14 / 2</td></tr>
+    <tr><td>vocabulary</td><td>151,936</td><td>151,936 ✓ same: required for speculative decoding</td></tr>
+    <tr><td>16-bit weights</td><td>≈ 3.1 GB</td><td>≈ 1.0 GB</td></tr>
+  </table>
+  <p><b>Why a baseline first?</b> Every later claim ("the adapter is better", "4-bit is cheaper") is a comparison. Without a
+  saved "before", you have nothing to compare against.</p>
+  <p><b>The prompt template</b> <code>Question: {q}\nAnswer:</code> is fixed in <code>CONFIG</code>. A base model has no chat
+  training, so this plain framing is the fairest no-system-prompt format. Changing the wording between runs would change the results,
+  which is why it lives in one place.</p>
+  <p class="def"><b>bf16 vs fp16</b>: two 16-bit number formats. bf16 has a wider range; fp16 has finer precision. A T4 only does fp16
+  fast, and for <i>inference</i> fp16 is safe. The notebook picks automatically.</p>
+</section>
+
+<section class="card" id="s5">
+  <h2><span class="num">5</span>QLoRA recap <span class="muted" style="font-size:15px">· Part B · 5 marks</span></h2>
+  <p>This is exactly 1A Part B, so the <b>1A explainer §7–§10</b> has the demos. On the 1.5B model the numbers are:</p>
+  <table>
+    <tr><th>Adapter B on Qwen2.5-1.5B</th><th></th></tr>
+    <tr><td>q_proj 1536→1536, r=16</td><td>16 × (1536 + 1536) = 49,152 per layer</td></tr>
+    <tr><td>v_proj 1536→256, r=16</td><td>16 × (1536 + 256) = 28,672 per layer</td></tr>
+    <tr><td>× 28 layers</td><td><b>2,179,072 trainable ≈ 0.14%</b> of 1.54 B</td></tr>
+    <tr><td>adapter file</td><td>≈ 9 MB (vs 3.1 GB for the full model)</td></tr>
+  </table>
+  <div class="note"><b>B3 is a fair test only if everything except the adapter is held fixed:</b> the same 3 prompts, greedy decoding,
+  150 new tokens. The only intended difference is the format: the adapter is prompted with the chat template it was trained on.
+  Say this in your inference.</div>
+</section>
+
+<section class="card" id="s6">
+  <h2><span class="num">6</span>Decoding strategies <span class="muted" style="font-size:15px">· Part C1 · 3 marks</span></h2>
+  <p>At every step the model outputs a probability for each of 151,936 tokens. A <b>decoding strategy</b> is the rule for picking one.
+  Here is a realistic next-token distribution after <code>sudo firewall-cmd --</code>:</p>
+  <div><button class="on" onclick="setS('greedy')" id="s-greedy">Greedy</button><button onclick="setS('beam')" id="s-beam">Beam search</button>
+    <button onclick="setS('topk')" id="s-topk">Top-K</button><button onclick="setS('topp')" id="s-topp">Top-P</button><button onclick="setS('temp')" id="s-temp">Temperature</button></div>
+  <div id="ctl" style="margin:8px 0"></div>
+  <div class="bars" id="bars"></div>
+  <div><button onclick="sample()">🎲 sample 20 times</button> <span id="samp" class="muted" style="font-size:13px"></span></div>
+  <p id="sExp" class="note"></p>
+  <table>
+    <tr><th>strategy</th><th>speed</th><th>repeatable?</th><th>typical risk</th><th>helpdesk fit</th></tr>
+    <tr><td>Greedy</td><td>fastest</td><td>yes</td><td>loops / repeats itself</td><td>✓ good for exact commands</td></tr>
+    <tr><td>Beam (4)</td><td>slowest (~4 paths)</td><td>yes</td><td>bland, short, generic</td><td>~ for formal summaries</td></tr>
+    <tr><td>Top-K (50)</td><td>fast</td><td>no</td><td>picks odd tokens when the distribution is flat</td><td>✗ risky flags</td></tr>
+    <tr><td>Top-P (0.9)</td><td>fast</td><td>no</td><td>still random</td><td>~ for explanations</td></tr>
+    <tr><td>Temp 0.3 / 0.7 / 1.2</td><td>fast</td><td>no</td><td>1.2 → invented options</td><td>✓ at 0.3, ✗ at 1.2</td></tr>
+  </table>
+  <p class="def"><b>Distinct-2</b> (computed in the notebook): unique word pairs ÷ all word pairs. Low = repetitive. A quick, objective
+  diversity number to cite in your 100-word analysis. <b>Seed</b>: makes "random" sampling repeatable across runs.</p>
+</section>
+
+<section class="card" id="s7">
+  <h2><span class="num">7</span>Speculative decoding <span class="muted" style="font-size:15px">· Part C2 · 2 marks</span></h2>
+  <div class="analogy"><b>Analogy.</b> A junior (the 0.5B <b>draft</b>) types the next few words of a reply quickly. The senior (the
+  1.5B <b>target</b>) reads all of them <i>at once</i> and accepts the ones they would have written, up to the first mistake, which
+  they fix. The reply is exactly the senior's, but the senior spends time reading instead of typing.</div>
+  <p>Step through one round (draft proposes k = 4 tokens):</p>
+  <div><button onclick="specStep()">▶ next step</button><button onclick="specReset()">reset</button></div>
+  <div id="spec" style="min-height:90px;margin:8px 0"></div>
+  <p id="specMsg" class="def"></p>
+  <h3>When does it actually pay off? A calculator</h3>
+  <div class="row">
+    <div><label class="muted" style="font-size:13px">acceptance rate α (how often the draft agrees): <b id="av"></b></label><input type="range" id="aS" min="0.3" max="0.95" step="0.01" value="0.75" oninput="specCalc()"></div>
+    <div><label class="muted" style="font-size:13px">tokens drafted per round k: <b id="kv"></b></label><input type="range" id="kS" min="1" max="10" value="4" oninput="specCalc()"></div>
+    <div><label class="muted" style="font-size:13px">draft step cost ÷ target step cost c: <b id="cv"></b></label><input type="range" id="cS" min="0.05" max="0.9" step="0.01" value="0.6" oninput="specCalc()"></div>
+  </div>
+  <div class="row">
+    <div class="stat"><small>tokens gained per target pass</small><span class="big" id="tg"></span></div>
+    <div class="stat"><small>expected speed-up</small><span class="big" id="su"></span></div>
+  </div>
+  <p class="def">Formula (Leviathan et al., 2023): tokens per round = (1 − α<sup>k+1</sup>) / (1 − α); speed-up ≈ that ÷ (1 + k·c).</p>
+  <div class="warn"><b>Why your measured gain may be small:</b> parameters suggest the 0.5B draft costs ⅓ of the 1.5B. But at batch
+  size 1, each step's time is mostly <i>fixed overhead</i> (launching GPU kernels for every layer: 24 vs 28 layers), so the real
+  <b>c is closer to 0.6–0.8</b>. Set c = 0.7 above and watch the speed-up shrink. That is a strong, evidence-based inference to write.</div>
+  <p class="def"><b>Lossless</b>: with greedy decoding the output is the same as the target alone; the notebook checks this. <b>Draft model</b>: the small, fast
+  model that guesses. <b>Target model</b>: the big model whose output you actually want.</p>
+</section>
+
+<section class="card" id="s8">
+  <h2><span class="num">8</span>4-bit quantization and honest benchmarking <span class="muted" style="font-size:15px">· Part C3</span></h2>
+  <h3>What 4-bit buys and what it costs</h3>
+  <div class="row">
+    <div class="stat"><small>16-bit weights (1.5B)</small><span class="big">≈ 3.1 GB</span></div>
+    <div class="stat"><small>4-bit NF4 (embeddings stay 16-bit)</small><span class="big">≈ 1.2 GB</span></div>
+  </div>
+  <div class="analogy"><b>Analogy.</b> Vacuum-packing your clothes. The suitcase gets much lighter (VRAM ↓), but every time you want a shirt you
+  must unpack it first (dequantization). If you grab shirts one at a time (batch size 1), all that unpacking can make you <i>slower</i>.</div>
+  <p>So expect: <b>VRAM goes down a lot; throughput may go down on a T4</b>; cost per token can go <i>up</i>. 4-bit pays off when memory is
+  the bottleneck: a bigger model on a cheap GPU, many models or adapters on one GPU, or large batches.</p>
+  <h3>Benchmarking without fooling yourself</h3>
+  <table>
+    <tr><th>pitfall</th><th>what goes wrong</th><th>what the notebook does</th></tr>
+    <tr><td>First call is slow</td><td>CUDA setup and memory allocation get counted as "generation"</td><td>a <b>warm-up</b> run before every timed batch</td></tr>
+    <tr><td>GPU runs asynchronously</td><td>the timer stops before the GPU has finished</td><td><code>torch.cuda.synchronize()</code> before both timestamps</td></tr>
+    <tr><td>Counting max_new_tokens</td><td>if it stopped at 60 tokens, dividing 150 by the time overstates speed</td><td>counts the tokens <b>actually generated</b></td></tr>
+    <tr><td>One noisy run</td><td>background load makes runs vary</td><td><b>median of 2 runs</b> × 10 prompts</td></tr>
+    <tr><td>Other models in memory</td><td>peak VRAM includes models from earlier cells</td><td>each config loaded <b>alone</b>, peak counter reset</td></tr>
+    <tr><td>Different prompts or strategies</td><td>you'd be measuring the prompt, not the config</td><td>same 10 prompts + <code>BEST</code> strategy for all 3</td></tr>
+  </table>
+  <p class="def"><b>Throughput</b>: tokens produced per second. <b>Latency</b>: time for one request. <b>Peak VRAM</b>: the most GPU memory used at any moment. <b>Dequantization</b>: expanding 4-bit weights back to 16-bit just before each multiplication.</p>
+</section>
+
+<section class="card" id="s9">
+  <h2><span class="num">9</span>Cost per 1M tokens <span class="muted" style="font-size:15px">· Part C3 · 3 marks</span></h2>
+  <p>The assignment's formula: <code>cost / 1M tokens = (1,000,000 ÷ throughput) ÷ 3600 × hourly rate</code>. In words: how many GPU-hours it takes
+  to produce a million tokens, multiplied by the price of an hour. Put your measured numbers in:</p>
+  <div class="row">
+    <div><label class="muted" style="font-size:13px">throughput (tok/s)</label><input type="number" id="tp" value="25" oninput="costCalc()"></div>
+    <div><label class="muted" style="font-size:13px">hourly rate</label><input type="number" id="hr" value="3.5" step="0.5" oninput="costCalc()"></div>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <div class="stat"><small>GPU-hours per 1M tokens</small><span class="big" id="gh"></span></div>
+    <div class="stat"><small>cost per 1M tokens</small><span class="big" id="cpm"></span></div>
+    <div class="stat"><small>cost of 10,000 tickets × 200 tokens</small><span class="big" id="tix"></span></div>
+  </div>
+  <div class="note"><b>Writing the deployment recommendation (2–3 sentences):</b> ① name the configuration, ② cite its measured cost and VRAM,
+  ③ state the trade-off you accept. For example: <i>"Deploy X at N per 1M tokens; it uses Y GB, leaving room for Z; quality was the same as
+  16-bit on the 10 prompts except …"</i>. Use your own numbers, not this template.</div>
+  <p class="def">The currency symbol did not survive the PDF's text layer. The formula works in any currency, so just state the rate you used.</p>
+</section>
+
+<section class="card quiz" id="s10">
+  <h2><span class="num">10</span>Quiz</h2>
+  <p>Take it <b>before</b> writing the inferences. If you get one wrong, the reason it shows is likely a point for your inference.</p>
+  <div id="quiz"></div>
+  <p class="big" style="font-size:20px">Score: <span id="score">0</span> / <span id="qtot"></span></p>
+</section>
+
+<section class="card" id="s11">
+  <h2><span class="num">11</span>Glossary</h2>
+  <table id="gloss"><tr><th>term</th><th>one line</th></tr></table>
+</section>
+</div>
+
+<script>
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+/* 1 pipeline */
+const ST=[['A1','corpus',1,'Same cleaned IT-admin corpus as 1A (reuses 1A PDFs if present). Report counts per filter step.'],
+ ['A2','baseline',1,'Load Qwen2.5-1.5B in 16-bit, print its architecture, save 3 "before" answers.'],
+ ['B1','Q&A data',2,'Manual sections → ~2,000 grounded instruction/response pairs, JSONL, 80/20 split with seed 42.'],
+ ['B2','QLoRA',2,'4-bit base + Adapter B (r=16, α=32, q/v). Report hyperparameters, time, VRAM, loss curves.'],
+ ['B3','compare',1,'Baseline vs adapter on the same 3 prompts: correctness, terms, completeness, hallucinations.'],
+ ['C1','decoding',3,'Greedy, beam, top-k, top-p, 3 temperatures × 3 prompts; record text + tok/s; 100-word analysis.'],
+ ['C2','speculative',2,'0.5B draft + 1.5B target. Measure speed-up and check the output is unchanged.'],
+ ['C3','4-bit + cost',3,'16-bit vs 4-bit vs 4-bit+spec on 10 prompts: VRAM, tok/s, cost per 1M tokens, recommendation.']];
+const pipe=document.getElementById('pipe');
+ST.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`${s[0]}<small>${s[1]} · ${s[2]}m</small>`;b.onclick=()=>{[...pipe.children].forEach((x,j)=>x.classList.toggle('on',i===j));document.getElementById('pipeOut').innerHTML=`<b>${s[0]}: ${s[1]}</b> (${s[2]} mark${s[2]>1?'s':''})<br>${s[3]}`};pipe.appendChild(b)});
+pipe.children[0].click();
+
+/* 2 habits */
+const H=[
+ ['Write the contract first','All model IDs, prompts, seed, max_new_tokens, prices and GPU live in one <code>CONFIG</code> dict in Cell 0. If a number later surprises you, there is exactly one place to look. It is also saved as <code>run_config.json</code> at the end.'],
+ ['Baseline before any change','A2 saves the untouched model\'s answers before training. C3 measures 16-bit before 4-bit. "Better" means nothing without a saved "before".'],
+ ['One change at a time','C1 varies only the decoding rule; C2 only adds a draft; C3 only changes precision. Prompts, length and seed never move, so each difference has exactly one cause.'],
+ ['Make it repeatable','Fixed seeds for shuffling and sampling, a deterministic Q&A heuristic, and idempotent downloads. Re-running gives the same dataset and split, so a grader or teammate can reproduce your table.'],
+ ['Measure honestly','Warm-up runs, <code>cuda.synchronize()</code>, counting the tokens actually produced, the median of repeats, one model on the GPU at a time. Section 8 explains each.'],
+ ['Verify the optimisation didn\'t break anything','Speculative decoding should be lossless, and the notebook checks that the output is identical. 4-bit can change wording, so the notebook prints the same prompt under every config.'],
+ ['Think in money and memory','A production team doesn\'t ask "is it fast?" but "what does 1M tokens cost, and how much GPU does it need?". C3 turns tok/s into cost.'],
+ ['Save artifacts with the results','Every table goes to a CSV in <code>data/</code>, the adapter is saved, and the config and library versions are recorded. Results without a record of what produced them can\'t be trusted later.'],
+ ['Decide, then justify with evidence','Each part ends in a decision (the deployed strategy, the deployed config) backed by cited numbers. That is what the inference cells ask for.']];
+const hw=document.getElementById('habits');
+H.forEach(([t,d],i)=>{const c=document.createElement('div');c.className='habit';c.innerHTML=`<h4><span class="n">${i+1}</span>${t}</h4><div class="more">${d}</div><div class="muted" style="font-size:12px">click to open</div>`;c.onclick=()=>c.classList.toggle('open');hw.appendChild(c)});
+
+/* 6 decoding */
+const TOK=[['add-port',3.2],['permanent',2.9],['reload',2.1],['list-all',1.6],['zone',1.2],['add-service',1.0],['get-default',.3],['panic-on',-.6],['banana',-2.2],['remove-port',.7]];
+let S='greedy',P={k:3,p:.9,t:1};
+function softmax(t){const e=TOK.map(([,l])=>Math.exp(l/t));const s=e.reduce((a,b)=>a+b);return e.map(x=>x/s)}
+function dist(){let pr=softmax(S==='temp'?P.t:1);const idx=pr.map((p,i)=>i).sort((a,b)=>pr[b]-pr[a]);let keep=new Set(idx);
+ if(S==='greedy'||S==='beam')keep=new Set([idx[0]]);
+ if(S==='topk')keep=new Set(idx.slice(0,P.k));
+ if(S==='topp'){keep=new Set();let c=0;for(const i of idx){keep.add(i);c+=pr[i];if(c>=P.p)break}}
+ return {pr,idx,keep}}
+function ctl(){const c=document.getElementById('ctl');
+ if(S==='topk')c.innerHTML=`<label class="muted" style="font-size:13px">k = <b>${P.k}</b></label><input type="range" min="1" max="10" value="${P.k}" oninput="P.k=+this.value;this.previousElementSibling.querySelector('b').textContent=this.value;draw()">`;
+ else if(S==='topp')c.innerHTML=`<label class="muted" style="font-size:13px">p = <b>${P.p}</b></label><input type="range" min="0.3" max="1" step="0.05" value="${P.p}" oninput="P.p=+this.value;this.previousElementSibling.querySelector('b').textContent=this.value;draw()">`;
+ else if(S==='temp')c.innerHTML=`<label class="muted" style="font-size:13px">temperature = <b>${P.t}</b></label><input type="range" min="0.2" max="2" step="0.1" value="${P.t}" oninput="P.t=+this.value;this.previousElementSibling.querySelector('b').textContent=this.value;draw()">`;
+ else c.innerHTML=''}
+function setS(s){S=s;['greedy','beam','topk','topp','temp'].forEach(x=>document.getElementById('s-'+x).classList.toggle('on',x===s));ctl();draw();document.getElementById('samp').textContent=''}
+function draw(){const {pr,idx,keep}=dist();const mx=Math.max(...pr);
+ document.getElementById('bars').innerHTML=idx.map(i=>`<div class="bar"><span class="lab">--${TOK[i][0]}</span><div class="fill ${keep.has(i)?(keep.size===1?'pick':''):'out'}" style="width:${Math.max(2,pr[i]/mx*60)}%"></div><span class="p">${(pr[i]*100).toFixed(1)}%</span></div>`).join('');
+ const E={greedy:'Always take the single most likely token. Same input → same output, every time. Fast. Risk: once in a loop ("the the the"), it stays there.',
+  beam:'Keep the <b>4 best partial sentences</b> alive and extend each, choosing the sequence with the best <i>total</i> probability. This looks ahead a little, so it is often more fluent, but about 4× the work, and it tends to prefer safe, generic text. (One step looks like greedy here; the difference shows over many steps.)',
+  topk:`Throw away everything except the top <b>${P.k}</b>, renormalise, then roll the dice among those. More variety; the risk is the k-th token when the list is flat.`,
+  topp:`Keep the <b>smallest</b> set whose probabilities add up to ≥ ${P.p}. Here that is ${keep.size} token(s). The set shrinks when the model is confident and grows when unsure: "adaptive top-k".`,
+  temp:`Divide every score by T = ${P.t} before softmax. T < 1 sharpens (the favourite dominates); T > 1 flattens (even <code>--banana</code> gets a chance). At T = ${P.t}, the top token has ${(pr[idx[0]]*100).toFixed(0)}%.`};
+ document.getElementById('sExp').innerHTML=E[S]}
+function sample(){const {pr,keep}=dist();const ks=[...keep];const z=ks.reduce((a,i)=>a+pr[i],0);const cnt={};
+ for(let n=0;n<20;n++){let r=Math.random()*z,pick=ks[0];for(const i of ks){r-=pr[i];if(r<=0){pick=i;break}}cnt[TOK[pick][0]]=(cnt[TOK[pick][0]]||0)+1}
+ document.getElementById('samp').textContent='→ '+Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([t,c])=>`--${t}×${c}`).join('  ')}
+setS('greedy');
+
+/* 7 speculative */
+const SPEC=[
+ {h:'<span class="tok done">firewall-cmd</span>',m:'Text so far. The <b>draft</b> (0.5B) is about to guess the next 4 tokens, one at a time, quickly.'},
+ {h:'<span class="tok done">firewall-cmd</span> <span class="tok d">--permanent</span><span class="tok d">--add-port</span><span class="tok d">=8080</span><span class="tok d">/udp</span>',m:'Draft proposes 4 tokens (purple). That took 4 cheap draft steps.'},
+ {h:'<span class="tok done">firewall-cmd</span> <span class="tok ok">--permanent</span><span class="tok ok">--add-port</span><span class="tok ok">=8080</span><span class="tok no">/udp</span>',m:'The <b>target</b> (1.5B) scores all 4 positions in <b>one</b> forward pass. It agrees with the first 3 (green) and disagrees with <code>/udp</code> (red).'},
+ {h:'<span class="tok done">firewall-cmd</span> <span class="tok ok">--permanent</span><span class="tok ok">--add-port</span><span class="tok ok">=8080</span><span class="tok t">/tcp</span>',m:'The target replaces the first rejected token with its own choice (blue, <code>/tcp</code>). Result: <b>4 tokens for 1 target pass</b> instead of 4 passes, identical to what the target would have written alone.'},
+];let sp=0;
+function specStep(){sp=Math.min(sp+1,SPEC.length-1);document.getElementById('spec').innerHTML=SPEC[sp].h;document.getElementById('specMsg').innerHTML=SPEC[sp].m}
+function specReset(){sp=-1;specStep()}specReset();
+function specCalc(){const a=+aS.value,k=+kS.value,c=+cS.value;av.textContent=a;kv.textContent=k;cv.textContent=c;
+ const t=(1-Math.pow(a,k+1))/(1-a);const s=t/(1+k*c);tg.textContent=t.toFixed(2);su.textContent=s.toFixed(2)+'×';su.style.color=s>1.05?css('--g'):s<.97?css('--r'):css('--y')}
+specCalc();
+
+/* 9 cost */
+function costCalc(){const t=Math.max(.01,+tp.value),r=+hr.value;const g=1e6/t/3600;gh.textContent=g.toFixed(2);cpm.textContent=(g*r).toFixed(2);
+ tix.textContent=((10000*200)/1e6*g*r).toFixed(2)}
+costCalc();
+
+/* 10 quiz */
+const Q=[
+ ['Why is everything (prompts, seed, max tokens) fixed in one CONFIG cell?',['It looks tidy','So any difference between runs has one cause, and the run can be reproduced','Hugging Face requires it'],1,'Controlled experiments: if prompts changed between runs you could not attribute differences to the setting under test.'],
+ ['Which strategy is deterministic AND fastest?',['Beam search','Greedy','Top-P'],1,'Greedy takes the argmax: no randomness, one path.'],
+ ['Top-P = 0.9 keeps…',['the 90 most likely tokens','the smallest set of tokens whose probabilities sum to ≥ 0.9','tokens with probability ≥ 0.9'],1,'Nucleus sampling adapts the set size to the model\'s confidence.'],
+ ['Raising the temperature from 0.3 to 1.2 makes outputs…',['more conservative','more diverse and more likely to invent things','faster'],1,'Dividing logits by T > 1 flattens the distribution.'],
+ ['Speculative decoding with greedy decoding changes the final text?',['Yes, it uses the draft\'s text','No, it is lossless: the target verifies every token','Only for long prompts'],1,'Rejected draft tokens are replaced by the target\'s own choice, so the output equals the target alone (up to tiny 16-bit rounding effects).'],
+ ['Your 0.5B draft gave almost no speed-up. Most likely reason?',['A bug','At batch 1 the draft\'s per-step time is not much smaller than the target\'s (fixed overhead), so c is high','Speculative decoding only works on CPUs'],1,'Speed-up ≈ tokens per round ÷ (1 + k·c). With c ≈ 0.7 the gain mostly disappears.'],
+ ['4-bit NF4 on a T4 at batch 1 usually…',['halves VRAM and doubles speed','cuts VRAM a lot but may be slower (dequantization overhead)','increases VRAM'],1,'Memory goes down; every matmul must unpack the weights first.'],
+ ['Why a warm-up run before timing?',['To heat the GPU','The first CUDA call includes one-off setup costs that are not generation speed','To download the model'],1,'Kernel compilation, memory pool allocation and similar costs happen once.'],
+ ['Throughput 25 tok/s, rate 3.50/hr. Cost per 1M tokens?',['≈ 38.9','≈ 3.5','≈ 140'],0,'1e6 / 25 = 40,000 s = 11.11 h; × 3.50 ≈ 38.9.'],
+ ['Best decoding for copy-pasteable admin commands?',['Temperature 1.2','Greedy or low temperature','Top-K 50'],1,'Factual domains value consistency and exactness over variety (the assignment\'s domain tip).'],
+];
+let score=0;qtot.textContent=Q.length;
+Q.forEach(([q,o,a,w],qi)=>{const d=document.createElement('div');d.className='q';d.innerHTML=`<b>${qi+1}. ${q}</b><div class="opts"></div><div class="why"></div>`;
+ o.forEach((t,oi)=>{const b=document.createElement('button');b.textContent=t;b.onclick=()=>{if(d.dataset.done)return;d.dataset.done=1;b.classList.add(oi===a?'ok':'bad');
+  if(oi!==a)d.querySelectorAll('.opts button')[a].classList.add('ok');else score++,document.getElementById('score').textContent=score;const y=d.querySelector('.why');y.style.display='block';y.textContent=w};d.querySelector('.opts').appendChild(b)});
+ document.getElementById('quiz').appendChild(d)});
+
+/* 11 glossary */
+[['Decoding strategy','The rule for picking the next token from the model\'s probabilities.'],['Greedy','Always pick the most likely token.'],
+ ['Beam search','Track the N best partial sequences; return the best overall.'],['Top-K','Sample only among the K most likely tokens.'],
+ ['Top-P (nucleus)','Sample among the smallest set whose probabilities add up to P.'],['Temperature','Divide scores by T: < 1 sharpens, > 1 flattens.'],
+ ['Speculative decoding','A small draft proposes tokens; the big target verifies them in one pass.'],['Draft / target model','The fast guesser / the model whose output you want.'],
+ ['Acceptance rate','How often the target agrees with the draft\'s token.'],['Quantization','Storing weights with fewer bits (16 → 4).'],
+ ['NF4','4-bit NormalFloat: 16 levels placed where bell-curve weights are densest.'],['Dequantization','Expanding 4-bit weights back to 16-bit before multiplying.'],
+ ['Throughput / latency','Tokens per second / time for one request.'],['Peak VRAM','The maximum GPU memory used at any moment.'],
+ ['Warm-up run','An untimed run first, so one-off setup costs are not measured.'],['cuda.synchronize()','Wait until the GPU has really finished (GPU work is asynchronous).'],
+ ['Cost per 1M tokens','GPU-hours to make a million tokens × hourly price.'],['Baseline','The unchanged system you compare every change against.'],
+ ['Controlled experiment','Change one variable; hold the rest fixed.'],['Idempotent','Safe to run twice: same result, no extra side effects.'],
+ ['Artifact','A saved output of a run (CSV, adapter, config) that others can inspect.'],['Distinct-2','Unique word pairs ÷ total word pairs: a quick diversity score.'],
+ ['QLoRA / Adapter B','LoRA on a 4-bit frozen base / r=16, α=32 on q_proj and v_proj.']].forEach(([t,d])=>document.getElementById('gloss').insertAdjacentHTML('beforeend',`<tr><td><b>${t}</b></td><td>${d}</td></tr>`));
+</script>
+</body>
+</html>
