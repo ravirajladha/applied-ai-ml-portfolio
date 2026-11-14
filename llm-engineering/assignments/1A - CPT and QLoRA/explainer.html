@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assignment 1A: CPT and QLoRA, an interactive lesson</title>
+<style>
+:root{
+  --bg:#f4f6fb;--panel:#fff;--ink:#0f172a;--muted:#64748b;--edge:#e2e8f0;
+  --b:#3b82f6;--v:#8b5cf6;--g:#10b981;--y:#f59e0b;--r:#ef4444;--c:#06b6d4;
+  --shadow:0 8px 26px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.05);
+}
+html[data-theme="dark"]{
+  --bg:#0b1120;--panel:#151d2e;--ink:#e8eefc;--muted:#94a3b8;--edge:#26324a;
+  --shadow:0 8px 26px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.62;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;padding-bottom:80px}
+.wrap{max-width:860px;margin:0 auto;padding:0 18px}
+h1{font-size:clamp(26px,6vw,38px);letter-spacing:-.7px;line-height:1.12;margin:0 0 10px}
+h2{font-size:clamp(20px,4.4vw,26px);letter-spacing:-.4px;margin:0 0 6px}
+h3{font-size:16px;margin:22px 0 6px}
+p{margin:12px 0}
+code{background:color-mix(in srgb,var(--ink) 8%,transparent);padding:2px 6px;border-radius:5px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.87em}
+pre{background:color-mix(in srgb,var(--ink) 6%,transparent);padding:12px 14px;border-radius:10px;overflow:auto;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;white-space:pre-wrap}
+header{padding:44px 0 10px}
+.kicker{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--v);background:color-mix(in srgb,var(--v) 13%,transparent);padding:4px 11px;border-radius:99px;margin-bottom:12px}
+.lead{color:var(--muted);font-size:17px}
+section.card{background:var(--panel);border:1px solid var(--edge);border-radius:18px;box-shadow:var(--shadow);
+  padding:24px 24px 20px;margin:22px 0}
+.num{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--b);color:#fff;
+  font-weight:800;font-size:14px;margin-right:8px;vertical-align:3px}
+.analogy{border-left:4px solid var(--y);background:color-mix(in srgb,var(--y) 10%,transparent);padding:10px 14px;border-radius:8px;margin:14px 0}
+.analogy b:first-child{color:var(--y)}
+.note{border-left:4px solid var(--b);background:color-mix(in srgb,var(--b) 9%,transparent);padding:10px 14px;border-radius:8px;margin:14px 0}
+.warn{border-left:4px solid var(--r);background:color-mix(in srgb,var(--r) 9%,transparent);padding:10px 14px;border-radius:8px;margin:14px 0}
+.def{font-size:14px;color:var(--muted)}
+.def b{color:var(--ink)}
+button{font:inherit;font-size:14px;font-weight:600;border:1px solid var(--edge);background:var(--panel);color:var(--ink);
+  padding:7px 13px;border-radius:9px;cursor:pointer;margin:3px 4px 3px 0;transition:.15s}
+button:hover{border-color:var(--b);color:var(--b)}
+button.on{background:var(--b);border-color:var(--b);color:#fff}
+input[type=range]{width:100%;accent-color:var(--b)}
+input[type=text],textarea{font:inherit;font-size:14px;width:100%;padding:8px 10px;border-radius:9px;border:1px solid var(--edge);
+  background:var(--bg);color:var(--ink)}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0}
+th,td{border-bottom:1px solid var(--edge);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.3px}
+.big{font-size:28px;font-weight:800;letter-spacing:-.5px}
+.muted{color:var(--muted)}
+.row{display:flex;gap:14px;flex-wrap:wrap}
+.row>*{flex:1 1 220px}
+.stat{background:var(--bg);border:1px solid var(--edge);border-radius:12px;padding:10px 14px}
+.stat small{color:var(--muted);display:block;font-size:12px}
+/* pipeline */
+.pipe{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.pipe button{flex:1 1 92px;margin:0;padding:10px 6px;font-size:13px;line-height:1.25}
+.pipe button small{display:block;font-weight:500;opacity:.8;font-size:11px}
+#pipeOut{min-height:120px}
+/* pages */
+.pages{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pg{width:92px;height:70px;border-radius:8px;border:1px solid var(--edge);background:var(--bg);font-size:10.5px;padding:5px;
+  line-height:1.25;overflow:hidden;transition:.3s}
+.pg.gone{opacity:.12;transform:scale(.9)}
+.pg b{display:block;font-size:10px;color:var(--muted)}
+/* tokens */
+.toks{display:flex;flex-wrap:wrap;gap:3px;margin:8px 0}
+.t{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;padding:3px 6px;border-radius:5px;color:#fff}
+.t.bos{background:var(--g)}.t.eos{background:var(--r)}.t.pad{background:#94a3b8;opacity:.6}
+.blk{border:2px dashed var(--edge);border-radius:9px;padding:5px;margin:5px 0;display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+.blk>span.lab{font-size:11px;color:var(--muted);width:100%}
+/* layers */
+.stack{display:flex;flex-direction:column-reverse;gap:3px;margin:10px 0}
+.layer{height:12px;border-radius:4px;background:color-mix(in srgb,var(--v) 55%,transparent);cursor:pointer}
+.layer:hover,.layer.sel{background:var(--v)}
+.layer.io{height:26px;background:color-mix(in srgb,var(--c) 60%,transparent);font-size:12px;color:#fff;padding:4px 8px;cursor:default}
+canvas{width:100%;height:220px;background:var(--bg);border-radius:10px;border:1px solid var(--edge)}
+/* lora */
+.mat{display:inline-grid;place-items:center;border-radius:8px;color:#fff;font-weight:700;font-size:13px;vertical-align:middle;transition:.25s}
+.quiz .q{border:1px solid var(--edge);border-radius:12px;padding:12px 14px;margin:10px 0}
+.quiz .opts button{display:block;width:100%;text-align:left;margin:5px 0}
+.quiz .ok{background:var(--g);border-color:var(--g);color:#fff}
+.quiz .bad{background:var(--r);border-color:var(--r);color:#fff}
+.quiz .why{display:none;font-size:14px;color:var(--muted);margin-top:6px}
+#theme{position:fixed;top:14px;right:14px;z-index:9}
+nav.toc{font-size:14px;columns:2;column-gap:24px}
+nav.toc a{color:var(--b);text-decoration:none;display:block;padding:2px 0}
+details summary{cursor:pointer;font-weight:600;color:var(--b)}
+</style>
+</head>
+<body>
+<button id="theme" onclick="toggleTheme()">◐ theme</button>
+<div class="wrap">
+
+<header>
+  <span class="kicker">LLM Engineering · Assignment 1A</span>
+  <h1>Teaching a small LLM to be a Linux helpdesk expert</h1>
+  <p class="lead">Continual pre-training (CPT) and then QLoRA instruction fine-tuning, explained from zero with things you can click.
+  Read a section, play with its demo, then go and write the matching <code># TODO</code> in <code>practice.ipynb</code>.</p>
+  <nav class="toc">
+    <a href="#s1">1 · The big picture</a><a href="#s2">2 · Cleaning the data (Step 1)</a>
+    <a href="#s3">3 · Tokens, BOS/EOS, packing (Step 2)</a><a href="#s4">4 · Inside the model (Step 3)</a>
+    <a href="#s5">5 · Loss and perplexity (Steps 4–5)</a><a href="#s6">6 · Catastrophic forgetting (Step 5B)</a>
+    <a href="#s7">7 · CPT vs instruction tuning (B1)</a><a href="#s8">8 · The chat template (B1–B2)</a>
+    <a href="#s9">9 · LoRA (B2)</a><a href="#s10">10 · 4-bit and QLoRA (B2)</a>
+    <a href="#s11">11 · Quiz: your study gate</a><a href="#s12">12 · Glossary</a>
+  </nav>
+</header>
+
+<!-- 1 -->
+<section class="card" id="s1">
+  <h2><span class="num">1</span>The big picture</h2>
+  <div class="analogy"><b>Analogy.</b> <code>Qwen2.5-0.5B</code> is a bright graduate who has read most of the internet. You want a
+  <b>Linux helpdesk specialist</b>.
+  <br>① <b>CPT</b>: hand them a stack of Red Hat manuals and let them <i>read</i>. They pick up the vocabulary (<code>firewalld</code>,
+  <code>nmcli</code>, <code>SELinux</code>), but they still just "continue text".
+  <br>② <b>Instruction tuning</b>: show them 2,000 example tickets with model answers. Now they <i>answer questions</i>.
+  <br>③ <b>QLoRA</b>: instead of rewriting their whole brain (expensive), give them a small notebook of sticky notes they consult on every answer.</div>
+  <p>Click each stage to see what it does, why, and how many marks it carries:</p>
+  <div class="pipe" id="pipe"></div>
+  <div id="pipeOut" class="note"></div>
+  <p class="def"><b>Base model</b>: an LLM after pre-training only; it continues text. <b>Domain</b>: one subject area (here IT administration).
+  <b>Corpus</b>: the pile of text you train on. <b>Fine-tuning</b>: training an already-trained model a bit more on new data.</p>
+</section>
+
+<!-- 2 -->
+<section class="card" id="s2">
+  <h2><span class="num">2</span>Cleaning the data <span class="muted" style="font-size:15px">· Step 1 · TODO 1–4</span></h2>
+  <p>A PDF is made for printing, not for reading by a model. Extracting it gives you title pages, tables of contents, legal notices that
+  repeat in every manual, and page headers on every page. The model would learn those as if they were knowledge. CS-2 slide 11 shows that
+  big labs run this same pipeline: <i>filter → deduplicate → …</i></p>
+  <div class="analogy"><b>Analogy.</b> Before handing the intern the manuals, you pull out the blank pages, the 24 identical copyright
+  pages, and the one manual that came in German.</div>
+  <p>Below are 16 "pages". Apply the filters one by one and watch the count:</p>
+  <div class="pages" id="pages"></div>
+  <div>
+    <button onclick="applyF('len')" id="f-len">1 · length ≥ 50 words</button>
+    <button onclick="applyF('boil')" id="f-boil">2 · boilerplate / TOC</button>
+    <button onclick="applyF('dup')" id="f-dup">3 · deduplicate</button>
+    <button onclick="applyF('lang')" id="f-lang">4 · English only</button>
+    <button onclick="resetF()">reset</button>
+  </div>
+  <table id="ftable"><tr><th>step</th><th>pages left</th><th>removed</th></tr></table>
+  <div class="note"><b>Why filter pages and not whole PDFs?</b> One manual = one document of ~100 pages. If you drop the whole manual
+  because its title page is short, you lose 99 good pages. Filter pages, then rebuild each document from the pages that survive.</div>
+  <p class="def"><b>Deduplication</b>: removing copies. <b>Hash (md5)</b>: a short fingerprint of a text; same text → same fingerprint, so
+  comparing fingerprints finds exact copies fast. <b>Near-duplicate</b>: almost the same text (one word changed); a hash misses it, and
+  <b>MinHash / Jaccard similarity</b> catch it. <b>langdetect</b>: a Python library that guesses a text's language from its letter patterns.</p>
+</section>
+
+<!-- 3 -->
+<section class="card" id="s3">
+  <h2><span class="num">3</span>Tokens, BOS/EOS and packing <span class="muted" style="font-size:15px">· Step 2 · TODO 5–7</span></h2>
+  <p>The model reads <b>token IDs</b> (numbers), not letters. A <b>tokenizer</b> cuts text into pieces and looks each one up in a fixed
+  <b>vocabulary</b> (Qwen2.5: about 151k entries).</p>
+  <div class="warn"><b>Never train a new tokenizer for CPT.</b> Row 4,512 of the model's embedding table was <i>learned</i> as the
+  meaning of one specific piece, say <code>"fire"</code>. A new tokenizer would give 4,512 to something else, and every learned meaning would be scrambled.</div>
+  <h3>The packing demo</h3>
+  <p>Three documents of different lengths. Click through the steps and change the block size:</p>
+  <div>
+    <button onclick="packStep(0)" id="p0" class="on">a · raw docs</button>
+    <button onclick="packStep(1)" id="p1">b · + BOS / EOS</button>
+    <button onclick="packStep(2)" id="p2">c · flatten</button>
+    <button onclick="packStep(3)" id="p3">d · slice (packing)</button>
+    <button onclick="packStep(4)" id="p4">vs · padding</button>
+  </div>
+  <label class="muted" style="font-size:13px">block size: <b id="bsv">8</b></label>
+  <input type="range" id="bs" min="4" max="14" value="8" oninput="packStep(curPack)">
+  <div id="packOut"></div>
+  <div id="packStat" class="note"></div>
+  <p class="def"><b>BOS</b> (beginning of sequence) / <b>EOS</b> (end of sequence): special tokens marking where a document starts and
+  ends. In packing they tell the model "a new document starts here; don't continue the old one". <b>Qwen detail</b>: its tokenizer has no
+  separate BOS, and the config uses <code>&lt;|endoftext|&gt;</code> for both. That is fine, because what the model needs is a boundary
+  marker, and one token can do that job. <b>Padding</b>: filler tokens added so short sequences reach the block length. They cost compute and teach nothing.
+  <b>Parquet</b>: a compact column-based file format, like a CSV that keeps types and compresses well.</p>
+</section>
+
+<!-- 4 -->
+<section class="card" id="s4">
+  <h2><span class="num">4</span>Inside the model <span class="muted" style="font-size:15px">· Step 3 · TODO 8–9</span></h2>
+  <p><code>Qwen2.5-0.5B</code> is a <b>decoder-only Transformer</b> (CS-1 slide 13). Text flows bottom to top through a stack of identical
+  layers; each layer has <b>attention</b> (tokens "talk" to earlier tokens) and an <b>FFN</b> (each token "thinks" alone). Click a layer:</p>
+  <div class="row">
+    <div>
+      <div class="stack" id="stack"></div>
+    </div>
+    <div>
+      <div id="layerInfo" class="note">Click any purple layer.</div>
+      <table>
+        <tr><th>config field</th><th>value</th></tr>
+        <tr><td>num_hidden_layers</td><td>24</td></tr>
+        <tr><td>num_attention_heads</td><td>14</td></tr>
+        <tr><td>num_key_value_heads</td><td>2 <span class="muted">(GQA)</span></td></tr>
+        <tr><td>hidden_size</td><td>896</td></tr>
+        <tr><td>head_dim</td><td><span id="hd">?</span> <button onclick="hd.textContent='896 / 14 = 64'">compute</button></td></tr>
+        <tr><td>vocab_size</td><td>151,936</td></tr>
+        <tr><td>parameters</td><td>≈ 494 M</td></tr>
+      </table>
+    </div>
+  </div>
+  <p class="def"><b>hidden size</b>: length of the vector that represents each token inside the model. <b>attention head</b>: one
+  "reader" that looks at the context in its own way; 14 heads each get a 64-number slice of the 896. <b>GQA</b> (grouped-query
+  attention): 14 query heads share just 2 key/value heads to save memory. <b>lm_head</b> (language-model head): the last layer, which turns the
+  896-number vector into one score per vocabulary entry. That is why its output size <i>must</i> equal <code>vocab_size</code>.</p>
+  <div class="note"><b>Two things you will notice in the notebook.</b> ① <code>vocab_size</code> (151,936) is bigger than
+  <code>len(tokenizer)</code> (~151,665): the table is padded to a GPU-friendly size, and the extra rows are never used.
+  ② <code>tie_word_embeddings = True</code>: the input embedding table and the lm_head share one matrix (136M numbers), so it is stored once.</div>
+</section>
+
+<!-- 5 -->
+<section class="card" id="s5">
+  <h2><span class="num">5</span>Loss and perplexity <span class="muted" style="font-size:15px">· Steps 4–5 · TODO 10–13</span></h2>
+  <p><b>Training objective</b>: predict the next token. Labels = the input itself, shifted by one (the library does the shift).
+  This is CS-2's <i>teacher forcing</i>: every position is scored in one pass.</p>
+  <p><b>Cross-entropy loss</b> = −ln(probability the model gave to the correct next token), averaged over all tokens.
+  <b>Perplexity</b> = e<sup>loss</sup>. Drag the slider:</p>
+  <input type="range" id="lossS" min="0.3" max="12" step="0.05" value="2.6" oninput="lossUpd()">
+  <div class="row">
+    <div class="stat"><small>loss</small><span class="big" id="lv">2.6</span></div>
+    <div class="stat"><small>perplexity = e^loss</small><span class="big" id="pv">13</span></div>
+    <div class="stat"><small>prob. on correct token (typical)</small><span class="big" id="prv">7%</span></div>
+  </div>
+  <p id="lossMsg" class="note"></p>
+  <div class="analogy"><b>Analogy.</b> Perplexity 13 means the model is as unsure as someone picking between 13 equally likely words.
+  After reading the manuals, on manual text it should be choosing between fewer: lower perplexity.</div>
+  <h3>What a healthy CPT loss curve looks like</h3>
+  <canvas id="lossC" width="800" height="220"></canvas>
+  <div><button onclick="drawLoss('good')" class="on" id="lc-good">healthy</button>
+    <button onclick="drawLoss('random')" id="lc-random">random init (bug)</button>
+    <button onclick="drawLoss('high')" id="lc-high">LR too high</button></div>
+  <p id="lossCMsg" class="def"></p>
+  <p class="def"><b>Learning rate (LR)</b>: how big a step the optimiser takes each update. <b>Warmup</b>: start with a tiny LR and ramp up
+  so early steps don't shock the model. <b>Cosine schedule</b>: after warmup, the LR glides down like half a cosine wave (CS-2 slide 20).
+  <b>Plateau</b>: where the curve flattens, so more steps on this data give little. <b>Callback</b>: a function the Trainer calls
+  at set moments; yours records the loss at every log step (TODO 11). <b>Held-out set</b>: data kept aside and never trained on, used for honest evaluation.</p>
+</section>
+
+<!-- 6 -->
+<section class="card" id="s6">
+  <h2><span class="num">6</span>Catastrophic forgetting <span class="muted" style="font-size:15px">· Step 5B · TODO 14</span></h2>
+  <p>When you update weights on Linux manuals only, the same weights also stored "Paris is the capital of France". Push too hard and
+  that gets overwritten (CS-2 slide 19).</p>
+  <div class="analogy"><b>Analogy.</b> Cramming one subject all night for an exam. You ace it, then can't remember your neighbour's name.</div>
+  <p>Toy model: drag the learning rate and see the trade-off.</p>
+  <label class="muted" style="font-size:13px">learning rate: <b id="lrv"></b></label>
+  <input type="range" id="lrS" min="0" max="100" value="30" oninput="forgetUpd()">
+  <div class="row">
+    <div class="stat"><small>domain perplexity drop</small><span class="big" id="dg"></span></div>
+    <div class="stat"><small>general knowledge</small><span class="big" id="gk"></span></div>
+  </div>
+  <p class="def" id="fmsg"></p>
+  <p class="def"><b>Fixes</b> (from the assignment and CS-2): lower the LR (10× is a common step), halve the steps, or mix some general text
+  back in. Mixing general text back in is called <b>replay</b>.</p>
+</section>
+
+<!-- 7 -->
+<section class="card" id="s7">
+  <h2><span class="num">7</span>CPT vs instruction tuning <span class="muted" style="font-size:15px">· B1 · TODO 15–16</span></h2>
+  <p>CPT teaches <i>what the domain sounds like</i>. It does not teach <i>how to answer</i>. Toggle to see the difference on one prompt:</p>
+  <div><button class="on" id="m-base" onclick="modelShow('base')">base model</button>
+    <button id="m-cpt" onclick="modelShow('cpt')">after CPT</button>
+    <button id="m-sft" onclick="modelShow('sft')">after CPT + instruction tuning</button></div>
+  <pre id="modelOut"></pre>
+  <p class="muted" style="font-size:13px">(Illustrative outputs: your real ones go in the notebook's comparison table.)</p>
+  <h3>Where the instruction pairs come from (CS-3 slide 8)</h3>
+  <table>
+    <tr><th>method</th><th>how</th><th>used here?</th></tr>
+    <tr><td>Human authoring</td><td>experts write pairs by hand</td><td>no: too slow</td></tr>
+    <tr><td><b>Template conversion</b></td><td>turn existing structure into Q&amp;A</td><td><b>yes</b>: section title → question, section text → answer</td></tr>
+    <tr><td>Synthetic (LLM)</td><td>an LLM writes pairs from your text</td><td>optional: prompt template is in the notebook</td></tr>
+  </table>
+  <p>Try the heuristic yourself. Type a section heading the way it appears in a RHEL manual:</p>
+  <input type="text" id="hIn" value="1.7.3. Assigning a network interface to a zone" oninput="heur()">
+  <pre id="hOut"></pre>
+  <p class="def"><b>JSONL</b>: a text file with one JSON object per line, so it is easy to stream and append. <b>80/20 split</b>: train on 80%,
+  measure on the 20% never seen. <b>Seed</b>: a fixed starting number for the random shuffle, so the split is identical every run.
+  <b>Grounded</b>: every fact in the answer comes from your corpus, not from outside knowledge.</p>
+</section>
+
+<!-- 8 -->
+<section class="card" id="s8">
+  <h2><span class="num">8</span>The chat template</h2>
+  <p>A model sees one flat string, never "roles". The <b>chat template</b> is the model's own convention for writing a conversation as
+  text, with special marker tokens. Qwen uses the <i>ChatML</i> style. Edit the pair:</p>
+  <div class="row">
+    <div><label class="muted" style="font-size:13px">instruction</label><input type="text" id="ci" value="How do I list open ports in firewalld?" oninput="chat()"></div>
+    <div><label class="muted" style="font-size:13px">response</label><input type="text" id="cr" value="Run: firewall-cmd --list-ports" oninput="chat()"></div>
+  </div>
+  <pre id="chatOut"></pre>
+  <div class="note">Train and infer with the <b>same</b> template. In B3, <code>generate(..., chat=True)</code> builds the string up to
+  <code>&lt;|im_start|&gt;assistant</code> and lets the model write the rest, stopping at <code>&lt;|im_end|&gt;</code>.
+  <code>SFTTrainer</code> applies this template automatically to the <code>messages</code> column.</div>
+  <p class="def"><b>SFT</b> (supervised fine-tuning): training on input → desired-output examples. <b>IFT</b>: SFT where the examples are
+  instructions and responses (CS-3 slide 5).</p>
+</section>
+
+<!-- 9 -->
+<section class="card" id="s9">
+  <h2><span class="num">9</span>LoRA: train a tiny add-on, not the whole model <span class="muted" style="font-size:15px">· B2 · TODO 17</span></h2>
+  <p>A weight matrix <b>W</b> (d × k) is frozen. LoRA learns the <i>change</i> as two thin matrices: <b>B</b> (d × r) and
+  <b>A</b> (r × k). New output: <code>h = W·x + (α/r)·B·A·x</code> (CS-3 slides 14–18). B starts at zero, so at step 0 the model is unchanged.</p>
+  <div class="analogy"><b>Analogy.</b> Instead of reprinting a 900-page manual, you add a few sticky notes. <b>r</b> (rank) = how many
+  sticky notes. <b>α</b> (alpha) = how loudly the notes are read out. The scale α/r keeps that volume steady when you change r.</div>
+  <label class="muted" style="font-size:13px">rank r: <b id="rv">16</b></label>
+  <input type="range" id="rS" min="1" max="64" value="16" oninput="loraUpd()">
+  <div id="loraVis" style="margin:14px 0;text-align:center"></div>
+  <div class="row">
+    <div class="stat"><small>full update of W (896 × 896)</small><span class="big" id="fu">802,816</span></div>
+    <div class="stat"><small>LoRA r·(d+k)</small><span class="big" id="lu"></span></div>
+    <div class="stat"><small>saving</small><span class="big" id="sv"></span></div>
+  </div>
+  <h3>The three adapters from the assignment, computed for Qwen2.5-0.5B</h3>
+  <p class="def">q_proj is 896→896. v_proj and k_proj are 896→128 (only 2 KV heads × 64). o_proj is 896→896. There are 24 layers.</p>
+  <table id="adTable"><tr><th>adapter</th><th>r</th><th>α</th><th>α/r</th><th>targets</th><th>trainable params</th><th>% of 494M</th></tr></table>
+  <p class="def"><b>Adapter</b>: a small trainable add-on; the frozen base stays untouched. <b>target_modules</b>: which matrices get LoRA.
+  <code>q_proj</code>, <code>v_proj</code> and <code>o_proj</code> are the query, value and output projections inside attention.
+  <b>PEFT</b>: parameter-efficient fine-tuning, the family LoRA belongs to. One base model + many 4 MB adapters can serve many tasks (CS-3 slide 19).</p>
+</section>
+
+<!-- 10 -->
+<section class="card" id="s10">
+  <h2><span class="num">10</span>4-bit quantization and QLoRA</h2>
+  <p><b>Quantization</b> = storing each weight with fewer bits (CS-3 slide 20). <b>QLoRA</b> = the frozen base in 4-bit <b>NF4</b>,
+  the LoRA matrices in 16-bit. For each matrix multiply, the weights are expanded back to 16-bit on the fly (CS-3 slides 21–22).</p>
+  <div class="analogy"><b>Analogy.</b> A photo saved with 16 colours instead of millions. It is much smaller and still clearly recognisable,
+  because you only <i>look</i> at it (frozen) and never paint on it.</div>
+  <p>Round 12 real weights onto a 4-bit grid (16 allowed values):</p>
+  <canvas id="qC" width="800" height="200"></canvas>
+  <div><button onclick="drawQ(16)" class="on" id="q16">16-bit (original)</button><button onclick="drawQ(4)" id="q4">4-bit (16 levels)</button><button onclick="drawQ(2)" id="q2">2-bit (4 levels)</button></div>
+  <h3>Memory for the weights of a 0.5B model</h3>
+  <table id="memT"><tr><th>format</th><th>bytes / weight</th><th>weights only</th></tr></table>
+  <div class="note"><b>T4 rule</b> (CS-3 slide 22): the T4 has no bfloat16, so the compute dtype is <code>float16</code>. The notebook
+  chooses automatically with <code>BF16_OK</code>. <b>NF4</b> (NormalFloat-4) places its 16 levels where bell-curve-shaped weights are
+  densest, so it loses less information than evenly spaced levels. <b>Double quantization</b> also compresses the scale numbers that NF4 stores.</div>
+</section>
+
+<!-- 11 -->
+<section class="card quiz" id="s11">
+  <h2><span class="num">11</span>Quiz: your study gate</h2>
+  <p>Get these right <b>before</b> writing the matching TODOs. A wrong answer shows the reason.</p>
+  <div id="quiz"></div>
+  <p class="big" style="font-size:20px">Score: <span id="score">0</span> / <span id="qtot"></span></p>
+</section>
+
+<!-- 12 -->
+<section class="card" id="s12">
+  <h2><span class="num">12</span>Glossary</h2>
+  <table id="gloss"><tr><th>term</th><th>one line</th></tr></table>
+</section>
+
+</div>
+<script>
+/* theme */
+function toggleTheme(){const h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'':'dark';drawLoss(curLoss);drawQ(curQ)}
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* 1 pipeline */
+const STAGES=[
+ ['Step 1','clean PDFs',2,'Download 25 admin PDFs, extract text page by page, then filter: length, boilerplate, duplicates, language. Output: <code>domain_corpus/*.txt</code>.','Garbage in, garbage out. The model memorises whatever you feed it, including page footers.'],
+ ['Step 2','tokens + packing',2,'Turn text into token IDs with the model\'s own tokenizer, wrap each doc in BOS/EOS, join everything, cut into 512-token blocks. Save as Parquet.','The GPU wants equal-length rectangles of numbers; packing gives them without wasting compute on padding.'],
+ ['Step 3','inspect model',2,'Load Qwen2.5-0.5B, count parameters, read its config (layers, heads, sizes), check lm_head = vocab, save 3 "before" answers.','You must know the machine before tuning it, and you need a baseline to prove improvement.'],
+ ['Step 4','CPT training',2,'Next-token training on your blocks, recording loss every step with a callback; plot the curve; save the checkpoint.','This is where the model actually soaks up the domain.'],
+ ['Step 5','PPL + forgetting',2,'Perplexity on held-out manuals: base vs CPT (expect 10–40% drop). Then check 3 general facts survived.','Numbers prove the domain gain; the forgetting check proves you didn\'t break the model.'],
+ ['B1','Q&A dataset',2,'Turn manual sections into ~2,000 instruction→response pairs (JSONL), split 80/20 with a fixed seed.','CPT knows the words; it needs examples of <i>answering</i>.'],
+ ['B2','QLoRA',2,'Load the CPT model in 4-bit, attach a LoRA adapter (r=16, α=32 on q,v), train with SFTTrainer and the chat template.','Full fine-tuning on a T4 is slow and heavy; QLoRA trains ~0.2% of the weights in a fraction of the memory.'],
+ ['B3','evaluate',1,'Ask the same 3 questions again. Compare base → CPT → CPT+adapter side by side and write what improved.','Closes the loop: did all this work produce a better assistant?'],
+];
+const pipe=document.getElementById('pipe');
+STAGES.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`${s[0]}<small>${s[1]} · ${s[2]}m</small>`;b.onclick=()=>pipeShow(i);pipe.appendChild(b)});
+function pipeShow(i){[...pipe.children].forEach((b,j)=>b.classList.toggle('on',i===j));const s=STAGES[i];
+ document.getElementById('pipeOut').innerHTML=`<b>${s[0]}: ${s[1]}</b> (${s[2]} marks)<br>${s[3]}<br><span class="muted"><b>Why:</b> ${s[4]}</span>`}
+pipeShow(0);
+
+/* 2 cleaning */
+const PAGES=[
+ {t:'Red Hat Enterprise Linux 9 Configuring firewalls',w:9,k:'title'},
+ {t:'Legal Notice Copyright © Red Hat. This document is licensed…',w:140,k:'boil',h:'legal'},
+ {t:'Table of Contents 1.1 … 1.2 … 1.3 …',w:210,k:'boil'},
+ {t:'1.1. Getting started with firewalld. A firewall filters…',w:320,k:'ok'},
+ {t:'1.2. Firewall zones. A zone groups interfaces…',w:290,k:'ok'},
+ {t:'1.3. Opening ports. Use firewall-cmd --add-port…',w:310,k:'ok',h:'p13'},
+ {t:'1.3. Opening ports. Use firewall-cmd --add-port…',w:310,k:'dup',h:'p13'},
+ {t:'(This page intentionally left blank)',w:5,k:'short'},
+ {t:'Red Hat Enterprise Linux 9 Managing networking',w:8,k:'title'},
+ {t:'Legal Notice Copyright © Red Hat. This document is licensed…',w:140,k:'boil',h:'legal'},
+ {t:'2.1. Configuring nmcli. NetworkManager provides…',w:300,k:'ok'},
+ {t:'2.2. Static IP. Set ipv4.method manual…',w:280,k:'ok'},
+ {t:'2.2. IP estática. Configure ipv4.method manual…',w:270,k:'lang'},
+ {t:'3.1. Installing packages with dnf install…',w:260,k:'ok'},
+ {t:'3.2. dnf provides finds the package for a file…',w:240,k:'ok'},
+ {t:'2.1. Configuring nmcli. NetworkManager provides…',w:300,k:'dup'},
+];
+let alive=new Set(PAGES.map((_,i)=>i)),applied=[];
+const pgWrap=document.getElementById('pages');
+PAGES.forEach((p,i)=>{const d=document.createElement('div');d.className='pg';d.id='pg'+i;d.innerHTML=`<b>p${i+1} · ${p.w} words</b>${p.t}`;pgWrap.appendChild(d)});
+function applyF(f){if(applied.includes(f))return;const before=alive.size;
+ PAGES.forEach((p,i)=>{if(!alive.has(i))return;
+  if(f==='len'&&p.w<50)alive.delete(i);
+  if(f==='boil'&&p.k==='boil')alive.delete(i);
+  if(f==='dup'&&p.k==='dup')alive.delete(i);
+  if(f==='lang'&&p.k==='lang')alive.delete(i);});
+ if(f==='dup'&&!applied.includes('boil')){ /* second legal page is an exact duplicate of the first */
+  const L=PAGES.map((p,i)=>i).filter(i=>PAGES[i].h==='legal'&&alive.has(i)); if(L.length>1)alive.delete(L[1]);}
+ applied.push(f);document.getElementById('f-'+f).classList.add('on');
+ PAGES.forEach((_,i)=>document.getElementById('pg'+i).classList.toggle('gone',!alive.has(i)));
+ const names={len:'1 length',boil:'2 boilerplate/TOC',dup:'3 dedup',lang:'4 language'};
+ document.getElementById('ftable').insertAdjacentHTML('beforeend',`<tr><td>${names[f]}</td><td>${alive.size}</td><td>${before-alive.size}</td></tr>`)}
+function resetF(){alive=new Set(PAGES.map((_,i)=>i));applied=[];document.querySelectorAll('[id^=f-]').forEach(b=>b.classList.remove('on'));
+ PAGES.forEach((_,i)=>document.getElementById('pg'+i).classList.remove('gone'));
+ document.getElementById('ftable').innerHTML='<tr><th>step</th><th>pages left</th><th>removed</th></tr><tr><td>0 raw</td><td>16</td><td>–</td></tr>'}
+resetF();
+
+/* 3 packing */
+const DOCS=[['open','port','80','in','firewalld'],['nmcli','sets','a','static','IP','address','on','eth0'],['dnf','provides','finds','packages']];
+const COL=['#3b82f6','#8b5cf6','#06b6d4'];
+let curPack=0;
+const tk=(s,c,cls='')=>`<span class="t ${cls}" style="${c?'background:'+c:''}">${s}</span>`;
+function packStep(n){curPack=n;for(let i=0;i<5;i++)document.getElementById('p'+i).classList.toggle('on',i===n);
+ const B=+document.getElementById('bs').value;document.getElementById('bsv').textContent=B;
+ const out=document.getElementById('packOut'),st=document.getElementById('packStat');
+ const wrapped=DOCS.map((d,j)=>[['BOS','bos']].concat(d.map(w=>[w,COL[j]])).concat([['EOS','eos']]));
+ const tokHTML=a=>a.map(([s,c])=>c==='bos'||c==='eos'?tk(s,'',c):tk(s,c)).join('');
+ if(n===0){out.innerHTML=DOCS.map((d,j)=>`<div class="toks">${d.map(w=>tk(w,COL[j])).join('')}</div>`).join('');
+  st.innerHTML='Three documents, three different lengths. A GPU batch must be a rectangle, so they cannot be stacked as they are.'}
+ if(n===1){out.innerHTML=wrapped.map(a=>`<div class="toks">${tokHTML(a)}</div>`).join('');
+  st.innerHTML='<b>TODO 5</b>: <code>[BOS] + ids + [EOS]</code>. Each document now carries its own start and end marker.'}
+ const flat=wrapped.flat();
+ if(n===2){out.innerHTML=`<div class="toks">${tokHTML(flat)}</div>`;
+  st.innerHTML=`<b>TODO 6</b>: one flat stream of ${flat.length} tokens. The boundaries are still visible thanks to BOS/EOS.`}
+ if(n===3){const blocks=[];for(let i=0;i+B<=flat.length;i+=B)blocks.push(flat.slice(i,i+B));
+  const left=flat.length%B;
+  out.innerHTML=blocks.map((b,i)=>`<div class="blk"><span class="lab">block ${i+1}</span>${tokHTML(b)}</div>`).join('')+
+   (left?`<div class="blk" style="opacity:.4"><span class="lab">leftover, dropped (${left} tokens)</span>${tokHTML(flat.slice(flat.length-left))}</div>`:'');
+  st.innerHTML=`<b>TODO 7</b>: ${blocks.length} blocks × ${B} tokens, <b>0 padding</b>. A block may contain the end of one doc and the start of the next, and that is fine because EOS/BOS mark the seam. ${left} leftover tokens dropped.`}
+ if(n===4){let pads=0;out.innerHTML=wrapped.map(a=>{const rows=[];for(let i=0;i<a.length;i+=B){const ch=a.slice(i,i+B);const p=B-ch.length;pads+=p;
+   rows.push(`<div class="blk">${tokHTML(ch)}${Array(p).fill(tk('pad','','pad')).join('')}</div>`)}return rows.join('')}).join('');
+  const total=Math.ceil(wrapped[0].length/B)*B+Math.ceil(wrapped[1].length/B)*B+Math.ceil(wrapped[2].length/B)*B;
+  st.innerHTML=`Padding instead: <b>${pads} of ${total}</b> token slots (${Math.round(100*pads/total)}%) are filler that the GPU still processes. With real 300-word pages and 512-token blocks, the waste is about half.`}}
+packStep(0);
+
+/* 4 layers */
+const stack=document.getElementById('stack');
+stack.insertAdjacentHTML('beforeend','<div class="layer io">token IDs → embedding (151,936 × 896)</div>');
+for(let i=0;i<24;i++){const d=document.createElement('div');d.className='layer';d.title='layer '+(i+1);
+ d.onclick=()=>{document.querySelectorAll('.layer').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');
+  document.getElementById('layerInfo').innerHTML=`<b>Decoder layer ${i+1} of 24</b><br>① <b>Attention</b>: 14 query heads × 64 dims; q_proj 896→896, k_proj &amp; v_proj 896→128, o_proj 896→896.<br>② <b>FFN</b>: 896 → 4,864 → 896 (gate, up, down projections).<br>Each adds its result to the running vector (the residual stream). <span class="muted">About 14.9M parameters per layer.</span>`};
+ stack.appendChild(d)}
+stack.insertAdjacentHTML('beforeend','<div class="layer io">lm_head: 896 → 151,936 scores (one per token)</div>');
+
+/* 5 loss */
+function lossUpd(){const L=+document.getElementById('lossS').value;const P=Math.exp(L);
+ document.getElementById('lv').textContent=L.toFixed(2);document.getElementById('pv').textContent=P<1000?P.toFixed(1):Math.round(P).toLocaleString();
+ document.getElementById('prv').textContent=(100*Math.exp(-L)).toFixed(L>6?4:1)+'%';
+ let m;if(L>11)m='≈ ln(151,936) = 11.9: a <b>random</b> guess over the whole vocabulary. Your weights did not load (the assignment tip).';
+ else if(L>6)m='Very confused. Something is off: wrong tokenizer, or diverged training.';
+ else if(L>=1.8)m='<b>Typical for a pretrained model on new domain text (2–4).</b> This is where CPT starts.';
+ else if(L>=0.8)m='Good domain fit, but watch the eval loss: if only the train loss gets this low, the model is memorising.';
+ else m='Suspiciously low. Likely memorising the training text (overfitting) or eval data leaked into train.';
+ document.getElementById('lossMsg').innerHTML=m}
+lossUpd();
+let curLoss='good';
+function drawLoss(kind){curLoss=kind;['good','random','high'].forEach(k=>document.getElementById('lc-'+k).classList.toggle('on',k===kind));
+ const c=document.getElementById('lossC'),x=c.getContext('2d'),W=c.width,H=c.height;x.clearRect(0,0,W,H);
+ const f={good:t=>1.55+1.15*Math.exp(-t/22)+.07*Math.sin(t*1.7)*Math.exp(-t/60),
+  random:t=>11.9-8*(1-Math.exp(-t/40))+.15*Math.sin(t*2.1),
+  high:t=>t<45?1.6+1.1*Math.exp(-t/10):1.6+.15*(t-45)+.4*Math.sin(t)}[kind];
+ const pts=[];for(let t=0;t<=150;t++)pts.push([t,Math.max(0,f(t)+(Math.random()-.5)*.1)]);
+ const maxY=kind==='random'?12.5:4.5;
+ x.strokeStyle=css('--edge');x.fillStyle=css('--muted');x.font='12px sans-serif';
+ for(let y=0;y<=maxY;y+=maxY>6?2:1){const py=H-20-(y/maxY)*(H-35);x.beginPath();x.moveTo(36,py);x.lineTo(W-8,py);x.stroke();x.fillText(y,10,py+4)}
+ x.fillText('step →',W-50,H-4);x.strokeStyle=kind==='good'?css('--g'):css('--r');x.lineWidth=2.5;x.beginPath();
+ pts.forEach(([t,v],i)=>{const px=36+(t/150)*(W-50),py=H-20-(Math.min(v,maxY)/maxY)*(H-35);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();
+ if(kind==='good'){const px=36+(75/150)*(W-50);x.setLineDash([5,5]);x.strokeStyle=css('--y');x.beginPath();x.moveTo(px,10);x.lineTo(px,H-20);x.stroke();x.setLineDash([]);x.fillStyle=css('--y');x.fillText('plateau starts',px+6,24)}
+ document.getElementById('lossCMsg').innerHTML={good:'Starts near 2.7 (pretrained), drops fast as the domain words become familiar, then <b>plateaus</b>. Report where.',
+  random:'Starts at ~11.9 = ln(vocab). The model began from random weights. Check <code>from_pretrained</code> and the model ID.',
+  high:'Dips, then climbs and wobbles: the LR is too high (or warmup too short). Lower the LR or add warmup.'}[kind]}
+drawLoss('good');
+
+/* 6 forgetting */
+function forgetUpd(){const s=+document.getElementById('lrS').value/100;const lr=Math.pow(10,-6+3*s);
+ document.getElementById('lrv').textContent=lr.toExponential(0).replace('e-','e-');
+ const gain=Math.min(45,60*(1-Math.exp(-s*3.2)));const forget=Math.max(0,(s-.42)*175);
+ document.getElementById('dg').textContent='−'+gain.toFixed(0)+'%';
+ const gk=document.getElementById('gk');gk.textContent=forget<15?'Retained':forget<50?'Wobbly':'Degraded';
+ gk.style.color=forget<15?css('--g'):forget<50?css('--y'):css('--r');
+ document.getElementById('fmsg').innerHTML=s<.2?'LR so small that almost nothing is learned: little domain gain.':
+  forget<15?'<b>Sweet spot</b>: clear domain gain, general facts intact. 2e-5 for a 0.5B model is around here.':
+  forget<50?'Getting greedy: answers to "Water boils at" may start drifting into Linux-speak.':'"The capital of France is… <code>/etc/sysconfig</code>". Catastrophic forgetting. Cut the LR by 10× or halve the steps.'}
+forgetUpd();
+
+/* 7 model toggle + heuristic */
+const P='How do I permanently open TCP port 8080 in firewalld on RHEL 9?';
+const OUTS={base:P+'\nHow do I permanently open TCP port 8080 in firewalld on RHEL 8?\nHow do I permanently open TCP port 443 in firewalld on CentOS?\n…\n\n→ continues the text: it repeats questions like a forum page.',
+ cpt:P+'\nThe firewalld service uses zones and services. To add a port to the default zone, the firewall-cmd utility\nis used with the --add-port option. Changes made without --permanent are lost after reload…\n\n→ sounds like the manual and knows the terms, but rambles. It is still continuing text.',
+ sft:'<|im_start|>assistant\nTo open the port permanently, add it to the zone and reload firewalld:\n# firewall-cmd --permanent --add-port=8080/tcp\n# firewall-cmd --reload\nVerify with: firewall-cmd --list-ports<|im_end|>\n\n→ answers the question, in the manual\'s vocabulary, and then stops.'};
+function modelShow(k){['base','cpt','sft'].forEach(j=>document.getElementById('m-'+j).classList.toggle('on',j===k));document.getElementById('modelOut').textContent=OUTS[k]}
+modelShow('base');
+function heur(){const raw=document.getElementById('hIn').value.trim();const m=raw.match(/^(\d+(?:\.\d+)+)\.?\s+([A-Z].{3,100})$/);
+ const o=document.getElementById('hOut');if(!m){o.textContent='✗ Not a section heading: needs a number like 1.7.3. followed by a Capitalised title.';return}
+ let t=m[2];if(t===t.toUpperCase())t=t[0]+t.slice(1).toLowerCase();const tl=t[0].toLowerCase()+t.slice(1);
+ const q=t.split(' ')[0].toLowerCase().endsWith('ing')?`Walk me through ${tl} on RHEL 9.`:`Explain ${tl} in RHEL 9.`;
+ o.textContent=JSON.stringify({instruction:q,response:'<first ~160 words of the text under this heading, cut at a full stop>'},null,1)}
+heur();
+
+/* 8 chat */
+function chat(){const i=document.getElementById('ci').value,r=document.getElementById('cr').value;
+ document.getElementById('chatOut').textContent=`<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\n<|im_start|>user\n${i}<|im_end|>\n<|im_start|>assistant\n${r}<|im_end|>`}
+chat();
+
+/* 9 lora */
+function loraUpd(){const r=+document.getElementById('rS').value,d=896,k=896;document.getElementById('rv').textContent=r;
+ const lp=r*(d+k);document.getElementById('lu').textContent=lp.toLocaleString();
+ document.getElementById('sv').textContent=(100*(1-lp/(d*k))).toFixed(2)+'%';
+ const s=r*2.2+6;document.getElementById('loraVis').innerHTML=
+  `<span class="mat" style="width:120px;height:120px;background:#94a3b8">W<br>896×896<br>frozen ❄</span> <b style="font-size:22px">+</b> `+
+  `<span class="mat" style="width:${s}px;height:120px;background:${css('--v')}">B</span> `+
+  `<span class="mat" style="width:120px;height:${s}px;background:${css('--g')}">A</span>`+
+  `<div class="muted" style="font-size:12px;margin-top:6px">B is 896×${r}, A is ${r}×896. Only these train.</div>`}
+loraUpd();
+const AD=[['A · low capacity',8,16,['q','v']],['B · balanced ★',16,32,['q','v']],['C · high capacity',32,32,['q','v','o']]];
+const SZ={q:896+896,v:896+128,o:896+896};
+AD.forEach(([n,r,a,t])=>{const p=r*t.reduce((s,m)=>s+SZ[m],0)*24;
+ document.getElementById('adTable').insertAdjacentHTML('beforeend',`<tr><td>${n}</td><td>${r}</td><td>${a}</td><td>${a/r}</td><td>${t.map(m=>m+'_proj').join(', ')}</td><td>${p.toLocaleString()}</td><td>${(100*p/494e6).toFixed(2)}%</td></tr>`)});
+
+/* 10 quant */
+const WTS=[-.62,-.41,-.33,-.18,-.09,-.02,.04,.11,.19,.27,.46,.71];let curQ=16;
+function drawQ(bits){curQ=bits;['16','4','2'].forEach(b=>document.getElementById('q'+b).classList.toggle('on',+b===bits));
+ const c=document.getElementById('qC'),x=c.getContext('2d'),W=c.width,H=c.height;x.clearRect(0,0,W,H);
+ const lv=bits>=16?null:Math.pow(2,bits);const mx=.75;const Y=v=>H/2-v/mx*(H/2-14);
+ if(lv){x.strokeStyle=css('--edge');for(let i=0;i<lv;i++){const v=-mx+2*mx*i/(lv-1);x.beginPath();x.moveTo(0,Y(v));x.lineTo(W,Y(v));x.stroke()}}
+ let err=0;WTS.forEach((w,i)=>{const px=40+i*(W-80)/(WTS.length-1);let q=w;
+  if(lv){const step=2*mx/(lv-1);q=-mx+Math.round((w+mx)/step)*step}err+=Math.abs(q-w);
+  x.fillStyle=css('--muted');x.beginPath();x.arc(px,Y(w),5,0,7);x.fill();
+  if(lv){x.strokeStyle=css('--r');x.beginPath();x.moveTo(px,Y(w));x.lineTo(px,Y(q));x.stroke();x.fillStyle=css('--b');x.beginPath();x.arc(px,Y(q),6,0,7);x.fill()}});
+ x.fillStyle=css('--ink');x.font='13px sans-serif';
+ x.fillText(lv?`${lv} levels · mean rounding error ${(err/WTS.length).toFixed(3)}  (grey = original, blue = stored)`:'original weights (grey dots)',10,16)}
+drawQ(16);
+[['float32',4],['bfloat16 / float16',2],['int8',1],['4-bit NF4',.5]].forEach(([n,b])=>
+ document.getElementById('memT').insertAdjacentHTML('beforeend',`<tr><td>${n}</td><td>${b}</td><td>${(494e6*b/1e9).toFixed(2)} GB</td></tr>`));
+
+/* 11 quiz */
+const Q=[
+ ['Why must CPT reuse the model\'s pretrained tokenizer?',['A new tokenizer would be slower','Token IDs index the learned embedding rows; new IDs would scramble every meaning','Hugging Face forbids it'],1,'Each embedding row was learned for one specific token ID. Change the mapping and the model reads nonsense.'],
+ ['What does packing remove?',['BOS/EOS tokens','Padding (wasted compute)','Duplicate documents'],1,'Packing fills every block completely with real tokens, so there is nothing to pad.'],
+ ['Your first CPT loss is 11.9. What happened?',['Great, very low loss','The LR is too small','The model is effectively random: ln(151,936) ≈ 11.9'],2,'A pretrained model starts around 2–4. A loss of ln(vocab) means uniform guessing.'],
+ ['In CPT, the labels are…',['the input IDs (the library shifts them by one)','human-written answers','the next document'],0,'Next-token prediction: the text is its own label (teacher forcing).'],
+ ['Eval loss 2.0 → perplexity ≈ ?',['2.0','7.4','20'],1,'PPL = e^loss = e² ≈ 7.39.'],
+ ['After CPT, "The capital of France is" → "/etc/hosts". Best first fix?',['Train longer','Lower the learning rate (≈10×) or halve the steps','Use a bigger block size'],1,'That is catastrophic forgetting; the update was too aggressive.'],
+ ['Why does CPT alone not make a helpdesk assistant?',['It only teaches domain language; it doesn\'t teach answering instructions','CPT deletes the chat template','CPT only works on BERT'],0,'Base and CPT models continue text. Instruction tuning teaches the question → answer behaviour.'],
+ ['LoRA r=16 on one 896×896 matrix trains how many numbers?',['16','28,672','802,816'],1,'r·(d+k) = 16·(896+896) = 28,672, against 802,816 for the full matrix.'],
+ ['In QLoRA, what is stored in 4-bit?',['The LoRA matrices','The frozen base weights','The gradients'],1,'The frozen base is in NF4; the small trainable LoRA matrices stay in 16-bit.'],
+ ['On a T4, the 4-bit compute dtype should be…',['bfloat16','float16','int4'],1,'The T4 has no native bfloat16 (CS-3 slide 22), so use float16.'],
+];
+let score=0;document.getElementById('qtot').textContent=Q.length;
+const qz=document.getElementById('quiz');
+Q.forEach(([q,opts,ans,why],qi)=>{const d=document.createElement('div');d.className='q';
+ d.innerHTML=`<b>${qi+1}. ${q}</b><div class="opts"></div><div class="why"></div>`;
+ opts.forEach((o,oi)=>{const b=document.createElement('button');b.textContent=o;
+  b.onclick=()=>{if(d.dataset.done)return;d.dataset.done=1;b.classList.add(oi===ans?'ok':'bad');
+   if(oi!==ans)d.querySelectorAll('.opts button')[ans].classList.add('ok');else document.getElementById('score').textContent=++score;
+   const w=d.querySelector('.why');w.style.display='block';w.textContent=why};d.querySelector('.opts').appendChild(b)});
+ qz.appendChild(d)});
+
+/* 12 glossary */
+[['CPT (continual pre-training)','Keep doing next-token training on new unlabeled text (your domain) starting from a trained model.'],
+ ['SFT / IFT','Supervised / instruction fine-tuning: train on input → desired-output pairs.'],
+ ['Base model','A pretrained model that continues text rather than following instructions.'],
+ ['Token / tokenizer / vocabulary','A text piece / the tool that cuts text and maps pieces to IDs / the fixed list of all pieces.'],
+ ['BOS / EOS','Special tokens marking the start / end of a document or sequence.'],
+ ['Packing','Join all token IDs into one stream and cut into equal blocks: no padding.'],
+ ['Context window / block size','How many tokens the model sees at once / the length we cut blocks to (512).'],
+ ['Parameters','The learned numbers (weights) inside the model. Qwen2.5-0.5B has ~494 million.'],
+ ['Decoder layer','One repeated Transformer block: attention + feed-forward network.'],
+ ['Hidden size / head dim','Vector length per token (896) / slice each attention head gets (64).'],
+ ['lm_head','Final layer that turns a token vector into one score per vocabulary entry.'],
+ ['Cross-entropy loss','−ln(probability given to the correct next token), averaged. Lower is better.'],
+ ['Perplexity (PPL)','e^loss: "how many choices the model is torn between". Lower is better.'],
+ ['Learning rate / warmup / cosine','Step size / slow start / smooth decay of the step size.'],
+ ['Gradient checkpointing','Recompute activations in the backward pass to save memory (~30% slower).'],
+ ['Mixed precision (bf16/fp16)','Do the maths in 16-bit for speed while keeping master weights in 32-bit.'],
+ ['Catastrophic forgetting','New training overwrites old knowledge.'],
+ ['Replay','Mix some general data back in during domain training to reduce forgetting.'],
+ ['Chat template','The model\'s own format for turning role-tagged messages into one text string.'],
+ ['LoRA','Freeze W; learn a low-rank update B·A with rank r and scale α/r.'],
+ ['Adapter','A small trainable add-on module; the base model stays frozen and shared.'],
+ ['Quantization / NF4','Store weights with fewer bits / a 4-bit format tuned for bell-shaped weight values.'],
+ ['QLoRA','LoRA adapters trained on top of a 4-bit-quantized frozen base model.'],
+ ['Held-out / eval set','Data never trained on, used to measure honestly.'],
+ ['Seed','Fixed number that makes "random" steps repeatable.']].forEach(([t,d])=>
+ document.getElementById('gloss').insertAdjacentHTML('beforeend',`<tr><td><b>${t}</b></td><td>${d}</td></tr>`));
+</script>
+</body>
+</html>
