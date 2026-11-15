@@ -1,0 +1,30 @@
+quantity,value
+episodes averaged per run,8.0
+DQN_Original: mean predicted Q (last 8 episodes),-0.9533976489910856
+DDQN_Original: mean predicted Q (last 8 episodes),-0.9525589155964553
+DQN_Modified: mean predicted Q (last 8 episodes),-1.4488374181091785
+DDQN_Modified: mean predicted Q (last 8 episodes),-1.5720466924831271
+"|DQN - DDQN| predicted-Q gap, original env",0.0008387333946302533
+"|DQN - DDQN| predicted-Q gap, modified env",0.12320927437394857
+DQN_Original: mean thruster activations (last 8 episodes),85.125
+DDQN_Original: mean thruster activations (last 8 episodes),60.125
+DQN_Modified: mean thruster activations (last 8 episodes),92.375
+DDQN_Modified: mean thruster activations (last 8 episodes),83.625
+"thruster change, DQN (modified - original)",7.25
+"thruster change, DDQN (modified - original)",23.5
+DQN_Original: mean base reward (last 8 episodes),-222.99220537853614
+DDQN_Original: mean base reward (last 8 episodes),-327.8030155687383
+DQN_Modified: mean base reward (last 8 episodes),-260.60075467016884
+DDQN_Modified: mean base reward (last 8 episodes),-318.8721613770023
+DQN_Original: greedy evaluation mean reward,-224.91526066220004
+DDQN_Original: greedy evaluation mean reward,-155.53873772556838
+DQN_Modified: greedy evaluation mean reward,-515.0711823226774
+DDQN_Modified: greedy evaluation mean reward,-650.3862606659789
+DQN_Original: greedy evaluation safe-landing rate,0.0
+DDQN_Original: greedy evaluation safe-landing rate,0.0
+DQN_Modified: greedy evaluation safe-landing rate,0.0
+DDQN_Modified: greedy evaluation safe-landing rate,0.0
+DQN_Original: greedy evaluation mean thruster activations,37.0
+DDQN_Original: greedy evaluation mean thruster activations,4.6
+DQN_Modified: greedy evaluation mean thruster activations,90.0
+DDQN_Modified: greedy evaluation mean thruster activations,123.6

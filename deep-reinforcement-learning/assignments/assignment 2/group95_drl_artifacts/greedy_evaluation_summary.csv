@@ -1,0 +1,5 @@
+run,evaluation_reward_mean,evaluation_reward_std,evaluation_safe_landing_rate,evaluation_thrusters_mean
+DQN_Original,-224.91526066220004,67.63620224237184,0.0,37.0
+DDQN_Original,-155.53873772556838,32.396968534136526,0.0,4.6
+DQN_Modified,-515.0711823226774,484.50633105403165,0.0,90.0
+DDQN_Modified,-650.3862606659789,371.7528215186493,0.0,123.6

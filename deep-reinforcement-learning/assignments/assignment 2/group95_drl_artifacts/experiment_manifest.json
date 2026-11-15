@@ -1,0 +1,79 @@
+{
+  "group": 95,
+  "members": [
+    "Ayan",
+    "Yash",
+    "Ravi",
+    "Sumanth",
+    "Vivek"
+  ],
+  "run_mode": "quick",
+  "seed": 95,
+  "device": "cpu",
+  "config": {
+    "env_id": "LunarLander-v3",
+    "state_size": 8,
+    "action_size": 4,
+    "hidden_1": 128,
+    "hidden_2": 128,
+    "learning_rate": 0.0005,
+    "gamma": 0.99,
+    "batch_size": 32,
+    "replay_capacity": 5000,
+    "min_replay_size": 128,
+    "train_every_steps": 4,
+    "target_update_steps": 250,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.01,
+    "epsilon_decay_episodes": 20,
+    "episodes": 8,
+    "max_steps_per_episode": 250,
+    "validation_state_count": 64,
+    "evaluation_episodes": 5,
+    "failure_probability": 0.15,
+    "fuel_penalty": 0.3,
+    "safe_landing_bonus": 50.0,
+    "moving_average_window": 100,
+    "log_every": 1,
+    "checkpoint_every": 0
+  },
+  "validation_state_checksum": 72.95317077636719,
+  "runs": {
+    "DQN_Original": {
+      "double_dqn": false,
+      "modified_environment": false
+    },
+    "DDQN_Original": {
+      "double_dqn": true,
+      "modified_environment": false
+    },
+    "DQN_Modified": {
+      "double_dqn": false,
+      "modified_environment": true
+    },
+    "DDQN_Modified": {
+      "double_dqn": true,
+      "modified_environment": true
+    }
+  },
+  "artifact_files": [
+    "01_episode_reward.png",
+    "02_average_predicted_q.png",
+    "03_safe_landing_rate.png",
+    "04_thruster_activations.png",
+    "05_base_environment_reward.png",
+    "DDQN_Modified_final.pt",
+    "DDQN_Modified_history.csv",
+    "DDQN_Original_final.pt",
+    "DDQN_Original_history.csv",
+    "DQN_Modified_final.pt",
+    "DQN_Modified_history.csv",
+    "DQN_Original_final.pt",
+    "DQN_Original_history.csv",
+    "comparison_summary.csv",
+    "discussion_metrics.csv",
+    "experiment_manifest.json",
+    "fixed_validation_states.npy",
+    "greedy_evaluation_summary.csv"
+  ]
+}
