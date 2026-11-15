@@ -26,6 +26,7 @@ TOPICS = [
     ("stack-split", "Stacking and splitting"),
     ("memory-layout", "Memory layout: C/F order, strides, contiguity"),
     ("special-values", "NaN, inf and structured arrays"),
+    ("ml-arrays", "Arrays in ML code: batches, images, sequences"),
 ]
 
 QUESTIONS = [
@@ -1366,4 +1367,762 @@ row 2 ----^
            print(np.isnan(np.array([1, 2, 3])))
            """),
        topic="special-values", level=3),
+
+    # ------------------------------------------------------------------ round 2 depth: memory-layout
+    out(C("""
+        import numpy as np
+        from numpy.lib.stride_tricks import as_strided
+        a = np.arange(5)
+        print(as_strided(a, shape=(3, 3), strides=(8, 8)))
+        """),
+        ["[[0 1 2]\n [1 2 3]\n [2 3 4]]", "[[0 1 2]\n [3 4 0]\n [0 0 0]]",
+         "[[0 0 0]\n [1 1 1]\n [2 2 2]]", "ValueError"], 0,
+        "Both axes step 8 bytes, i.e. one int64.",
+        "as_strided builds a view with any shape and strides you ask for. Row stride 8 means each row starts one element "
+        "later, so the rows overlap: sliding windows with no copy. The tempting [[0 1 2] [3 4 ...]] answer assumes a row "
+        "stride of 24 (three elements), which is what reshape would use.",
+        topic="memory-layout", level=3),
+    ask("What strides does a C-ordered int32 array of shape (2, 3, 4) have?", C("""
+        import numpy as np
+        print(np.zeros((2, 3, 4), dtype=np.int32).strides)
+        """),
+        ["(48, 16, 4)", "(4, 16, 48)", "(96, 32, 8)", "(24, 12, 4)"], 0,
+        "Last axis moves one item; each earlier axis jumps over a whole block of the later ones.",
+        "itemsize is 4. Last axis: 4 bytes. Middle axis: 4 items x 4 = 16. First axis: 3 x 4 items x 4 = 48. "
+        "(96, 32, 8) is the int64 answer; (4, 16, 48) is Fortran order.",
+        diagram=C("""
+            shape (2, 3, 4), int32, C order
+            axis 2: next item        ->  4 bytes
+            axis 1: skip 4 items     -> 16 bytes
+            axis 0: skip 3*4 items   -> 48 bytes
+            """),
+        topic="memory-layout", level=3),
+    ask("What strides does a Fortran-ordered float64 array of shape (3, 4) have?", C("""
+        import numpy as np
+        print(np.zeros((3, 4), order="F").strides)
+        """),
+        ["(8, 24)", "(32, 8)", "(24, 8)", "(8, 32)"], 0,
+        "In F order the FIRST index changes fastest.",
+        "Column-major: walking down a column moves 8 bytes, moving to the next column skips 3 rows = 24 bytes. "
+        "(32, 8) is the C-order layout of the same shape. Fortran order is what LAPACK and MATLAB use natively.",
+        topic="memory-layout", level=3),
+    ask("Why does `np.zeros((10_000, 10_000))[:, 0].sum()` touch far more memory than the 10,000 numbers it adds?",
+        None,
+        ["Each value sits in a different cache line, so the CPU loads 64 bytes to use 8",
+         "NumPy copies the whole array before slicing a column",
+         "Column slices are converted to Python floats first",
+         "sum always reads the base array, not the view"], 0,
+        "Think about what the CPU fetches from RAM: single numbers or whole lines?",
+        "A column of a C-ordered array has a stride of 80,000 bytes, so every element is in its own 64-byte cache line: "
+        "you pay for 8x the bytes you use and the prefetcher can't help. No copy happens; the slice is a view. "
+        "Like scanning one column of a row-store database table: every row page gets read anyway.",
+        analogy="Reading one field from every record in a row-oriented database: you fetch every page even though you need one value per row.",
+        topic="memory-layout", level=3),
+    ask("What strides does the reversed, stepped view have?", C("""
+        import numpy as np
+        a = np.arange(12).reshape(4, 3)
+        print(a[::2, ::-1].strides)
+        """),
+        ["(48, -8)", "(48, 8)", "(24, -8)", "(-48, 8)"], 0,
+        "A step multiplies the stride; a negative step flips its sign.",
+        "Row stride is 24 bytes; step 2 doubles it to 48. Column stride 8 with step -1 becomes -8, and the view's start "
+        "pointer moves to the last column. Negative strides are why a[::-1] is O(1), and why some C libraries "
+        "(and torch.from_numpy) reject such arrays until you call np.ascontiguousarray.",
+        topic="memory-layout", level=4),
+    ask("What do the two memory-overlap checks report for the even and odd elements?", C("""
+        import numpy as np
+        a = np.arange(10)
+        print(np.may_share_memory(a[::2], a[1::2]), np.shares_memory(a[::2], a[1::2]))
+        """),
+        ["True False", "True True", "False False", "False True"], 0,
+        "One check only compares the memory bounds; the other solves the exact problem.",
+        "Even and odd elements interleave in the same byte range, so the quick bounds test may_share_memory says True. "
+        "shares_memory does the exact (potentially expensive) check and finds no byte in common. "
+        "Use may_share_memory as a cheap conservative guard, shares_memory when you need the truth.",
+        analogy="Like a Bloom filter versus a real lookup: the quick check can say 'maybe' when the answer is no.",
+        topic="memory-layout", level=4),
+    out(C("""
+        import numpy as np
+        from numpy.lib.stride_tricks import sliding_window_view
+        img = np.zeros((5, 5))
+        print(sliding_window_view(img, (3, 3)).shape)
+        """),
+        ["(3, 3, 3, 3)", "(9, 3, 3)", "(3, 3)", "(5, 5, 3, 3)"], 0,
+        "How many 3x3 positions fit along each axis of a 5x5 image?",
+        "3 positions down x 3 across, each a 3x3 patch: (3, 3, 3, 3), all a zero-copy view. This is im2col, the trick "
+        "behind a naive convolution: reshape to (9, 9) and one matmul with the flattened kernel does every patch. "
+        "The reshape to (9, 9) is the moment a copy happens.",
+        topic="memory-layout", level=4),
+    mcq("Why is `np.lib.stride_tricks.as_strided` considered dangerous, while `sliding_window_view` is safe?",
+        ["as_strided does no bounds checks, so wrong strides read or write memory outside the buffer",
+         "as_strided always copies, which can exhaust memory",
+         "as_strided only works on float arrays",
+         "sliding_window_view runs in Python, as_strided in C"], 0,
+        "What stops you from asking for shape (100, 100) on a 5-element array?",
+        "as_strided trusts whatever shape and strides you give it: one wrong number and you see garbage or crash the "
+        "process. sliding_window_view computes the strides for you and returns a read-only view. "
+        "It's like raw pointer arithmetic in C versus a bounds-checked slice API.",
+        analogy="as_strided is pointer arithmetic with no bounds check; sliding_window_view is the safe library wrapper around it.",
+        topic="memory-layout", level=4),
+
+    # ------------------------------------------------------------------ round 2 depth: views-copies
+    ask("Which of these two reshapes can return a view?", C("""
+        import numpy as np
+        a = np.arange(6).reshape(2, 3)
+        print(np.shares_memory(a.T, a.T.reshape(6)), np.shares_memory(a, a.reshape(3, 2)))
+        """),
+        ["False True", "True True", "True False", "False False"], 0,
+        "Can the transposed elements, read in C order, be reached with one fixed stride?",
+        "a.T in C order is 0 3 1 4 2 5: no single stride walks that through the buffer, so reshape must copy. "
+        "a.reshape(3, 2) on a contiguous array only regroups the same order, so it's a view. "
+        "Interview point: reshape is 'view if possible, copy if necessary', and you can't tell without checking.",
+        topic="views-copies", level=3),
+    out(C("""
+        import numpy as np
+        a = np.zeros(4)
+        a[[1, 2]][0] = 5
+        a[1:3][0] = 7
+        print(a)
+        """),
+        ["[0. 7. 0. 0.]", "[0. 5. 0. 0.]", "[0. 7. 5. 0.]", "[0. 0. 0. 0.]"], 0,
+        "Which of the two chained indexes returns a temporary copy?",
+        "a[[1, 2]] makes a copy, and [0] = 5 writes into that temporary, which is then thrown away. a[1:3] is a view, "
+        "so writing into it reaches a. Same idea as pandas' chained-assignment warning: write with ONE index "
+        "operation, e.g. a[[1]] = 5.",
+        topic="views-copies", level=3),
+    out(C("""
+        import numpy as np
+        a = np.arange(12).reshape(3, 4)
+        print(np.shares_memory(a, a[:, :2].reshape(-1)),
+              np.shares_memory(a, a[:2].reshape(-1)),
+              np.shares_memory(a, a[:, ::2].reshape(3, 1, 2)))
+        """),
+        ["False True True", "True True True", "False True False", "False False False"], 0,
+        "Flattening needs one constant stride; adding a size-1 axis needs none.",
+        "a[:, :2] has a gap after every 2 items, so flattening it must copy. a[:2] is a contiguous block of rows: view. "
+        "a[:, ::2].reshape(3, 1, 2) only inserts a length-1 axis, which any strided array can do as a view. "
+        "So 'non-contiguous means copy' is too simple: it depends on which axes you merge.",
+        topic="views-copies", level=4),
+    ask("What do the two ravel calls give on a Fortran-ordered array, and is the second one a view?", C("""
+        import numpy as np
+        a = np.arange(6).reshape(2, 3)
+        f = np.asfortranarray(a)
+        print(f.ravel(), f.ravel(order="K"), np.shares_memory(f, f.ravel(order="K")))
+        """),
+        ["[0 1 2 3 4 5] [0 3 1 4 2 5] True", "[0 3 1 4 2 5] [0 3 1 4 2 5] True",
+         "[0 1 2 3 4 5] [0 1 2 3 4 5] False", "[0 1 2 3 4 5] [0 3 1 4 2 5] False"], 0,
+        "ravel's default is C order whatever the memory layout; order='K' means 'as stored'.",
+        "f holds the same values in column-major memory. ravel() promises logical C order, so it must copy. "
+        "ravel(order='K') reads in memory order (0 3 1 4 2 5) and can return a view. "
+        "Tempting wrong answer: assuming ravel() follows the memory layout; it follows the logical one unless you ask.",
+        topic="views-copies", level=4),
+    out(C("""
+        import numpy as np
+        buf = np.empty(2)
+        batches = []
+        for i in range(3):
+            buf[:] = i
+            batches.append(buf)
+        print(np.array(batches))
+        """),
+        ["[[2. 2.]\n [2. 2.]\n [2. 2.]]", "[[0. 0.]\n [1. 1.]\n [2. 2.]]",
+         "[[0. 0.]\n [0. 0.]\n [0. 0.]]", "ValueError"], 0,
+        "How many distinct arrays does the list hold?",
+        "The list holds three references to the SAME buffer, which ends up full of 2s. A reused buffer in a "
+        "data loader causes exactly this: every saved batch equals the last one. Append buf.copy() instead. "
+        "It's the classic JavaScript bug of pushing the same mutable object into an array in a loop.",
+        analogy="Like pushing the same object into a JS array inside a loop and mutating it: every slot shows the last state.",
+        topic="views-copies", level=4),
+    tf("`b = a[...]` gives a new array object that shares memory with `a`, so `b is a` is False but writes through `b` change `a`.",
+       True,
+       "Ellipsis on its own is a full basic slice.",
+       "a[...] (like a[:]) is basic indexing, so it returns a fresh view: a new object with the same buffer. "
+       "That's why `b[...] = 0` or `a[:] = new` are the idioms for overwriting an array in place, e.g. updating "
+       "a weight buffer that other code already holds a reference to.",
+       topic="views-copies", level=3),
+
+    # ------------------------------------------------------------------ round 2 depth: masks-fancy
+    out(C("""
+        import numpy as np
+        a = np.zeros(3)
+        a[[0, 0, 0]] = [1, 2, 3]
+        print(a)
+        """),
+        ["[3. 0. 0.]", "[6. 0. 0.]", "[1. 0. 0.]", "ValueError"], 0,
+        "Three writes to the same slot: which one survives?",
+        "Fancy assignment with repeated indices performs the writes in order, so the last value wins (3). It does "
+        "NOT add them up (that is np.add.at). Don't rely on 'last wins' in production code: it's the observed "
+        "behaviour, and the docs only promise one of the values ends up there.",
+        topic="masks-fancy", level=3),
+    ask("What is `a` after assigning through np.ix_?", C("""
+        import numpy as np
+        a = np.arange(9).reshape(3, 3)
+        a[np.ix_([0, 2], [1, 2])] = 0
+        print(a)
+        """),
+        ["[[0 0 0]\n [3 4 5]\n [6 0 0]]", "[[0 0 2]\n [3 4 5]\n [6 7 0]]",
+         "[[0 1 2]\n [3 4 5]\n [6 7 8]]", "[[0 0 0]\n [3 4 5]\n [0 0 0]]"], 0,
+        "np.ix_ turns two lists into an open mesh: every row with every column.",
+        "np.ix_([0, 2], [1, 2]) addresses the 2x2 block rows {0, 2} x columns {1, 2}, and the assignment writes "
+        "through to a. Without ix_, a[[0, 2], [1, 2]] = 0 would only zero the two pairs (0, 1) and (2, 2).",
+        diagram=C("""
+                  col1 col2
+            row0   x    x      np.ix_: every row x every col
+            row2   x    x      pairs : only (0,1) and (2,2)
+            """),
+        topic="masks-fancy", level=3),
+    out(C("""
+        import numpy as np
+        a = np.arange(4)
+        print(a[np.array([True, False])])
+        """),
+        ["IndexError", "[0]", "[0 2]", "[0 1 2 3]"], 0,
+        "Does NumPy repeat or pad a short mask?",
+        "A boolean index must match the axis length exactly; a length-2 mask on 4 elements raises IndexError. "
+        "In ML code this catches mask/feature misalignment early, e.g. a mask built on the train rows applied to "
+        "the full dataset.",
+        topic="masks-fancy", level=3),
+    ask("What do np.nonzero and np.argwhere return for a 2D array?", C("""
+        import numpy as np
+        a = np.array([[0, 5], [7, 0]])
+        print(np.nonzero(a), np.argwhere(a).shape)
+        """),
+        ["(array([0, 1]), array([1, 0])) (2, 2)", "[[0 1] [1 0]] (2,)",
+         "(array([1, 2]),) (2, 2)", "(array([0, 1]), array([1, 0])) (4, 2)"], 0,
+        "One groups by axis, the other by element.",
+        "nonzero returns one index array per axis (rows, cols), ready to use as a[np.nonzero(a)]. argwhere returns "
+        "one row per hit, shape (k, ndim), which is nicer to loop over or print as coordinates.",
+        topic="masks-fancy", level=3),
+    ask("What does the weighted bincount return?", C("""
+        import numpy as np
+        idx = np.array([0, 2, 0])
+        w = np.array([1.0, 2.0, 3.0])
+        print(np.bincount(idx, weights=w, minlength=4))
+        """),
+        ["[4. 0. 2. 0.]", "[1. 0. 2. 3.]", "[3. 0. 2. 0.]", "[4. 2.]"], 0,
+        "Each weight is added into the bin named by its index.",
+        "bincount sums weights per index: bin 0 gets 1 + 3, bin 2 gets 2, minlength pads to 4 bins. For 1D "
+        "non-negative int keys this is a fast alternative to np.add.at (scatter-add), e.g. summing loss per class "
+        "or counting tokens per id. a[idx] += w would give bin 0 only 3, because repeated indices are buffered.",
+        diagram=C("""
+            idx : 0    2    0
+            w   : 1.0  2.0  3.0
+            bin 0 <- 1.0 + 3.0 = 4.0
+            bin 2 <- 2.0
+            bins 1, 3 stay 0 (minlength=4)
+            """),
+        topic="masks-fancy", level=4),
+    mcq("In a hand-written embedding layer, `grad_E[token_ids] += grad_out` is used to accumulate gradients for a batch "
+        "where some token ids repeat. What goes wrong?",
+        ["Repeated ids get only one of their gradient rows; use np.add.at(grad_E, token_ids, grad_out)",
+         "Nothing: += with fancy indexing adds every row",
+         "It raises IndexError on repeated ids",
+         "It adds every row but in a random order, so results are not reproducible"], 0,
+        "Fancy-index += is read all, add, write all.",
+        "a[idx] += v is a[idx] = a[idx] + v: the reads happen first, then the writes, so duplicates overwrite each "
+        "other and frequent tokens get too little gradient. No error is raised, so the model just trains worse. "
+        "np.add.at is unbuffered and adds every occurrence, which is what frameworks do for embedding backward.",
+        topic="masks-fancy", level=4),
+
+    # ------------------------------------------------------------------ round 2 depth: dtypes
+    out(C("""
+        import numpy as np
+        img = np.array([250, 10], dtype=np.uint8)
+        print(img + 10, img.astype(np.int16) + 10)
+        """),
+        ["[ 4 20] [260  20]", "[260  20] [260  20]", "[255  20] [260  20]", "OverflowError"], 0,
+        "uint8 holds 0-255 and Python's 10 adopts the array's dtype.",
+        "uint8 arithmetic wraps mod 256: 250 + 10 = 260 -> 4. Brightening an image this way turns white pixels "
+        "black. Cast to a wider type first (or use np.clip on a wider copy) and convert back with clipping.",
+        diagram=C("""
+            uint8 wheel: ... 253 254 255 | 0 1 2 3 4 ...
+            250 + 10 ->  goes past 255   -> wraps to 4
+            """),
+        topic="dtypes", level=3),
+    ask("Two uint8 grayscale frames are subtracted to find motion. What does the difference show?", C("""
+        import numpy as np
+        a = np.array([10, 200], dtype=np.uint8)
+        b = np.array([20, 190], dtype=np.uint8)
+        print(a - b, np.abs(a.astype(np.int16) - b))
+        """),
+        ["[246  10] [10 10]", "[-10  10] [10 10]", "[0 10] [10 10]", "[246  10] [246  10]"], 0,
+        "There is no -10 in uint8.",
+        "10 - 20 wraps to 246, so a small change looks like a huge one. np.abs(a - b) can't fix it: the wrap already "
+        "happened. Upcast first (int16 holds -255..255) and then take the absolute value. Same trap as unsigned "
+        "subtraction in C.",
+        analogy="Like a car odometer rolling back past 000000 to 999990: the reading is huge, not negative.",
+        topic="dtypes", level=3),
+    ask("How does float16 store 2049 and 2051?", C("""
+        import numpy as np
+        print(np.float16(2049), np.float16(2051))
+        """),
+        ["2048.0 2052.0", "2049.0 2051.0", "2048.0 2050.0", "2050.0 2052.0"], 0,
+        "float16 has 11 significant bits; above 2048 the gap between floats is 2.",
+        "float16 stores integers exactly only up to 2048. Between 2048 and 4096 the spacing is 2, so 2049 and 2051 "
+        "are both halfway cases and round to the even mantissa: 2048 and 2052. That's why fp16 counters and "
+        "token-id arrays are a bug, and why mixed-precision training keeps master weights in float32.",
+        topic="dtypes", level=3),
+    out(C("""
+        import numpy as np
+        print(np.float16(65519), np.float16(65520))
+        """),
+        ["65500.0 inf", "65519.0 65520.0", "65500.0 65500.0", "inf inf"], 0,
+        "float16's largest finite value is 65504.",
+        "65519 still rounds down to 65504 (printed as 65500.0 with float16's short repr); 65520 is the halfway point "
+        "to the next would-be value and rounds up to inf. One large activation or squared loss in fp16 is enough "
+        "to make inf and then NaN, which is why fp16 training needs loss scaling and bf16 is preferred.",
+        diagram=C("""
+            ... 65472   65504 | (65536 would be next)
+                              ^ halfway = 65520
+            65519 -> 65504      65520 -> inf
+            """),
+        topic="dtypes", level=4),
+    out(C("""
+        import numpy as np
+        u = np.array([200, 100], dtype=np.uint8)
+        print((u[0] + u[1]) / 2, u.mean())
+        """),
+        ["22.0 150.0", "150.0 150.0", "22.0 22.0", "OverflowError"], 0,
+        "The two uint8 scalars are added before the division happens.",
+        "u[0] + u[1] is uint8 + uint8 = 300 mod 256 = 44 (a RuntimeWarning, silenced here), then 44 / 2 = 22.0. "
+        "mean() accumulates in float64, so it gives 150.0. Hand-written averages of image pixels are a classic "
+        "source of dark blotches in augmented images.",
+        topic="dtypes", level=4),
+    out(C("""
+        import numpy as np
+        try:
+            print(np.array([1], dtype=np.uint8) + -1)
+        except Exception as e:
+            print(type(e).__name__)
+        print(np.array([1.0], dtype=np.float32) * 1e300)
+        """),
+        ["OverflowError\n[inf]", "[0]\n[1.e+300]", "[0]\n[inf]", "OverflowError\n[1.e+300]"], 0,
+        "NEP 50: a Python scalar takes the array's dtype, if it fits.",
+        "Under NumPy 2's weak-scalar rules, -1 must be converted to uint8 and can't be, so you get OverflowError "
+        "(NumPy 1 silently upcast to int16). 1e300 is a valid float, so it becomes float32 inf and the result is "
+        "float32 inf, not a float64 1e300. Code written for NumPy 1 can break or change dtype on upgrade.",
+        analogy="Like TypeScript literal types widening to the declared variable type: the literal adapts to the array, not the other way round.",
+        topic="dtypes", level=4),
+
+    # ------------------------------------------------------------------ round 2 depth: special-values
+    ask("How many elements does each mask count?", C("""
+        import numpy as np
+        a = np.array([np.nan, 1.0, -1.0])
+        print((a > 0).sum(), (~(a <= 0)).sum())
+        """),
+        ["1 2", "1 1", "2 2", "nan nan"], 0,
+        "Every comparison with NaN is False, including <=.",
+        "NaN > 0 is False and NaN <= 0 is also False, so negating the second mask flips NaN to True. "
+        "'Not non-positive' is not the same as 'positive' once NaNs exist. In a data filter this silently keeps "
+        "or drops missing rows depending on how the condition was phrased; handle np.isnan explicitly.",
+        diagram=C("""
+            value     a > 0    a <= 0   ~(a <= 0)
+            nan       False    False    True
+            1.0       True     False    True
+            -1.0      False    True     False
+            """),
+        topic="special-values", level=4),
+    out(C("""
+        import numpy as np
+        try:
+            print(np.nanargmax(np.array([np.nan, np.nan])))
+        except ValueError as e:
+            print("ValueError")
+        print(np.nanargmax(np.array([np.nan, 2.0, 5.0])))
+        """),
+        ["ValueError\n2", "0\n2", "nan\n2", "-1\n2"], 0,
+        "There is no valid index to return if every value is missing.",
+        "nanargmax skips NaNs, so [nan, 2, 5] gives 2. With nothing but NaNs there is no answer, and it raises "
+        "ValueError instead of returning a fake index. A predict step that hits an all-NaN row (e.g. a broken feature "
+        "pipeline) fails loudly here, which is better than silently picking class 0.",
+        topic="special-values", level=3),
+    ask("What does np.nan_to_num replace NaN and infinities with by default?", C("""
+        import numpy as np
+        r = np.nan_to_num(np.array([np.nan, np.inf, -np.inf, 1.0]))
+        print(r[0], r[1] == np.finfo(np.float64).max, r[3])
+        """),
+        ["NaN -> 0.0, inf -> the largest finite float, -inf -> the most negative float",
+         "Everything non-finite becomes 0.0",
+         "NaN -> 0.0, infinities are left unchanged",
+         "NaN -> the column mean, infinities -> 0.0"], 0,
+        "Infinities are clamped, not zeroed.",
+        "nan_to_num maps NaN to 0.0 and +/-inf to +/-1.8e308 (pass nan=, posinf=, neginf= to choose). Those huge "
+        "finite values can still blow up a later sum, so in a feature pipeline it's often better to impute on "
+        "purpose than to rely on the defaults.",
+        topic="special-values", level=3),
+    ask("What do the field view's strides, the record size and the updated age come out as?", C("""
+        import numpy as np
+        dt = np.dtype([("name", "U10"), ("age", "i4")])
+        p = np.array([("Ann", 30), ("Bob", 25)], dtype=dt)
+        ages = p["age"]
+        ages += 1
+        print(ages.strides, p.itemsize, p[0]["age"])
+        """),
+        ["(44,) 44 31", "(4,) 44 31", "(44,) 14 30", "(4,) 14 30"], 0,
+        "A field is a view that steps over whole records.",
+        "U10 takes 40 bytes (4 per character) plus 4 for the int32: 44-byte records. p['age'] is a strided view "
+        "with stride 44, so += 1 updates p itself. This 'array of structs' layout is why columnar tools (pandas, "
+        "Arrow) store each field as its own contiguous array instead.",
+        topic="special-values", level=4),
+
+    # ------------------------------------------------------------------ round 2 depth: creating
+    out(C("""
+        import numpy as np
+        print(np.linspace(0, 1, 5, dtype=int))
+        """),
+        ["[0 0 0 0 1]", "[0 1 2 3 4]", "[0 0 1 1 1]", "[0. 0.25 0.5 0.75 1.]"], 0,
+        "The floats are computed first, then cast.",
+        "linspace computes 0, 0.25, 0.5, 0.75, 1.0 and casting to int truncates toward zero: four zeros and a one. "
+        "If you wanted evenly spaced integer indices (e.g. frames to sample from a video), round first: "
+        "np.linspace(0, n - 1, k).round().astype(int).",
+        topic="creating", level=4),
+    ask("What do these two grids look like?", C("""
+        import numpy as np
+        X, Y = np.meshgrid(np.arange(3), np.arange(2))
+        Xi, Yi = np.meshgrid(np.arange(3), np.arange(2), indexing="ij")
+        print(X.shape, Xi.shape)
+        """),
+        ["(2, 3) (3, 2)", "(3, 2) (3, 2)", "(2, 3) (2, 3)", "(3, 2) (2, 3)"], 0,
+        "The default indexing is 'xy', plotting style: x runs along columns.",
+        "With the default indexing='xy' the first input (length 3) runs along columns, giving shape (len(y), len(x)) "
+        "= (2, 3), which matches images and matplotlib. indexing='ij' gives matrix-style (3, 2). Mixing the two "
+        "is a common transposed-heatmap bug when evaluating a model on a grid of points.",
+        topic="creating", level=3),
+    out(C("""
+        import numpy as np
+        rng = np.random.default_rng(0)
+        print(rng.random(3, dtype=np.float32).dtype, rng.integers(0, 10, size=(2, 3)).dtype)
+        """),
+        ["float32 int64", "float64 int64", "float32 int32", "float64 float64"], 0,
+        "Generator methods take a dtype argument; integers defaults to int64.",
+        "rng.random(..., dtype=np.float32) generates float32 directly (no float64 temporary to cast), useful for big "
+        "weight initialisations. integers defaults to int64. The legacy np.random.rand has no dtype argument at all.",
+        topic="creating", level=3),
+
+    # ------------------------------------------------------------------ round 2 depth: attributes / indexing
+    ask("What dtype and itemsize does the string array have?", C("""
+        import numpy as np
+        a = np.array(["ab", "cdefg"])
+        print(a.dtype, a.itemsize)
+        """),
+        ["<U5 20", "<U5 5", "<U2 8", "object 8"], 0,
+        "Unicode arrays are fixed width: every slot is as wide as the longest string.",
+        "dtype <U5 means up to 5 characters, each stored as 4 bytes (UTF-32), so 20 bytes per element even for 'ab'. "
+        "A million short labels padded to one long one can waste a lot of memory; map labels to int ids instead.",
+        topic="attributes", level=3),
+    ask("What shapes do these None (np.newaxis) insertions give for `a` of shape (4, 5)?", C("""
+        import numpy as np
+        a = np.zeros((4, 5))
+        print(a[:, None, :].shape, a[..., None].shape, a[None].shape)
+        """),
+        ["(4, 1, 5) (4, 5, 1) (1, 4, 5)", "(4, 5, 1) (4, 5, 1) (1, 4, 5)",
+         "(1, 4, 5) (4, 5, 1) (4, 1, 5)", "(4, 1, 5) (1, 4, 5) (4, 5, 1)"], 0,
+        "None goes exactly where you write it; ... stands for all the other axes.",
+        "Each None inserts a length-1 axis at its position: middle, end, front. These are the shapes you build "
+        "on purpose for broadcasting, e.g. x[:, None, :] - c[None, :, :] for distances from every point to every centroid.",
+        topic="indexing", level=3),
+
+    # ------------------------------------------------------------------ ml-arrays
+    mcq("A dataset of 1,000 samples with 20 features each is stored as one NumPy array. What shape is it, by convention?",
+        ["(1000, 20): one row per sample, one column per feature",
+         "(20, 1000): one row per feature",
+         "(20000,): all numbers in one line",
+         "(1000,): one number per sample"], 0,
+        "Think of a spreadsheet: what is a row?",
+        "ML libraries (scikit-learn, PyTorch) expect X with shape (n_samples, n_features): rows are examples, "
+        "columns are features. The first axis is the 'batch' axis that you slice to make mini-batches.",
+        analogy="Like a database table: each row is one record (sample), each column one field (feature).",
+        topic="ml-arrays", level=1),
+    out(C("""
+        import numpy as np
+        img = np.zeros((28, 28, 3))
+        print(img.shape[0], img.shape[2])
+        """),
+        ["28 3", "3 28", "28 28", "784 3"], 0,
+        "A colour image is height x width x colour channels.",
+        "A colour image is usually a 3D array (height, width, channels). Here 28 rows of pixels, and 3 channels "
+        "(red, green, blue).",
+        topic="ml-arrays", level=1),
+    tf("In an image array of shape (height, width, 3), `img[10, 20]` is the pixel in row 10, column 20, so the first index is the y coordinate.",
+       True,
+       "Rows go down the image.",
+       "Arrays index (row, col), so the first index is the vertical position (y) and the second the horizontal (x). "
+       "Libraries that take (x, y) points (OpenCV drawing, matplotlib scatter) use the opposite order, a frequent "
+       "source of swapped coordinates.",
+       topic="ml-arrays", level=2),
+    ask("What batch sizes does the slicing loop produce?", C("""
+        import numpy as np
+        X = np.arange(10)
+        print([len(X[i:i + 4]) for i in range(0, len(X), 4)])
+        """),
+        ["[4, 4, 2]", "[4, 4, 4]", "[4, 4]", "[3, 3, 4]"], 0,
+        "Slicing past the end just stops at the end.",
+        "Batches of 4 from 10 samples: 4, 4 and a last partial batch of 2. Slices never raise when they run off the "
+        "end. Training code must handle the short last batch (or drop it, like PyTorch's drop_last=True).",
+        topic="ml-arrays", level=2),
+    out(C("""
+        import numpy as np
+        y = np.array([2, 0])
+        print(np.eye(3, dtype=int)[y])
+        print(np.eye(3)[y].argmax(axis=1))
+        """),
+        ["[[0 0 1]\n [1 0 0]]\n[2 0]", "[[0 1 0]\n [1 0 0]]\n[1 0]",
+         "[[0 0 1]\n [1 0 0]]\n[0 2]", "[[1 0 0]\n [0 0 1]]\n[2 0]"], 0,
+        "Row k of the identity matrix is the one-hot vector for class k.",
+        "Fancy-indexing rows of np.eye turns labels into one-hot rows; argmax along axis 1 turns them back. "
+        "The index list makes a copy, so the identity matrix itself is untouched.",
+        topic="ml-arrays", level=2),
+    mcq("A batch of 64 RGB images at 224 x 224 is stored as float32. Roughly how much memory does the input batch take?",
+        ["About 37 MB", "About 9 MB", "About 74 MB", "About 3.7 GB"], 0,
+        "64 x 3 x 224 x 224 x bytes-per-float32.",
+        "64 * 3 * 224 * 224 = 9.6 million values; x 4 bytes = 38.5 million bytes, about 37 MiB. 9 MB is the uint8 "
+        "size, 74 MB the float64 size. Keeping images as uint8 until the GPU step is why loaders are 4x lighter.",
+        topic="ml-arrays", level=3),
+    ask("A loader gives images as NHWC `(8, 32, 32, 3)` but the model wants NCHW. What does the conversion give?", C("""
+        import numpy as np
+        x = np.zeros((8, 32, 32, 3)).transpose(0, 3, 1, 2)
+        print(x.shape, x.flags["C_CONTIGUOUS"])
+        """),
+        ["(8, 3, 32, 32) False", "(8, 3, 32, 32) True", "(8, 32, 3, 32) False", "(3, 8, 32, 32) False"], 0,
+        "transpose moves axes by rewriting strides; does it move any data?",
+        "transpose(0, 3, 1, 2) puts channels second: (8, 3, 32, 32). It's a view, so it isn't C-contiguous. "
+        "reshape(8, 3, 32, 32) would give the right shape but scramble pixels across channels. Call "
+        "np.ascontiguousarray before handing it to code that needs a packed buffer.",
+        diagram=C("""
+            NHWC (8, 32, 32, 3)
+                 0   1   2   3     axes
+            transpose(0, 3, 1, 2)
+            NCHW (8, 3, 32, 32)    same bytes, new strides
+            """),
+        topic="ml-arrays", level=3),
+    ask("What dtypes do these pixel normalisations produce for a uint8 image?", C("""
+        import numpy as np
+        img = np.zeros((4, 5, 3), dtype=np.uint8)
+        print((img / 255).dtype, (img / np.float32(255)).dtype, (img.astype(np.float32) / 255).dtype)
+        """),
+        ["float64 float32 float32", "float32 float32 float32", "uint8 float32 float32", "float64 float64 float32"], 0,
+        "True division always makes floats. Which float does a Python scalar pick?",
+        "img / 255 gives float64 (uint8 has to become a float, and the default is float64), doubling memory versus "
+        "float32. Dividing by a NumPy float32 scalar, or casting first, keeps float32, which is what models train in. "
+        "A float64 batch handed to a float32 PyTorch model raises a dtype mismatch error.",
+        topic="ml-arrays", level=3),
+    ask("What padding mask does the broadcast comparison build?", C("""
+        import numpy as np
+        lengths = np.array([3, 1, 2])
+        mask = np.arange(3) < lengths[:, None]
+        print(mask.astype(int))
+        """),
+        ["[[1 1 1]\n [1 0 0]\n [1 1 0]]", "[[1 1 1]\n [1 1 1]\n [1 1 1]]",
+         "[[1 0 0]\n [1 1 1]\n [1 1 0]]", "[1 1 0]"], 0,
+        "Compare every position (columns) with every sequence length (rows).",
+        "(3,) against (3, 1) broadcasts to a (3, 3) table: position j < length i. This is the padding mask for a batch "
+        "of variable-length sequences: 1 marks real tokens, 0 marks padding that attention and the loss must ignore.",
+        diagram=C("""
+                       pos 0  1  2
+            len 3  ->      1  1  1
+            len 1  ->      1  0  0
+            len 2  ->      1  1  0
+            """),
+        topic="ml-arrays", level=3),
+    out(C("""
+        import numpy as np
+        g = np.zeros((4, 5))
+        print(np.repeat(g[..., None], 3, axis=-1).shape, np.broadcast_to(g[..., None], (4, 5, 3)).strides)
+        """),
+        ["(4, 5, 3) (40, 8, 0)", "(4, 5, 3) (120, 24, 8)", "(4, 5, 1) (40, 8, 0)", "(12, 5) (40, 8, 0)"], 0,
+        "One of these copies the channel three times; the other just pretends to.",
+        "Both give a (4, 5, 3) 'RGB' version of a grayscale image. np.repeat allocates 3x the memory. broadcast_to "
+        "uses stride 0 on the channel axis, so all three channels read the same bytes; it is read-only, which is "
+        "fine for feeding a model and wrong if you later want to edit one channel.",
+        topic="ml-arrays", level=3),
+    out(C("""
+        import numpy as np
+        from numpy.lib.stride_tricks import sliding_window_view
+        s = np.arange(6)
+        X = sliding_window_view(s[:-1], 3)
+        y = s[3:]
+        print(X.shape, y.shape, X[-1], y[-1])
+        """),
+        ["(3, 3) (3,) [2 3 4] 5", "(4, 3) (3,) [3 4 5] 5", "(3, 3) (3,) [3 4 5] 5", "(3, 3) (4,) [2 3 4] 5"], 0,
+        "Each window of 3 past values should predict the value right after it.",
+        "Dropping the last value leaves 5 points, so 3 windows; the targets are s[3:], the value after each window. "
+        "This is how you turn a time series into a supervised (X, y) dataset with zero copying. Off-by-one here "
+        "leaks the target into the input window, and the model looks brilliant offline.",
+        topic="ml-arrays", level=3),
+    out(C("""
+        import numpy as np
+        seqs = [[1, 2], [3]]
+        try:
+            print(np.array(seqs))
+        except ValueError:
+            print("ValueError")
+        """),
+        ["ValueError", "[[1 2]\n [3 0]]", "[list([1, 2]) list([3])]", "[[1 2] [3]]"], 0,
+        "Arrays must be rectangular.",
+        "NumPy 2 refuses ragged nested lists (an inhomogeneous shape) instead of quietly making an object array "
+        "as old versions did. Variable-length token sequences must be padded to a common length (plus a mask) "
+        "before they can become one batch array.",
+        analogy="Like a SQL table: every row needs the same columns, so short rows get NULL (padding) values.",
+        topic="ml-arrays", level=3),
+    out(C("""
+        import numpy as np
+        x = np.arange(6).reshape(3, 2)   # (time=3, batch=2)
+        print(x.reshape(2, 3).tolist())
+        print(x.T.tolist())
+        """),
+        ["[[0, 1, 2], [3, 4, 5]]\n[[0, 2, 4], [1, 3, 5]]", "[[0, 2, 4], [1, 3, 5]]\n[[0, 2, 4], [1, 3, 5]]",
+         "[[0, 1, 2], [3, 4, 5]]\n[[0, 1, 2], [3, 4, 5]]", "[[0, 2, 4], [1, 3, 5]]\n[[0, 1, 2], [3, 4, 5]]"], 0,
+        "Column 0 is sequence 0. Which result keeps its values together?",
+        "Sequence 0 is 0, 2, 4. Only the transpose produces [0, 2, 4] as a row; reshape(2, 3) re-reads memory in order "
+        "and mixes the two sequences. Shapes match so nothing errors: the RNN just trains on scrambled sequences. "
+        "Rule: reshape regroups, transpose reorders axes.",
+        diagram=C("""
+            x (time, batch)     reshape(2,3)      x.T (batch, time)
+            t0: 0 1             [0 1 2]           [0 2 4]  seq 0
+            t1: 2 3             [3 4 5]           [1 3 5]  seq 1
+            t2: 4 5             mixed!            correct
+            """),
+        topic="ml-arrays", level=4),
+    out(C("""
+        import numpy as np
+        from numpy.lib.stride_tricks import sliding_window_view
+        w = sliding_window_view(np.arange(5.0), 3)
+        try:
+            w -= w.mean(axis=1, keepdims=True)
+        except ValueError:
+            print("ValueError")
+        """),
+        ["ValueError", "Nothing: every window is centred in place", "[[-1. 0. 1.]]", "TypeError"], 0,
+        "Overlapping windows share elements. What would writing to one do to its neighbours?",
+        "sliding_window_view returns a read-only view: windows overlap, so an in-place write to one window would "
+        "corrupt the others. Writing raises ValueError (assignment destination is read-only). Compute "
+        "w - w.mean(...) into a new array instead.",
+        topic="ml-arrays", level=4),
+    ask("What is `X` after centring the training slice in place?", C("""
+        import numpy as np
+        X = np.arange(6.0)
+        X_train = X[:4]
+        X_train -= X_train.mean()
+        print(X)
+        """),
+        ["[-1.5 -0.5  0.5  1.5  4.   5. ]", "[0. 1. 2. 3. 4. 5.]", "[-1.5 -0.5  0.5  1.5]",
+         "[-2.5 -1.5 -0.5  0.5  1.5  2.5]"], 0,
+        "Is X_train its own array?",
+        "X[:4] is a view, so the in-place -= centres the first four rows of X itself. Any later code that re-splits "
+        "X, or saves it, gets half-normalised data. Use X_train = X[:4].copy(), or the out-of-place "
+        "X_train = X_train - mean.",
+        analogy="Like passing a mutable object by reference to a 'pure' helper that mutates it: the caller's data changes too.",
+        topic="ml-arrays", level=4),
+    out(C("""
+        import numpy as np
+        probs = np.array([[0.2, 0.5, 0.3]])     # a batch of ONE prediction
+        p = probs.squeeze()
+        try:
+            print(p.argmax(axis=1))
+        except Exception as e:
+            print(type(e).__name__)
+        """),
+        ["AxisError", "[1]", "1", "IndexError"], 0,
+        "What did squeeze remove: just the size-1 axis you meant, or every one?",
+        "squeeze() drops ALL length-1 axes, so a batch of one loses its batch axis and axis=1 no longer exists "
+        "(AxisError, a subclass of ValueError and IndexError). Code that works for batch size 32 breaks at inference "
+        "with batch size 1. Use squeeze(axis=0) or index explicitly.",
+        analogy="Like an API that returns a bare object instead of a one-element list: the client's list handling breaks only when there's exactly one result.",
+        topic="ml-arrays", level=4),
+    fill("Which function checks EXACTLY whether two arrays have any bytes in common: `np.____(a, b)`?", "shares_memory",
+         "Its cheaper cousin only compares memory bounds and is called may_...",
+         "np.shares_memory solves the overlap exactly; np.may_share_memory only checks address ranges and can say True "
+         "for interleaved views like a[::2] and a[1::2]. Use it in tests that assert a function returns a copy.",
+         topic="views-copies", level=3),
+    fill("Pad a sequence with two zeros on the right so it reaches the batch length: `np.____(seq, (0, 2))`", "pad",
+         "A three-letter word for adding filler around data.",
+         "np.pad(seq, (0, 2)) adds 0 values before (0) and after (2); the default mode is constant zeros. For a 2D "
+         "batch, pass one (before, after) pair per axis, e.g. ((0, 0), (0, 2)) to pad only the time axis.",
+         topic="ml-arrays", level=3),
+    tf("`np.ascontiguousarray(a)` returns `a` itself, without copying, when `a` is already C-contiguous.", True,
+       "It only does work when it has to.",
+       "If the layout and dtype already match, you get the same object back (ascontiguousarray(a) is a is True). "
+       "So it's cheap to call defensively before handing an array to a C extension, ONNX runtime or torch.from_numpy.",
+       topic="memory-layout", level=3),
+    tf("`np.random.default_rng(42)` and `np.random.default_rng(np.random.SeedSequence(42))` produce the same random stream.",
+       True,
+       "What does default_rng do with a plain int seed?",
+       "default_rng wraps an int seed in a SeedSequence and feeds it to PCG64, so both calls give identical numbers. "
+       "SeedSequence is the piece that hashes the seed into a well-mixed state and can spawn independent child "
+       "seeds, e.g. one per data-loader worker, so passing a SeedSequence around is the scalable version of 'seed 42'.",
+       topic="creating", level=4),
+    tf("`x.reshape(len(x), -1)` and `x.reshape(-1, x.shape[1] * x.shape[2])` give the same result for an image batch `x` of shape (N, H, W).",
+       True,
+       "Both keep N rows of H*W numbers each.",
+       "Both produce (N, H*W) with each image flattened into its own row, because C-order reshape keeps the first "
+       "axis intact. The bug is reshape(H*W, -1) or reshape(-1, N), which slice across images. Prefer the "
+       "len(x) form: it doesn't hard-code the image size.",
+       topic="reshaping", level=3),
+    tf("Transposing a (10000, 10000) array with `a.T` takes time proportional to the number of elements.", False,
+       "What actually changes: the bytes or the metadata?",
+       "a.T only swaps the shape and strides tuples: O(1), no data moved. The cost shows up later if you need a "
+       "contiguous copy (np.ascontiguousarray, reshape of the transpose) or if you iterate along the now-strided axis.",
+       diagram=C("""
+           a   : shape (10000, 10000) strides (80000, 8)
+           a.T : shape (10000, 10000) strides (8, 80000)
+                 same buffer, two numbers swapped
+           """),
+       topic="memory-layout", level=3),
+    tf("`torch.from_numpy(a[::-1])` works, because PyTorch tensors share NumPy's stride model.", False,
+       "Look at the sign of the stride.",
+       "a[::-1] has a negative stride, and PyTorch tensors don't support negative strides, so from_numpy raises "
+       "ValueError and suggests a copy. Positive steps like a[::2] are fine (stride 2, still zero-copy). This bites "
+       "image code that flips with img[:, ::-1] (or OpenCV's BGR -> RGB via [..., ::-1]) right before the model.",
+       diagram=C("""
+           a        : strides (8,)     start at a[0]
+           a[::2]   : strides (16,)    ok for torch
+           a[::-1]  : strides (-8,)    start at a[-1]
+                      torch.from_numpy -> ValueError
+           """),
+       topic="memory-layout", level=4),
+    tf("`a[a > 0] += 1` increments every positive element exactly once, unlike `a[idx] += 1` with repeated indices.",
+       True,
+       "Can a boolean mask select the same element twice?",
+       "A boolean mask picks each position at most once, so the buffered read-add-write of fancy += is harmless "
+       "and every positive element goes up by 1. The 'only once' surprise needs repeated integer indices, where "
+       "np.add.at is the fix.",
+       code=C("""
+           import numpy as np
+           a = np.array([1, -2, 3])
+           a[a > 0] += 1
+           print(a)
+           """),
+       topic="masks-fancy", level=3),
+    tf("For an int8 array `a`, `a.astype(np.int64) + a.astype(np.int64)` cannot overflow for any values a can hold.", True,
+       "What is the largest possible sum of two int8 values?",
+       "int8 values are in [-128, 127], so sums are in [-256, 254], far inside int64. Widening BEFORE the arithmetic "
+       "is the general fix for uint8/int8 overflow; widening after (e.g. (a + a).astype(np.int64)) only preserves the "
+       "already-wrapped result.",
+       topic="dtypes", level=3),
+    fill("A float16's largest finite value is ____ (exact integer).", "65504",
+         "Just under 2**16.",
+         "np.finfo(np.float16).max is 65504. Anything rounding above it becomes inf, which is why fp16 training "
+         "uses loss scaling and why bf16 (float32's range) is popular.",
+         topic="dtypes", level=3),
+    fill("Which stride_tricks function gives a safe, read-only view of all length-k windows: `np.lib.stride_tricks.____(a, k)`?",
+         "sliding_window_view",
+         "It literally slides a window.",
+         "sliding_window_view(a, k) returns shape (len(a) - k + 1, k) as a stride trick: no copy, read-only. "
+         "Use it for rolling features and 1D convolutions instead of hand-written as_strided.",
+         topic="memory-layout", level=3),
+    fill("To turn a C-ordered (N, H, W, C) batch into (N, C, H, W) you call `x.____(0, 3, 1, 2)`.", "transpose",
+         "Not reshape: you're reordering axes, not regrouping elements.",
+         "x.transpose(0, 3, 1, 2) (or np.moveaxis(x, -1, 1)) moves the channel axis to position 1 as a view. "
+         "reshape would give the right shape and the wrong pixels.",
+         diagram=C("""
+             axes  : N  H  W  C      (0, 1, 2, 3)
+             order : 0  3  1  2  ->  N  C  H  W
+             """),
+         topic="ml-arrays", level=3),
+    fill("Which NumPy function turns a list of equal-shape (H, W) images into ONE (N, H, W) batch, adding a new first axis: `np.____(images)`?",
+         "stack",
+         "concatenate joins along an existing axis; this one creates one.",
+         "np.stack(images) adds axis 0 by default. np.concatenate(images) would join along rows and give (N*H, W), "
+         "losing the image boundaries.",
+         topic="ml-arrays", level=2),
 ]
