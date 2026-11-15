@@ -560,4 +560,569 @@ QUESTIONS = [
        "The underscore convention marks learned state.",
        "Constructor arguments (C, n_neighbors) are set in __init__; learned values get a trailing underscore after fit. check_is_fitted relies on this convention.",
        topic="sklearn-api", level=4),
+
+    # ================================================================== round 2
+    # ------------------------------------------------------------------ linear-regression
+    out("from sklearn.linear_model import LinearRegression\nX = [[1, 0], [0, 1], [1, 1], [2, 1]]\ny = [3, 4, 6, 8]          # y = 2*x1 + 3*x2 + 1\nm = LinearRegression().fit(X, y)\nprint(m.coef_.round(2), round(float(m.intercept_), 2))",
+        ["[2. 3.] 1.0", "[3. 2.] 1.0", "[2. 3.] 0.0", "[1. 2.] 3.0"], 0,
+        "One coefficient per column, in column order, plus one intercept.",
+        "coef_ has one weight per feature in the same order as the columns of X (2 for x1, 3 for x2); intercept_ is the prediction when every feature is 0. With two features the 'line' is a flat plane.",
+        topic="linear-regression", level=1),
+    out("from sklearn.preprocessing import PolynomialFeatures\nprint(PolynomialFeatures(degree=2).fit_transform([[2, 3]]))",
+        ["[[1. 2. 3. 4. 6. 9.]]", "[[2. 3. 4. 9.]]", "[[1. 2. 3. 4. 9.]]", "[[4. 6. 9.]]"], 0,
+        "Degree 2 means: a constant, each feature, each square AND each pairwise product.",
+        "For (a, b) = (2, 3) you get [1, a, b, a^2, a*b, b^2] = [1, 2, 3, 4, 6, 9]. The a*b interaction term is the one people forget. The column count explodes with degree and feature count, so pair it with regularisation.",
+        analogy="Like adding computed columns to a SQL view so a simple query can use them.",
+        topic="linear-regression", level=2),
+    mcq("You plot residuals (actual - predicted) against predicted price and see a funnel: small errors for cheap houses, huge errors for expensive ones. Which OLS assumption is violated?",
+        ["Constant error variance (homoscedasticity)", "Features must be normally distributed",
+         "No missing values", "The intercept must be zero"], 0,
+        "The spread of the errors changes with the prediction.",
+        "A funnel means heteroscedasticity. Predictions can still be fine, but standard errors and p-values are wrong. Common fix: model log(price), which turns multiplicative errors into roughly constant ones.",
+        diagram="""
+ residual
+   +  |                    .  .
+      |          .  .   .     .  .
+   0  |-..-.-.-.---.-------.---------
+      |          .   .    .   .
+   -  |                .     .    .
+      +------------------------------ predicted price
+        cheap: tight      expensive: wide
+""",
+        topic="linear-regression", level=3),
+    mcq("You fit a degree-15 polynomial regression to 20 points. Training R^2 is 0.999 but predictions swing wildly between and beyond the points. What is happening and what is the usual fix?",
+        ["Overfitting: high-degree terms chase noise, especially near the edges; lower the degree or add Ridge regularisation, chosen by CV",
+         "Underfitting: use degree 30", "A bug in PolynomialFeatures", "Linear regression can't use polynomial features"], 0,
+        "16 coefficients for 20 points.",
+        "With almost as many parameters as points, the curve threads every point and oscillates between them. Pick the degree by cross-validation, and scale the features because x^15 is enormous.",
+        analogy="Like a test suite that hard-codes each expected output: perfect on the known cases, useless on new ones.",
+        topic="linear-regression", level=3),
+    out("import numpy as np\nfrom sklearn.linear_model import Ridge, Lasso\nx = np.arange(10.0)\nX = np.c_[x, x]                 # the same column twice\ny = 2 * x\nprint(Ridge(alpha=0.1).fit(X, y).coef_.round(2))\nprint(Lasso(alpha=0.1).fit(X, y).coef_.round(2))",
+        ["[1. 1.]\n[1.99 0.  ]", "[2. 0.]\n[1. 1.]", "[1. 1.]\n[1. 1.]", "[2. 2.]\n[2. 0.]"], 0,
+        "Which penalty is cheaper: 1^2 + 1^2 or 2^2 + 0^2? And |1| + |1| or |2| + |0|?",
+        "Ridge's squared penalty is smallest when the credit is SPLIT (1 + 1 = 2 < 4), so duplicates share it evenly. Lasso's absolute penalty is the same either way, and coordinate descent hands it all to the first column. So Lasso's choice among correlated features is arbitrary: don't read 'dropped' as 'useless'.",
+        diagram="""
+ coef     L2 penalty    L1 penalty
+ [1, 1]   1 + 1 = 2     1 + 1 = 2
+ [2, 0]   4 + 0 = 4     2 + 0 = 2
+ Ridge prefers to split; Lasso doesn't care
+""",
+        topic="linear-regression", level=4),
+
+    # ------------------------------------------------------------------ logistic-regression
+    out("import numpy as np\nfrom sklearn.linear_model import LogisticRegression\nX = np.array([[1, 0], [2, 0], [0, 1], [0, 2]] * 3)\ny = [1, 1, 0, 0] * 3\nm = LogisticRegression().fit(X, y)\nprint(np.sign(m.coef_[0]).tolist())",
+        ["[1.0, -1.0]", "[-1.0, 1.0]", "[1.0, 1.0]", "[0.0, 0.0]"], 0,
+        "Feature 0 shows up in class 1 rows; feature 1 shows up in class 0 rows.",
+        "A positive coefficient pushes the log-odds (and so the probability) towards class 1; a negative one pushes towards class 0. The sign is the first thing to check when sanity-testing a model.",
+        topic="logistic-regression", level=2),
+    out("from sklearn.linear_model import LogisticRegression\nX = [[0], [1], [2], [3], [4], [5]]\ny = [0, 0, 0, 1, 1, 1]\nm = LogisticRegression().fit(X, y)\np = m.predict_proba([[1.5], [2.2]])[:, 1]\nprint(m.predict([[1.5], [2.2]]), (p >= 0.3).astype(int))",
+        ["[0 0] [0 1]", "[0 0] [0 0]", "[0 1] [0 1]", "[1 1] [0 1]"], 0,
+        "predict uses a fixed 0.5 cut-off on predict_proba.",
+        "Both points have P(class 1) below 0.5, so predict says 0 for both. x = 1.5 has P of about 0.25 and x = 2.2 about 0.42, which passes a 0.3 threshold. Lowering the threshold catches more positives (higher recall, lower precision); pick it from the business cost, not the default.",
+        diagram="""
+ P(class 1):  x=1.5 -> 0.25    x=2.2 -> 0.42
+ cut 0.5:          0                0
+ cut 0.3:          0                1
+""",
+        topic="logistic-regression", level=2),
+    out("from sklearn.linear_model import LogisticRegression\nX = [[0], [1], [5], [6], [10], [11]]\ny = ['dog', 'dog', 'cat', 'cat', 'ant', 'ant']\nm = LogisticRegression().fit(X, y)\nprint(m.classes_, m.predict_proba([[0]]).shape)",
+        ["['ant' 'cat' 'dog'] (1, 3)", "['dog' 'cat' 'ant'] (1, 3)", "['ant' 'cat' 'dog'] (1, 1)", "['dog' 'cat' 'ant'] (3,)"], 0,
+        "sklearn sorts the labels; it doesn't keep the order they first appeared in.",
+        "classes_ is sorted, and predict_proba's columns follow classes_. Here column 0 is 'ant', not 'dog'. Always index columns via list(m.classes_).index('dog') instead of assuming an order.",
+        diagram="""
+ predict_proba columns follow m.classes_
+   col 0    col 1    col 2
+   'ant'    'cat'    'dog'
+""",
+        analogy="Like reading a response by array position when the API sorts keys: look things up by name, not by position.",
+        topic="logistic-regression", level=2),
+    out("import numpy as np\nfrom sklearn.linear_model import LogisticRegression\nX = [[0], [1], [2], [3], [4], [5]]\ny = [0, 0, 0, 1, 1, 1]\nm = LogisticRegression().fit(X, y)\np = m.predict_proba(X)[:, 1]\nprint(np.allclose(m.decision_function(X), np.log(p / (1 - p))))",
+        ["True", "False", "ValueError", "AttributeError"], 0,
+        "decision_function returns w.x + b, before the sigmoid.",
+        "decision_function gives the raw score w.x + b, which IS the log-odds. Applying the sigmoid to it gives predict_proba. Ranking by either gives the same order, which is why ROC AUC can use either.",
+        diagram="""
+ x --> w.x + b --> sigmoid --> P(class 1)
+       (log-odds)              (probability)
+       decision_function()     predict_proba()[:, 1]
+""",
+        topic="logistic-regression", level=3),
+    out("from sklearn.linear_model import LogisticRegression\nX = [[0], [1], [2], [3], [4], [5]]\ny = [0, 0, 0, 1, 1, 1]\nm = LogisticRegression().fit(X, y)\nw, b = m.coef_[0][0], m.intercept_[0]\nprint(round(float(-b / w), 2))",
+        ["2.5", "0.5", "3.0", "0.0"], 0,
+        "The boundary is where w*x + b = 0.",
+        "P = 0.5 exactly where w*x + b = 0, i.e. x = -b / w. The data is symmetric around 2.5, so that's where the classes switch. In 2D the same equation gives a straight line.",
+        topic="logistic-regression", level=3),
+    mcq("A 3-class LogisticRegression is trained on 4 features in sklearn 1.6. What is the shape of coef_ and how are probabilities produced?",
+        ["(3, 4): one weight vector per class, combined with a softmax so the 3 probabilities sum to 1",
+         "(1, 4): one weight vector shared by all classes", "(4, 3) with a sigmoid per class that doesn't sum to 1", "(3,): one number per class"], 0,
+        "Binary logistic regression has coef_ shape (1, n_features).",
+        "With the default lbfgs solver, multiclass uses the multinomial (softmax) formulation: one score per class, softmax turns scores into probabilities. This is the same softmax that sits at the top of every LLM, just over 3 classes instead of 50,000 tokens.",
+        topic="logistic-regression", level=3),
+    mcq("Interview: 'Why are logistic regression's probabilities usually more trustworthy than those of Naive Bayes or an SVM?'",
+        ["It directly minimises log loss, a proper scoring rule that rewards honest probabilities, so on well-specified data the outputs are close to calibrated",
+         "Because the sigmoid always outputs 0.5", "Because it has fewer features", "It isn't; logistic regression can't output probabilities"], 0,
+        "What does the training loss reward?",
+        "Log loss is minimised only by predicting the true probability, so LR is pushed towards calibration. Naive Bayes double-counts evidence and SVMs optimise a margin, so both need CalibratedClassifierCV if you need real probabilities. Strong regularisation or a mis-specified model can still miscalibrate LR, so check a reliability curve.",
+        topic="logistic-regression", level=4),
+
+    # ------------------------------------------------------------------ knn
+    out("from sklearn.neighbors import KNeighborsClassifier\nX = [[0], [1], [2], [8], [9]]\ny = [0, 0, 1, 1, 1]\nm = KNeighborsClassifier(n_neighbors=3).fit(X, y)\nprint(m.predict_proba([[1.2]]).round(2))",
+        ["[[0.67 0.33]]", "[[0.33 0.67]]", "[[1. 0.]]", "[[0.4 0.6]]"], 0,
+        "The 3 nearest points to 1.2 are 1, 2 and 0.",
+        "Their labels are 0, 1, 0, so P(class 0) = 2/3 and P(class 1) = 1/3. kNN 'probabilities' are just vote shares among the k neighbours, so with k = 3 they can only be 0, 1/3, 2/3 or 1.",
+        analogy="Like a poll of 3 people: the result can only be 0, 1/3, 2/3 or all of them.",
+        topic="knn", level=1),
+    out("from sklearn.neighbors import KNeighborsRegressor\nX = [[1], [2], [3], [10]]\ny = [10, 20, 30, 100]\nm = KNeighborsRegressor(n_neighbors=2).fit(X, y)\nprint(m.predict([[2.4], [50]]))",
+        ["[25. 65.]", "[24. 500.]", "[20. 100.]", "[25. 100.]"], 0,
+        "A kNN regressor averages the targets of the k nearest rows.",
+        "x = 2.4: neighbours 2 and 3 give (20 + 30) / 2 = 25. x = 50: neighbours 10 and 3 give (100 + 30) / 2 = 65. Like trees, kNN can never predict outside the range of targets it has seen, so it can't extrapolate a trend.",
+        diagram="""
+ x:  1    2  2.4  3          10 ....... 50
+ y: 10   20   ^  30         100          ^
+        avg(20,30)=25      avg(30,100)=65
+""",
+        topic="knn", level=2),
+    out("from sklearn.neighbors import KNeighborsClassifier\nX = [[0], [3], [3.2], [10]]\ny = [0, 1, 1, 0]\nfor w in ('uniform', 'distance'):\n    m = KNeighborsClassifier(n_neighbors=4, weights=w).fit(X, y)\n    print(w, m.predict([[2.9]]))",
+        ["uniform [0]\ndistance [1]", "uniform [1]\ndistance [1]", "uniform [0]\ndistance [0]", "uniform [1]\ndistance [0]"], 0,
+        "Uniform: a 2-2 tie. Distance: closer neighbours get louder votes.",
+        "With 4 equal votes it's 2 vs 2, and sklearn breaks the tie towards the first class in classes_ (0). With weights='distance', 3 and 3.2 are almost on top of 2.9, so their 1/distance votes win easily. Distance weighting also makes the choice of k less sensitive.",
+        diagram="""
+ 0 ........... 2.9 3 3.2 ........... 10
+[0]             ?  [1][1]            [0]
+ uniform: 2 vs 2 tie   distance: the 1s win
+""",
+        analogy="Like weighting opinions in an incident review by how close each engineer was to the failing service.",
+        topic="knn", level=3),
+
+    # ------------------------------------------------------------------ trees
+    out("import numpy as np\nfrom sklearn.tree import DecisionTreeClassifier\nrng = np.random.default_rng(0)\nX = np.c_[np.arange(20), rng.normal(size=20)]\ny = (X[:, 0] >= 10).astype(int)\nt = DecisionTreeClassifier(random_state=0).fit(X, y)\nprint(t.feature_importances_, t.get_depth())",
+        ["[1. 0.] 1", "[0.5 0.5] 1", "[1. 0.] 2", "[0. 1.] 1"], 0,
+        "The label is fully decided by one threshold on column 0.",
+        "One split on column 0 (x <= 9.5) makes both children pure, so the tree stops at depth 1 and column 0 gets all the importance. The random column is never used. Importances always sum to 1.",
+        topic="trees", level=2),
+    mcq("How does a DecisionTreeRegressor (predicting a number) choose splits, and what does a leaf output?",
+        ["Picks the split that most reduces squared error (variance) in the children; each leaf outputs the mean target of its rows",
+         "Uses Gini impurity; leaves output a class", "Fits a line in each leaf", "Splits at the median of each feature; leaves output the median"], 0,
+        "There are no classes to be 'pure' about.",
+        "For regression, impurity = variance (criterion='squared_error'). Each leaf predicts the average of its training targets, which is why the prediction is a staircase.",
+        topic="trees", level=2),
+    out("def gini(a, b):\n    n = a + b\n    return 1 - (a / n) ** 2 - (b / n) ** 2\n# parent: 10 rows (5 yes, 5 no) -> left (4 yes, 1 no), right (1 yes, 4 no)\nchild = 0.5 * gini(4, 1) + 0.5 * gini(1, 4)\nprint(round(gini(5, 5) - child, 2))",
+        ["0.18", "0.32", "0.5", "0.68"], 0,
+        "Parent Gini is 0.5; each child is 1 - 0.8^2 - 0.2^2.",
+        "Each child has Gini 1 - 0.64 - 0.04 = 0.32. Weighted by size (5/10 each) the children average 0.32, so the impurity decrease is 0.5 - 0.32 = 0.18. The tree computes this for every candidate threshold and keeps the biggest.",
+        diagram="""
+           [5 yes / 5 no]   gini 0.50
+             /         \\
+   [4 yes / 1 no]   [1 yes / 4 no]
+     gini 0.32        gini 0.32
+   decrease = 0.50 - (0.5*0.32 + 0.5*0.32) = 0.18
+""",
+        topic="trees", level=3),
+    mcq("The true boundary between two classes is the diagonal line x1 = x2. Why does a single decision tree need many splits to approximate it?",
+        ["Each split is axis-aligned (one feature vs a threshold), so a diagonal is approximated by a staircase of steps",
+         "Trees can only use one feature in total", "Trees need scaled features for diagonals", "Trees can model it in one split"], 0,
+        "A split looks like 'x1 <= 3.2', never 'x1 - x2 <= 0'.",
+        "Trees cut space into rectangles. A diagonal needs many small steps, which wastes depth and overfits. A linear model gets it in one line; or add the feature x1 - x2 and the tree needs one split.",
+        analogy="Like drawing a diagonal line using only horizontal and vertical Lego bricks.",
+        diagram="""
+ x2 |      ____
+    |   __|    B      true boundary: x1 = x2
+    |__|               tree boundary: staircase
+    |  A
+    +----------- x1
+""",
+        topic="trees", level=3),
+    mcq("You retrain a single decision tree after removing just 5 of 1,000 rows and the top split changes to a completely different feature. What does this show?",
+        ["Trees are high-variance: small data changes can flip early greedy choices, which cascade down the whole tree",
+         "There is a bug in sklearn", "The 5 rows were the only important ones", "The tree is underfitting"], 0,
+        "An early split decides everything below it.",
+        "Greedy top-down splitting is unstable when two features give similar gains. Averaging many trees on resampled data (random forest) is exactly the fix for this instability.",
+        analogy="Like a dependency resolver: bump one version and the whole lockfile can reshuffle.",
+        topic="trees", level=3),
+    mcq("On XOR data, every possible FIRST split gives zero impurity decrease, yet two levels of splits would classify perfectly. What does this reveal about tree learning?",
+        ["It is greedy: it scores one split at a time, so a stopping rule like min_impurity_decrease > 0 would stop at the root and miss the pattern",
+         "Trees can't learn XOR at all", "Gini is broken for XOR", "Trees look ahead two levels to avoid this"], 0,
+        "The tree never asks 'which pair of splits is best?'.",
+        "Finding the optimal tree is NP-hard, so CART picks the locally best split at each node. Interactions with no main effect fool greedy splitting. sklearn's default (keep splitting) still finds XOR, but aggressive early stopping can hide it. Ensembles and deeper search soften the problem.",
+        analogy="Like a greedy scheduler that always grabs the best next job and never considers the best pair of jobs.",
+        topic="trees", level=4),
+
+    # ------------------------------------------------------------------ ensembles
+    out("from sklearn.ensemble import RandomForestClassifier\nrf = RandomForestClassifier(n_estimators=7, max_depth=2, random_state=0).fit([[0], [1], [2], [3]], [0, 0, 1, 1])\nprint(len(rf.estimators_), type(rf.estimators_[0]).__name__)",
+        ["7 DecisionTreeClassifier", "1 RandomForestClassifier", "2 DecisionTreeClassifier", "7 RandomForestClassifier"], 0,
+        "n_estimators = number of trees.",
+        "A fitted forest keeps its individual trees in estimators_, each a normal DecisionTreeClassifier you can inspect or plot. The forest's prediction is the average of their predicted probabilities.",
+        topic="ensembles", level=1),
+    tf("Like a random forest, the trees inside a gradient boosting model can all be trained at the same time, in parallel.", False,
+       "Tree 2 is fitted to the errors left by tree 1.",
+       "Boosting is sequential: each tree needs the current predictions to know what's still wrong. Libraries parallelise the split search INSIDE each tree, but not across trees. Forests are embarrassingly parallel (n_jobs=-1).",
+       analogy="Forest = N independent CI jobs run at once; boosting = a chain of patch releases, each built on the previous one.",
+       topic="ensembles", level=2),
+    mcq("VotingClassifier with voting='soft' vs voting='hard': what is the difference?",
+        ["Soft averages the models' predicted probabilities; hard counts their predicted labels. Soft usually works better when the probabilities are reasonable",
+         "Soft trains the models with less data", "Hard voting needs probabilities", "They are the same"], 0,
+        "One counts votes, the other weighs confidence.",
+        "Hard: 2 models say A, 1 says B -> A. Soft: if the B model is 99% sure and the A models are 51% sure, the average can pick B. Ensembles help most when the members are good AND make different mistakes.",
+        analogy="Hard voting counts PR approvals; soft voting also weighs how sure each reviewer is.",
+        topic="ensembles", level=3),
+    mcq("Why does a random forest use deep, fully grown trees while gradient boosting typically uses shallow trees (depth 3-8)?",
+        ["Forests average many low-bias, high-variance trees to cut variance; boosting adds many weak, high-bias learners that each reduce bias a little",
+         "Shallow trees are always more accurate", "Boosting can't grow deep trees", "Deep trees train faster in boosting"], 0,
+        "Averaging fixes variance; sequential correction fixes bias.",
+        "Averaging can't remove bias, so forest trees must be individually flexible. Boosting already reduces bias step by step; deep trees would fit noise within a few rounds. Tuning reflex: forest -> more trees, boosting -> depth, learning_rate and early stopping.",
+        diagram="""
+ Forest:   deep  deep  deep  -> average
+           (low bias, high variance each)
+           = less variance
+ Boosting: stump -> +stump -> +stump -> sum
+           (high bias each) = less bias
+""",
+        topic="ensembles", level=4),
+    mcq("Why is it called GRADIENT boosting?",
+        ["Each new tree is fitted to the negative gradient of the loss w.r.t. the current predictions (for squared error, that's just the residuals)",
+         "It uses gradient descent on the tree thresholds", "It needs a neural network", "The learning rate is a gradient"], 0,
+        "For squared error, the gradient of (y - f)^2 / 2 w.r.t. f is -(y - f).",
+        "Boosting is gradient descent in 'function space': each tree is a step in the direction that lowers the loss most. Swap the loss (log loss, Huber, quantile) and the same recipe fits classification, robust or quantile regression.",
+        topic="ensembles", level=4),
+    tf("HistGradientBoostingClassifier turns early stopping on automatically (early_stopping='auto') when the training set has more than 10,000 samples.", True,
+       "Check the default of early_stopping.",
+       "With 'auto', it holds out validation_fraction (default 10%) and stops when the score hasn't improved for n_iter_no_change rounds, but only if n_samples > 10,000. On smaller data set early_stopping=True yourself, or max_iter is all you get.",
+       topic="ensembles", level=4),
+
+    # ------------------------------------------------------------------ svm
+    mcq("What does SVC.decision_function(x) return for a binary problem?",
+        ["A signed score: the sign gives the class, the size says how far the point is from the boundary (not a probability)",
+         "A probability between 0 and 1", "The index of the nearest support vector", "The margin width"], 0,
+        "Zero means 'exactly on the boundary'.",
+        "Positive = class 1 side, negative = class 0 side, bigger magnitude = further from the boundary. You can rank or threshold it (ROC AUC works), but it isn't calibrated.",
+        topic="svm", level=2),
+    out("from sklearn.svm import SVC\nX = [[0], [1], [2], [8], [9], [10]]\ny = [0, 0, 0, 1, 1, 1]\ns = SVC().fit(X, y)\nprint(s.predict([[3]]))\nprint(s.predict_proba([[3]]))",
+        ["[0]\nAttributeError", "[0]\n[[0.9 0.1]]", "AttributeError", "[1]\nAttributeError"], 0,
+        "SVC's default is probability=False.",
+        "predict works, but predict_proba isn't available unless you build SVC(probability=True), which fits an extra internal cross-validated calibration (slower, and can disagree slightly with predict). For scores, use decision_function.",
+        topic="svm", level=3),
+    out("import numpy as np\nfrom sklearn.svm import SVC\nrng = np.random.default_rng(0)\nX = rng.normal(size=(60, 2)); y = rng.integers(0, 2, 60)   # random labels\nfor g in (0.1, 100):\n    print(g, SVC(gamma=g).fit(X, y).score(X, y))",
+        ["0.1 0.5333333333333333\n100 1.0", "0.1 1.0\n100 0.5333333333333333", "0.1 0.5\n100 0.5", "0.1 1.0\n100 1.0"], 0,
+        "Huge gamma: each training point gets its own tiny bubble of influence.",
+        "With gamma = 100 the RBF kernel is so local that the boundary wraps around each point, memorising even random labels (training accuracy 1.0). gamma = 0.1 gives a smooth boundary that can't fit noise. Tune gamma and C together with cross-validation.",
+        analogy="High gamma is like a cache keyed on exact requests: perfect on what it has seen, no help for anything new.",
+        diagram="""
+ low gamma:   wide, smooth bumps   -> simple boundary
+ high gamma:  a spike per point    -> memorises noise
+""",
+        topic="svm", level=3),
+    out("import numpy as np\nfrom sklearn.svm import SVC\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nrng = np.random.default_rng(0)\nX = rng.normal(size=(200, 2)); y = (X[:, 0] > 0).astype(int)   # only col 0 matters\nX = X * [1, 10_000]                 # col 1 is noise in huge units\nXtr, Xte, ytr, yte = X[:150], X[150:], y[:150], y[150:]\nprint(round(SVC().fit(Xtr, ytr).score(Xte, yte), 2),\n      round(make_pipeline(StandardScaler(), SVC()).fit(Xtr, ytr).score(Xte, yte), 2))",
+        ["0.42 0.96", "0.96 0.96", "0.96 0.42", "0.5 0.5"], 0,
+        "The RBF kernel measures distance. Which column dominates it?",
+        "Unscaled, the huge noise column swamps the distances, so the SVM can't see the useful column: worse than a coin flip. Standardising inside the pipeline gives 0.96. Same data, same model; only the preprocessing changed.",
+        topic="svm", level=3),
+    mcq("LinearSVC vs SVC(kernel='linear'): why do people pick LinearSVC for large data?",
+        ["LinearSVC uses liblinear, which scales roughly linearly with rows; SVC builds on libsvm's kernel machinery, which scales much worse",
+         "LinearSVC supports RBF kernels", "SVC can't fit linear boundaries", "They are byte-for-byte the same"], 0,
+        "One is a kernel solver used with a linear kernel.",
+        "Both give a linear boundary, but LinearSVC is far faster for many rows or sparse text features. They aren't identical: LinearSVC defaults to the squared hinge loss and penalises the intercept, so coefficients differ a little.",
+        topic="svm", level=3),
+    out("import numpy as np\nfrom sklearn.svm import SVC\nX = [[0, 0], [1, 1], [2, 2], [4, 4], [5, 5], [6, 6]]\ny = [0, 0, 0, 1, 1, 1]\nw = SVC(kernel='linear', C=1000).fit(X, y).coef_[0]\nprint(round(float(2 / np.linalg.norm(w)), 2))",
+        ["2.83", "1.41", "4.0", "2.0"], 0,
+        "The margin width of a linear SVM is 2 / ||w||.",
+        "The support vectors (2, 2) and (4, 4) are sqrt(8) = 2.83 apart, and with a near-hard margin the street spans exactly that gap. Maximising the margin is the same as minimising ||w||, which is why the SVM objective is ||w||^2 plus a C-weighted error term.",
+        diagram="""
+  (2,2) [x]  |      |      |  [o] (4,4)
+             |<---- 2/||w|| ---->|
+          margin    boundary    margin
+""",
+        topic="svm", level=4),
+    mcq("Hinge loss (SVM) vs log loss (logistic regression): which statement is correct?",
+        ["Points correctly classified beyond the margin add zero hinge loss, so only margin points (support vectors) shape the SVM; every point adds some log loss",
+         "Both give every point equal weight", "Hinge loss outputs probabilities", "Log loss ignores misclassified points"], 0,
+        "hinge = max(0, 1 - y * score).",
+        "Once y * score >= 1, hinge loss is flat at 0, which makes the solution sparse in the training points. Log loss never reaches exactly 0, so far-away points still nudge LR and it yields probabilities. In practice the two boundaries are often similar.",
+        diagram="""
+ loss
+   |\\
+   | \\  hinge: hits 0 at margin, stays 0
+   |  \\___________
+   |   ~~--___      log loss: never quite 0
+   +----------+----------- y * score
+              1
+""",
+        topic="svm", level=4),
+
+    # ------------------------------------------------------------------ naive-bayes
+    fill("In Bayes' rule, P(spam) before looking at any words in the email is called the ____ probability.", "prior",
+         "It comes before the evidence.",
+         "posterior is proportional to prior x likelihood: start from how common spam is (the prior), then update with how likely these words are in spam (the likelihood). sklearn stores the learned priors in class_log_prior_ / class_prior_.",
+         analogy="Like a bug-triage guess: '30% of tickets are network issues' is the prior; reading the stack trace updates it.",
+         topic="naive-bayes", level=1),
+    out("# 'refund' appeared 0 times in spam; spam has 10 words total; vocabulary = 5 words\ncount, total, vocab, alpha = 0, 10, 5, 1\nprint(round((count + alpha) / (total + alpha * vocab), 3))",
+        ["0.067", "0.0", "0.1", "0.2"], 0,
+        "Laplace smoothing adds alpha to every word's count, so the denominator grows by alpha * vocab.",
+        "(0 + 1) / (10 + 5) = 0.067. The unseen word gets a small, non-zero probability instead of 0, so one new word can't wipe out all the other evidence.",
+        diagram="""
+ P(word | spam) = (count + alpha) / (total + alpha * vocab)
+                = (0 + 1) / (10 + 1 * 5) = 1/15
+""",
+        topic="naive-bayes", level=2),
+    mcq("Why do Naive Bayes implementations add log-probabilities instead of multiplying probabilities?",
+        ["Multiplying hundreds of small probabilities underflows to 0.0 in floating point; sums of logs stay in range and give the same argmax",
+         "Logs make the model more accurate", "Multiplication is not allowed in NumPy", "To make the probabilities calibrated"], 0,
+        "0.001 multiplied by itself 300 times is 1e-900.",
+        "float64 can't represent numbers below about 1e-308, so long products become exactly 0 and every class ties. log(a * b) = log a + log b keeps the comparison exact. The same trick shows up as log-softmax and log-likelihoods in deep learning.",
+        topic="naive-bayes", level=3),
+    out("import numpy as np\nfrom sklearn.naive_bayes import MultinomialNB\nX = np.array([[1.0, -0.5], [0.2, 0.3]])   # e.g. standardised features\nMultinomialNB().fit(X, [0, 1])",
+        ["ValueError", "TypeError", "", "AttributeError"], 0,
+        "MultinomialNB models counts. Can a count be negative?",
+        "It raises ValueError ('Negative values in data passed to MultinomialNB'). A StandardScaler before MultinomialNB is a classic pipeline bug. Feed it counts or TF-IDF, or use GaussianNB for continuous features.",
+        topic="naive-bayes", level=3),
+    out("import numpy as np\nfrom sklearn.naive_bayes import GaussianNB\nrng = np.random.default_rng(0)\nx = np.r_[rng.normal(0, 1, 50), rng.normal(1, 1, 50)].reshape(-1, 1)\ny = np.r_[np.zeros(50), np.ones(50)]\nfor copies in (1, 10):\n    X = np.repeat(x, copies, axis=1)          # same feature repeated\n    p = GaussianNB().fit(X, y).predict_proba(np.full((1, copies), 1.0))[0, 1]\n    print(copies, round(float(p), 2))",
+        ["1 0.59\n10 0.97", "1 0.59\n10 0.59", "1 0.97\n10 0.59", "1 0.5\n10 0.5"], 0,
+        "Naive Bayes treats each copy as independent new evidence.",
+        "Ten copies of one feature are multiplied in ten times, so mild evidence (0.59) becomes near-certainty (0.97) with no new information. This is exactly why NB is over-confident on correlated features like overlapping n-grams.",
+        diagram="""
+ 1 copy:    e                  -> 0.59
+ 10 copies: e * e * ... * e    -> 0.97
+ same information, counted ten times
+""",
+        topic="naive-bayes", level=4),
+
+    # ------------------------------------------------------------------ kmeans
+    mcq("What does one iteration of k-means do?",
+        ["Assign every point to its nearest centre, then move each centre to the mean of the points assigned to it",
+         "Merge the two closest clusters", "Pick k random points as the final answer", "Split the biggest cluster in two"], 0,
+        "Two steps, repeated until nothing changes.",
+        "Assign, update, repeat. Each step can only lower the inertia, so the algorithm always converges, though possibly to a local optimum. (Merging closest clusters is hierarchical clustering.)",
+        diagram="""
+ 1. assign:  o o o  (C1)      x x x  (C2)
+             each point -> nearest centre
+ 2. update:  C1 = mean of o's, C2 = mean of x's
+ 3. repeat until assignments stop changing
+""",
+        topic="kmeans", level=1),
+    fill("After KMeans.fit, the coordinates of the k centres are stored in the attribute ____.", "cluster_centers_",
+         "Trailing underscore, plural.",
+         "km.cluster_centers_ has shape (k, n_features); km.labels_ gives each training row's cluster and km.inertia_ the total squared distance.",
+         topic="kmeans", level=1),
+    out("from sklearn.cluster import KMeans\nX = [[1, 1], [1, 2], [9, 9], [9, 8]]\nkm = KMeans(n_clusters=2, n_init=10, random_state=0).fit(X)\nprint(km.predict([[2, 1]])[0] == km.labels_[0], km.predict([[8, 9]])[0] == km.labels_[0])",
+        ["True False", "False True", "True True", "False False"], 0,
+        "predict sends a new point to its nearest learned centre.",
+        "(2, 1) is closest to the centre of the [1, 1]/[1, 2] group, so it gets the same label as row 0; (8, 9) joins the other group. Comparing to labels_[0] avoids depending on which cluster happened to be called 0.",
+        topic="kmeans", level=2),
+    out("import numpy as np\nfrom sklearn.cluster import KMeans\n# customers: [age, yearly spend in rupees]\nX = np.array([[20, 50_000], [22, 90_000], [60, 52_000], [62, 88_000]])\nprint(KMeans(n_clusters=2, n_init=10, random_state=0).fit(X).labels_)",
+        ["[0 1 0 1]", "[0 0 1 1]", "[0 0 0 1]", "[1 1 1 1]"], 0,
+        "Age gaps are about 40; spend gaps are about 40,000.",
+        "Without scaling, spend dominates the distance, so k-means groups low spenders vs high spenders and ignores the obvious young/old split. Standardise first (or choose weights on purpose): the scaling you pick decides what 'similar' means.",
+        analogy="Like ranking servers by 'CPU percent + free RAM in bytes': the bytes decide everything.",
+        topic="kmeans", level=3),
+    out("from sklearn.datasets import make_blobs\nfrom sklearn.cluster import KMeans\nfrom sklearn.metrics import silhouette_score\nX, _ = make_blobs(n_samples=150, centers=3, random_state=0)\nscores = {k: silhouette_score(X, KMeans(n_clusters=k, n_init=10, random_state=0).fit_predict(X)) for k in (2, 3, 4, 5)}\nprint(max(scores, key=scores.get))",
+        ["3", "5", "2", "4"], 0,
+        "Unlike inertia, silhouette does NOT keep improving as k grows.",
+        "Silhouette compares each point's distance to its own cluster vs the nearest other cluster (from -1 to 1). It peaks at the natural number of groups, here the 3 generated blobs. Inertia would just keep falling towards k = n.",
+        diagram="""
+ s(i) = (b - a) / max(a, b)
+   a = mean distance to my own cluster
+   b = mean distance to the nearest other cluster
+ s near 1: well placed   s near 0: on a border
+""",
+        topic="kmeans", level=3),
+    out("from sklearn.datasets import make_moons\nfrom sklearn.cluster import KMeans, DBSCAN\nfrom sklearn.metrics import adjusted_rand_score\nX, y = make_moons(n_samples=200, noise=0.05, random_state=0)\nkm = KMeans(n_clusters=2, n_init=10, random_state=0).fit_predict(X)\ndb = DBSCAN(eps=0.3).fit_predict(X)\nprint(adjusted_rand_score(y, km) > 0.9, adjusted_rand_score(y, db) > 0.9)",
+        ["False True", "True False", "True True", "False False"], 0,
+        "k-means draws a straight boundary between two centres.",
+        "Two interlocking crescents can't be split by a straight line, so k-means cuts each moon in half. DBSCAN grows clusters through dense neighbourhoods and follows the curved shapes. Choose the clusterer from the cluster SHAPE you expect.",
+        diagram="""
+   k-means cut:       |
+     .-~~-.           |
+    /      \\    .-~~-.|
+            \\  /      |\\
+             '-'      |
+   straight line splits each moon in half
+""",
+        topic="kmeans", level=4),
+    mcq("Customer data forms elongated, overlapping, different-sized groups, and you want a probability of belonging to each segment. Which is a better fit than k-means?",
+        ["A Gaussian mixture model: soft assignments and elliptical clusters with their own shape and size",
+         "k-means with a bigger n_init", "PCA", "k-means with k = n"], 0,
+        "k-means gives each point exactly one round cluster.",
+        "k-means = hard assignment + spherical, equal-ish clusters (it's a special case of a GMM). GaussianMixture learns a covariance per cluster and gives predict_proba. Pick the number of components with BIC.",
+        analogy="k-means gives every ticket exactly one owner; a mixture model gives percentage ownership.",
+        topic="kmeans", level=4),
+
+    # ------------------------------------------------------------------ pca
+    out("import numpy as np\nfrom sklearn.decomposition import PCA\nrng = np.random.default_rng(0)\na = rng.normal(size=300)\nX = np.c_[a, a + 0.1 * rng.normal(size=300), rng.normal(size=300)]\nprint(np.cumsum(PCA().fit(X).explained_variance_ratio_).round(2))",
+        ["[0.71 1.   1.  ]", "[0.33 0.67 1.  ]", "[1. 1. 1.]", "[0.5 0.75 1.  ]"], 0,
+        "Two of the three columns are near-copies; the third is independent.",
+        "The near-duplicate pair collapses into one strong component (about 71% of the variance) and the independent column into a second; together they hold ~100%, so the third component is almost pure noise. A cumulative curve like this tells you how many components to keep.",
+        topic="pca", level=2),
+    tf("sklearn's PCA subtracts the mean of each feature automatically, but it does NOT divide by the standard deviation.", True,
+       "Centring is part of the algorithm; scaling is a choice.",
+       "PCA always centres, so you don't need to. Scaling to unit variance is a modelling decision you make with StandardScaler first (in a Pipeline). Forgetting it lets large-unit features hijack the first component.",
+       topic="pca", level=3),
+    mcq("After Z = PCA(n_components=2).fit(X).transform(X) on 5 features, what does pca.inverse_transform(Z) return?",
+        ["An approximation of X back in the original 5 features, missing whatever the dropped 3 components held",
+         "Exactly X", "The 2 components", "The labels"], 0,
+        "You threw away 3 directions of information.",
+        "Mapping back gives a 'compressed and decompressed' X. The reconstruction error is a handy anomaly score: rows that don't fit the main patterns reconstruct badly.",
+        analogy="Like a lossy JPEG: you get the picture back, minus the fine detail the compression dropped.",
+        topic="pca", level=3),
+    mcq("You want to plot 768-dimensional sentence embeddings in 2D to see if topics form groups. PCA vs t-SNE/UMAP?",
+        ["PCA is fast and linear and keeps global spread but often blurs groups; t-SNE/UMAP preserve local neighbourhoods so clusters show better, but distances between clusters mean little",
+         "PCA always shows clusters better", "t-SNE should be used as model input features in production", "They give identical pictures"], 0,
+        "One keeps big-picture variance, the others keep 'who is near whom'.",
+        "Common recipe: PCA to ~50 dims first (speed, denoise), then UMAP or t-SNE to 2D for the picture. Treat the plot as a sketch: cluster sizes and gaps in t-SNE are not trustworthy measurements.",
+        topic="pca", level=3),
+    out("import numpy as np\nfrom sklearn.decomposition import PCA\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.pipeline import make_pipeline\nrng = np.random.default_rng(0)\ny = rng.integers(0, 2, 400)\nX = np.c_[rng.normal(0, 10, 400), y + rng.normal(0, 0.1, 400)]  # big noise, small signal\nfull = LogisticRegression().fit(X[:300], y[:300]).score(X[300:], y[300:])\npca = make_pipeline(PCA(n_components=1), LogisticRegression()).fit(X[:300], y[:300]).score(X[300:], y[300:])\nprint(round(full, 1), round(pca, 1))",
+        ["1.0 0.6", "1.0 1.0", "0.6 1.0", "0.5 0.5"], 0,
+        "Which column has the bigger variance, and which one carries the label?",
+        "Column 0 is high-variance noise; column 1 is low-variance but perfectly predictive. PCA(1) keeps the noisy column (it has more variance) and throws away the signal, so accuracy collapses from 1.0 to about chance. PCA is blind to labels.",
+        diagram="""
+ col 0: variance ~100, pure noise     <- PCA keeps this
+ col 1: variance ~0.25, = label       <- PCA drops this
+""",
+        topic="pca", level=4),
+
+    # ------------------------------------------------------------------ choosing
+    mcq("Product asks you to group 20,000 unlabelled support tickets into themes. What is a sensible classic-ML approach?",
+        ["Turn each ticket into an embedding (or TF-IDF vector), then cluster with k-means and read sample tickets per cluster",
+         "Train a logistic regression on the tickets", "Linear regression on ticket length", "A decision tree with max_depth=None"], 0,
+        "No labels -> unsupervised.",
+        "Without labels you can't train a classifier. Embeddings + k-means (try several k, check silhouette, read examples) gives themes quickly. Once themes are named and labelled, a supervised classifier can route new tickets.",
+        analogy="Like grouping error logs by stack-trace similarity before anyone has named the bugs.",
+        topic="choosing", level=2),
+    mcq("As an AI engineer, when is a classic model (e.g. gradient boosting) a better choice than calling an LLM?",
+        ["Structured tabular predictions at high volume (churn, fraud, pricing): cheaper, faster, more accurate on tabular data and easier to evaluate",
+         "Never; LLMs are better at everything", "Only when there is no internet", "When the input is free-form text that needs a written answer"], 0,
+        "Think latency, cost per call and the shape of the data.",
+        "An LLM call costs money and hundreds of milliseconds per prediction and isn't built for numeric columns. A boosted tree scores a row in microseconds. Real systems mix both: LLMs for unstructured text, classic models for tables, sometimes LLM-extracted features feeding a classic model.",
+        analogy="Like using a regex vs a full NLP service: pick the lightest tool that solves the problem reliably.",
+        topic="choosing", level=2),
+    mcq("A discount only increases sales on weekends (no effect on weekdays). Why might a tree model find this when a plain linear model doesn't?",
+        ["Trees capture interactions naturally (split on weekend, then on discount); a linear model adds effects independently unless you add a discount x weekend feature",
+         "Linear models can't use binary features", "Trees need fewer rows than linear models", "Linear models can't fit weekends"], 0,
+        "In a linear model, each feature's effect is the same whatever the others are.",
+        "y = w1*discount + w2*weekend can't express 'discount matters only on weekends'. Add the product term, or use trees/boosting, which find such interactions by splitting one feature inside another.",
+        analogy="Like a feature flag that only matters for one tenant: it needs a nested if, not a global setting.",
+        diagram="""
+            weekend?
+           /        \\
+         no          yes
+        sales=100    discount?
+                     /      \\
+                   no        yes
+                sales=110  sales=160
+""",
+        topic="choosing", level=3),
+    mcq("A credit model must never LOWER someone's score when their income goes up (a regulatory and sanity requirement). How do you enforce that with gradient boosting?",
+        ["Set a monotonic constraint on income (monotonic_cst in HistGradientBoosting, monotone_constraints in LightGBM/XGBoost)",
+         "Remove income from the model", "Scale income with StandardScaler", "Use more trees"], 0,
+        "Boosted trees can be told the allowed direction of a feature's effect.",
+        "Unconstrained trees may learn bumpy, non-monotonic effects from noise, which are hard to defend. Monotonic constraints restrict the splits so predictions only move in the declared direction, usually at a tiny accuracy cost and a big trust gain.",
+        analogy="Like enforcing a business rule as a database constraint instead of hoping every code path respects it.",
+        topic="choosing", level=4),
+
+    # ------------------------------------------------------------------ interpretability
+    out("from sklearn.tree import DecisionTreeClassifier, export_text\nX = [[25, 2], [30, 9], [45, 3], [50, 8], [60, 9], [35, 1]]   # [age, income_lakh]\ny = [0, 1, 0, 1, 1, 0]                                     # 1 = approved\nt = DecisionTreeClassifier(random_state=0).fit(X, y)\nprint(export_text(t, feature_names=['age', 'income']))",
+        ["|--- income <= 5.50\n|   |--- class: 0\n|--- income >  5.50\n|   |--- class: 1",
+         "|--- age <= 40.00\n|   |--- class: 0\n|--- age >  40.00\n|   |--- class: 1",
+         "|--- income <= 5.50\n|   |--- age <= 40.00\n|   |   |--- class: 0\n|   |--- age >  40.00\n|   |   |--- class: 1\n|--- income >  5.50\n|   |--- class: 1",
+         "|--- income <= 5.50\n|   |--- class: 1\n|--- income >  5.50\n|   |--- class: 0"], 0,
+        "Look at the label column next to each feature: which one alone separates approved from rejected?",
+        "Every approved row has income 8-9 and every rejected row 1-3, so one income split makes both sides pure and the tree stops; age never appears. export_text prints the model as if/else rules, which shows at a glance which features it uses (and which it ignores).",
+        analogy="A shallow tree is literally an if/else block you could code-review.",
+        topic="interpretability", level=2),
+    mcq("A loan officer asks 'why was THIS applicant rejected?', while the risk team asks 'which features does the model rely on overall?'. Which tools fit?",
+        ["Officer: a local explanation (SHAP values for that one row); risk team: a global one (permutation importance or mean |SHAP| across rows)",
+         "Both: the model's accuracy", "Officer: permutation importance; team: one SHAP row", "Neither question can be answered for tree ensembles"], 0,
+        "One question is about one row, the other about all rows.",
+        "Local explanations break down one prediction; global explanations summarise reliance across the dataset. Averaging absolute SHAP values turns local into global.",
+        topic="interpretability", level=2),
+    out("import numpy as np\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.preprocessing import StandardScaler\nrng = np.random.default_rng(0)\nsize_m2 = rng.uniform(50, 200, 100); rooms = rng.integers(1, 6, 100)\nprice = 2 * size_m2 + 30 * rooms + rng.normal(0, 5, 100)\nX = np.c_[size_m2, rooms]\nprint(LinearRegression().fit(X, price).coef_.round(0), LinearRegression().fit(StandardScaler().fit_transform(X), price).coef_.round(0))",
+        ["[ 2. 30.] [91. 44.]", "[ 2. 30.] [ 2. 30.]", "[91. 44.] [ 2. 30.]", "[30.  2.] [44. 91.]"], 0,
+        "Raw coefficients are 'per square metre' and 'per room'. Standardised ones are 'per standard deviation'.",
+        "Raw, rooms (30) looks 15x more important than size (2). But size varies over 150 m^2 while rooms vary by ~4, so per standard deviation size moves price about twice as much (91 vs 44). Compare standardised coefficients, or use permutation importance.",
+        analogy="Like comparing two salaries by their raw numbers when one is in rupees and the other in dollars.",
+        topic="interpretability", level=3),
+    out("import numpy as np\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.inspection import permutation_importance\nrng = np.random.default_rng(0)\nX = rng.normal(size=(300, 3))\ny = (X[:, 2] > 0).astype(int)          # only column 2 matters\nrf = RandomForestClassifier(random_state=0).fit(X[:200], y[:200])\nr = permutation_importance(rf, X[200:], y[200:], n_repeats=5, random_state=0)\nprint(int(r.importances_mean.argmax()), r.importances_mean.round(2).tolist())",
+        ["2 [0.0, 0.0, 0.49]", "0 [0.49, 0.0, 0.0]", "2 [0.33, 0.33, 0.33]", "2 [0.0, 0.0, 1.0]"], 0,
+        "Shuffle a column on held-out data and measure the accuracy drop.",
+        "Shuffling column 2 drops accuracy by about 0.49 (from ~1.0 to coin-flip ~0.5); shuffling the noise columns changes nothing. Computed on held-out rows, it measures what the model really needs to generalise, not what it used to fit training noise.",
+        topic="interpretability", level=3),
+    mcq("A partial dependence plot (PDP) for 'age' is flat, yet SHAP shows age matters a lot for individual customers. How can both be true?",
+        ["PDP shows the AVERAGE effect; if age raises risk for one group and lowers it for another, the effects cancel in the average",
+         "One of the tools has a bug", "SHAP ignores age", "PDP only works for linear models"], 0,
+        "An average of +10 and -10 is 0.",
+        "PDPs hide heterogeneous effects and can mislead when features are correlated (they average over unrealistic combinations). ICE curves (one line per row) or SHAP dependence plots reveal the split.",
+        analogy="Like an average latency chart that stays flat because one region got faster while another got slower.",
+        diagram="""
+ risk |  group A  /
+      |         /
+      |-------x--------  PDP (average) = flat
+      |         \\
+      |  group B  \\
+      +------------------ age
+""",
+        topic="interpretability", level=4),
+    mcq("City is one-hot encoded with drop='first' (categories BLR, DEL, MUM; BLR is dropped). The logistic coefficient for city_MUM is 0.4. What does it mean?",
+        ["Being in MUM multiplies the odds by e^0.4 = 1.49 compared with BLR, the dropped baseline, holding other features fixed",
+         "MUM raises the probability by 0.4", "MUM is 0.4 times as likely as DEL", "MUM's effect compared with the average city"], 0,
+        "With a dropped column, every coefficient is measured against the missing category.",
+        "The dropped category becomes the reference point. Change the baseline and the coefficients change, even though predictions don't. State the baseline whenever you report categorical coefficients.",
+        topic="interpretability", level=4),
+
+    # ------------------------------------------------------------------ sklearn-api
+    fill("KNeighborsClassifier() with no arguments uses n_neighbors = ____.", "5",
+         "A small odd number.",
+         "The default k is 5. Defaults are a starting point, not a recommendation: tune k with cross-validation on your data. model.get_params() lists every default.",
+         topic="sklearn-api", level=1),
+    mcq("You write a custom sklearn transformer whose __init__ does self.cols = [c.lower() for c in cols]. Grid search then behaves strangely. Why?",
+        ["sklearn expects __init__ to store arguments unchanged; get_params/clone read the attributes back, and a modified value breaks cloning and set_params. Validate or transform in fit instead",
+         "Custom transformers must not have __init__", "List comprehensions are not allowed in sklearn", "Transformers can't take column names"], 0,
+        "clone rebuilds an estimator from get_params().",
+        "The contract: __init__ only assigns parameters as passed (no logic), learned state goes into fit as attributes ending in _. Break it and clone either raises or silently produces a differently configured object in each CV fold.",
+        analogy="Like a React component's props: keep them exactly as passed and derive state somewhere else.",
+        topic="sklearn-api", level=4),
+
+    # ------------------------------------------------------------------ round 2, extra depth
+    mcq("You run kNN on [age (standardised), income (standardised), city one-hot over 30 cities]. What subtle problem remains even after scaling?",
+        ["kNN weighs every column equally: any two different cities are always sqrt(2) apart, so the 30 one-hot columns can swamp or distort the numeric features; you must choose the feature weighting on purpose",
+         "None; once features are scaled, kNN distances are always meaningful", "kNN can't accept one-hot columns", "One-hot columns make kNN predictions faster"], 0,
+        "Scaling fixes units, not how much each GROUP of columns should matter.",
+        "Distance is a design decision: which columns count, and how much. Options: down-weight the one-hot block, use a mixed-type distance, or learn embeddings and search those. Validate the choice with CV, not intuition.",
+        topic="knn", level=4),
+    out("from sklearn.svm import SVC\nX = [[0], [1], [5], [6], [10], [11], [15], [16]]\ny = [0, 0, 1, 1, 2, 2, 3, 3]\ns = SVC(decision_function_shape='ovo').fit(X, y)\nprint(s.decision_function([[3]]).shape, SVC().fit(X, y).decision_function([[3]]).shape)",
+        ["(1, 6) (1, 4)", "(1, 4) (1, 4)", "(1, 6) (1, 6)", "(1, 3) (1, 4)"], 0,
+        "A binary SVM is trained for every PAIR of classes.",
+        "SVC always trains one-vs-one internally: 4 * 3 / 2 = 6 pairwise classifiers. The default decision_function_shape='ovr' just aggregates those 6 into one score per class (4 columns). With 100 classes that's 4,950 SVMs, another reason kernel SVMs scale badly.",
+        topic="svm", level=3),
+    mcq("You need to reduce a 100,000-column sparse TF-IDF matrix to 300 dimensions. Why is TruncatedSVD the usual tool rather than classic PCA?",
+        ["Classic PCA centres each column, which turns the sparse matrix dense and can blow up memory; TruncatedSVD skips centring and works on the sparse matrix directly (this is LSA)",
+         "PCA only works on images", "TruncatedSVD uses the labels", "PCA can't produce 300 components"], 0,
+        "Subtracting a non-zero mean from a zero entry gives a non-zero entry.",
+        "A TF-IDF matrix is mostly zeros, stored cheaply. Centring fills every cell. TruncatedSVD computes the top singular vectors without centring, which is classic latent semantic analysis. Recent sklearn versions can run PCA on sparse input with some solvers via implicit centring, but TruncatedSVD remains the standard choice.",
+        analogy="Like a sparse database column: storing 'everything minus the average' forces you to materialise every NULL.",
+        topic="pca", level=4),
+    mcq("A text classifier has one huge class and several small ones, and MultinomialNB keeps favouring the big class. Which sklearn Naive Bayes variant is designed for this situation?",
+        ["ComplementNB: it estimates each class's word weights from all the OTHER classes' documents, which is more stable when classes are imbalanced",
+         "GaussianNB", "BernoulliNB with alpha=0", "CategoricalNB on raw strings"], 0,
+        "Small classes have few documents to estimate word probabilities from.",
+        "ComplementNB learns from the complement of each class, so even a small class gets weights estimated from plenty of text. It often beats MultinomialNB on imbalanced text tasks and is just as fast. Still compare against logistic regression on the same CV splits.",
+        topic="naive-bayes", level=4),
+    mcq("LightGBM grows trees leaf-wise (always split the single leaf with the biggest loss reduction) instead of level-wise. What is the practical consequence?",
+        ["It reaches lower loss with the same number of leaves, but can grow deep, lopsided trees that overfit small data; control it with num_leaves, min_child_samples and max_depth",
+         "It can only build depth-1 trees", "It removes the need for a learning rate", "It makes every tree perfectly balanced"], 0,
+        "Best-first growth spends its leaf budget where the loss drops most.",
+        "Level-wise growth (classic GBM/XGBoost default) expands every node at a depth before going deeper. Leaf-wise growth chases the biggest gains, which is efficient but can carve one branch very deep. num_leaves is the main capacity knob in LightGBM, not max_depth.",
+        diagram="""
+ level-wise:        o              leaf-wise:      o
+                  /   \\                          /   \\
+                 o     o                        o     o
+                / \\   / \\                            / \\
+               o   o o   o                          o   o
+                                                       / \\
+                                                      o   o
+""",
+        topic="ensembles", level=4),
+    mcq("Clustering 50 million embedding vectors with sklearn's KMeans is too slow. What is the standard sklearn alternative and its trade-off?",
+        ["MiniBatchKMeans: updates the centres from small random batches, much faster and lighter on memory, at the cost of slightly worse inertia",
+         "Set n_init=100", "Use k = 50 million", "Switch to PCA, which also clusters"], 0,
+        "Do you need every row to move the centres each step?",
+        "Each full k-means iteration touches every row. Mini-batches give a noisy but cheap estimate of the update, like SGD vs full-batch gradient descent. Check that the clusters are stable on a sample before trusting them.",
+        analogy="Like estimating an average API latency from a sample of requests instead of scanning every log line.",
+        topic="kmeans", level=3),
 ]
