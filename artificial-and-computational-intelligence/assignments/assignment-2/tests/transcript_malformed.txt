@@ -1,0 +1,7 @@
+Is the Fever Intensity (high_sudden/high/mild/none)? high_sudden.
+Is the Cough Type (severe_dry/persistent_dry/mild/none)? 
+  [error] that answer could not be read. Expected one of [severe_dry,persistent_dry,mild,none].
+Is the Cough Type (severe_dry/persistent_dry/mild/none)? severe_dry.
+Is the Body Pain Severity (severe/excruciating/mild/none)? severe.
+Is the Skin Rash Type (absent/patchy)? absent.
+Result: The patient is likely suffering from: Influenza

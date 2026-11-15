@@ -1,0 +1,11 @@
+Is the Fever Intensity (high_sudden/high/mild/none)? burning_hot.
+  [error] "burning_hot" is not a valid answer. Expected one of [high_sudden,high,mild,none].
+Is the Fever Intensity (high_sudden/high/mild/none)? high_sudden.
+Is the Cough Type (severe_dry/persistent_dry/mild/none)? severe_dry.
+Is the Body Pain Severity (severe/excruciating/mild/none)? severe.
+Is the Skin Rash Type (absent/patchy)? absent.
+Result: The patient is likely suffering from: Influenza
+Is the Fever Intensity (high_sudden/high/mild/none)? none.
+Is the Cough Type (severe_dry/persistent_dry/mild/none)? mild.
+Is the Body Pain Severity (severe/excruciating/mild/none)? mild.
+Is the Skin Rash Type (absent/patchy)? 

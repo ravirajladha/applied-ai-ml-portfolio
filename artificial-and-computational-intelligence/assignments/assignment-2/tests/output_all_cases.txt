@@ -1,0 +1,6 @@
+Result: The patient is likely suffering from: Influenza
+Result: The patient is likely suffering from: Dengue
+Result: The patient is likely suffering from: Influenza
+Result: The patient is likely suffering from: COVID-19
+Result: The patient is likely suffering from: Other Viral Infection
+Result: The patient is likely suffering from: Common Cold

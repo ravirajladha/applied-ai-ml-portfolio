@@ -1,0 +1,8 @@
+burning_hot.
+high_sudden.
+severe_dry.
+severe.
+absent.
+none.
+mild.
+mild.

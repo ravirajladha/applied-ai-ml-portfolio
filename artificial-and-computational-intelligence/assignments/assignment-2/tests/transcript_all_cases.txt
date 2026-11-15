@@ -1,0 +1,30 @@
+Is the Fever Intensity (high_sudden/high/mild/none)? high_sudden.
+Is the Cough Type (severe_dry/persistent_dry/mild/none)? severe_dry.
+Is the Body Pain Severity (severe/excruciating/mild/none)? severe.
+Is the Skin Rash Type (absent/patchy)? absent.
+Result: The patient is likely suffering from: Influenza
+Is the Fever Intensity (high_sudden/high/mild/none)? high.
+Is the Cough Type (severe_dry/persistent_dry/mild/none)? none.
+Is the Body Pain Severity (severe/excruciating/mild/none)? excruciating.
+Is the Skin Rash Type (absent/patchy)? patchy.
+Result: The patient is likely suffering from: Dengue
+Is the Fever Intensity (high_sudden/high/mild/none)? 102.0.
+Is the Cough Type (severe_dry/persistent_dry/mild/none)? severe_dry.
+Is the Body Pain Severity (severe/excruciating/mild/none)? severe.
+Is the Skin Rash Type (absent/patchy)? absent.
+Result: The patient is likely suffering from: Influenza
+Is the Fever Intensity (high_sudden/high/mild/none)? 101.9.
+Is the Cough Type (severe_dry/persistent_dry/mild/none)? persistent_dry.
+Is the Body Pain Severity (severe/excruciating/mild/none)? severe.
+Is the Skin Rash Type (absent/patchy)? absent.
+Result: The patient is likely suffering from: COVID-19
+Is the Fever Intensity (high_sudden/high/mild/none)? 101.9.
+Is the Cough Type (severe_dry/persistent_dry/mild/none)? mild.
+Is the Body Pain Severity (severe/excruciating/mild/none)? severe.
+Is the Skin Rash Type (absent/patchy)? absent.
+Result: The patient is likely suffering from: Other Viral Infection
+Is the Fever Intensity (high_sudden/high/mild/none)? none.
+Is the Cough Type (severe_dry/persistent_dry/mild/none)? mild.
+Is the Body Pain Severity (severe/excruciating/mild/none)? mild.
+Is the Skin Rash Type (absent/patchy)? absent.
+Result: The patient is likely suffering from: Common Cold

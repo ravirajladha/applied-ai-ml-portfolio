@@ -1,0 +1,4 @@
+high_sudden.
+severe_dry.
+severe.
+absent.
