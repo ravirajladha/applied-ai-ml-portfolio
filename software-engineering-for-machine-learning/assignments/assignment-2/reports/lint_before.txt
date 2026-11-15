@@ -1,0 +1,103 @@
+===============================================================
+ LINT REPORT - BEFORE
+ Command: flake8 / black --check / isort --check research ecom tests
+===============================================================
+
+--- flake8 ----------------------------------------------------
+ecom\predict.py:63:89: E501 line too long (91 > 88 characters)
+research\prototype.py:5:1: F401 'os' imported but unused
+research\prototype.py:5:1: F401 'sys' imported but unused
+research\prototype.py:5:1: F401 'json' imported but unused
+research\prototype.py:5:10: E401 multiple imports on one line
+research\prototype.py:7:1: F401 'numpy as np' imported but unused
+research\prototype.py:7:13: E272 multiple spaces before keyword
+research\prototype.py:10:1: F403 'from sklearn.metrics import *' used; unable to detect undefined names
+research\prototype.py:12:18: E201 whitespace after '('
+research\prototype.py:12:44: E202 whitespace before ')'
+research\prototype.py:17:23: E225 missing whitespace around operator
+research\prototype.py:19:15: E225 missing whitespace around operator
+research\prototype.py:19:33: E225 missing whitespace around operator
+research\prototype.py:21:19: E231 missing whitespace after ','
+research\prototype.py:21:22: E231 missing whitespace after ','
+research\prototype.py:23:23: E231 missing whitespace after ','
+research\prototype.py:23:46: E231 missing whitespace after ','
+research\prototype.py:23:59: E231 missing whitespace after ','
+research\prototype.py:23:76: E231 missing whitespace after ','
+research\prototype.py:23:89: E501 line too long (187 > 88 characters)
+research\prototype.py:23:96: E231 missing whitespace after ','
+research\prototype.py:23:115: E231 missing whitespace after ','
+research\prototype.py:23:134: E231 missing whitespace after ','
+research\prototype.py:23:147: E231 missing whitespace after ','
+research\prototype.py:23:158: E231 missing whitespace after ','
+research\prototype.py:23:168: E231 missing whitespace after ','
+research\prototype.py:23:177: E231 missing whitespace after ','
+research\prototype.py:26:8: E231 missing whitespace after ','
+research\prototype.py:26:15: E231 missing whitespace after ','
+research\prototype.py:26:23: E231 missing whitespace after ','
+research\prototype.py:26:51: E231 missing whitespace after ','
+research\prototype.py:26:53: E231 missing whitespace after ','
+research\prototype.py:26:89: E501 line too long (110 > 88 characters)
+research\prototype.py:28:14: E231 missing whitespace after ','
+research\prototype.py:28:89: E501 line too long (103 > 88 characters)
+research\prototype.py:30:19: F405 'accuracy_score' may be undefined, or defined from star imports: sklearn.metrics
+research\prototype.py:30:40: E231 missing whitespace after ','
+research\prototype.py:31:13: F405 'f1_score' may be undefined, or defined from star imports: sklearn.metrics
+research\prototype.py:31:28: E231 missing whitespace after ','
+research\prototype.py:34:1: E265 block comment should start with '# '
+research\prototype.py:35:1: E265 block comment should start with '# '
+research\prototype.py:38:11: E231 missing whitespace after ','
+research\prototype.py:38:15: E231 missing whitespace after ','
+research\prototype.py:38:17: E231 missing whitespace after ','
+research\prototype.py:38:23: E231 missing whitespace after ','
+research\prototype.py:38:25: E231 missing whitespace after ','
+research\prototype.py:38:27: E231 missing whitespace after ','
+research\prototype.py:38:32: E231 missing whitespace after ','
+research\prototype.py:38:39: E231 missing whitespace after ','
+research\prototype.py:38:41: E231 missing whitespace after ','
+research\prototype.py:38:43: E231 missing whitespace after ','
+research\prototype.py:38:45: E231 missing whitespace after ','
+(exit code: 1)
+
+--- black --check ---------------------------------------------
+would reformat C:\dev\ai-ml\software-engineering-for-machine-learning\assignments\assignment-2\research\prototype.py
+would reformat C:\dev\ai-ml\software-engineering-for-machine-learning\assignments\assignment-2\ecom\predict.py
+
+Oh no!
+2 files would be reformatted, 17 files would be left unchanged.
+
+--- isort --check-only ----------------------------------------
+ERROR: C:\dev\ai-ml\software-engineering-for-machine-learning\assignments\assignment-2\research\prototype.py Imports are incorrectly sorted and/or formatted.
+ERROR: C:\dev\ai-ml\software-engineering-for-machine-learning\assignments\assignment-2\ecom\predict.py Imports are incorrectly sorted and/or formatted.
+--- C:\dev\ai-ml\software-engineering-for-machine-learning\assignments\assignment-2\research\prototype.py:before	2026-08-07 13:08:36.523806
++++ C:\dev\ai-ml\software-engineering-for-machine-learning\assignments\assignment-2\research\prototype.py:after	2026-08-07 13:12:13.063157
+@@ -2,12 +2,15 @@
+ # It works, but everything is hardcoded, nothing is reusable, there is no
+ # validation, no logging, no error handling and no tests.
+ # See ecom/ for the production version of the same idea.
+-import os, sys, json
++import json
++import os
++import sys
++
++import numpy as np
+ import pandas as pd
+-import numpy   as np
+ from sklearn.linear_model import LogisticRegression
++from sklearn.metrics import *
+ from sklearn.model_selection import train_test_split
+-from sklearn.metrics import *
+ 
+ df = pd.read_csv( "data/sessions_train.csv" )
+ print(df.head())
+--- C:\dev\ai-ml\software-engineering-for-machine-learning\assignments\assignment-2\ecom\predict.py:before	2026-08-07 13:07:49.053980
++++ C:\dev\ai-ml\software-engineering-for-machine-learning\assignments\assignment-2\ecom\predict.py:after	2026-08-07 13:12:13.075167
+@@ -1,8 +1,7 @@
+ """Inference: load the saved artifact and score sessions."""
+ 
++import joblib
+ import pandas as pd
+-
+-import joblib
+ 
+ from ecom.config import MODEL_PATH
+ from ecom.exceptions import ModelNotReadyError

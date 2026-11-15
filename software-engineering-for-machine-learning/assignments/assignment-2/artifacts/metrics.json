@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "n_train": 4000,
+  "n_test": 1000,
+  "model_quality": {
+    "accuracy": 0.716,
+    "f1": 0.683,
+    "precision": 0.7034,
+    "recall": 0.6638,
+    "roc_auc": 0.7813,
+    "brier_score": 0.1899
+  },
+  "calibration": [
+    {
+      "bucket": "0.0-0.2",
+      "count": 197,
+      "predicted_rate": 0.1309,
+      "actual_rate": 0.1574
+    },
+    {
+      "bucket": "0.2-0.4",
+      "count": 263,
+      "predicted_rate": 0.2964,
+      "actual_rate": 0.2662
+    },
+    {
+      "bucket": "0.4-0.6",
+      "count": 222,
+      "predicted_rate": 0.4993,
+      "actual_rate": 0.545
+    },
+    {
+      "bucket": "0.6-0.8",
+      "count": 200,
+      "predicted_rate": 0.6971,
+      "actual_rate": 0.715
+    },
+    {
+      "bucket": "0.8-1.0",
+      "count": 118,
+      "predicted_rate": 0.8814,
+      "actual_rate": 0.8136
+    }
+  ],
+  "loss_curve": [
+    0.583821,
+    0.56358,
+    0.554139,
+    0.552615,
+    0.552584,
+    0.552584
+  ],
+  "release_gate": {
+    "min_accuracy": 0.7,
+    "min_f1": 0.6,
+    "passed": true
+  }
+}

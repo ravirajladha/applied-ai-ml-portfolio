@@ -1,0 +1,83 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\ravir\AppData\Local\Programs\Python\Python312-arm64\python.exe
+rootdir: C:\dev\ai-ml\software-engineering-for-machine-learning\assignments\assignment-2
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.14.2
+collecting ... collected 61 items
+
+tests/test_api.py::test_health_is_always_200 PASSED                      [  1%]
+tests/test_api.py::test_model_info PASSED                                [  3%]
+tests/test_api.py::test_metrics_endpoint PASSED                          [  4%]
+tests/test_api.py::test_predict_returns_200_and_a_valid_body PASSED      [  6%]
+tests/test_api.py::test_batch_predict PASSED                             [  8%]
+tests/test_api.py::test_invalid_input_returns_422[pages_viewed--1] PASSED [  9%]
+tests/test_api.py::test_invalid_input_returns_422[pages_viewed-twelve] PASSED [ 11%]
+tests/test_api.py::test_invalid_input_returns_422[cart_items-10000] PASSED [ 13%]
+tests/test_api.py::test_invalid_input_returns_422[device-smart-fridge] PASSED [ 14%]
+tests/test_api.py::test_invalid_input_returns_422[avg_item_price--50] PASSED [ 16%]
+tests/test_api.py::test_invalid_input_returns_422[session_id-] PASSED    [ 18%]
+tests/test_api.py::test_missing_required_field_returns_422 PASSED        [ 19%]
+tests/test_api.py::test_unknown_field_is_rejected PASSED                 [ 21%]
+tests/test_api.py::test_oversized_batch_is_rejected PASSED               [ 22%]
+tests/test_api.py::test_empty_batch_is_rejected PASSED                   [ 24%]
+tests/test_api.py::test_unknown_route_returns_404 PASSED                 [ 26%]
+tests/test_data_ingestion.py::test_missing_file_raises PASSED            [ 27%]
+tests/test_data_ingestion.py::test_empty_file_raises PASSED              [ 29%]
+tests/test_data_ingestion.py::test_corrupt_file_raises PASSED            [ 31%]
+tests/test_data_ingestion.py::test_small_file_warns_but_still_loads PASSED [ 32%]
+tests/test_data_ingestion.py::test_generator_is_reproducible PASSED      [ 34%]
+tests/test_data_ingestion.py::test_drifted_traffic_really_is_different PASSED [ 36%]
+tests/test_data_validation.py::test_clean_data_passes PASSED             [ 37%]
+tests/test_data_validation.py::test_missing_column_is_rejected PASSED    [ 39%]
+tests/test_data_validation.py::test_wrong_dtype_is_rejected PASSED       [ 40%]
+tests/test_data_validation.py::test_too_many_missing_values_is_rejected PASSED [ 42%]
+tests/test_data_validation.py::test_negative_values_are_rejected PASSED  [ 44%]
+tests/test_data_validation.py::test_non_strict_mode_reports_instead_of_raising PASSED [ 45%]
+tests/test_data_validation.py::test_schema_conformance_is_a_measurable_fraction PASSED [ 47%]
+tests/test_data_validation.py::test_psi_is_zero_for_identical_distributions PASSED [ 49%]
+tests/test_data_validation.py::test_psi_flags_a_shifted_distribution PASSED [ 50%]
+tests/test_data_validation.py::test_detect_drift_catches_the_drifted_live_feed PASSED [ 52%]
+tests/test_features.py::test_fill_missing_removes_nulls PASSED           [ 54%]
+tests/test_features.py::test_fill_missing_does_not_mutate_input PASSED   [ 55%]
+tests/test_features.py::test_pages_per_minute_handles_zero_duration PASSED [ 57%]
+tests/test_features.py::test_cart_value_and_has_cart PASSED              [ 59%]
+tests/test_features.py::test_encode_device_is_one_hot PASSED             [ 60%]
+tests/test_features.py::test_unknown_device_encodes_as_all_zero PASSED   [ 62%]
+tests/test_features.py::test_build_features_returns_the_agreed_columns_in_order PASSED [ 63%]
+tests/test_features.py::test_build_features_is_deterministic PASSED      [ 65%]
+tests/test_inference.py::test_output_shape_matches_input PASSED          [ 67%]
+tests/test_inference.py::test_probability_is_in_range PASSED             [ 68%]
+tests/test_inference.py::test_response_has_the_expected_keys PASSED      [ 70%]
+tests/test_inference.py::test_empty_input_returns_empty_list PASSED      [ 72%]
+tests/test_inference.py::test_more_cart_items_increases_conversion_probability PASSED [ 73%]
+tests/test_inference.py::test_returning_user_is_more_likely_to_convert PASSED [ 75%]
+tests/test_inference.py::test_discount_increases_conversion_probability PASSED [ 77%]
+tests/test_inference.py::test_session_id_does_not_change_the_prediction PASSED [ 78%]
+tests/test_inference.py::test_device_casing_does_not_change_the_prediction PASSED [ 80%]
+tests/test_inference.py::test_row_order_does_not_change_predictions PASSED [ 81%]
+tests/test_inference.py::test_predicting_without_loading_raises PASSED   [ 83%]
+tests/test_inference.py::test_missing_artifact_raises PASSED             [ 85%]
+tests/test_inference.py::test_intent_band[0.05-low] PASSED               [ 86%]
+tests/test_inference.py::test_intent_band[0.3-medium] PASSED             [ 88%]
+tests/test_inference.py::test_intent_band[0.9-high] PASSED               [ 90%]
+tests/test_training.py::test_loss_decreases_with_more_training PASSED    [ 91%]
+tests/test_training.py::test_model_can_overfit_a_small_batch PASSED      [ 93%]
+tests/test_training.py::test_trained_model_beats_the_release_gate PASSED [ 95%]
+tests/test_training.py::test_model_beats_a_majority_class_baseline PASSED [ 96%]
+tests/test_training.py::test_training_is_reproducible PASSED             [ 98%]
+tests/test_training.py::test_save_before_fit_raises PASSED               [100%]
+
+============================== warnings summary ===============================
+..\..\..\..\..\Users\ravir\AppData\Local\Programs\Python\Python312-arm64\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\ravir\AppData\Local\Programs\Python\Python312-arm64\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_api.py: 7 warnings
+tests/test_inference.py: 7 warnings
+  C:\Users\ravir\AppData\Local\Programs\Python\Python312-arm64\Lib\site-packages\joblib\numpy_pickle.py:207: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+  As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+    array.shape = self.shape
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 61 passed, 15 warnings in 2.21s =======================

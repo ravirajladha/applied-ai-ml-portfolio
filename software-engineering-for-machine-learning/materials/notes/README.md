@@ -23,9 +23,18 @@ Every note is written to be **read on its own months later** — plain-English f
 | 5 | [Architectural Patterns for ML Systems](Session-05-Architectural-Patterns-for-ML-Systems.md) | **CQRS · RAG · Monolith · Microservices** | ✅ | 7.pdf |
 | 6 | [Event-Driven Architecture & ML Design Patterns](Session-06-Event-Driven-Architecture-and-ML-Design-Patterns.md) | Events, **Model Registry**, batch vs real-time serving | ✅ | 8.pdf |
 | 7 | [Agentic AI & Coordination Patterns](Session-07-Agentic-AI-and-Coordination-Patterns.md) | Chatbots → doers; **SAGA** & **Blackboard** patterns | ✅ | 9.pdf |
-| 9 | [Implementation & Code Sharing](Session-09-Implementation-and-Code-Sharing.md) ⭐ | **What is good code** + analysing code performance (profiling) | ✅ | — |
+| 9 | [Implementation & Code Sharing](Session-09-Implementation-and-Code-Sharing.md) | **What is good code** + analysing code performance (profiling) | ✅ | — |
+| 10 | [Time Complexity, Data Structures & OOP](Session-10-Time-Complexity-Data-Structures-and-OOP.md) | **Big-O**, the 5 ML data structures, **OOP for agents** | ✅ | — |
+| 11 | [Errors, Style, Refactoring, APIs & Packaging](Session-11-Errors-Style-Refactoring-APIs-and-Packaging.md) | Fail fast · logging · PEP 8 · **SOLID** · FastAPI · Docker/DVC/Poetry | ✅ | — |
+| 12 | [Quality Assurance](Session-12-Quality-Assurance-Testing-and-RAGAS.md) | Data/model/pipeline/system tests · slicing · A-B vs shadow vs canary · **RAGAS** | ✅ | — |
+| 13 | [Deployment — Docker & Kubernetes](Session-13-Deployment-Docker-and-Kubernetes.md) | Containers vs VMs · Dockerfile→image→container · **K8s architecture** | ✅ | — |
+| 14 | [Inference, Serving & Deployment Strategies](Session-14-Inference-Serving-and-Deployment-Strategies.md) | 4 serving designs · **Basic/Ramped/Blue-Green/Canary** · MLOps vs LLMOps vs AgentOps | ✅ | — |
+| 15 | [Responsible ML Engineering](Session-15-Responsible-ML-Engineering.md) | Provenance · **explainability** · fairness · safety · **CIA** · privacy | ✅ | — |
+| 16 | [Course Review](Session-16-Course-Review.md) | Module map + evaluation scheme (**end-sem is open book, 40%**) | ✅ | — |
 
-⭐ = currently studying.  Session 8 slides were not part of this set.
+Session 8 slides were not part of this set (the mid-term fell there).
+
+**Exam revision packs** → [`../../revision/`](../../revision/README.md) — condensed **pre-midsem** and **post-midsem** cheat sheets, plus **question banks** (conceptual + scenario, chapter by chapter) built for the open-book end-sem.
 
 **Extras**
 - [Course Overview](00-Course-Overview.md) — objectives, module map, tools, evaluation scheme.
@@ -45,6 +54,12 @@ flowchart TD
     S5 --> S6["S6 · Event-Driven + ML patterns<br/>registry, batch vs online"]
     S6 --> S7["S7 · Agentic AI<br/>SAGA · Blackboard"]
     S7 --> S9["S9 · Good Code + Performance<br/>profiling"]
+    S9 --> S10["S10 · Big-O · data structures<br/>OOP for agents"]
+    S10 --> S11["S11 · Errors · logging · PEP 8<br/>SOLID · FastAPI · packaging"]
+    S11 --> S12["S12 · Quality Assurance<br/>data/model/pipeline tests · RAGAS"]
+    S12 --> S13["S13 · Deployment<br/>Docker · Kubernetes"]
+    S13 --> S14["S14 · Serving designs<br/>deployment strategies · MLOps/LLMOps/AgentOps"]
+    S14 --> S15["S15 · Responsible ML<br/>explainability · fairness · safety · security"]
 ```
 
 The spine of the whole course is one sentence: **an ML model is a small box inside a much larger software system, and engineering that system well is the real job.**

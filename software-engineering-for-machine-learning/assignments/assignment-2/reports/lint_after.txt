@@ -1,0 +1,15 @@
+===============================================================
+ LINT REPORT - AFTER
+ Production code only (research/ is kept as the 'before' exhibit)
+ Command: flake8 / black --check / isort --check ecom tests
+===============================================================
+
+--- flake8 ----------------------------------------------------
+(exit code: 0 -> 0 means zero violations)
+
+--- black --check ---------------------------------------------
+All done!
+20 files would be left unchanged.
+
+--- isort --check-only ----------------------------------------
+(no output = all imports correctly sorted)

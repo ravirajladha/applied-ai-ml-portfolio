@@ -1,0 +1,32 @@
+{
+  "baseline_rows": 5000,
+  "live_rows": 2500,
+  "validation": {
+    "passed": true,
+    "schema_conformance": 1.0,
+    "missing_rates": {
+      "session_id": 0.0,
+      "pages_viewed": 0.0,
+      "session_duration_min": 0.0,
+      "cart_items": 0.0,
+      "avg_item_price": 0.01,
+      "is_returning_user": 0.0,
+      "discount_applied": 0.0,
+      "device": 0.0
+    },
+    "errors": [],
+    "warnings": [
+      "'avg_item_price' has 1.0% missing values"
+    ]
+  },
+  "drift_psi": {
+    "pages_viewed": 1.6902,
+    "session_duration_min": 0.8272,
+    "cart_items": 0.0012,
+    "avg_item_price": 0.0014
+  },
+  "drifted_columns": [
+    "pages_viewed",
+    "session_duration_min"
+  ]
+}
