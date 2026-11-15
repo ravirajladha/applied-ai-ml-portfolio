@@ -37,3 +37,7 @@ interview-preparation/application-development/*.md
 .DS_Store
 __pycache__/
 .env
+
+# Python virtual environments and Jupyter LSP scratch files
+.venv*/
+.virtual_documents/
