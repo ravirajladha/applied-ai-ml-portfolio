@@ -12,6 +12,7 @@ TOPICS = [
     ("data-ensembles", "More data and ensembling"),
     ("double-descent", "Double descent and big networks"),
     ("llm-finetune", "Overfitting in LLM fine-tuning"),
+    ("val-overfit", "Overfitting the validation set"),
 ]
 
 QUESTIONS = [
@@ -545,4 +546,472 @@ QUESTIONS = [
         "How many trainable parameters can a high-rank adapter across all layers have?",
         "LoRA lowers capacity compared with full fine-tuning, but millions of adapter parameters can still memorise a few hundred examples. Rank, epochs and learning rate all control it.",
         topic="llm-finetune", level=4),
+
+    # ================================================================== additions
+    # ------------------------------------------------------------------ symptoms
+    tf("A training accuracy of 100% on its own proves the model is overfitting.", False,
+       "What does the validation score say?",
+       "Overfitting is judged on held-out data. 100% train with 97% val on an easy, clean task is fine; 100% train with 70% val is not. Always read the pair, never one number.",
+       topic="symptoms", level=2),
+    mcq("From epoch 1, validation loss is 0.20 while training loss is 0.90. There is no dropout or augmentation, and the gap never closes. What should you check first?",
+        ["Leakage or duplicate rows shared by train and validation, or a validation set that is far easier than training",
+         "Nothing: this is excellent generalisation",
+         "Make the model bigger, it is underfitting",
+         "Lower the learning rate"], 0,
+        "A small reverse gap has innocent causes. Does a huge, permanent one?",
+        "Without dropout or augmentation, training should not be much harder than validation. A large reverse gap usually means validation rows (or near-copies) were seen in training, or validation is an easier slice. Dedupe across splits and re-check how the split was made.",
+        diagram="""
+ loss
+ 0.9 | train ---------------------------
+     |
+ 0.2 | val   ---------------------------   <- suspicious
+     +--------------------------------> epochs
+""",
+        topic="symptoms", level=3),
+    mcq("Training a classifier: validation ACCURACY is still slowly rising, but validation LOSS (cross-entropy) has started to rise. What is the most likely explanation?",
+        ["The model is becoming over-confident: a few confident mistakes push the loss up while more rows still land on the right side of 0.5",
+         "A bug: loss and accuracy must always move in opposite directions",
+         "Underfitting: train for many more epochs",
+         "The validation set has leaked into training"], 0,
+        "Accuracy only checks the side of 0.5; loss also checks how sure the model was.",
+        "Cross-entropy grows fast when a wrong prediction is confident, so loss can rise while accuracy improves. It is an early overfitting sign on the probabilities. Pick the checkpoint by the metric you actually ship, and recalibrate if you need honest probabilities.",
+        diagram="""
+         val accuracy          val loss
+  0.90 |        ____---   1.2 |          __--
+       |   __---              |  \\__  __--
+  0.80 | _-              0.8 |     ''
+       +-------> epochs       +-------> epochs
+""",
+        topic="symptoms", level=4),
+
+    # ------------------------------------------------------------------ curves
+    tf("On a typical learning curve, the TRAINING score goes down as the training set grows.", True,
+       "Is it easier to memorise 10 rows or 10,000?",
+       "With few rows a flexible model fits them all; with more rows it can't memorise everything, so training score falls while validation score rises. The two curves move toward each other.",
+       topic="curves", level=2),
+    out("from sklearn.datasets import make_classification\nfrom sklearn.model_selection import cross_validate\nfrom sklearn.tree import DecisionTreeClassifier\nX, y = make_classification(n_samples=300, n_features=10, flip_y=0.2, random_state=0)\nfor d in [2, None]:\n    r = cross_validate(DecisionTreeClassifier(max_depth=d, random_state=0), X, y, cv=5, return_train_score=True)\n    print(d, round(r['train_score'].mean(), 2), round(r['test_score'].mean(), 2))",
+        ["2 0.88 0.86\nNone 1.0 0.74", "2 1.0 0.74\nNone 0.88 0.86", "2 0.88 0.88\nNone 1.0 1.0", "2 0.86 0.88\nNone 0.74 1.0"], 0,
+        "return_train_score=True gives you both sides of the gap, fold by fold.",
+        "The depth-2 tree has a small gap (slight bias); the unlimited tree scores 1.0 on its training folds but lower on the held-out folds: a big variance gap. cross_validate measures this gap more reliably than one split.",
+        topic="curves", level=3),
+    out("import numpy as np\nfrom sklearn.datasets import make_moons\nfrom sklearn.model_selection import validation_curve\nfrom sklearn.neighbors import KNeighborsClassifier\nX, y = make_moons(n_samples=200, noise=0.35, random_state=0)\nks = [1, 5, 15, 50, 150]\ntr, va = validation_curve(KNeighborsClassifier(), X, y, param_name='n_neighbors', param_range=ks, cv=5)\nprint(ks[int(np.argmax(va.mean(axis=1)))], round(float(tr.mean(axis=1)[0]), 2))",
+        ["15 1.0", "1 1.0", "150 0.5", "15 0.85"], 0,
+        "k=1 memorises; k=150 averages almost the whole dataset.",
+        "k=1 scores 1.0 on its training folds (each point is its own neighbour) but not best on validation. A middle k wins on validation; huge k underfits the moon shapes. The validation curve, not the training curve, picks k.",
+        question="A validation curve over k for kNN on noisy moons. It prints the best k by mean validation score, then the mean training score at k=1. What does it print?",
+        topic="curves", level=3),
+    out("import numpy as np\nalphas = np.array([0.01, 0.1, 1, 10, 100])\nmean = np.array([0.80, 0.84, 0.85, 0.845, 0.70])\nstd = np.array([0.03, 0.03, 0.02, 0.03, 0.04])\nk = 5   # folds\nse = std[np.argmax(mean)] / np.sqrt(k)\nok = mean >= mean.max() - se\nprint(float(alphas[ok].max()), round(float(se), 3))",
+        ["10.0 0.009", "1.0 0.009", "10.0 0.02", "100.0 0.02"], 0,
+        "The standard error is the fold std divided by sqrt(number of folds). Bigger alpha = simpler model.",
+        "SE = 0.02 / sqrt(5) = 0.009, so anything scoring at least 0.841 counts as a tie with the best (0.85). alpha=10 (0.845) qualifies and is the most regularised, so the one-standard-error rule picks it over the raw best, alpha=1.",
+        question="One-standard-error rule on 5-fold CV results for Ridge. It prints the chosen alpha and the standard error. What does it print?",
+        diagram="""
+ alpha   mean   within best - SE (0.841)?
+ 0.01    0.80   no
+ 0.1     0.84   no
+ 1       0.85   yes  <- raw best
+ 10      0.845  yes  <- simplest tie: pick this
+ 100     0.70   no
+""",
+        topic="curves", level=4),
+    mcq("Your learning curve has wide shaded bands (mean +/- std across folds) at small training sizes that narrow as size grows. How should you read the left end?",
+        ["With little data each fold's score depends a lot on which rows it got, so treat small-size points as rough and look at the trend",
+         "The model is broken at small sizes",
+         "Wide bands mean the model is underfitting",
+         "The bands should be ignored; only the mean line matters"], 0,
+        "Few rows = noisy estimates.",
+        "The band shows variance of the score estimate across folds. Small training sets give unstable models and unstable scores. Decisions like 'more data will help' should rest on the overall trend and the gap at the right end, not on one noisy point.",
+        diagram="""
+ score
+  |   ......____________________ train
+  |  :  :    ___-----''''''
+  | :    :_-''   val
+  |:  __-'       (band = +/- 1 std across folds)
+  +----------------------------> training size
+""",
+        topic="curves", level=3),
+
+    # ------------------------------------------------------------------ bias-variance
+    mcq("You increase the regularisation strength of a model. How do bias and variance usually move?",
+        ["Bias goes up, variance goes down",
+         "Bias goes down, variance goes up",
+         "Both go down",
+         "Neither changes; only training speed changes"], 0,
+        "Regularisation makes the model simpler and more stubborn.",
+        "A stronger penalty limits how far the model can bend to the training sample: less wobble across samples (variance down) but more systematic misses (bias up). The best strength is where their sum is smallest on validation.",
+        analogy="Like a strict lint config: it blocks weird one-off hacks (variance) but also flags some legitimate code (bias).",
+        topic="bias-variance", level=2),
+    out("import numpy as np\ntrue = 10.0\npreds = np.array([12.0, 14.0, 12.0, 14.0])   # same x, 4 different training sets\nbias2 = (preds.mean() - true) ** 2\nvar = preds.var()\nprint(bias2, var)",
+        ["9.0 1.0", "3.0 1.0", "9.0 1.33", "1.0 9.0"], 0,
+        "Bias uses the AVERAGE prediction; variance is the spread around that average.",
+        "Average prediction 13, so bias = 3 and bias^2 = 9. The predictions spread +/- 1 around 13, so variance = 1. This model is consistently too high (bias) more than it is jumpy (variance).",
+        question="Four models trained on different samples predict the same point, whose true value is 10. What does this print?",
+        topic="bias-variance", level=2),
+    tf("Collecting many more rows of the same kind lowers the irreducible error.", False,
+       "Where does irreducible error come from?",
+       "Irreducible error is randomness in the label that the features can't explain. More rows reduce variance, not this floor. To lower it you need better features, cleaner labels or less noisy measurement.",
+       topic="bias-variance", level=3),
+    mcq("For a fixed model class (say, linear regression), why does adding training data mainly reduce variance and not bias?",
+        ["Bias comes from what the model class can represent; more data pins down its best version more precisely, but cannot make a straight line bend",
+         "More data always reduces bias more than variance",
+         "More data increases the number of parameters",
+         "Bias only depends on the learning rate"], 0,
+        "Can a million points make a straight line fit a parabola?",
+        "With more data, the fitted model moves less from sample to sample (variance down) and settles on the best line. If the truth is curved, that best line is still wrong in the same way: bias stays. That's why flat, low learning curves call for more capacity, not more data.",
+        topic="bias-variance", level=3),
+    mcq("For k-nearest-neighbour regression with label noise variance sigma^2, the expected error at a point is about sigma^2 + bias^2 + sigma^2 / k. What does that tell you about k?",
+        ["Raising k cuts the variance term as 1/k, but averages farther neighbours, so bias grows; the best k balances the two",
+         "Larger k always wins because sigma^2 / k shrinks",
+         "k=1 always wins because bias is zero",
+         "k has no effect on the noise floor or bias"], 0,
+        "Two terms depend on k and they move in opposite directions.",
+        "Averaging k noisy labels divides their variance by k. But the k-th neighbour is farther away, so its true value differs more from the query point's: bias rises. The noise floor sigma^2 never moves. Tune k on validation data.",
+        diagram="""
+ error
+  |\\                          /  bias^2 (grows with k)
+  | \\  sigma^2/k          _-'
+  |  \\_               _-''
+  |    '--..____..--''   <- total is lowest in the middle
+  +------------------------------> k
+""",
+        topic="bias-variance", level=4),
+
+    # ------------------------------------------------------------------ capacity
+    mcq("Which of these models has the LOWEST capacity (is the least flexible)?",
+        ["Linear regression on 2 features",
+         "A decision tree with no depth limit",
+         "kNN with k=1",
+         "A degree-15 polynomial regression"], 0,
+        "Which one can only draw a flat plane?",
+        "A linear model on 2 features can only fit a flat plane, so it can't memorise noise. Unlimited trees, 1-NN and high-degree polynomials can all bend to fit almost any training set.",
+        analogy="A linear model is a config file with two knobs; an unlimited tree is a lookup table with one entry per training row.",
+        topic="capacity", level=1),
+    out("from sklearn.datasets import make_classification\nfrom sklearn.tree import DecisionTreeClassifier\nX, y = make_classification(n_samples=200, flip_y=0.2, random_state=0)\nfor d in [3, None]:\n    t = DecisionTreeClassifier(max_depth=d, random_state=0).fit(X, y)\n    print(d, t.get_n_leaves(), t.score(X, y))",
+        ["3 8 0.905\nNone 25 1.0", "3 25 1.0\nNone 8 0.905", "3 3 0.905\nNone 200 1.0", "3 8 1.0\nNone 25 1.0"], 0,
+        "A depth-3 tree has at most 2^3 leaves. An unlimited one keeps splitting until leaves are pure.",
+        "Leaf count is a direct capacity gauge for a tree. With 20% label noise the unlimited tree needs many tiny leaves to isolate noisy rows: that's memorisation, which is why it reaches 1.0 on training data.",
+        topic="capacity", level=2),
+    out("import numpy as np\nfrom sklearn.preprocessing import PolynomialFeatures\nX = np.zeros((1, 2))   # 2 input features\nfor d in [1, 3, 10]:\n    print(d, PolynomialFeatures(degree=d).fit(X).n_output_features_)",
+        ["1 3\n3 10\n10 66", "1 2\n3 6\n10 20", "1 3\n3 9\n10 30", "1 2\n3 8\n10 1024"], 0,
+        "Count every term x1^a * x2^b with a + b <= degree, including the constant 1.",
+        "For 2 inputs the count is C(d + 2, 2): 3, 10 and 66. Capacity grows fast with degree (and much faster with more inputs), so a linear model on polynomial features can overfit quickly without a penalty.",
+        topic="capacity", level=3),
+    fill("A straight-line classifier in 2-D can shatter (label every possible way) at most ____ points; this is its VC dimension.",
+         "3",
+         "Try 3 points in a triangle, then 4 points in a square with diagonal labels.",
+         "Any 3 points not on a line can be split every way by some line, but no 4 points can (the XOR pattern fails). In d dimensions a linear classifier's VC dimension is d + 1: a classic capacity measure.",
+         topic="capacity", level=4),
+
+    # ------------------------------------------------------------------ regularisation
+    mcq("You try Ridge with alpha in [0.001, 0.1, 10] and pick the one with the best TRAINING R². What happens?",
+        ["alpha=0.001 always wins, because less penalty always fits training data better; choose alpha on validation or CV (e.g. RidgeCV)",
+         "alpha=10 wins, because regularisation improves training fit",
+         "They tie, because alpha does not affect training R²",
+         "This is the recommended way to choose alpha"], 0,
+        "The penalty only ever costs training fit.",
+        "Regularisation trades training fit for generalisation, so the training score always prefers the weakest penalty. Hyperparameters like alpha must be judged on data the model didn't train on.",
+        analogy="Like judging a caching policy only by hits on the exact requests you warmed it with.",
+        topic="regularisation", level=2),
+    out("import numpy as np\nfrom sklearn.linear_model import Lasso\nrng = np.random.default_rng(1)\nX = rng.normal(size=(100, 6))\ny = X @ np.array([5.0, 3.0, 1.0, 0.5, 0.0, 0.0]) + rng.normal(0, 0.5, 100)\nfor a in [0.01, 0.8, 4.0]:\n    print(a, int(np.sum(Lasso(alpha=a).fit(X, y).coef_ != 0)))",
+        ["0.01 6\n0.8 2\n4.0 1", "0.01 1\n0.8 2\n4.0 6", "0.01 6\n0.8 6\n4.0 6", "0.01 4\n0.8 4\n4.0 4"], 0,
+        "As alpha grows, the weakest true effects are the first to be zeroed.",
+        "Tiny alpha keeps every feature (even the useless ones get small non-zero weights). As alpha grows, Lasso zeros the weak features first and finally keeps only the strongest. This 'Lasso path' is a quick feature-importance ranking.",
+        topic="regularisation", level=3),
+    out("import numpy as np\nw_ols = np.array([3.0, 0.4, -1.5])   # plain least-squares weights\nlam = 1.0\nlasso = np.sign(w_ols) * np.maximum(np.abs(w_ols) - lam, 0)\nridge = w_ols / (1 + lam)\nprint(lasso.tolist(), ridge.tolist())",
+        ["[2.0, 0.0, -0.5] [1.5, 0.2, -0.75]", "[1.5, 0.2, -0.75] [2.0, 0.0, -0.5]", "[2.0, -0.6, -2.5] [1.5, 0.2, -0.75]", "[3.0, 0.0, -1.5] [1.5, 0.2, -0.75]"], 0,
+        "Lasso subtracts a fixed amount (and stops at zero); Ridge divides.",
+        "With orthonormal features (and the penalty scaled so the threshold is lambda), Lasso soft-thresholds: every weight moves 1 toward 0 and the small one (0.4) lands exactly on 0. Ridge shrinks by a factor, so 0.4 only becomes 0.2. This is the mechanism behind 'L1 gives zeros, L2 gives small'.",
+        question="For orthonormal features, Lasso and Ridge have closed-form answers in terms of the plain least-squares weights. What does this print?",
+        diagram="""
+ OLS weight:   -1.5      0.4       3.0
+ Lasso (-1):   -0.5      0.0       2.0   move 1 toward 0, stop at 0
+ Ridge (/2):   -0.75     0.2       1.5   halve: never reaches 0
+""",
+        topic="regularisation", level=4),
+    tf("sklearn's LogisticRegression() with default arguments is unregularised.", False,
+       "Check the default penalty and C.",
+       "The defaults are penalty='l2' and C=1.0, so it is L2-regularised out of the box. On small or unscaled data this can noticeably shrink coefficients; set C (or penalty=None) on purpose rather than by accident.",
+       topic="regularisation", level=3),
+    mcq("Why does L1 tend to land exactly on zero while L2 does not? Use the picture.",
+        ["The L1 constraint region is a diamond with corners on the axes, and the loss contours usually touch it at a corner, where one weight is 0",
+         "L1 is solved with a different optimiser that rounds small weights",
+         "L2's circle has corners on the axes too",
+         "L1 works only when features are scaled"], 0,
+        "Where does an ellipse first touch a diamond versus a circle?",
+        "Regularised fitting = find the lowest loss inside the constraint region. The diamond's sharp corners sit on the axes (some weight = 0), so they are the likeliest touch points. The circle is smooth, so the touch point is usually off the axes.",
+        diagram=r"""
+  L1: |w1| + |w2| <= t          L2: w1^2 + w2^2 <= t
+          w2                          w2
+          /\   <- contours            .--.
+         /  \     touch a corner     /    \   touch a smooth
+        <    > w1 (w1 = 0)          |      | w1 edge (both
+         \  /                        \    /   weights non-zero)
+          \/                          '--'
+""",
+        topic="regularisation", level=3),
+    out("import numpy as np\nfrom sklearn.linear_model import Ridge\nrng = np.random.default_rng(0)\na, b = rng.normal(size=100), rng.normal(size=100)\ny = a + b                              # both matter equally\nX = np.column_stack([a, b / 1000])     # b stored in 'thousands'\nm = Ridge(alpha=10).fit(X, y)\nprint(round(float(m.coef_[0]), 2), round(float(m.coef_[1] / 1000), 2))",
+        ["0.95 0.0", "0.95 0.95", "0.0 0.95", "1.0 1.0"], 0,
+        "To use the shrunken column, its weight would have to be about 1000. What does the penalty think of that?",
+        "Both features matter equally, but the rescaled one needs a huge coefficient, which the L2 penalty crushes; its effective effect per unit of b drops to about 0. Units, not usefulness, decided the shrinkage. Put StandardScaler before Ridge/Lasso in a Pipeline.",
+        question="Two equally useful features, one stored in different units, with Ridge. It prints the weight on a and the effective weight per unit of b. What does it print?",
+        topic="regularisation", level=3),
+    mcq("When training a transformer with AdamW, why do many recipes exclude biases and LayerNorm weights from weight decay?",
+        ["Shrinking norm scales and biases toward zero doesn't reduce useful complexity and can hurt training; decay is meant for the large weight matrices",
+         "Biases and LayerNorm weights have no gradients",
+         "AdamW cannot apply decay to 1-D tensors",
+         "Weight decay on those parameters makes the model overfit more"], 0,
+        "What does a LayerNorm gain of 0 do to a layer's output?",
+        "Weight decay pulls parameters toward 0. For big matrices that limits capacity, which is the point. For a LayerNorm gain or a bias, 0 is not a 'simple' value, just a broken one. So optimisers get two parameter groups: decay for matrices, none for biases and norms (often embeddings too).",
+        topic="regularisation", level=4),
+
+    # ------------------------------------------------------------------ nn-regularisers
+    tf("Weight decay nudges every weight a little toward zero at each training step, unless the data keeps pushing it back.", True,
+       "The name says what happens to the weights.",
+       "Each step multiplies the weights by slightly less than 1 (or adds an L2 penalty gradient). Weights the data really needs stay large; weights that only fit noise fade away. It is the neural-network name for L2-style regularisation.",
+       analogy="Like a cache with a TTL: entries that keep getting used stay, entries nobody touches expire.",
+       topic="nn-regularisers", level=1),
+    out("import torch\nimport torch.nn as nn\ntorch.manual_seed(0)\nnet = nn.Sequential(nn.Linear(4, 16), nn.ReLU(), nn.Dropout(0.5), nn.Linear(16, 1))\nx = torch.ones(1, 4)\nnet.train(); a, b = net(x), net(x)\nnet.eval();  c, d = net(x), net(x)\nprint(torch.equal(a, b), torch.equal(c, d))",
+        ["False True", "True True", "True False", "False False"], 0,
+        "In train mode each forward pass draws a new dropout mask.",
+        "Two forward passes in train mode use different random masks, so the outputs differ. In eval mode dropout is off and the network is deterministic. If your 'inference' gives different answers on the same input, check for a missing model.eval().",
+        topic="nn-regularisers", level=3),
+    mcq("A model uses BatchNorm. You forget model.eval() and serve requests one at a time. What goes wrong?",
+        ["BatchNorm keeps normalising with the current batch's statistics (and updating running stats), so a batch of one gives unstable, wrong outputs",
+         "Nothing; BatchNorm behaves the same in train and eval",
+         "Only dropout is affected by eval()",
+         "The model raises an error for batch size 1 at every layer"], 0,
+        "In train mode, BatchNorm's mean and variance come from the batch itself.",
+        "eval() switches BatchNorm to the running mean/variance learned in training. In train mode a single row is normalised against itself, predictions depend on what else is in the batch, and running stats drift. model.eval() (plus torch.no_grad()) is mandatory for inference.",
+        topic="nn-regularisers", level=3),
+    out("import numpy as np\neps, K = 0.1, 4\ntarget = np.eye(K)[0]          # one-hot: class 0\nsmooth = target * (1 - eps) + eps / K\nprint([round(v, 3) for v in smooth.tolist()])",
+        ["[0.925, 0.025, 0.025, 0.025]", "[0.9, 0.1, 0.1, 0.1]", "[0.9, 0.033, 0.033, 0.033]", "[1.0, 0.0, 0.0, 0.0]"], 0,
+        "Keep 1 - eps of the one-hot, then spread eps evenly over all K classes.",
+        "Label smoothing gives 0.9 + 0.025 to the true class and 0.025 to each other class. Targets are never exactly 1, so the model can't push logits to infinity to become ever more confident: a cheap regulariser used in many image and transformer models.",
+        question="Label smoothing with eps = 0.1 over 4 classes. What does this print?",
+        topic="nn-regularisers", level=3),
+    out("val = [0.80, 0.70, 0.695, 0.692, 0.69, 0.60]\nbest, waited, patience, min_delta = float('inf'), 0, 3, 0.01\nfor epoch, v in enumerate(val):\n    if v < best - min_delta:\n        best, waited = v, 0\n    else:\n        waited += 1\n        if waited >= patience:\n            break\nprint(epoch, best)",
+        ["4 0.7", "5 0.6", "4 0.69", "2 0.695"], 0,
+        "With min_delta, an improvement only counts if it beats the best by more than 0.01.",
+        "After 0.70, the drops to 0.695, 0.692 and 0.69 are each smaller than min_delta, so patience runs out at epoch 4, before the real drop to 0.60. A min_delta that's too large (or patience too small) stops on a slow plateau.",
+        diagram="""
+ epoch  val    beats best - 0.01?  waited
+ 0      0.80   yes (new best)       0
+ 1      0.70   yes (new best)       0
+ 2      0.695  no  (needs < 0.69)   1
+ 3      0.692  no                   2
+ 4      0.69   no                   3 -> stop
+ 5      0.60   never seen
+""",
+        topic="nn-regularisers", level=3),
+    out("import numpy as np\nlam = 0.7\nx1, x2 = np.array([1.0, 0.0]), np.array([0.0, 1.0])\ny1, y2 = np.array([1, 0, 0]), np.array([0, 0, 1])\nx = lam * x1 + (1 - lam) * x2\ny = lam * y1 + (1 - lam) * y2\nprint([round(v, 2) for v in x.tolist()], [round(v, 2) for v in y.tolist()])",
+        ["[0.7, 0.3] [0.7, 0.0, 0.3]", "[0.7, 0.3] [1.0, 0.0, 0.0]", "[1.0, 1.0] [1.0, 0.0, 1.0]", "[0.7, 0.3] [0.0, 0.0, 1.0]"], 0,
+        "Mixup blends the inputs AND the labels with the same weight.",
+        "Mixup trains on 70/30 blends of two examples with 70/30 blended labels. The model learns to behave linearly between examples instead of making sharp, memorised jumps. Keeping the hard label (option 2) would teach a wrong target.",
+        question="Mixup augmentation with lambda = 0.7. What does this print?",
+        topic="nn-regularisers", level=3),
+    fill("Fill the keyword that sets decoupled weight decay: torch.optim.AdamW(model.parameters(), lr=1e-3, ____=0.01)",
+         "weight_decay",
+         "Two words joined by an underscore.",
+         "weight_decay=0.01 shrinks every weight by lr x 0.01 each step. In SGD the same keyword acts like an L2 penalty; in AdamW it is applied separately from the adaptive step.",
+         topic="nn-regularisers", level=2),
+    mcq("Why do most large LLM pre-training runs use little or no dropout?",
+        ["They see each token about once over a huge corpus, so there is little chance to memorise; dropout would mostly slow learning",
+         "Dropout does not work with attention layers",
+         "Dropout is applied only at inference for LLMs",
+         "LLMs overfit so badly that dropout cannot help"], 0,
+        "How many epochs does a typical pre-training run do?",
+        "Overfitting needs repeated exposure. With roughly one pass over trillions of tokens, the model is data-limited, not memorising, so regularisers that slow fitting cost more than they save. Small-data fine-tuning is different: there dropout (e.g. LoRA dropout), early stopping and few epochs matter.",
+        topic="nn-regularisers", level=4),
+
+    # ------------------------------------------------------------------ data-ensembles
+    tf("Duplicating every training row (so the dataset is twice as big) helps against overfitting about as much as collecting twice as much new data.", False,
+       "Does a copy add any new information?",
+       "Copies add no new patterns; they just weight the same rows more, like extra epochs. New, independent rows are what reduce variance. Augmentation sits in between: it adds realistic variation, not exact copies.",
+       analogy="Running the same unit test twice doesn't double your coverage.",
+       topic="data-ensembles", level=2),
+    out("import numpy as np\nrng = np.random.default_rng(0)\nn = 10000\nidx = rng.integers(0, n, n)        # one bootstrap sample\nprint(round(len(np.unique(idx)) / n, 2), round(1 - (1 - 1 / n) ** n, 3))",
+        ["0.64 0.632", "1.0 1.0", "0.5 0.5", "0.37 0.368"], 0,
+        "The chance a given row is never picked in n draws is (1 - 1/n)^n, about 1/e.",
+        "A bootstrap sample contains about 63.2% of the distinct rows; the other ~36.8% are 'out-of-bag' for that tree. Different trees see different rows, which is what makes bagging's averaging useful, and the left-out rows give a free validation score.",
+        question="How many distinct rows does one bootstrap sample contain? What does this print?",
+        topic="data-ensembles", level=3),
+    out("from sklearn.datasets import make_classification\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.model_selection import train_test_split\nX, y = make_classification(n_samples=600, n_features=20, n_informative=5, flip_y=0.1, random_state=0)\nXtr, Xte, ytr, yte = train_test_split(X, y, random_state=0)\nrf = RandomForestClassifier(n_estimators=300, oob_score=True, random_state=0).fit(Xtr, ytr)\nprint(rf.score(Xtr, ytr), round(rf.oob_score_, 2), round(rf.score(Xte, yte), 2))",
+        ["1.0 0.85 0.91", "1.0 1.0 0.91", "0.85 0.85 0.85", "1.0 0.5 0.91"], 0,
+        "Each row's OOB prediction only uses trees that never saw that row.",
+        "Training accuracy 1.0 means nothing for a forest. The out-of-bag score uses trees that didn't train on each row, so it is an honest estimate in the same range as the test score (often a little pessimistic, since each row is scored by only about a third of the trees): a free validation estimate without a holdout.",
+        topic="data-ensembles", level=3),
+    out("import numpy as np\nfrom sklearn.datasets import make_classification\nfrom sklearn.ensemble import GradientBoostingClassifier\nfrom sklearn.model_selection import train_test_split\nX, y = make_classification(n_samples=400, n_features=10, flip_y=0.3, random_state=0)\nXtr, Xte, ytr, yte = train_test_split(X, y, random_state=0)\ngb = GradientBoostingClassifier(n_estimators=300, learning_rate=0.5, random_state=0).fit(Xtr, ytr)\nerr = [np.mean(p != yte) for p in gb.staged_predict(Xte)]\nprint(gb.score(Xtr, ytr), int(np.argmin(err)) + 1 < 300)",
+        ["1.0 True", "1.0 False", "0.7 True", "0.7 False"], 0,
+        "staged_predict gives the prediction after each boosting round.",
+        "With noisy labels and a high learning rate, boosting drives training accuracy to 1.0 by fitting noise, and the best test error comes long before round 300. Use a small learning_rate plus early stopping (n_iter_no_change, or HistGradientBoosting's early_stopping).",
+        question="Boosting for 300 rounds on noisy labels. It prints the training accuracy and whether the best test round comes before the last one. What does it print?",
+        topic="data-ensembles", level=3),
+    mcq("Why does a random forest consider only a random subset of features at each split (max_features), even though that makes each tree a bit worse?",
+        ["It decorrelates the trees, shrinking the rho * sigma^2 floor that averaging can't remove",
+         "It makes each tree more accurate",
+         "It reduces bias, not variance",
+         "It is only there to speed up training"], 0,
+        "Recall: variance of an average = rho*s^2 + (1 - rho)*s^2/B.",
+        "If every tree could use the one dominant feature, they'd all split the same way (high rho), and adding trees would stop helping. Random feature subsets make trees disagree, lowering rho. Each tree loses a little accuracy, but the average gains more.",
+        topic="data-ensembles", level=4),
+    mcq("You stack models: a meta-model is trained on the base models' predictions. Why must those predictions be out-of-fold, not made on the rows the base models trained on?",
+        ["In-sample predictions of an overfit base model look perfect, so the meta-model learns to trust it and fails on new data",
+         "Out-of-fold predictions are faster to compute",
+         "The meta-model cannot read in-sample predictions",
+         "It doesn't matter for stacking"], 0,
+        "What does an unlimited tree predict for its own training rows?",
+        "An unlimited tree reproduces its training labels exactly, so on those rows it looks like the best base model. Out-of-fold predictions (cross_val_predict, or StackingClassifier's internal cv) show each model's honest error, so the meta-model learns sensible weights.",
+        analogy="Like judging engineers by code they reviewed themselves.",
+        topic="data-ensembles", level=4),
+    mcq("You bag 500 decision stumps (depth-1 trees) on a problem with a curved boundary. Test accuracy barely improves over one stump. Why?",
+        ["Stumps are high-bias, low-variance; averaging cuts variance, so there is little to fix; boosting (which reduces bias) suits stumps",
+         "500 stumps is too few for bagging",
+         "Bagging only works for regression",
+         "Bootstrap samples are too small"], 0,
+        "What kind of error does averaging remove?",
+        "Bagging averages away the random part of each model's error. A stump's error is mostly systematic (it can only draw one cut), and every stump makes roughly the same mistake. Boosting adds stumps one after another to correct the remaining errors, which attacks bias.",
+        topic="data-ensembles", level=4),
+
+    # ------------------------------------------------------------------ double-descent
+    out("import numpy as np\nX = np.array([[1.0, 1.0]]); y = np.array([2.0])   # 1 row, 2 weights\nw = np.linalg.pinv(X) @ y\nother = np.array([2.0, 0.0])                          # also fits exactly\nprint(np.round(w, 3).tolist(), round(float(np.linalg.norm(w)), 3), float(np.linalg.norm(other)))",
+        ["[1.0, 1.0] 1.414 2.0", "[2.0, 0.0] 2.0 2.0", "[1.0, 1.0] 2.0 1.414", "[0.0, 2.0] 2.0 2.0"], 0,
+        "pinv returns the exact-fit solution with the smallest length.",
+        "w1 + w2 = 2 has infinitely many solutions. The pseudo-inverse picks the minimum-norm one, [1, 1], length 1.414, rather than [2, 0], length 2. Past the interpolation threshold, this 'pick the smallest weights' bias is what lets big models generalise.",
+        question="One equation, two unknowns: which exact solution does the pseudo-inverse pick? What does this print?",
+        diagram="""
+ w2
+ 2 |*            every point on the line w1 + w2 = 2
+   |  *           fits the one row exactly
+ 1 |    o  <- min-norm [1, 1], closest to the origin
+   |      *
+ 0 +--------*---> w1
+   0    1    2 [2, 0]
+""",
+        topic="double-descent", level=3),
+    tf("Near the interpolation threshold, adding MORE training samples can make test error worse for a fixed-size model.", True,
+       "Moving n moves the threshold p = n.",
+       "Sample-wise double descent: if extra rows push n up to about the parameter count, the model lands right on the badly conditioned peak. It's a reason to tune regularisation along with model and data size, not to stop collecting data.",
+       topic="double-descent", level=4),
+    mcq("A large network shows 'epoch-wise double descent': test error drops, rises, then drops again with more epochs. What does this mean for early stopping?",
+        ["Stopping at the first minimum may leave a better later minimum unused; watch a longer window or use more patience when you see this",
+         "Early stopping is always optimal at the first minimum",
+         "It proves the validation set is broken",
+         "It only happens with L1 regularisation"], 0,
+        "Patience assumes 'once worse, always worse'.",
+        "Epoch-wise double descent shows up in big models, especially with label noise. It's not universal, but it means short patience can stop too early. Log the full curve and compare the best checkpoint over a longer run.",
+        diagram="""
+ test error
+  |\\       _
+  | \\    _' '-._
+  |  '--'       '-.___
+  |   ^first min       '--...___ later, lower min
+  +--------------------------------> epochs
+""",
+        topic="double-descent", level=4),
+    mcq("What happens to the double-descent peak when you add a well-tuned ridge penalty?",
+        ["The peak is largely flattened: tuned regularisation stops the model from needing huge weights to interpolate noise",
+         "The peak gets taller",
+         "The peak moves to p = 2n",
+         "Ridge has no effect on overparameterised models"], 0,
+        "The peak comes from huge, unstable weights at p = n.",
+        "The spike at the interpolation threshold comes from fitting noise exactly with a badly conditioned system. A tuned penalty refuses those huge weights, so test error becomes smooth in model size. Double descent is mostly a story about unregularised or weakly regularised fits.",
+        topic="double-descent", level=4),
+
+    # ------------------------------------------------------------------ llm-finetune
+    tf("If training loss keeps going down during fine-tuning, the model is definitely getting better.", False,
+       "Better at what: the training rows or new prompts?",
+       "Training loss only says it fits the training examples. Watch eval loss on held-out examples and test real prompts; falling train loss with rising eval loss means it is memorising.",
+       topic="llm-finetune", level=1),
+    mcq("You fine-tune a 7B model on 1,500 instruction examples. How many epochs is a sensible starting point?",
+        ["About 1 to 3, watching eval loss and keeping the best checkpoint",
+         "50 or more, so it really learns them",
+         "Exactly 1 step",
+         "Train until training loss reaches 0"], 0,
+        "Small data + huge model = memorises quickly.",
+        "Big pre-trained models pick up a small dataset's format in a few passes; more epochs mostly memorise. Start small, evaluate each epoch, and keep the best checkpoint (load_best_model_at_end).",
+        topic="llm-finetune", level=2),
+    out("d_in = d_out = 4096\nr = 8\nfull = d_in * d_out\nlora = r * (d_in + d_out)\nprint(full, lora, round(lora / full * 100, 2))",
+        ["16777216 65536 0.39", "16777216 32768 0.2", "16777216 65536 3.9", "8192 65536 800.0"], 0,
+        "LoRA trains two thin matrices: d_in x r and r x d_out.",
+        "One 4096 x 4096 layer has 16.8M weights; a rank-8 adapter trains only 65,536 (0.39%). That limits capacity, but across dozens of layers and several matrices it is still millions of parameters: enough to memorise a few hundred examples.",
+        question="Trainable parameters for one 4096 x 4096 weight matrix: full fine-tuning vs a rank-8 LoRA adapter. What does this print?",
+        topic="llm-finetune", level=3),
+    mcq("Your fine-tuned model scores 95% on a public benchmark, but much lower on fresh questions of the same kind written by your team. Training data was scraped from the web. What is the most likely cause?",
+        ["Benchmark contamination: test questions (or close copies) were in the training data, so the score measures memory",
+         "Underfitting on the benchmark",
+         "Your team's questions are too easy",
+         "Double descent"], 0,
+        "Where might the benchmark's questions also live?",
+        "Public benchmarks are all over the web. If they end up in training data, the model has seen the answers, which is leakage, not skill. Check n-gram overlap between training data and the eval set, and keep a private eval set that never goes online.",
+        topic="llm-finetune", level=3),
+    mcq("During SFT, eval loss on the held-out split rises after epoch 2, but a judged task metric on held-out prompts keeps improving through epoch 3. Which checkpoint signal should you trust more?",
+        ["The task metric on real prompts, while checking for verbatim copying and lost general skills; token loss on the reference wording is only a proxy",
+         "Always eval loss: it is the only objective metric",
+         "Training loss",
+         "Neither; always ship the last checkpoint"], 0,
+        "Eval loss scores how likely the exact reference words are, not whether the answer is good.",
+        "A good answer phrased differently from the reference still costs loss, and growing confidence raises loss on rows the model gets wrong. Eval loss is a cheap early warning; the decision should use the metric that matches the product, plus guards against memorisation and forgetting.",
+        topic="llm-finetune", level=4),
+
+    # ------------------------------------------------------------------ val-overfit
+    mcq("What does 'overfitting the validation set' mean?",
+        ["After many rounds of tuning against the same validation set, your choices fit its quirks, so the validation score becomes too optimistic",
+         "The model trains on the validation set by mistake",
+         "The validation set is too large",
+         "Validation loss is lower than training loss"], 0,
+        "Every decision you make by looking at a score uses up some of that data's honesty.",
+        "No weights train on validation data, but YOU do: each hyperparameter, feature or prompt change kept because validation went up fits it a little. Keep a test set you look at once, and refresh validation data when you can.",
+        analogy="Like tweaking code until one flaky integration test goes green, then treating that green as proof the code works.",
+        topic="val-overfit", level=2),
+    mcq("A Kaggle team is 1st on the public leaderboard (scored on a small public slice of the test data) after 400 submissions, then drops to 60th on the private leaderboard. What happened?",
+        ["They tuned against the public slice so often that they fit its noise; the private slice exposed it",
+         "The private leaderboard is random",
+         "Their model underfit",
+         "The public slice was larger than the private one"], 0,
+        "400 looks at the same small slice.",
+        "Each submission is a peek at the public score. Picking whatever went up fits that slice's noise: the classic 'shake-up'. Trust your own cross-validation more than a small public leaderboard.",
+        diagram="""
+ test data: [ public 20% | private 80%           ]
+                 ^ 400 peeks     ^ scored once, at the end
+ public rank:  1st   (fit to the slice's noise)
+ private rank: 60th
+""",
+        topic="val-overfit", level=2),
+    out("import numpy as np\nrng = np.random.default_rng(0)\ny_val = rng.integers(0, 2, 50)\nguesses = rng.integers(0, 2, (200, 50))      # 200 'models' that guess at random\naccs = (guesses == y_val).mean(axis=1)\ny_new = rng.integers(0, 2, 20000)\nbest_on_new = rng.integers(0, 2, 20000)       # the 'best' one is still a coin flip on new rows\nprint(round(float(accs.max()), 2), round(float((best_on_new == y_new).mean()), 2))",
+        ["0.68 0.5", "0.5 0.5", "1.0 0.5", "0.68 0.68"], 0,
+        "The maximum of 200 noisy scores is far above their average.",
+        "Every 'model' is a coin flip, yet the best of 200 scores well above 0.5 on 50 validation rows, purely by luck. On new data it is back to about 0.5. Picking the best of many candidates on a small set inflates the winning score.",
+        question="200 random-guess models scored on 50 validation rows: the best score, then the best model's accuracy on fresh rows. What does it print?",
+        topic="val-overfit", level=3),
+    mcq("GridSearchCV tried 500 hyperparameter combinations. Is best_score_ a fair estimate of the final model's performance?",
+        ["No: it's the maximum over 500 noisy CV scores, so it's optimistic; use nested CV or a separate untouched test set",
+         "Yes: cross-validation removes all bias",
+         "Yes, if cv=10",
+         "No, because GridSearchCV trains on the test set"], 0,
+        "The same folds were used both to choose and to score.",
+        "The folds that picked the winner can't also grade it fairly: the best of many noisy scores is biased upward. Nested CV (an inner loop to choose, an outer loop to score) or a final holdout gives an honest number.",
+        topic="val-overfit", level=3),
+    mcq("In nested cross-validation, what does each loop do?",
+        ["The inner loop tunes hyperparameters on the outer training part; the outer loop scores that whole tuning procedure on folds it never saw",
+         "The inner loop scores the model; the outer loop trains it",
+         "Both loops tune hyperparameters, to double-check",
+         "The outer loop picks features and the inner loop is skipped"], 0,
+        "One loop chooses, the other judges the choosing.",
+        "Nested CV estimates how well 'run GridSearchCV, then fit' works on new data. In sklearn: cross_val_score(GridSearchCV(model, grid, cv=inner), X, y, cv=outer). The outer score is honest; the per-fold best parameters can differ, which is fine.",
+        diagram="""
+ outer fold 1: [ outer-train: inner CV picks params ][ outer-test ]
+ outer fold 2: [ outer-train: inner CV picks params ][ outer-test ]
+ outer fold 3: [ outer-train: inner CV picks params ][ outer-test ]
+ reported score = mean of the outer-test scores
+""",
+        topic="val-overfit", level=4),
+    mcq("Over six months a team tried 300 prompt and model variants against the same 100-example eval set. The best scores 91%. What is the most honest next step before claiming 91%?",
+        ["Score the chosen variant once on a fresh eval set that played no part in any decision, and report it with an interval",
+         "Report 91%; the eval set never trained the model",
+         "Average the top 10 variants' scores",
+         "Re-run the best variant on the same 100 examples to confirm"], 0,
+        "300 decisions were made by looking at those 100 rows.",
+        "Picking from 300 variants on 100 examples bakes in a winner's-curse bonus of several points. A fresh holdout removes it, and an interval (about +/- 6 points at n = 100) shows how much the score can move by chance. Rotate eval sets regularly, like rotating secrets.",
+        analogy="An eval set you've peeked at 300 times is a known test suite: passing it no longer proves much.",
+        topic="val-overfit", level=4),
 ]

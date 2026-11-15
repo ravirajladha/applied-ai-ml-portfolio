@@ -17,6 +17,8 @@
 | 8 | `complexity` | Time complexity | — | append O(1), `in` O(n) | pop(0)/insert(0) O(n), use a set for membership | amortised O(1) append, `sum(lists, [])` quadratic, `bisect.insort` still O(n) |
 | 9 | `mutable-defaults` | Mutable default arguments | — | `def f(x, acc=[])` keeps growing | `None` sentinel fix | defaults are evaluated once at `def` time, live in `f.__defaults__` |
 | 10 | `internals` | How lists work inside | — | — | a list stores references, not values | dynamic array over-allocation, `sys.getsizeof` excludes elements, `id` stable across growth |
+| 11 | `iter-tools` | Looping helpers: enumerate, zip, reversed | `enumerate`, `min`/`max`/`sum` | `zip` pairs and silently truncates, `reversed`, loop variable is not a slot | `zip(strict=True)`, iterators are single-use | `zip(it, it)` chunking idiom |
+| 12 | `ml-patterns` | Lists in ML code: batches, padding, metrics | metric history with `append` | batching with slices, `+`/`*` are not element-wise, `max(runs, key=...)` | padding token sequences, ragged lists -> NumPy ValueError, shuffle X and y together, order-keeping dedupe | NumPy dtype upcasting from mixed lists, storing loss tensors leaks the graph, float summation error |
 
 ## Must-know facts
 - Indexing is zero-based; `a[-1]` is the last item; `a[i]` out of range raises IndexError but a slice out of range just returns fewer items.
@@ -34,6 +36,8 @@
 - Python's sort is stable; `key` is computed once per element.
 - Default argument values are evaluated once, when `def` runs.
 - A list is a dynamic array of pointers that over-allocates so appends are amortised O(1).
+- `zip` stops at the shortest input and is a single-use iterator; `enumerate` gives (index, item).
+- Lists are not vectors: convert to NumPy for element-wise maths, and pad ragged rows first.
 
 ## Common traps (each one must have at least one question)
 - `x = nums.sort()` -> `x` is None; `.sort()` sorts in place and returns None.
@@ -48,6 +52,13 @@
 - `queue.pop(0)` in a loop -> quadratic time; use deque.
 - `a += [4]` changes every alias, `a = a + [4]` doesn't.
 - `t = ([1],); t[0] += [2]` -> raises TypeError but the inner list is still changed.
+- `zip(a, b)` with different lengths -> silently drops the extras; use `strict=True`.
+- `[1, 2] + [3, 4]` / `[1, 2] * 2` -> concatenation and repetition, not element-wise maths.
+- `random.shuffle(X)` then `random.shuffle(y)` -> features and labels no longer line up.
+- `np.array([[1, 2], [3]])` -> ValueError (ragged); pad first.
+- `losses.append(loss)` with a PyTorch tensor -> keeps the autograd graph alive; append `loss.item()`.
+- `sorted([3, nan, 1])` -> not sorted and no error.
+- `class M: layers = []` -> one list shared by every instance.
 - `sorted(["b", "A", "a"])` -> uppercase sorts before lowercase.
 - `a[::2] = [1]` when the slice has 3 items -> ValueError.
 

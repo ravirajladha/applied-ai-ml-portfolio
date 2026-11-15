@@ -16,6 +16,8 @@
 | 7 | `precedence` | Operator precedence | — | `not` binds looser than `==` | `and` binds tighter than `or`, `x == 1 or 2` trap | `not` with `in`/`is`, comparison vs bitwise `&` (Pandas masks) |
 | 8 | `any-all` | any() and all() | — | `any`/`all` with a generator | `all([])` is True, `any([])` is False | short-circuit on generators, returning bool not the item |
 | 9 | `if-structure` | if / elif / else and guard clauses | `if`/`elif`/`else` order, indentation | first True branch wins, elif vs separate ifs | unreachable elif order bugs, guard clauses / early return | walrus in conditions, empty block needs `pass` |
+| 10 | `type-checks` | isinstance and type checks | `isinstance(x, int)` | tuple of types, convert after `isdigit()` | `isinstance(True, int)` is True, isinstance vs `type() ==`, `list \| tuple` unions | `np.int64` is not an `int`, `collections.abc.Mapping`, rejecting bools in validators |
+| 11 | `ml-patterns` | Conditions in ML code: thresholds, masks, early stopping | save-best-checkpoint check | accuracy from summed comparisons | early stopping with patience and `min_delta`, `np.where` thresholds, tensor in `if` -> RuntimeError, `df.empty`, `in` vs truthiness for config keys | NaN is truthy and fails every comparison, `if a == b` on arrays, `np.array_equal` |
 
 ## Must-know facts
 - Comparisons return `True` or `False`; `=` assigns, `==` compares.
@@ -33,6 +35,9 @@
 - `match` checks cases top to bottom, runs only the first match, and never falls through.
 - A bare name in a `case` is a capture pattern that matches anything; constants must be dotted (`Color.RED`) or literals.
 - Mapping patterns match if the listed keys are present (extra keys are fine); sequence patterns never match `str`.
+- `isinstance` accepts subclasses (and `bool` is a subclass of `int`); `type(x) == T` is an exact match.
+- In Python `&`/`|` bind tighter than comparisons (the opposite of C/JS), so mask conditions need brackets.
+- NaN is truthy and never compares True with `<`, `>` or `==`; test it with `math.isnan`.
 
 ## Common traps (each one must have at least one question)
 - `if x == 1 or 2:` -> always true, because `2` is truthy on its own.
@@ -48,6 +53,15 @@
 - `elif` order: `if score >= 50: ... elif score >= 90:` -> the second branch can never run.
 - `True + True` -> 2; bool is a subclass of int.
 - `df[(a > 1) and (b < 2)]` in Pandas -> ValueError; use `&` with brackets.
+- `df[df.a > 1 & df.b < 2]` without brackets -> `&` binds first, ValueError.
+- `bucket = bucket or []` -> a caller's empty list is replaced, so their list never changes.
+- `if loss > 10: stop()` -> never fires for NaN; NaN is truthy and every comparison with it is False.
+- `isinstance(True, int)` -> True; validators accept booleans as ints.
+- `isinstance(np.int64(5), int)` -> False.
+- `if tensor > 1:` on a multi-element PyTorch tensor -> RuntimeError.
+- `"10" < "9"` -> True; strings compare character by character.
+- `x > 3 == True` -> a chained comparison, `(x > 3) and (3 == True)`.
+- `[n for n in xs if c else 0]` -> SyntaxError; a mapping conditional goes before `for`.
 
 ## Interview angle
 - **"What does `a or b` return?"** Not necessarily a bool: it returns `a` if `a` is truthy, else `b`. That's why `name or "anonymous"` works as a default, and why it's wrong when `0` or `""` is a valid value. Similar to JS `||`; Python has no `??`, so for "only if None" write `b if a is None else a`.

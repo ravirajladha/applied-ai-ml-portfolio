@@ -17,6 +17,7 @@
 | 8 | `assert-warnings` | assert and warnings | what `assert` does | AssertionError message, assert is not validation | `python -O` strips asserts, `warnings.warn`, categories | warnings filters, turning warnings into errors |
 | 9 | `debugging` | Debugging: print, logging, pdb | print vs breakpoint idea | `logging` levels, `logger.exception` | `pdb` commands (n, s, c, p, q), post-mortem `%debug` | logger hierarchy / propagation, lazy `%s` formatting |
 | 10 | `exception-groups` | ExceptionGroup and except* | — | — | what an ExceptionGroup is (many errors at once) | `except*` matching, splitting groups, asyncio TaskGroup |
+| 11 | `ml-patterns` | Error handling in real ML code | skip bad rows per item, log what was skipped | retry loops for flaky I/O, NaN loss never raises | PyTorch RuntimeError for shapes, `torch.cuda.OutOfMemoryError`, DataLoader worker tracebacks, checkpoint on Ctrl+C, silent-skip data loss | what to retry vs fail fast, stored exceptions pinning GPU memory via `__traceback__`, adding sample context with `add_note` / `from e` |
 
 ## Must-know facts
 - Read a traceback from the bottom: last line is `ErrorType: message`; the frame just above it is where it was raised.
@@ -36,6 +37,10 @@
 - `logging` has levels (DEBUG < INFO < WARNING < ERROR < CRITICAL); the default level is WARNING.
 - `breakpoint()` drops into pdb at that line.
 - `except*` handles parts of an ExceptionGroup; each matching clause can run.
+- The expression after `except` is evaluated only when an exception arrives, so a typo there (or a list instead of a tuple) fails late.
+- If `__enter__` raises, `__exit__` never runs; an error raised in `finally` replaces the in-flight one (the original becomes `__context__`).
+- PyTorch reports shape mismatches as RuntimeError; `torch.cuda.OutOfMemoryError` is a RuntimeError subclass.
+- NaN and inf are valid floats: a NaN loss never raises on its own.
 
 ## Common traps (each one must have at least one question)
 - Thinking the first traceback line is the error -> the last line is.
@@ -54,6 +59,13 @@
 - `logging.debug` printing nothing -> default level is WARNING.
 - `dict.get` vs `[]` -> `.get` returns None instead of raising KeyError.
 - UnboundLocalError when assigning to a global name inside a function.
+- `except Exception: continue` over every row -> silent data loss; count skips and fail past a threshold.
+- Saving a checkpoint with `except Exception` on Ctrl+C -> never runs; catch KeyboardInterrupt, save, re-raise.
+- Storing caught exceptions in a list -> their tracebacks keep frames and GPU tensors alive.
+- Retrying every error -> bad requests and auth failures retried forever; retry only transient errors.
+- `raise StopIteration` inside a generator -> RuntimeError (PEP 479).
+- `@contextmanager` that doesn't yield on some path -> RuntimeError: generator didn't yield.
+- Plain `except ValueError` around code that raises an ExceptionGroup -> no match; use except*.
 
 ## Interview angle
 1. **"try/except/else/finally: when does each run?"** try always; except only on a matching error; else only if try raised nothing; finally always, even on return. Use else for code that should only run on success, so its own errors are not caught by the except. SDE analogy: Java try/catch/finally plus a "success" hook.

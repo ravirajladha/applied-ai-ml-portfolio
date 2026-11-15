@@ -15,6 +15,8 @@ TOPICS = [
     ("functools", "functools: partial, lru_cache, wraps, reduce"),
     ("hints-docs", "Type hints and docstrings"),
     ("recursion", "Recursion"),
+    ("passing", "Argument passing: object references"),
+    ("callbacks", "Callbacks and callable objects in ML code"),
 ]
 
 QUESTIONS = [
@@ -385,4 +387,713 @@ QUESTIONS = [
         "Python's sort is stable, even with reverse=True.",
         "Equal keys keep their original order: Bo stays before Cy. reverse=True does not flip ties.",
         topic="first-class", level=4),
+]
+
+
+# ---------------- Expansion: more questions per topic ----------------
+QUESTIONS += [
+    # ---------------- Level 1: amateur ----------------
+    mcq("When you call `f(nums)` with a list, what does the function receive?",
+        ["The same list object, under a new parameter name (no copy is made)",
+         "A fresh copy of the list",
+         "Only the first element",
+         "The variable name 'nums' as text"], 0,
+        "Python never copies arguments for you.",
+        "The parameter is a second name for the very same object. If f changes the list (append, sort), the caller sees the change.",
+        analogy="Like sharing a link to a Google Doc rather than emailing a copy: edits show up for everyone holding the link.",
+        topic="passing", level=1),
+    mcq("What is the difference between `button.on_click(save)` and `button.on_click(save())`?",
+        ["The first passes the function itself to be called later; the second calls save right now and passes its return value",
+         "There is no difference",
+         "The first is a SyntaxError",
+         "The second passes the function, the first passes nothing"], 0,
+        "Parentheses mean 'call it now'.",
+        "A callback is the function object, with no (). Writing save() runs it immediately and hands over whatever it returned, often None.",
+        analogy="addEventListener('click', save) vs addEventListener('click', save()) in JavaScript: the same bug.",
+        topic="callbacks", level=1),
+    out('def f():\n    return "hi"\n\nprint(type(f).__name__, type(f()).__name__)',
+        ["function str", "str str", "function function", "NoneType str"], 0,
+        "f is the function; f() is what it returns.",
+        "Without parentheses you have the function object itself. With them you get the result of calling it, here a str.",
+        topic="def-return", level=1),
+    tf("A function can contain more than one return statement.", True,
+       "Think of an if/else where each branch returns.",
+       "A function can have many returns, but only one runs per call: the first one reached ends the function.",
+       topic="def-return", level=1),
+    fill("What does this print? Type the exact output.",
+         '#ai#',
+         "Passing sym replaces the default.",
+         "sym=\"#\" overrides the default \"*\", so the text is wrapped in #.",
+         code='def tag(text, sym="*"):\n    return sym + text + sym\n\nprint(tag("ai", sym="#"))',
+        topic="arguments",
+        level=1),
+    fill("In `def f(*args):`, Python packs the extra positional arguments into a ____.",
+         "tuple",
+         "It's an immutable sequence type.",
+         "args is a tuple, so you can loop over it or index it, but not append to it.",
+         topic="args-kwargs", level=1),
+    out('def f():\n    y = 1\n\nf()\nprint(y)',
+        ["NameError", "1", "None", "0"], 0,
+        "Where does y live?",
+        "y is local to f and disappears when f returns. The code outside has no name y, so it raises NameError. Return the value if the caller needs it.",
+        analogy='Like a variable declared inside a JS function: gone once the function returns.',
+        topic="scope", level=1),
+    out('def total(n):\n    if n == 0:\n        return 0\n    return n + total(n - 1)\n\nprint(total(3))',
+        ["6", "3", "0", "RecursionError"], 0,
+        "total(3) = 3 + total(2) = ...",
+        "3 + 2 + 1 + 0 = 6. Each call waits for the smaller one to finish, and n == 0 stops the chain.",
+        diagram="""
+ total(3) = 3 + total(2)
+               2 + total(1)
+                   1 + total(0)
+                       0          <- base case
+""",
+        topic="recursion", level=1),
+    out('nums = [1, 2, 3]\nprint(list(map(lambda n: n * 10, nums)))',
+        ["[10, 20, 30]", "[1, 2, 3]", "<map object>", "60"], 0,
+        "map applies the function to every item.",
+        "map calls the lambda on 1, 2 and 3, and list() collects the results. A list comprehension [n * 10 for n in nums] does the same thing.",
+        topic="first-class", level=1),
+    mcq("What does `def area(r: float) -> float:` tell you?",
+        ["r is expected to be a float and the function returns a float; it's documentation for readers and tools",
+         "Python will convert r to a float automatically",
+         "Python raises an error if r is not a float",
+         "The function can only be called once"], 0,
+        "These are called type hints.",
+        "Type hints describe the intended types. Editors and checkers like mypy use them, but Python itself doesn't convert or check anything at runtime.",
+        analogy="Like TypeScript annotations: helpful to tools, gone at runtime.",
+        topic="hints-docs", level=1),
+
+    # ---------------- Level 2: intermediate ----------------
+    tf("This code prints `['a', 'new']`.", True,
+        "tags and mine point to the same list.",
+        "append mutates the shared list object, so the caller's list changes. Functions that do this should say so in their name or docstring.",
+        code='def add_tag(tags):\n    tags.append("new")\n\nmine = ["a"]\nadd_tag(mine)\nprint(mine)',
+        diagram="""
+ mine --+
+        +--> ['a', 'new']   (one list object)
+ tags --+
+""",
+        topic="passing",
+        level=2),
+    tf('This code prints `[]`.', False,
+        "Is this mutating the list, or pointing a name at a new one?",
+        "tags = [] only re-points the local name tags at a new empty list. mine still points at the original. To empty the caller's list use tags.clear().",
+        code='def reset(tags):\n    tags = []\n\nmine = ["a"]\nreset(mine)\nprint(mine)',
+        diagram="""
+ before: mine, tags --> ['a']
+ after:  mine --> ['a']     tags --> []
+""",
+        topic="passing",
+        level=2),
+    out('def train(epochs, on_epoch_end):\n    for e in range(epochs):\n        on_epoch_end(e)\n\ndef log(e):\n    print("epoch", e, "done")\n\ntrain(2, log)',
+        ["epoch 0 done\nepoch 1 done", "epoch 1 done\nepoch 2 done", "Nothing is printed", "TypeError"], 0,
+        "train calls whatever function you hand it.",
+        "log is passed in as a callback, and train decides when to call it. Keras callbacks and PyTorch Lightning hooks work the same way.",
+        analogy="Like a webhook: you register a URL, and the service calls it when the event happens.",
+        diagram="""
+ train(2, log)
+   e = 0 -> on_epoch_end(0) -> log(0)
+   e = 1 -> on_epoch_end(1) -> log(1)
+""",
+        topic="callbacks", level=2),
+    out('def relu(x):\n    return max(0, x)\n\ndef neg(x):\n    return -x\n\nACTS = {"relu": relu, "neg": neg}\nprint(ACTS["relu"](-3), ACTS["neg"](-3))',
+        ["0 3", "-3 3", "0 -3", "KeyError"], 0,
+        "Functions can be stored in a dict like any other value.",
+        "A dict from names to functions lets a config string like 'relu' pick the code to run. Many ML libraries look up activations and optimizers this way.",
+        diagram="""
+ config 'relu' --> ACTS['relu'] --> relu --> relu(-3) = 0
+""",
+        analogy='Like a route table that maps a URL to its handler function.',
+        topic="callbacks", level=2),
+    out('print(sorted(["aa", "b"], key=len()))',
+        ["TypeError", "['b', 'aa']", "['aa', 'b']", "SyntaxError"], 0,
+        "key= wants a function. What does len() evaluate to?",
+        "len() calls len with no argument and fails at once: TypeError. Pass the function itself: key=len.",
+        topic="callbacks", level=2),
+    fill("What does this print? Type the exact output.",
+         '13',
+         "A keyword argument can skip over defaults in the middle.",
+         "a = 1, b keeps its default 2, c = 10, so the total is 13. Keywords let you set just the option you care about.",
+         code='def f(a, b=2, c=3):\n    return a + b + c\n\nprint(f(1, c=10))',
+        topic="arguments",
+        level=2,
+        diagram="""
+ f(1, c=10)
+   a <- 1      (position)
+   b <- 2      (default kept)
+   c <- 10     (by name)
+"""),
+    mcq("Which function definition is a SyntaxError?",
+        ["def f(a=1, b):", "def f(a, b=1):", "def f(a, *args, b=1):", "def f(*, a=1, b):"], 0,
+        "Think about how Python would fill b from a positional call.",
+        "A parameter without a default can't follow one with a default (unless it's keyword-only, after *). The last option is fine because a and b are both keyword-only.",
+        topic="arguments", level=2),
+    out('def f(a, *rest):\n    return a, rest\n\nprint(f(1), f(1, 2, 3))',
+        ["(1, ()) (1, (2, 3))", "(1, None) (1, [2, 3])", "TypeError", "(1, []) (1, [2, 3])"], 0,
+        "*rest is always a tuple, even when there are no extras.",
+        "With no extra arguments, rest is an empty tuple, never None. With extras it's (2, 3).",
+        topic="args-kwargs", level=2),
+    out('config = {"lr": 0.1, "epochs": 3}\n\ndef train(lr, epochs):\n    return f"{epochs} epochs at {lr}"\n\nprint(train(**config))',
+        ["3 epochs at 0.1", "0.1 epochs at 3", "TypeError", "{'lr': 0.1, 'epochs': 3} epochs at None"], 0,
+        "** spreads a dict into keyword arguments.",
+        "train(**config) is train(lr=0.1, epochs=3). It's how hyperparameter dicts loaded from YAML/JSON are passed to model or trainer constructors.",
+        topic="args-kwargs", level=2),
+    out('def f(*args):\n    args.append(1)\n\nf(1)',
+        ["AttributeError", "TypeError", "Nothing is printed", "NameError"], 0,
+        "What type is args?",
+        "args is a tuple, and tuples have no append: AttributeError. Convert with list(args) if you need to change it.",
+        topic="args-kwargs", level=2),
+    out('def fit(X, *, epochs=1, lr=0.1):\n    return epochs, lr\n\nprint(fit("data", lr=0.5))',
+        ["(1, 0.5)", "(0.5, 0.1)", "TypeError", "('data', 0.5)"], 0,
+        "After *, parameters must be named.",
+        "Keyword-only options can't be mixed up by position, which is why libraries like scikit-learn make most estimator options keyword-only.",
+        analogy='Like a JS options object, fit(X, { epochs, lr }): options are named, never positional.',
+        topic="param-kinds", level=2),
+    tf("The mutable default trap only affects lists; dict and set defaults are safe.", False,
+       "What do lists, dicts and sets have in common?",
+       "Any mutable default (list, dict, set, or an object you change) is created once and shared by every call. Use None and build a fresh one inside.",
+       topic="mutable-default", level=2),
+    out('list = [1, 2]\nprint(list("ab"))',
+        ["TypeError", "['a', 'b']", "[1, 2]", "NameError"], 0,
+        "LEGB: which 'list' is found first?",
+        "The global name list now hides the built-in list type, so calling it raises TypeError: 'list' object is not callable. A common notebook bug; restart the kernel or `del list`.",
+        topic="scope", level=2),
+    out('x = "global"\n\ndef outer():\n    x = "enclosing"\n    def inner():\n        return x\n    return inner()\n\nprint(outer())',
+        ["enclosing", "global", "NameError", "None"], 0,
+        "Search order: Local, Enclosing, Global, Built-in.",
+        "inner has no local x, so Python checks the enclosing function next and finds 'enclosing' before it ever reaches the global.",
+        diagram="""
+ B  built-ins   (len, print, list)
+ G  module      x = "global"
+ E  outer()     x = "enclosing"   <- found here
+ L  inner()     (no x)
+""",
+        topic="scope", level=2),
+    out('def setup():\n    global model\n    model = "bert"\n\nsetup()\nprint(model)',
+        ["bert", "NameError", "None", "UnboundLocalError"], 0,
+        "global can also create a module-level name.",
+        "With `global model`, the assignment creates or rebinds the module variable. It works, but hidden globals make notebooks hard to reason about; return the value instead.",
+        topic="scope", level=2),
+    fill("What does this print? Type the exact output.",
+         '3',
+         "nonlocal lets inc update n in the enclosing function.",
+         "Each call bumps the same captured n: 1, 2, 3. The closure keeps private state between calls, like a tiny object with one field.",
+         code='def make_counter():\n    n = 0\n    def inc():\n        nonlocal n\n        n += 1\n        return n\n    return inc\n\nc = make_counter()\nc()\nc()\nprint(c())',
+        analogy="Like a private field in a class with a single increment method.",
+        topic="closures",
+        level=2),
+    out('words = ["b", "a", "C"]\nprint(sorted(words), sorted(words, key=str.lower))',
+        ["['C', 'a', 'b'] ['a', 'b', 'C']", "['a', 'b', 'C'] ['a', 'b', 'C']", "['C', 'a', 'b'] ['C', 'a', 'b']", "TypeError"], 0,
+        "Upper-case letters come before lower-case ones in plain string order.",
+        "Default string order compares character codes, and 'C' (67) is before 'a' (97). key=str.lower sorts case-insensitively but returns the original strings.",
+        topic="first-class", level=2),
+    tf('This code prints `[9, 8]`.', False,
+        "With two iterables, map passes one item from each.",
+        "map(pow, a, b) calls pow(2, 3) and pow(3, 2). Like zip, it stops at the shorter input.",
+        code='print(list(map(pow, [2, 3], [3, 2])))',
+        topic="first-class",
+        level=2),
+    fill("`@timer` written above `def train():` is shorthand for `train = ____`.",
+         "timer(train)",
+         "The decorator receives the function and returns a replacement.",
+         "Decorator syntax just calls the decorator with the function and rebinds the name to whatever it returns.",
+         topic="decorators", level=2),
+    fill("What does this print? Type the exact output.",
+         'Return one.',
+         "The docstring is stored on the function.",
+         "The first string in the body becomes f.__doc__, which help(f) and IDE tooltips show.",
+         code='def f():\n    """Return one."""\n    return 1\n\nprint(f.__doc__)',
+        topic="hints-docs",
+        level=2),
+    mcq("What does the hint `def find(xs: list[int], t: int) -> int | None:` say about the return value?",
+        ["It returns an int, or None (for example when t isn't found)",
+         "It returns an int and None together as a tuple",
+         "It returns a bitwise OR of an int and None",
+         "It must return an int; None is an error"], 0,
+        "| between types means 'either'.",
+        "int | None (Python 3.10+) means either type. It's the same as Optional[int] and tells the caller to check for None before using the result.",
+        topic="hints-docs", level=2),
+    tf('This code prints `None 2.0`.', True,
+        "The guard clause returns before the division runs.",
+        "An early return handles the bad case first, which keeps the main path un-nested. / always gives a float, so 6 / 3 is 2.0.",
+        code='def safe_div(a, b):\n    if b == 0:\n        return None\n    return a / b\n\nprint(safe_div(1, 0), safe_div(6, 3))',
+        topic="def-return",
+        level=2),
+
+    # ---------------- Level 3: advanced ----------------
+    mcq('A tuple is immutable, yet `data` changes here. Why?',
+        ['The tuple only holds references; the list it points to is still mutable', 'Passing a tuple to a function turns it into a list', "append works on tuples when it's called inside a function", 'The function receives a copy of the tuple but not of the list'], 0,
+        "The tuple can't change, but what about the list inside it?",
+        "A tuple holds references. The list it points to is still mutable, so the 'immutable' tuple's contents change. Passing a tuple is not a guarantee of safety.",
+        code='def f(t):\n    t[1].append(3)\n\ndata = (1, [2])\nf(data)\nprint(data)',
+        topic="passing",
+        level=3,
+        diagram="""
+ data = ( 1 , [*] )
+              |
+              v
+             [2, 3]   <- the list itself can change
+""",
+        analogy="A read-only folder that contains a writable file: you can't swap the file, but you can edit it."),
+    mcq("Which describes how Python passes arguments?",
+        ["Call by object reference: the parameter is a new name bound to the same object the caller passed",
+         "Call by value: every argument is copied",
+         "Call by reference, like C++ `&`: rebinding the parameter rebinds the caller's variable",
+         "It depends on the type: ints by value, lists by reference"], 0,
+        "Mutation is visible to the caller; rebinding isn't. Which model explains both?",
+        "Every argument is an object reference passed by assignment (also called 'call by sharing'). Ints only look like 'by value' because they're immutable, so you can't mutate them.",
+        topic="passing", level=3),
+    mcq('What is the line `xs = xs[:]` for?',
+        ["It makes a copy, so the function doesn't overwrite the caller's list", 'It converts xs to a tuple', 'It sorts xs before normalising', 'Python needs it before you can divide list items'], 0,
+        "xs[:] makes a shallow copy first.",
+        "Copying at the top makes the function pure: the caller's list is untouched. Without that line, w would be overwritten too.",
+        code='def normalise(xs):\n    xs = xs[:]\n    total = sum(xs)\n    for i in range(len(xs)):\n        xs[i] /= total\n    return xs\n\nw = [1, 3]\nprint(normalise(w), w)',
+        topic="passing",
+        level=3,
+        analogy='A defensive copy, like cloning state in a reducer instead of mutating it.'),
+    out('def same(a):\n    return a is data\n\ndata = [1]\nprint(same(data), same(data[:]))',
+        ["True False", "True True", "False False", "False True"], 0,
+        "`is` compares identity, not contents.",
+        "Passing data gives the function the same object, so `is` is True. data[:] is a new list with equal contents, so `is` is False.",
+        topic="passing", level=3),
+    mcq('What makes `double(21)` work on an object?',
+        ['Scale defines __call__, so its instances can be called like functions', 'Every object in Python can be called', 'The assignment double = Scale(2) turns the object into a function', '__init__ runs again on each call'], 0,
+        "__call__ makes an object usable like a function.",
+        "Any object with __call__ can be passed where a function is expected, and it can carry configuration (here k). PyTorch models and transforms are callable objects like this.",
+        code='class Scale:\n    def __init__(self, k):\n        self.k = k\n    def __call__(self, x):\n        return x * self.k\n\ndouble = Scale(2)\nprint(double(21), callable(double), callable(21))',
+        topic="callbacks",
+        level=3,
+        diagram="""
+ double(21)
+   -> type(double).__call__(double, 21)
+   -> 21 * double.k = 42
+"""),
+    out('def train(steps, callbacks):\n    for s in range(steps):\n        if any(cb(s) for cb in callbacks):\n            return s\n    return steps\n\nstop_at_2 = lambda s: s == 2\nprint(train(5, [lambda s: False, stop_at_2]))',
+        ["2", "5", "3", "0"], 0,
+        "Any callback returning True stops training.",
+        "Each step asks every callback whether to stop. At s = 2, stop_at_2 returns True, so train returns 2. This is the shape of an early-stopping callback.",
+        topic="callbacks", level=3),
+    mcq('Why does calling `cb` update `lg.lines`?',
+        ["lg.log is a bound method that carries lg as self, so cb('a') is lg.log('a')", 'cb is a copy of the Logger class', 'Methods are stored as global functions', 'The callback writes to a global list'], 0,
+        "lg.log without () is a bound method.",
+        "A bound method remembers its object (cb.__self__), so passing lg.log as a callback still updates lg. It also keeps lg alive as long as the callback is stored.",
+        code='class Logger:\n    def __init__(self):\n        self.lines = []\n    def log(self, msg):\n        self.lines.append(msg)\n\nlg = Logger()\ncb = lg.log\ncb("a")\ncb("b")\nprint(lg.lines, cb.__self__ is lg)',
+        topic="callbacks",
+        level=3),
+    out('print(callable(int), callable(int("3")), callable(print))',
+        ["True False True", "False False True", "True True True", "True False False"], 0,
+        "Classes can be called to make objects.",
+        "int is a class, and calling it builds an int. The int 3 itself isn't callable. callable() checks whether x(...) would be allowed.",
+        topic="callbacks", level=3),
+    mcq('Why does this print `1 1 1`?',
+        ['The default expression stamp() ran once, when def executed, and both calls reuse that value', 'f caches its own results', 'stamp() runs on every call but always returns 1', 'Default values are only recomputed when they change'], 0,
+        "How many times does the default expression run?",
+        "stamp() runs once, when def executes. That's why `def log(t=datetime.now())` stamps every call with the import time. Use t=None and compute inside.",
+        code='calls = []\n\ndef stamp():\n    calls.append(1)\n    return len(calls)\n\ndef f(x=stamp()):\n    return x\n\nprint(f(), f(), len(calls))',
+        topic="arguments",
+        level=3,
+        analogy='Like a static initializer that runs once when the class loads, not on each call.'),
+    mcq("What does `kwargs.setdefault('c', 100)` do in this wrapper?",
+        ["It adds c=100 only when the caller didn't pass c", 'It always replaces c with 100', 'It raises an error if the caller passed c', "It permanently changes base's default for c"], 0,
+        "setdefault only fills c if the caller didn't pass it.",
+        "The wrapper forwards everything and injects a default for c. That's how wrappers add or override options without knowing the full signature.",
+        code='def base(a, b=0, c=0):\n    return a + b + c\n\ndef wrapper(*args, **kwargs):\n    kwargs.setdefault("c", 100)\n    return base(*args, **kwargs)\n\nprint(wrapper(1, 2), wrapper(1, c=5))',
+        topic="args-kwargs",
+        level=3,
+        diagram="""
+ wrapper(1, 2):   kwargs {} -> {'c': 100}
+                  -> base(1, 2, c=100) = 103
+ wrapper(1, c=5): kwargs {'c': 5} unchanged
+                  -> base(1, c=5) = 6
+""",
+        analogy="Like a proxy that adds a default header only if the client didn't send one."),
+    tf("This code prints `{'x': 99}`.", False,
+        "** at the call site unpacks into new keyword arguments.",
+        "**kw in the function builds a brand-new dict, so changing it doesn't touch opts. Passing the dict itself (f(opts)) would share it.",
+        code='def f(**kw):\n    kw["x"] = 99\n\nopts = {"x": 1}\nf(**opts)\nprint(opts)',
+        topic="args-kwargs",
+        level=3,
+        diagram="""
+ opts = {'x': 1}
+ f(**opts)  -> unpack -> x=1 -> new dict kw = {'x': 1}
+ kw['x'] = 99 changes kw only; opts untouched
+"""),
+    out('def f(a, *args, b):\n    return a, args, b\n\nprint(f(1, 2, 3, b=4))',
+        ["(1, (2, 3), 4)", "(1, (2, 3, 4), None)", "TypeError", "(1, 2, (3, 4))"], 0,
+        "Anything after *args can only be passed by name.",
+        "*args swallows all remaining positional arguments, so b must be given as b=4. f(1, 2, 3) would raise TypeError: missing keyword-only argument 'b'.",
+        diagram="""
+ f(1, 2, 3, b=4)
+   a     <- 1
+   *args <- (2, 3)   swallows the rest
+   b     <- 4        name only
+""",
+        topic="param-kinds", level=3),
+    out('print(len(obj=[1, 2]))',
+        ["TypeError", "2", "SyntaxError", "NameError"], 0,
+        "Many built-ins have positional-only parameters.",
+        "len's signature is len(obj, /), so its argument can't be passed by keyword. help(len) shows the slash.",
+        topic="param-kinds", level=3),
+    mcq('Why is `a is b` True?',
+        ['Both calls used the default, which is one list object created at def time', 'is compares list contents, and both hold 2 and 3', 'add returns a copy, and Python merges equal copies', 'Python caches small lists'], 0,
+        "Only calls that USE the default share it.",
+        "Passing your own list bypasses the default. Both default calls return the same shared object, so a and b are one list holding 2 and 3.",
+        code='def add(x, acc=[]):\n    acc.append(x)\n    return acc\n\nmine = add(1, [])\na = add(2)\nb = add(3)\nprint(mine, a is b, a)',
+        topic="mutable-default",
+        level=3),
+    tf("`def f(x=())` (a tuple default) has the same shared-state bug as `def f(x=[])`.", False,
+       "Can the default object be changed?",
+       "The default is still created once, but a tuple can't be mutated, so no call can leave changes behind for the next. The bug needs a mutable default.",
+       topic="mutable-default", level=3),
+    mcq('Why does the second call return `[2, 1, 1]`?',
+        ['It starts from the same default list that the first call already filled with 2 and 1', 'Recursion copies the list at each level', 'collect(1) calls itself twice', 'out is only reset on the first call'], 0,
+        "Recursive helpers often use an accumulator. Where does this one come from?",
+        "The first call fills the shared default with 2, 1. The second call starts with that same list and adds 1. Recursive accumulators are a common place for this bug.",
+        code='def collect(n, out=[]):\n    if n == 0:\n        return out\n    out.append(n)\n    return collect(n - 1, out)\n\ncollect(2)\nprint(collect(1))',
+        topic="mutable-default",
+        level=3,
+        diagram="""
+ collect(2): out=[] -> [2] -> [2, 1]   (the default itself)
+ collect(1): out is that same list -> [2, 1, 1]
+"""),
+    out('x = 1\n\ndef f(flag):\n    if flag:\n        x = 2\n    return x\n\nprint(f(True))\nprint(f(False))',
+        ["2\nUnboundLocalError", "2\n1", "2\n2", "UnboundLocalError"], 0,
+        "Python decides 'local or not' when it compiles the function, not per call.",
+        "Because x is assigned somewhere in f, it's local everywhere in f. When flag is False the local was never set, so reading it raises UnboundLocalError instead of falling back to the global.",
+        diagram="""
+ compile f: sees 'x = 2' -> x is LOCAL in all of f
+ f(True):  x = 2, return 2
+ f(False): return x -> local x never set -> error
+""",
+        topic="scope", level=3),
+    mcq('Why does the partial version avoid the late-binding bug?',
+        ["partial stores the current value of i when it's created, instead of looking i up later", 'partial makes the lambda run immediately', 'partial copies the whole loop', "Comprehension variables can't be captured at all"], 0,
+        "partial stores the argument's value when it's created.",
+        "partial(fn, i) saves the current i inside the partial object, so there's no late binding. It's often clearer than the lambda i=i trick.",
+        code='from functools import partial\nfs = [partial(lambda i: i * 10, i) for i in range(3)]\nprint([f() for f in fs])',
+        topic="closures",
+        level=3),
+    fill("What does this print? Type the exact output.",
+         '5',
+         "Does get save k's value at def time, or the variable?",
+         "A closure holds the variable (a cell), not a snapshot. k was 5 by the time make returned, so get sees 5.",
+         code='def make():\n    k = 1\n    def get():\n        return k\n    k = 5\n    return get\n\nprint(make()())',
+        topic="closures",
+        level=3,
+        diagram="""
+ make():  k = 1 -> get defined -> k = 5 -> return get
+ get():   reads the cell k at CALL time -> 5
+"""),
+    tf('This code prints `0 7`.', False,
+        "max has two useful keyword options.",
+        "default= avoids ValueError on an empty input. key=lambda x: -x makes max pick the item with the largest -x, which is the smallest x.",
+        code='print(max([], default=0), max([3, 7], key=lambda x: -x))',
+        topic="first-class",
+        level=3),
+    mcq('What does the key `(-r[1], r[0])` do?',
+        ['Sorts by score descending, then by name ascending to break ties', 'Sorts by name descending, then by score', 'Sorts by score ascending only', 'Reverses each tuple before sorting'], 0,
+        "Tuples compare item by item.",
+        "The key sorts by score descending (-r[1]), then by name ascending to break ties. Returning a tuple from key= is the standard multi-column sort.",
+        code='rows = [("b", 2), ("a", 2), ("c", 1)]\nprint(sorted(rows, key=lambda r: (-r[1], r[0])))',
+        topic="first-class",
+        level=3,
+        diagram="""
+ row       key
+ (b, 2) -> (-2, 'b')
+ (a, 2) -> (-2, 'a')   <- smallest key first
+ (c, 1) -> (-1, 'c')
+"""),
+    mcq('Why does PEP 8 advise against `f = lambda x: x`?',
+        ["The function's __name__ is '<lambda>', which makes tracebacks and profiles harder to read; def gives it a real name", 'Lambdas are slower than defs', "Lambdas can't be assigned to variables", 'Lambdas are deprecated in Python 3.13'], 0,
+        "Does assigning a lambda to a name give it that name?",
+        "Every lambda is named '<lambda>', so tracebacks and profilers can't tell them apart. PEP 8 says: if you assign it to a name, use def.",
+        code='f = lambda x: x\n\ndef g():\n    pass\n\nprint(f.__name__, g.__name__)',
+        topic="first-class",
+        level=3),
+    mcq('Why is `hi` None after decoration?',
+        ["deco doesn't return wrapper, so it returns None and hi = deco(hi) is None", 'wrapper is never defined', "Decorators always replace the function with None until it's called", "hi() wasn't called before printing"], 0,
+        "What does deco return?",
+        "deco forgot `return wrapper`, so it returns None and hi = deco(hi) makes hi None. Calling hi() would then raise TypeError: 'NoneType' object is not callable.",
+        code='def deco(f):\n    def wrapper():\n        return f()\n\n@deco\ndef hi():\n    return "hi"\n\nprint(hi)',
+        topic="decorators",
+        level=3),
+    mcq('Why does `add(2, 3)` give None?',
+        ['wrapper calls f but never returns its result', 'print inside wrapper returns None', 'f.__name__ breaks the call', '*a, **k loses the arguments'], 0,
+        "Look at what wrapper returns.",
+        "wrapper calls f but throws away its result, so every decorated call returns None. Always write `return f(*a, **k)` in a wrapper.",
+        code='def log(f):\n    def wrapper(*a, **k):\n        print("calling", f.__name__)\n        f(*a, **k)\n    return wrapper\n\n@log\ndef add(a, b):\n    return a + b\n\nprint(add(2, 3))',
+        topic="decorators",
+        level=3,
+        analogy='Like middleware that calls next() but forgets to pass the response back.'),
+    fill("What does this print? Type the exact output.",
+         '2',
+         "The counter is stored as an attribute on the wrapper function.",
+         "Each call goes through wrapper, which increments its own attribute. Function attributes are a lightweight way for a decorator to keep stats.",
+         code='def count_calls(f):\n    def wrapper(*a):\n        wrapper.calls += 1\n        return f(*a)\n    wrapper.calls = 0\n    return wrapper\n\n@count_calls\ndef sq(x):\n    return x * x\n\nsq(2)\nsq(3)\nprint(sq.calls)',
+        topic="decorators",
+        level=3),
+    fill("What does this print? Type the exact output.",
+         '9',
+         "Positional arguments to partial fill parameters from the left.",
+         "partial(power, 3) fixes base = 3, not exp, so cube(2) is 3 ** 2 = 9. Use partial(power, exp=3) to fix the exponent.",
+         code='from functools import partial\n\ndef power(base, exp):\n    return base ** exp\n\ncube = partial(power, 3)\nprint(cube(2))',
+        topic="functools",
+        level=3,
+        diagram="""
+ power(base, exp)
+ partial(power, 3) -> base = 3 fixed
+ cube(2)           -> exp = 2  => 3 ** 2 = 9
+"""),
+    out('from functools import reduce\nprint(reduce(lambda a, b: a + b, [], 0), reduce(max, [3, 9, 2]))',
+        ["0 9", "TypeError", "None 9", "0 3"], 0,
+        "The third argument is the starting value.",
+        "With an initial value, reduce on an empty list returns it. Without one, reduce([]) raises TypeError. reduce(max, xs) is just max(xs) the long way.",
+        topic="functools", level=3),
+    mcq('What shape does reduce build here?',
+        ['((ab)c): it folds from the left, combining the running result with each next item', '(a(bc)): it folds from the right', '(abc): it combines all items at once', 'abc: it ignores the lambda for strings'], 0,
+        "reduce folds from the left.",
+        "First (ab), then that combined with c: ((ab)c). The order matters for operations that aren't associative, such as subtraction or string building.",
+        code='from functools import reduce\nprint(reduce(lambda a, b: f"({a}{b})", "abc"))',
+        diagram="""
+  a   b   c
+   \\ /    |
+  (ab)    |
+     \\   /
+    ((ab)c)
+""",
+        topic="functools",
+        level=3),
+    tf('This code prints `a`.', True,
+        "Does Python compare the default with the hint?",
+        "Hints aren't checked, even against the function's own default. Only an external checker (mypy, pyright) would complain.",
+        code='def f(x: int = "a"):\n    return x\n\nprint(f())',
+        topic="hints-docs",
+        level=3),
+    fill("What does this print? Type the exact output.",
+         '177',
+         "Every call (except base cases) makes two more calls.",
+         "Naive fib recomputes the same values again and again, so the number of calls grows exponentially (about 1.6^n). Memoising with lru_cache brings it down to 11.",
+         code='calls = 0\n\ndef fib(n):\n    global calls\n    calls += 1\n    return n if n < 2 else fib(n - 1) + fib(n - 2)\n\nfib(10)\nprint(calls)',
+        topic="recursion",
+        level=3,
+        diagram="""
+            fib(4)
+          /        \\
+      fib(3)      fib(2)
+      /    \\      /    \\
+  fib(2) fib(1) fib(1) fib(0)
+  (fib(2) is computed twice already)
+"""),
+    out('def flatten(x):\n    if not isinstance(x, list):\n        return [x]\n    out = []\n    for item in x:\n        out += flatten(item)\n    return out\n\nprint(flatten([1, [2, [3, 4]], 5]))',
+        ["[1, 2, 3, 4, 5]", "[1, [2, [3, 4]], 5]", "[1, 2, [3, 4], 5]", "RecursionError"], 0,
+        "Nested lists of unknown depth are a natural fit for recursion.",
+        "The base case is 'not a list'. Each nested list is flattened by the same function, however deep it goes.",
+        diagram="""
+ flatten([1, [2, [3, 4]], 5])
+   1        -> [1]
+   [2, [3, 4]] -> [2] + flatten([3, 4]) -> [2, 3, 4]
+   5        -> [5]
+""",
+        topic="recursion", level=3),
+
+    # ---------------- Level 4: expert ----------------
+    mcq("Why does `a` change but `b` doesn't?",
+        ['list += extends the same object in place; tuple += builds a new tuple and only rebinds the local name', "Tuples can't be passed to functions", 'isinstance fails for tuples, so nothing is added', '+= is not allowed on tuples and is skipped'], 0,
+        "+= behaves differently for mutable and immutable types.",
+        "For a list, += calls __iadd__, which extends the same object in place, so the caller sees it. A tuple has no __iadd__, so += builds a new tuple and only rebinds the local x.",
+        code='def grow(x):\n    x += [9] if isinstance(x, list) else (9,)\n\na, b = [1], (1,)\ngrow(a)\ngrow(b)\nprint(a, b)',
+        topic="passing",
+        level=4,
+        diagram="""
+ list:  x --> [1] --(+= in place)--> [1, 9]   a sees it
+ tuple: x --> (1,)   x = (1,) + (9,) --> new (1, 9)
+        b --> (1,)   still the old tuple
+"""),
+    mcq('Why does only `scale_b` change `a`?',
+        ['x *= 2 writes into the existing array; x = x * 2 builds a new array and rebinds the local name', 'NumPy copies arrays passed to scale_a but not to scale_b', 'scale_a has a syntax problem and does nothing', '*= is slower, so its result appears later'], 0,
+        "x * 2 makes a new array; x *= 2 writes into the existing one.",
+        "In-place operators on arrays and tensors mutate the caller's data. That's a real source of bugs in preprocessing functions, and in PyTorch it can break autograd.",
+        code='import numpy as np\n\ndef scale_a(x):\n    x = x * 2\n\ndef scale_b(x):\n    x *= 2\n\na = np.array([1, 2])\nscale_a(a)\nprint(a.tolist())\nscale_b(a)\nprint(a.tolist())',
+        topic="passing",
+        level=4,
+        diagram="""
+ scale_a: x = x * 2 -> x --> NEW array [2, 4]
+                       a still [1, 2]
+ scale_b: x *= 2    -> writes into a's buffer
+                       a is now [2, 4]
+"""),
+    mcq("A DataLoader with `num_workers=4` crashes on Windows with \"Can't pickle <lambda>\" when you pass `transform=lambda x: x / 255`. What's the best fix?",
+        ["Define the transform as a module-level def (or a functools.partial of one); worker processes receive it by pickle, which stores functions by their importable name",
+         "Set num_workers=8",
+         "Wrap the lambda in another lambda",
+         "Add @staticmethod to the lambda"], 0,
+        "How does a new process get a copy of your function?",
+        "On Windows (and macOS) workers are spawned and everything they need is pickled. Pickle saves a function as 'module.name', which a lambda or nested function doesn't have.",
+        diagram="""
+ main process --pickle(transform)--> worker 1..4
+ pickle stores a function as "module.name"
+ <lambda> has no importable name -> PicklingError
+""",
+        topic="callbacks", level=4),
+    mcq("Why do you call `model(x)` instead of `model.forward(x)` on a PyTorch nn.Module?",
+        ["Module.__call__ runs registered hooks and other bookkeeping around forward; calling forward directly skips them",
+         "forward is a private method and raises an error",
+         "model(x) runs on the GPU and forward(x) on the CPU",
+         "They are identical; it's only a style choice"], 0,
+        "What can __call__ do before and after forward?",
+        "__call__ is a wrapper, like a decorator: it fires forward pre-hooks and hooks (used by profilers, feature extractors and some pruning tools), then calls forward.",
+        analogy="Like calling an Express route through the app (middleware runs) vs calling the handler function directly (middleware skipped).",
+        topic="callbacks", level=4),
+    out('class Model:\n    size = 3\n    def get(self):\n        return size\n\nprint(Model().get())',
+        ["NameError", "3", "AttributeError", "None"], 0,
+        "Is a class body an 'enclosing' scope for its methods?",
+        "Class-level names are not part of LEGB for methods. Inside get you must write self.size or Model.size.",
+        diagram="""
+ B  built-ins
+ G  module
+ E  enclosing FUNCTIONS only
+ L  get()          (class body is skipped)
+ class Model: size = 3  -> reach it via self.size
+""",
+        topic="scope", level=4),
+    out('def f():\n    nonlocal x\n    x = 1',
+        ["SyntaxError", "NameError", "Nothing is printed", "UnboundLocalError"], 0,
+        "nonlocal needs an enclosing FUNCTION that has the name.",
+        "f is at module level, so there's no enclosing function scope. Python rejects this at compile time: no binding for nonlocal 'x' found. Use global for module names.",
+        topic="scope", level=4),
+    mcq("Why does `outer()` still return 'e'?",
+        ["inner's global x skips the enclosing function and rebinds the module x; outer's local x is a separate variable", "global makes inner's x local", 'outer caches the value of x before calling inner', 'inner never actually runs'], 0,
+        "global jumps straight to the module scope and skips the enclosing function.",
+        "inner's global x rebinds the module x. outer's local x is a different variable and stays 'e'. To change outer's x you need nonlocal.",
+        code='x = "g"\n\ndef outer():\n    x = "e"\n    def inner():\n        global x\n        x = "changed"\n    inner()\n    return x\n\nprint(outer(), x)',
+        topic="scope",
+        level=4,
+        diagram="""
+ module x: 'g' -> 'changed'   <- inner's global x
+ outer  x: 'e'                <- untouched
+"""),
+    mcq('Why does `get()` see 2?',
+        ["inc and get close over the same cell for n, so get reads inc's updates", 'get re-runs make() to recompute n', 'nonlocal turns n into a global', 'inc returns n, and get receives it'], 0,
+        "Both inner functions close over the same variable.",
+        "inc and get share one cell for n, so get sees inc's updates. Closures from the same call share state; closures from different calls of make don't.",
+        code='def make():\n    n = 0\n    def inc():\n        nonlocal n\n        n += 1\n    def get():\n        return n\n    return inc, get\n\ninc, get = make()\ninc()\ninc()\nprint(get())',
+        diagram="""
+ make() call
+   cell n  (one shared box)
+   inc --> uses cell n
+   get --> uses cell n   (same cell)
+""",
+        topic="closures",
+        level=4),
+    out('def outer():\n    a = 1\n    b = 2\n    def inner():\n        return a\n    return inner\n\nprint(outer().__code__.co_freevars)',
+        ["('a',)", "('a', 'b')", "()", "('inner',)"], 0,
+        "The compiler only captures names the inner function actually uses.",
+        "inner refers to a, so only a becomes a free variable with a cell. b is never kept alive. That's useful to know when a closure might hold a large tensor.",
+        analogy="Like a bundler's tree-shaking: only the names the inner function actually uses are kept.",
+        topic="closures", level=4),
+    mcq('Why do the factories run a then b, but the decorators apply b then a?',
+        ['Decorator expressions are evaluated top to bottom; the resulting decorators are then applied bottom-up, nearest the def first', 'Python applies decorators in alphabetical order', 'The factories run when g is first called', 'Stacked decorators run in parallel, so the order is random'], 0,
+        "The decorator expressions are evaluated top-down; applying them is bottom-up.",
+        "Python first evaluates deco('a') and then deco('b'), top to bottom. Then it applies the results to g starting from the one nearest the def: b, then a.",
+        code='def deco(tag):\n    print("factory", tag)\n    def apply(f):\n        print("apply", tag)\n        return f\n    return apply\n\n@deco("a")\n@deco("b")\ndef g():\n    pass',
+        topic="decorators",
+        level=4,
+        diagram="""
+ evaluate:  deco('a') -> A,  deco('b') -> B   (top-down)
+ apply:     g = A(B(g))                       (bottom-up)
+"""),
+    mcq('What does `@Count` turn `hi` into?',
+        ['An instance of Count whose __call__ wraps the original function', 'A function named Count', 'A subclass of the function type', 'The original function with an n attribute added'], 0,
+        "A decorator can be any callable, including a class.",
+        "@Count makes hi = Count(hi), an instance whose __call__ wraps the function. Class-based decorators keep state cleanly, but they don't work as methods unless they also implement __get__.",
+        code='class Count:\n    def __init__(self, f):\n        self.f = f\n        self.n = 0\n    def __call__(self, *a):\n        self.n += 1\n        return self.f(*a)\n\n@Count\ndef hi():\n    return "hi"\n\nhi()\nhi()\nprint(hi.n, type(hi).__name__)',
+        topic="decorators",
+        level=4),
+    mcq('Which call evicts 2 from this cache?',
+        ['sq(3), because at that point 2 is the least recently used entry', 'The second sq(1)', 'The final sq(2)', 'None: a maxsize of 2 never evicts anything'], 0,
+        "A full LRU cache evicts the least recently USED entry.",
+        "1 miss, 2 miss, 1 hit, 3 miss (evicts 2), 1 hit, 2 miss (evicts 3). maxsize trades memory for hit rate, and cache_info() is how you tune it.",
+        code='from functools import lru_cache\n\n@lru_cache(maxsize=2)\ndef sq(x):\n    return x * x\n\nfor x in [1, 2, 1, 3, 1, 2]:\n    sq(x)\ninfo = sq.cache_info()\nprint(info.hits, info.misses)',
+        diagram="""
+ call: 1    2      1      3      1      2
+ hit?  miss miss   HIT    miss   HIT    miss
+ cache [1]  [1,2]  [2,1]  [1,3]  [3,1]  [1,2]
+""",
+        topic="functools",
+        level=4,
+        analogy='Same eviction rule as an LRU cache in Redis or a browser: the entry untouched longest goes first.'),
+    tf('This code prints `0.1`.', False,
+        "The cache stores the returned object, not a copy.",
+        "Every later call gets the same dict, so mutating one result corrupts the cache for everyone. Return immutable values (tuples, frozen dataclasses) from cached functions, or copy them.",
+        code='from functools import cache\n\n@cache\ndef defaults():\n    return {"lr": 0.1}\n\ncfg = defaults()\ncfg["lr"] = 99\nprint(defaults()["lr"])',
+        topic="functools",
+        level=4,
+        analogy="Like a cache that hands every caller the same mutable singleton: one caller's edit corrupts it for all."),
+    out('from functools import lru_cache\n\n@lru_cache\ndef f(x):\n    return x\n\nf(1)\nf(x=1)\nprint(f(1.0), f.cache_info().misses)',
+        ["1.0 3", "1 2", "1 1", "1.0 2"], 0,
+        "The cache key is built from HOW the arguments were passed, not just their values.",
+        "f(x=1) builds a different key from f(1), so it is a second miss. Even f(1.0) misses: the docs warn that int and str arguments may be cached separately even with typed=False, so you get three entries for one logical input. Normalise arguments before calling a cached function.",
+        diagram="""
+ call      cache key        result
+ f(1)      1                miss
+ f(x=1)    (kwd mark, x, 1)  miss
+ f(1.0)    (1.0,)           miss
+""",
+        topic="functools", level=4),
+    out('from __future__ import annotations\n\ndef f(x: int) -> str:\n    return str(x)\n\nprint(f.__annotations__)',
+        ["{'x': 'int', 'return': 'str'}", "{'x': <class 'int'>, 'return': <class 'str'>}", "{}", "SyntaxError"], 0,
+        "This future import changes when annotations are evaluated.",
+        "With postponed evaluation the hints are stored as strings. Tools like pydantic and FastAPI call typing.get_type_hints() to turn them back into real types.",
+        topic="hints-docs", level=4),
+    mcq("`@lru_cache` on a recursive `fib`, then a first call of `fib(5000)`. What happens?",
+        ["RecursionError: the cache doesn't help on the first call, because fib(5000) still has to recurse about 5000 frames deep to fill it",
+         "It returns instantly because results are cached",
+         "MemoryError, because the cache is too big",
+         "It works, because lru_cache turns the recursion into a loop"], 0,
+        "Caching removes repeated work, not depth.",
+        "Memoisation makes fib linear in time, but the first call still nests down to fib(1). Warm the cache bottom-up (fib(500), fib(1000), ...) or write an iterative version.",
+        topic="recursion", level=4),
+    tf("Raising `sys.setrecursionlimit(10**6)` makes very deep recursion safe.", False,
+       "The limit is a guard, not extra memory.",
+       "The limit protects the real C stack. Set it too high and deep recursion can crash the whole interpreter with a segmentation fault instead of raising a catchable RecursionError. Convert deep recursion to a loop with an explicit stack.",
+       topic="recursion", level=4),
+    out('rows = [("bo", 30), ("al", 25), ("cy", 30), ("al", 30)]\nrows.sort(key=lambda r: r[0])\nrows.sort(key=lambda r: r[1], reverse=True)\nprint(rows)',
+        ["[('al', 30), ('bo', 30), ('cy', 30), ('al', 25)]", "[('bo', 30), ('cy', 30), ('al', 30), ('al', 25)]", "[('cy', 30), ('bo', 30), ('al', 30), ('al', 25)]", "[('al', 25), ('al', 30), ('bo', 30), ('cy', 30)]"], 0,
+        "A stable sort keeps the previous order among equal keys.",
+        "Sort by the secondary key first, then by the primary key. Stability keeps names in order within each age, so you get age descending, name ascending.",
+        diagram="""
+ pass 1 (name):     al25 al30 bo30 cy30
+ pass 2 (age desc): al30 bo30 cy30 | al25
+                    ties keep pass-1 order
+""",
+        topic="first-class", level=4),
+    out('import inspect\n\ndef f(a, /, b, *args, c, **kw):\n    pass\n\nprint([p.kind.name for p in inspect.signature(f).parameters.values()])',
+        ["['POSITIONAL_ONLY', 'POSITIONAL_OR_KEYWORD', 'VAR_POSITIONAL', 'KEYWORD_ONLY', 'VAR_KEYWORD']",
+         "['POSITIONAL', 'POSITIONAL', 'VAR', 'KEYWORD', 'VAR']",
+         "['POSITIONAL_OR_KEYWORD', 'POSITIONAL_OR_KEYWORD', 'VAR_POSITIONAL', 'KEYWORD_ONLY', 'VAR_KEYWORD']",
+         "TypeError"], 0,
+        "There are exactly five kinds of parameter.",
+        "inspect.signature exposes the kinds that frameworks (FastAPI, pytest fixtures, click) read to decide how to fill each parameter.",
+        diagram="""
+ def f(a, /, b, *args, c, **kw)
+       |     |   |      |   |
+       |     |   |      |   VAR_KEYWORD
+       |     |   |      KEYWORD_ONLY
+       |     |   VAR_POSITIONAL
+       |     POSITIONAL_OR_KEYWORD
+       POSITIONAL_ONLY
+""",
+        topic="param-kinds", level=4),
+    out('def f(a, b=2, *, c=3):\n    pass\n\nprint(f.__defaults__, f.__kwdefaults__)',
+        ["(2,) {'c': 3}", "(2, 3) None", "{'b': 2, 'c': 3} None", "(2,) None"], 0,
+        "Positional defaults and keyword-only defaults are stored separately.",
+        "__defaults__ is a tuple for the last positional parameters; __kwdefaults__ is a dict for keyword-only ones. Both are created once at def time, so the mutable-default trap applies to both.",
+        diagram="""
+ def f(a, b=2, *, c=3)
+          \\_/      \\_/
+   __defaults__   __kwdefaults__
+      (2,)          {'c': 3}
+""",
+        topic="param-kinds", level=4),
 ]

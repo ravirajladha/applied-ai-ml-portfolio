@@ -18,6 +18,8 @@
 | 9 | `composition` | Composition vs inheritance | has-a vs is-a | choosing composition | why prefer composition (fragile base class) | Liskov violations, delegation |
 | 10 | `internals` | `__slots__` and descriptors | — | — | what `__slots__` is for | slots block new attributes / no `__dict__`, descriptors, data descriptor precedence, cached_property |
 | 11 | `nn-module` | The `nn.Module` pattern | forward holds the computation | build a Net, call `model(x)` not `model.forward(x)` | forgetting `super().__init__()`, parameter count, plain list vs ModuleList | `__setattr__` registration, eval() propagation, hooks run via `__call__` |
+| 12 | `iteration` | Making classes iterable: `__iter__` and `__next__` | — | `__iter__` written with yield, `__iter__`/`__next__` names | iterable vs iterator (one-shot iterators), generator `__iter__` is reusable | — |
+| 13 | `copying` | Identity, aliasing and copying objects | `b = a` is the same object | `==` vs `is`, shallow `copy.copy` shares inner lists | `list.copy()` keeps the same objects, `deepcopy` | `state_dict()` returns live references (the 'best weights' bug) |
 
 ## Must-know facts
 - A class is a blueprint; calling it (`Point(2, 3)`) creates an instance and runs `__init__`.
@@ -36,6 +38,8 @@
 - Duck typing: Python cares whether an object has the method, not what class it is.
 - Prefer composition ("has-a") unless the subclass truly "is-a" substitutable parent.
 - `nn.Module`: layers in `__init__` (after `super().__init__()`), maths in `forward`, call `model(x)` so `__call__` can run hooks.
+- `for` calls `__iter__`; an iterator implements `__next__` and raises StopIteration at the end.
+- Assignment never copies an object; `copy.copy` is shallow, `copy.deepcopy` copies all the way down.
 
 ## Common traps (each one must have at least one question)
 - Forgetting `self` in a method definition -> TypeError: takes 0 positional arguments but 1 was given.
@@ -53,6 +57,17 @@
 - Calling `model.forward(x)` directly -> skips hooks.
 - Mutating a field used in `__hash__` after inserting into a set -> the object becomes unfindable.
 - `__slots__` class -> cannot add new attributes.
+- `best = model.state_dict()` -> keeps live references, so 'best' silently follows the latest weights; deepcopy or clone.
+- `copy.copy(obj)` -> inner lists and dicts are still shared.
+- An object whose `__iter__` returns self -> empty on the second loop.
+- Reading `name` instead of `self.name` in a method -> NameError.
+- Annotation-less class attribute in a @dataclass -> not a field, not in `__init__`.
+- `self.value` inside the `value` property -> RecursionError; store it as `self._value`.
+- `model.eval()` does not turn off gradients -> also use `torch.no_grad()`.
+- Plain tensor attribute on nn.Module -> not a parameter and not moved by `.to()`; use nn.Parameter or register_buffer.
+- Subclassing dict and overriding `__setitem__` -> `update()` and the constructor bypass it.
+- `__getattr__` that reads `self.inner` -> RecursionError when copied or pickled.
+- Mixin listed after the base class -> its method never runs.
 
 ## Interview angle
 1. **"Explain self."** It's the instance the method was called on, passed automatically as the first argument: `d.bark()` is `Dog.bark(d)`. Same as `this` in Java, but explicit.

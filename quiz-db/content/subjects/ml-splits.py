@@ -14,6 +14,7 @@ TOPICS = [
     ("pipelines", "Pipelines to prevent leakage"),
     ("test-reuse", "Test-set reuse and distribution mismatch"),
     ("llm-evals", "Splits for LLM evals and contamination"),
+    ("compare", "Comparing models fairly (same folds, baselines, repeated CV)"),
 ]
 
 QUESTIONS = [
@@ -619,4 +620,710 @@ QUESTIONS = [
         "The judge is part of the measuring instrument.",
         "Tuning the grader on your test items fits the measurement to that set. Keep a judge-calibration set separate from the final eval set.",
         topic="llm-evals", level=4),
+
+    # ================================================================== added set 2
+    # ------------------------------------------------------------------ purpose
+    tf("On a medium-sized dataset you can skip a separate validation set by running cross-validation on the training data for tuning, keeping the test set for the end.", True,
+       "CV does the validation set's job, many times over.",
+       "Train+CV for choices, test once for the final number. CV uses data more efficiently than a single fixed validation split, at the cost of k times more training.",
+       topic="purpose", level=2),
+    mcq("You use early stopping: training halts when validation loss stops improving, at epoch 37. You then report that validation loss as the model's expected loss. What is the issue?",
+        ["The validation set chose the stopping epoch, so it's now a tuning set and its score is optimistic; report a separate test score",
+         "Early stopping can't use a validation set",
+         "Nothing, validation loss is unbiased",
+         "Epoch 37 is too early"], 0,
+        "The epoch count is a hyperparameter. Who picked it?",
+        "Early stopping is tuning: it selects the epoch with the best validation loss, which includes some luck. Like any selection, that score is biased upward. The test set gives the honest number.",
+        diagram="""
+ loss
+  |  train  `-._____________
+  |  val     `-.__.-'''''     <- lowest at epoch 37
+  +--------------------------> epochs
+ val picked 37, so val is now a tuning set
+""",
+        analogy='Like running a benchmark 50 times and quoting the fastest run as the typical latency.',
+        topic="purpose", level=3),
+    mcq("After early stopping picked 37 epochs on 'train', you want to refit on train + validation (25% more data) for production. What is a sensible way to choose the epoch count, given there is no validation set left to stop on?",
+        ["Reuse the chosen budget, often scaled for the extra data (e.g. about 37 epochs or the same number of update steps), and fix it before training",
+         "Train until the training loss reaches zero",
+         "Use the test set for early stopping",
+         "Pick a random number of epochs"], 0,
+        "Freeze the decision first, then refit.",
+        "When refitting on more data, hyperparameters (including the epoch budget) are frozen from the tuning phase. Some teams scale by steps rather than epochs. Never peek at test to stop. The test score you measured earlier remains the estimate.",
+        topic="purpose", level=4),
+    mcq("Which statement best describes the three sets in SDE terms?",
+        ["Train = writing code, validation = your local test runs while iterating, test = the release gate you run once",
+         "Train = prod, validation = dev, test = staging",
+         "All three are the same test suite run three times",
+         "Test = the code; train = the tests"], 0,
+        "Which one do you run over and over while iterating?",
+        "You iterate against validation as often as you like; the test set is a gate you pass once. If you keep fixing things until the gate passes, it stops being a gate.",
+        analogy="Unit tests you rerun all day vs a final acceptance run before release.",
+        topic="purpose", level=1),
+
+    # ------------------------------------------------------------------ ratios
+    out("""import math
+p, target_se = 0.9, 0.01
+n = p * (1 - p) / target_se ** 2
+print(round(n))""",
+        ["900", "90", "9000", "100"], 0,
+        "Rearrange SE = sqrt(p(1-p)/n) for n.",
+        "n = p(1-p) / SE^2 = 0.09 / 0.0001 = 900 test examples for +/- 1 point at 90% accuracy. Halving the error needs 4x the rows.",
+        topic="ratios", level=3),
+    mcq("Your fraud test set has 10,000 transactions at 0.5% fraud. You report fraud recall = 0.80. Why is that number shakier than it looks?",
+        ["Recall is computed over only the ~50 fraud cases, so its standard error is about +/- 6 points",
+         "10,000 rows is a huge test set, so recall is exact",
+         "Recall doesn't depend on the number of positives",
+         "Fraud recall should be computed on the training set"], 0,
+        "Which rows does recall actually divide by?",
+        "A metric's noise depends on the rows it's computed from: sqrt(0.8 x 0.2 / 50) = 0.057. For rare classes, plan the test set by the count of positives, not total rows.",
+        topic="ratios", level=3),
+    out("""import numpy as np
+from sklearn.datasets import load_breast_cancer
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+X, y = load_breast_cancer(return_X_y=True)
+X, y = X[:150], y[:150]
+acc = []
+for seed in range(20):
+    a, b, c, d = train_test_split(X, y, test_size=0.2, random_state=seed)
+    acc.append(make_pipeline(StandardScaler(), LogisticRegression()).fit(a, c).score(b, d))
+print(round(max(acc) - min(acc), 2))""",
+        ["0.1", "0.0", "0.01", "0.5"], 0,
+        "Same model, same data, only the split seed changes. 30 test rows each time.",
+        "The score moves by about 10 points just from which 30 rows land in test. On small data a single split is a lottery ticket; use (repeated) cross-validation and report the spread.",
+        diagram="""
+ seed:  0    1    2    3   ...  19
+ acc:  .93  .97  .90  1.0  ...  .93
+        |-------- range ~0.10 -------|
+""",
+        topic="ratios", level=3),
+
+    # ------------------------------------------------------------------ tts
+    out("""from sklearn.model_selection import train_test_split
+X = list(range(10))
+a, b = train_test_split(X, test_size=3, random_state=0)
+print(len(a), len(b))""",
+        ["7 3", "7 0", "3 7", "ValueError"], 0,
+        "An int means a row count, a float means a fraction.",
+        "test_size=3 asks for exactly 3 test rows. Ints are counts, floats in (0, 1) are fractions, a common source of confusion when someone writes test_size=20 meaning 20%.",
+        analogy='Like an API where limit=3 means 3 rows but limit=0.3 means 30%: one parameter, two meanings.',
+        topic="tts", level=2),
+    out("""import pandas as pd
+from sklearn.model_selection import train_test_split
+df = pd.DataFrame({"x": range(10)}, index=[f"r{i}" for i in range(10)])
+tr, te = train_test_split(df, test_size=0.2, shuffle=False)
+print(te.index.tolist())""",
+        ["['r8', 'r9']", "[8, 9]", "['r0', 'r1']", "[0, 1]"], 0,
+        "DataFrames keep their index labels through the split.",
+        "train_test_split returns DataFrames with the original index, so you can always trace a test row back to its source (and join predictions back later).",
+        topic="tts", level=2),
+    out("""from sklearn.model_selection import train_test_split
+X = list(range(10))
+a, b = train_test_split(X, train_size=0.5, test_size=0.2, random_state=0)
+print(len(a), len(b))""",
+        ["5 2", "8 2", "5 5", "ValueError"], 0,
+        "Both sizes are given explicitly; they don't have to add up to 1.",
+        "With both train_size and test_size set, sklearn returns exactly those sizes (5 and 2) and silently leaves 3 rows out. Handy for quick subsampling, surprising if you forgot you set both.",
+        topic="tts", level=3),
+    out("""import numpy as np
+from sklearn.model_selection import train_test_split
+y = np.array([0, 1, 2] * 3)
+train_test_split(np.arange(9), y, test_size=2, stratify=y, random_state=0)
+print("done")""",
+        ["ValueError", "done", "IndexError", "KeyError"], 0,
+        "How do you fit 3 classes into a 2-row test set while keeping every class?",
+        "A stratified test set must hold at least one row per class. With 3 classes and test_size=2, sklearn raises ValueError (test_size should be >= the number of classes).",
+        topic="tts", level=3),
+    mcq("You need splits that keep BOTH the class ratio and the region ratio (north/south) balanced. A simple way with train_test_split?",
+        ["Stratify on a combined key such as y.astype(str) + '_' + region",
+         "Pass stratify=[y, region]",
+         "Call train_test_split twice with different stratify columns",
+         "It's impossible"], 0,
+        "stratify takes ONE label per row; make that label carry both facts.",
+        "Concatenating the columns creates joint strata (0_north, 1_south...). Watch out: every combination needs at least 2 rows, so rare combinations may need merging.",
+        diagram="""
+ y  region   key
+ 0  north -> 0_north
+ 1  south -> 1_south
+ stratify=key keeps the share of every combination
+""",
+        topic="tts", level=3),
+
+    # ------------------------------------------------------------------ kfold
+    out("""from sklearn.model_selection import KFold
+X = list(range(10))
+print([len(te) for _, te in KFold(4, shuffle=True, random_state=0).split(X)])""",
+        ["[3, 3, 2, 2]", "[2, 2, 3, 3]", "[2, 2, 2, 4]", "[3, 3, 3, 1]"], 0,
+        "Shuffling changes which rows go where, not the fold sizes.",
+        "10 rows into 4 folds: 10 % 4 = 2 folds get an extra row, so sizes 3, 3, 2, 2 (first folds get the extra), shuffled or not.",
+        topic="kfold", level=2),
+    out("""import numpy as np
+from sklearn.model_selection import cross_val_score
+from sklearn.tree import DecisionTreeRegressor
+X = np.arange(100, dtype=float).reshape(-1, 1)
+y = 2 * X.ravel()
+s = cross_val_score(DecisionTreeRegressor(random_state=0), X, y, cv=5)
+print(bool((s < 0).all()))""",
+        ["True", "False", "ValueError", "nan"], 0,
+        "For a regressor, cv=5 means KFold without shuffling. y is sorted.",
+        "Each test fold is a block of y values the tree never saw, and trees can't extrapolate, so every R^2 is negative (worse than predicting the mean). Shuffle (KFold(shuffle=True)) when rows are sorted, unless order is time.",
+        topic="kfold", level=3),
+    out("""from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import cross_validate
+from sklearn.tree import DecisionTreeClassifier
+X, y = load_breast_cancer(return_X_y=True)
+r = cross_validate(DecisionTreeClassifier(random_state=0), X, y, cv=5, return_train_score=True)
+print(r["train_score"].mean() == 1.0, r["test_score"].mean() < 0.95)""",
+        ["True True", "True False", "False True", "False False"], 0,
+        "An unpruned tree can memorise its training folds.",
+        "return_train_score shows the gap: perfect on training folds, lower on held-out folds. A big gap = overfitting (variance); both low = underfitting.",
+        topic="kfold", level=2),
+    out("""from sklearn.datasets import load_breast_cancer
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_predict
+X, y = load_breast_cancer(return_X_y=True)
+pred = cross_val_predict(LogisticRegression(max_iter=5000), X, y, cv=5)
+print(len(pred) == len(y))""",
+        ["True", "False", "ValueError", "None"], 0,
+        "Every row sits in exactly one test fold.",
+        "cross_val_predict returns one out-of-fold prediction per row, made by the model that didn't train on it. Useful for confusion matrices, error analysis and stacking.",
+        topic="kfold", level=2),
+    tf("The accuracy of cross_val_predict's pooled predictions is always exactly equal to the mean of cross_val_score's fold accuracies.", False,
+       "Mean of per-fold ratios vs one ratio over all rows: same thing when folds differ in size?",
+       "The two match only when folds are equal-sized and the metric averages nicely. sklearn warns that pooled out-of-fold predictions are not a substitute for per-fold scores, especially for metrics like AUC or F1.",
+       topic="kfold", level=4),
+    out("""import numpy as np
+from sklearn.model_selection import ShuffleSplit
+tested = set()
+for _, te in ShuffleSplit(n_splits=3, test_size=0.2, random_state=0).split(np.zeros(20)):
+    tested |= set(te.tolist())
+print(20 - len(tested))""",
+        ["10", "0", "8", "4"], 0,
+        "Each ShuffleSplit draws its test set independently.",
+        "Unlike k-fold, ShuffleSplit's test sets can overlap and some rows are never tested (here 10 of 20). Fine for many cheap repeats; for 'each row tested once', use KFold.",
+        diagram="""
+ KFold:        every row in exactly one test fold
+ ShuffleSplit: split1 [..xx..x.x.]  split2 [x...x..x.x]
+               overlaps allowed, some rows never tested
+""",
+        topic="kfold", level=3),
+
+    # ------------------------------------------------------------------ group
+    out("""import numpy as np
+from sklearn.model_selection import GroupShuffleSplit
+groups = np.array(list("aabbccddee"))
+gss = GroupShuffleSplit(n_splits=1, test_size=0.25, random_state=0)
+tr, te = next(gss.split(np.zeros(10), groups=groups))
+print(sorted(set(groups[te].tolist())), len(te))""",
+        ["['a', 'c'] 4", "['a'] 2", "['a', 'c'] 2", "['a', 'b', 'c'] 3"], 0,
+        "test_size counts GROUPS here, and ceil(0.25 x 5) = 2.",
+        "GroupShuffleSplit picks whole groups for the test side: 2 of the 5 groups, i.e. 4 rows. Note test_size refers to groups, so the row share can differ from what you asked for.",
+        topic="group", level=2),
+    out("""import numpy as np
+from sklearn.model_selection import LeaveOneGroupOut
+groups = np.array(list("aabbccddee"))
+print(LeaveOneGroupOut().get_n_splits(groups=groups))""",
+        ["5", "10", "2", "1"], 0,
+        "One split per distinct group.",
+        "LeaveOneGroupOut holds out each group once: 5 groups, 5 splits. Natural for 'leave one hospital/site/store out' to test generalisation to a new site.",
+        topic="group", level=2),
+    out("""import numpy as np
+from sklearn.model_selection import GroupKFold
+g = np.array(list("aaaaabbbcc"))
+for tr, te in GroupKFold(n_splits=2).split(np.zeros((10, 1)), groups=g):
+    print(len(te), sorted(set(g[te].tolist())))""",
+        ["5 ['a']\n5 ['b', 'c']", "5 ['a', 'b']\n5 ['c']", "4 ['a']\n6 ['b', 'c']", "ValueError"], 0,
+        "GroupKFold tries to make fold sizes (in rows) as even as possible.",
+        "The biggest group (a, 5 rows) fills one fold; b (3) and c (2) together fill the other. Groups stay whole, and folds are balanced by row count, not by number of groups.",
+        diagram="""
+ groups: a = 5 rows   b = 3   c = 2
+ fold 1 test: [a a a a a]
+ fold 2 test: [b b b c c]
+""",
+        topic="group", level=3),
+    out("""import numpy as np
+from sklearn.model_selection import train_test_split
+users = np.repeat(np.arange(20), 5)
+tr, te = train_test_split(users, test_size=0.2, random_state=0)
+shared = set(tr.tolist()) & set(te.tolist())
+print(len(shared), len(set(te.tolist())))""",
+        ["14 14", "0 4", "4 4", "20 20"], 0,
+        "Each user has 5 rows. A random row split doesn't know that.",
+        "Every user who appears in test also appears in train: a random row split leaks users. Always run this overlap check on your ID columns; with GroupShuffleSplit the first number would be 0.",
+        topic="group", level=3),
+    mcq("A video-frame classifier gets 99% on a random frame split and 70% on new videos. Why?",
+        ["Neighbouring frames of the same video are near-duplicates, so a random split puts copies of test frames in training; split by video",
+         "Videos have too many frames",
+         "Frames must be shuffled more",
+         "The model needs a bigger image size"], 0,
+        "How different is frame 101 from frame 100?",
+        "Hidden groups (video, recording session, device, household) create near-duplicate rows. The group id is whatever unit you will see NEW at deployment: here, the video.",
+        analogy="Like testing a cache with the same requests you warmed it with.",
+        topic="group", level=4),
+    mcq("A churn model will score users who already exist, for the next month. The team insists on a GroupKFold by user. Is that the right split?",
+        ["Not necessarily: deployment is 'known users, future period', so a time-based split (train on past months, test on a later month) matches better",
+         "Yes, user-grouping is always the safest split",
+         "Use a random row split instead",
+         "Use LeaveOneOut"], 0,
+        "Copy the deployment situation, not a rule of thumb.",
+        "Group splits answer 'how well on NEW users?'. If the model will only score existing users going forward, the honest question is 'how well next month?', which is a time split. Sometimes you need both (new users AND future period).",
+        topic="group", level=4),
+    mcq("Your dataset has users AND time. The model will score new sign-ups next quarter. Which evaluation best matches?",
+        ["Train on users who signed up before a cutoff date; test on users who signed up after it, using only their data after the cutoff",
+         "GroupKFold by user ignoring time",
+         "TimeSeriesSplit on rows ignoring users",
+         "A random 80/20 row split"], 0,
+        "Two kinds of 'new' at once: new people and a new period.",
+        "A cutoff on sign-up date gives test users that are both unseen and in the future, just like production. Either split alone leaks one dimension.",
+        diagram="""
+          users who joined before | after cutoff
+ past   [======= train ======] |
+ future                        | [==== test ====]
+""",
+        topic="group", level=4),
+
+    # ------------------------------------------------------------------ time-series
+    tf("TimeSeriesSplit sorts your rows by date before splitting.", False,
+       "It receives X, not your date column.",
+       "TimeSeriesSplit only uses row positions. If the rows aren't already sorted by time, its 'past' and 'future' are meaningless. Sort by timestamp first.",
+       analogy="Like paging through a table in insertion order: 'page 2' only means 'later' if rows were inserted chronologically.",
+       topic="time-series", level=2),
+    out("""from sklearn.model_selection import TimeSeriesSplit
+for tr, te in TimeSeriesSplit(n_splits=3, test_size=2).split(list(range(10))):
+    print(len(tr), te.tolist())""",
+        ["4 [4, 5]\n6 [6, 7]\n8 [8, 9]", "2 [2, 3]\n4 [4, 5]\n6 [6, 7]", "6 [6, 7]\n6 [8, 9]\n6 [4, 5]", "ValueError"], 0,
+        "Test blocks are fixed at 2 rows and end at the last row.",
+        "With test_size=2 the three test blocks are the last 6 rows, two at a time, and training is everything before each block (4, 6, 8 rows).",
+        topic="time-series", level=3),
+    mcq("You forecast sales for 50 stores. The data is one table sorted by store, then date. What goes wrong with TimeSeriesSplit on this table as-is?",
+        ["Its 'future' blocks are just later stores, not later dates; split by a date cutoff applied to all stores instead",
+         "Nothing, TimeSeriesSplit handles multiple series",
+         "It raises an error for more than one store",
+         "It only uses the first store"], 0,
+        "TimeSeriesSplit cuts by row position. What does row position mean here?",
+        "For many series (panel data), define folds by date: train on all stores before date d, test on all stores in the next window. Otherwise the 'test' contains earlier dates than training.",
+        diagram="""
+ rows: store1 Jan..Dec | store2 Jan..Dec | store3 Jan..Dec
+ TSS:  [ train ...................... ][ test = store3 ]
+ right: every store, Jan..Sep = train | Oct..Dec = test
+""",
+        topic="time-series", level=4),
+    mcq("A forecasting pipeline standardises each feature with the mean and std of the whole series, then runs walk-forward validation. What is the leak?",
+        ["Early training windows are scaled with statistics that include future values; fit the scaler inside each window",
+         "There is none; scaling is harmless",
+         "Walk-forward forbids scaling",
+         "The std should use ddof=1"], 0,
+        "When was the full-series mean known?",
+        "A mean computed over all time carries information about the future level and trend. Put the scaler in a Pipeline so each walk-forward step fits it on past data only.",
+        topic="time-series", level=3),
+    mcq("You evaluate a model that forecasts 7 days ahead. Features are computed up to day t. Which test setup is honest?",
+        ["For each origin t, use features as of t and score the prediction for day t+7, leaving a 7-day gap between the last label used in training and the origin",
+         "Score the prediction for day t+1 because it's easier",
+         "Use features up to day t+7",
+         "Shuffle days and use 5-fold CV"], 0,
+        "Copy what you will know on the day you make the forecast.",
+        "The horizon defines both the target and the gap. Training labels that end inside the test horizon leak future information; testing on t+1 overstates a t+7 model.",
+        diagram="""
+ [ train: labels end by t ] t ----- 7 days -----> t+7
+                            ^ features as of t    ^ score
+""",
+        topic="time-series", level=4),
+    mcq("Your new demand model's backtest MAE is 120 units. Before celebrating, what should you compare it with?",
+        ["A naive baseline, such as 'same as last week' (seasonal naive), on the same backtest windows",
+         "Its training MAE",
+         "A model trained on shuffled folds",
+         "Nothing; 120 is a good number"], 0,
+        "Is 120 good? Compared with what?",
+        "Many forecasting models barely beat 'repeat last week'. A naive baseline on identical windows tells you whether the model adds value at all.",
+        analogy="Like benchmarking a new cache against no cache: a speed-up means nothing without the baseline.",
+        topic="time-series", level=3),
+
+    # ------------------------------------------------------------------ nested-cv
+    out("""from sklearn.datasets import load_iris
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.tree import DecisionTreeClassifier
+X, y = load_iris(return_X_y=True)
+rs = RandomizedSearchCV(DecisionTreeClassifier(random_state=0),
+                        {"max_depth": list(range(1, 20))}, n_iter=5, cv=3, random_state=0).fit(X, y)
+print(len(rs.cv_results_["params"]), 5 * 3)""",
+        ["5 15", "19 57", "5 5", "3 15"], 0,
+        "n_iter = number of settings sampled.",
+        "RandomizedSearchCV samples n_iter=5 settings, each cross-validated 3 times: 15 fits (plus one refit). The budget is fixed by n_iter, not by the grid size.",
+        topic="nested-cv", level=2),
+    out("""import numpy as np
+rng = np.random.default_rng(0)
+y_val, y_test = rng.integers(0, 2, 50), rng.integers(0, 2, 1000)
+val_preds = rng.integers(0, 2, (100, 50))
+test_preds = rng.integers(0, 2, (100, 1000))
+val_acc = (val_preds == y_val).mean(axis=1)
+best = val_acc.argmax()
+print(round(val_acc[best], 2), round((test_preds[best] == y_test).mean(), 2))""",
+        ["0.66 0.51", "0.5 0.5", "0.66 0.66", "0.51 0.66"], 0,
+        "All 100 'models' are coin flips. What does the best of 100 coin flips look like?",
+        "Picking the best of 100 random guessers on 50 validation rows gives 66% by luck alone; on fresh test data it's 51%, chance. This is the winner's curse: selection on a noisy score biases it upward.",
+        diagram="""
+ 100 coin-flip models scored on 50 val rows
+ val acc:   .40 ... .50 ... .58 ... .66 <- picked
+ test acc of the pick:  .51  (just luck, gone)
+""",
+        topic="nested-cv", level=4),
+    out("""import numpy as np
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV, GroupKFold
+X = np.arange(10, dtype=float).reshape(-1, 1)
+y = [0, 1] * 5
+GridSearchCV(LogisticRegression(), {"C": [1]}, cv=GroupKFold(2)).fit(X, y)
+print("ok")""",
+        ["ValueError", "ok", "TypeError", "KeyError"], 0,
+        "GroupKFold needs to know the groups. Were they passed?",
+        "GridSearchCV(cv=GroupKFold()) requires fit(X, y, groups=...). Forgetting it raises ValueError, which is lucky: a splitter that silently ignored groups would leak.",
+        analogy='Like a required config flag: failing loudly at startup beats silently running with the wrong setting.',
+        topic="nested-cv", level=4),
+    tf("Nested cross-validation gives you the final model to deploy.", False,
+       "What does the outer loop produce: a model or a number?",
+       "Nested CV produces an honest performance ESTIMATE of the tuning procedure. To deploy, run the inner search (e.g. GridSearchCV) once on all the data and ship its best_estimator_.",
+       topic="nested-cv", level=3),
+    mcq("After GridSearchCV(refit=True).fit(X_train, y_train), what does gs.score(X_test, y_test) use?",
+        ["best_estimator_: the best setting refit on all of X_train",
+         "The model from the best CV fold only",
+         "An average of all candidate models",
+         "The last setting in the grid"], 0,
+        "refit=True does one more fit at the end.",
+        "With refit=True the winning parameters are retrained on the whole training set, and predict/score delegate to that best_estimator_. That's the model you evaluate once on test.",
+        topic="nested-cv", level=3),
+    mcq("You tune 3 hyperparameters with 5-fold CV on 5,000 rows, then score once on a held-out test set of 2,000 rows. Is nested CV still necessary?",
+        ["Usually not: the untouched test set already gives an unbiased estimate; nested CV matters most when data is too small to spare a test set",
+         "Yes, always use nested CV",
+         "Yes, the test score is biased by the tuning",
+         "No, and the test set isn't needed either"], 0,
+        "What problem does nested CV solve?",
+        "Nested CV replaces the held-out test set when you can't afford one. With enough data, tune with CV on train and confirm once on test: simpler and cheaper.",
+        topic="nested-cv", level=3),
+
+    # ------------------------------------------------------------------ leakage
+    out("""import numpy as np
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.tree import DecisionTreeClassifier
+y = np.array([0] * 80 + [1] * 20)
+X = np.arange(100).reshape(-1, 1)
+cv = StratifiedKFold(5, shuffle=True, random_state=0)
+print(round(cross_val_score(DecisionTreeClassifier(random_state=0), X, y, cv=cv).mean(), 2))""",
+        ["0.98", "0.8", "0.5", "0.2"], 0,
+        "The only feature is the row number. The positives were appended at the end of the file.",
+        "The row index alone gets 98%: positives were added in a later batch, so 'index > 79' is a perfect rule. Leakage hunt rule: if an ID, row number or timestamp predicts the label, your data was assembled in a label-dependent way.",
+        analogy='Like a test suite where all the failing cases sit at the bottom of the file: the line number alone predicts pass or fail.',
+        topic="leakage", level=3),
+    mcq("A model predicts a support ticket's priority at creation time. The top feature is 'time_to_resolution'. What is the verdict?",
+        ["Target leakage: resolution time is only known after the ticket is closed, long after the prediction is needed",
+         "A great feature: keep it",
+         "It just needs log-scaling",
+         "It is a group-split problem"], 0,
+        "At the moment the ticket is created, what is its time to resolution?",
+        "Check every feature's timestamp against the prediction moment. Anything produced later (resolution time, final status, agent notes) must go.",
+        topic="leakage", level=2),
+    mcq("A pneumonia model trained on X-rays from two hospitals scores 0.95 AUC, but on a third hospital 0.70. Investigation shows sick patients mostly came from hospital A, whose scanner prints a text marker in the corner. What happened?",
+        ["Shortcut learning: the model learned the hospital marker (a proxy for the label) instead of the disease",
+         "The third hospital has wrong labels",
+         "The model needs more epochs",
+         "AUC is the wrong metric"], 0,
+        "What is the easiest pixel pattern that separates sick from healthy in that training set?",
+        "When collection source correlates with the label, any source artefact becomes a leaky feature. Test with leave-one-site-out splits and inspect what the model looks at.",
+        diagram="""
+ hospital A: 90% sick  [marker 'A' in the corner]
+ hospital B: 10% sick  [no marker]
+ easiest rule learned: marker present -> sick
+""",
+        topic="leakage", level=4),
+    mcq("A colleague uses the test set for early stopping ('just to pick the epoch') and then reports test accuracy. What is the problem?",
+        ["The test set chose a hyperparameter (the epoch), so its score is optimistic; use a validation split for stopping",
+         "Early stopping always overfits",
+         "There's none: the epoch isn't a weight",
+         "Test sets can't measure accuracy"], 0,
+        "Any choice made by looking at a set uses that set.",
+        "Choosing the best epoch by test loss picks the luckiest point on the test curve. It looks harmless because no weights were trained on test, but the decision was.",
+        topic="leakage", level=3),
+    mcq("A fraud model uses the feature 'was the previous transaction on this card fraud?'. Offline it's the top feature. In production, fraud labels arrive 30-60 days later via chargebacks. What is the problem?",
+        ["Label latency: at prediction time the previous transaction's label usually isn't known yet, so the feature is filled with information production won't have",
+         "Nothing, the previous transaction happened in the past",
+         "The feature needs one-hot encoding",
+         "It should be computed over the whole card history"], 0,
+        "The event is in the past. Is its LABEL already known?",
+        "'As of' rules apply to labels too: a past event's outcome counts only once it is recorded. Build features from labels available by the prediction time (e.g. chargebacks received so far), or offline scores will be far too optimistic.",
+        diagram="""
+ txn 1 (fraud) --- txn 2 (predict now) --- chargeback for txn 1
+     day 0             day 3                    day 45
+ at day 3 the label of txn 1 is still unknown
+""",
+        topic="leakage", level=4),
+    mcq("You build a churn dataset by joining today's 'customer_tier' table (updated whenever a customer upgrades or cancels) to labels from last year. What leaks?",
+        ["Tier changes caused by last year's churn or upgrades are now in the features; you need the tier as of each label's date",
+         "Nothing, tier is a stable attribute",
+         "Only the customer ID",
+         "The join adds duplicates, nothing else"], 0,
+        "When was today's tier value written?",
+        "Mutable tables overwrite history. Joining their current values onto past events smuggles outcomes into features. Use snapshot/history tables or a feature store with point-in-time joins.",
+        diagram="""
+ label date: 2025-06 (churned)
+ tier table today: 'cancelled'  <- written 2025-07
+ feature should be: tier as of 2025-06 = 'gold'
+""",
+        topic="leakage", level=4),
+
+    # ------------------------------------------------------------------ pipelines
+    out("""from sklearn.datasets import load_iris
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+X, y = load_iris(return_X_y=True)
+pipe = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000))
+g = GridSearchCV(pipe, {"logisticregression__C": [0.1, 1]}, cv=3).fit(X, y)
+print(list(g.best_params_))""",
+        ["['logisticregression__C']", "['C']", "['LogisticRegression__C']", "['standardscaler', 'logisticregression']"], 0,
+        "best_params_ uses the same keys as the grid.",
+        "Pipeline parameters are named <step>__<param>, and best_params_ echoes those keys. To use them on a fresh pipeline: pipe.set_params(**g.best_params_).",
+        topic="pipelines", level=2),
+    out("""import numpy as np
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+X = np.random.default_rng(0).normal(size=(20, 2)); y = [0, 1] * 10
+pipe = make_pipeline(StandardScaler(), LogisticRegression())
+GridSearchCV(pipe, {"C": [0.1, 1]}).fit(X, y)""",
+        ["ValueError", "TypeError", "KeyError", "AttributeError"], 0,
+        "The pipeline itself has no parameter called C.",
+        "Grid keys must name the step: 'logisticregression__C'. A bare 'C' raises ValueError (invalid parameter). The error is your friend: a typo can't silently tune nothing.",
+        question="What does this print (or raise)?",
+        topic="pipelines", level=3),
+    out("""import numpy as np
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+X = np.array([[1.0], [2.0], [3.0], [10.0]]); y = [0, 0, 1, 1]
+pipe = make_pipeline(StandardScaler(), LogisticRegression()).fit(X[:3], y[:3])
+print(pipe.named_steps["standardscaler"].mean_[0])""",
+        ["2.0", "4.0", "10.0", "0.0"], 0,
+        "fit was called on the first 3 rows only.",
+        "The pipeline's scaler learned its mean from exactly the rows passed to fit (1, 2, 3). Inspecting fitted steps like this is a quick way to prove no test data reached preprocessing.",
+        topic="pipelines", level=2),
+    mcq("You need random oversampling of the minority class inside cross-validation. Why can't you simply put it as a step in a standard sklearn Pipeline?",
+        ["sklearn Pipeline steps can only transform X, not change the number of rows or y; use imblearn's Pipeline, which resamples only during fit",
+         "sklearn forbids oversampling",
+         "Oversampling must happen before the pipeline",
+         "Pipelines don't support classifiers"], 0,
+        "Oversampling adds rows AND labels.",
+        "imblearn.pipeline.Pipeline applies samplers only in fit (on each training fold) and skips them in predict, so validation folds keep their real distribution. Oversampling outside the pipeline leaks copies across folds.",
+        diagram="""
+ fit:     X_train -> sampler (adds rows) -> model.fit
+ predict: X_val   -> sampler skipped     -> model.predict
+""",
+        topic="pipelines", level=4),
+    mcq("Why is it fine to fit a TfidfVectorizer inside a Pipeline but questionable to fit it once on train + test documents before splitting?",
+        ["Fitting on all documents puts test-set vocabulary and IDF counts into the features; inside a pipeline it only learns from training folds",
+         "TfidfVectorizer can't be used in pipelines",
+         "IDF is identical regardless of which documents are used",
+         "It's questionable in both cases"], 0,
+        "IDF = how rare a word is across the documents it was fit on.",
+        "It's an unsupervised leak (no labels), usually small, but test-only words get columns and IDF weights shaped by the test set. Pipelines remove the question entirely.",
+        topic="pipelines", level=3),
+
+    # ------------------------------------------------------------------ test-reuse
+    mcq("Your team must report test accuracy to leadership every sprint. What practice keeps that number honest over months?",
+        ["Log every test-set evaluation, limit how often it's used, and periodically refresh the test set with new labelled data",
+         "Evaluate on test after every commit",
+         "Use the test set as extra training data each sprint",
+         "Report validation accuracy instead and call it test"], 0,
+        "Each look at the test set spends a little of its credibility.",
+        "Treat the test set as a budget. A log of evaluations shows how much has been 'spent'; fresh data restores an unseen set. Keep the old set too for regression checks.",
+        analogy="Like a production canary you only consult at release time; if you route every experiment through it, it no longer tells you anything new.",
+        topic="test-reuse", level=3),
+    mcq("A model's offline test score has been stable for a year, but production complaints are rising. Your test set was frozen in 2025. What is the likely gap?",
+        ["The frozen test set no longer looks like current traffic; refresh it from recent production data",
+         "The model weights decayed",
+         "Test sets must be frozen forever",
+         "The complaints are noise"], 0,
+        "A test set is a snapshot of the world at one time.",
+        "A static test set measures yesterday's distribution. Sample new labelled examples from recent traffic for a current test set, and keep the old one to catch regressions.",
+        topic="test-reuse", level=3),
+    mcq("Adversarial validation shows test rows differ from training rows mainly in 'account_age'. You can't get more test-like data. One way to make validation more test-like?",
+        ["Use the adversarial classifier's p(test) to pick or weight the training rows that look most like test as the validation set",
+         "Drop the test set",
+         "Shuffle account_age",
+         "Use a larger random validation split"], 0,
+        "The adversarial model already scores how 'test-like' each training row is.",
+        "Selecting (or importance-weighting) the most test-like training rows for validation makes your tuning target resemble the real target. Also consider dropping or fixing the drifting feature if it isn't causal.",
+        topic="test-reuse", level=4),
+    mcq("Two teams evaluate on the same public benchmark. Team A picked its architecture after 200 runs scored on the benchmark's test split; team B tuned on a separate dev split and ran the test once. Both report 85%. Whose number do you trust more, and why?",
+        ["Team B: team A's 85% includes selection on the test set (adaptive overfitting), so it is optimistic",
+         "Team A, because they ran more experiments",
+         "Both equally, the number is the same",
+         "Neither, benchmarks are meaningless"], 0,
+        "Same number, different amount of peeking.",
+        "A score's trustworthiness depends on how it was produced. 200 test-set looks turn the test into a validation set. Ask 'how many times was this set used to make decisions?'",
+        topic="test-reuse", level=4),
+
+    # ------------------------------------------------------------------ llm-evals
+    mcq("You are building an eval set for a production LLM support bot. Which source and split is most honest?",
+        ["Sample real user queries from logs, label the answers, and keep the most recent period as the test set",
+         "Have the team write 20 questions they think are typical",
+         "Use the few-shot examples from the prompt",
+         "Use a public benchmark only"], 0,
+        "Your eval should look like the traffic the bot will see next.",
+        "Real queries capture phrasing, typos and topics the team wouldn't invent. A time-based holdout (latest weeks) checks the bot on what's coming, not what it was tuned on.",
+        topic="llm-evals", level=2),
+    out("""def ngrams(text, n=3):
+    w = text.lower().split()
+    return {tuple(w[i:i + n]) for i in range(len(w) - n + 1)}
+test = "what is the capital city of france"
+train = "quiz: what is the capital city of spain"
+t = ngrams(test)
+print(len(t & ngrams(train)), len(t))""",
+        ["4 5", "4", "5 5", "3 5"], 0,
+        "List the 3-grams of the test sentence and check which appear in the train text.",
+        "Test has 5 trigrams; 4 (what is the / is the capital / the capital city / capital city of) also appear in the train text. Overlap checks flag such items, but a paraphrase ('which city is France's capital') would score 0.",
+        topic="llm-evals", level=3),
+    mcq("Your prompt eval set has 50 items; prompt v2 scores 82% vs v1's 78%. Is v2 clearly better?",
+        ["No: with 50 items the standard error is about 5.5 points, so a 4-point gap is within noise; use a bigger set or paired comparison on the same items",
+         "Yes, 4 points is a big gain",
+         "Yes, because LLM outputs are deterministic",
+         "No, prompts can't be compared"], 0,
+        "sqrt(0.8 x 0.2 / 50) = ?",
+        "Small eval sets are noisy, just like small test sets in classic ML. Compare versions on the same items and look at which items flipped (a paired view), and grow the set for decisions that matter.",
+        topic="llm-evals", level=3),
+    mcq("You fine-tune a model on 30,000 Q&A pairs generated by a teacher LLM, which you prompted with examples from your eval set to 'match the style'. What is wrong?",
+        ["The teacher may paraphrase eval items into training data, contaminating the eval through the back door",
+         "Teacher models can't write Q&A",
+         "Style matching never helps",
+         "Nothing, since no eval item was copied verbatim"], 0,
+        "Where did the teacher's inspiration come from?",
+        "Anything derived from the eval set (paraphrases, style seeds, generated variants) leaks it. Seed generators with dev or training data only, and run near-duplicate checks against the eval set.",
+        analogy='Like a candidate coached by someone who has seen the interview questions: nothing is copied word for word, but the questions are no longer unseen.',
+        topic="llm-evals", level=4),
+    mcq("Why do some LLM benchmarks only use questions created after a model's training cutoff date?",
+        ["Questions published after the cutoff can't have been in pre-training data, so the score can't be memorisation",
+         "Newer questions are easier",
+         "Old questions have wrong answers",
+         "Cutoff dates make evaluation faster"], 0,
+        "It's a time-based split applied to the whole internet.",
+        "A dated, rolling benchmark is the LLM version of 'train on the past, test on the future'. It defeats contamination without needing to inspect secret training data.",
+        diagram="""
+ internet text ------------------| cutoff |------------->
+ pre-training data  [===========]
+ eval questions                          [ written later ]
+""",
+        topic="llm-evals", level=4),
+    mcq("You build a RAG eval by generating questions from document chunks, then use the same questions to pick chunk size and prompt. What should the final report use?",
+        ["A separate set of questions (ideally real user queries) not used for any tuning",
+         "The same generated questions; they were never trained on",
+         "Only the retrieval recall on the tuning set",
+         "No eval: RAG doesn't overfit"], 0,
+        "Chunk size and prompt are hyperparameters.",
+        "Every design choice tuned against a question set fits that set. Keep a dev set for chunking/prompt/retriever tuning and a held-out test set for the final number.",
+        topic="llm-evals", level=4),
+
+    # ------------------------------------------------------------------ compare
+    out("""import numpy as np
+from sklearn.dummy import DummyClassifier
+from sklearn.model_selection import cross_val_score
+y = np.array([0] * 80 + [1] * 20)
+X = np.zeros((100, 1))
+print(cross_val_score(DummyClassifier(), X, y, cv=5).mean())""",
+        ["0.8", "0.5", "0.2", "1.0"], 0,
+        "The default DummyClassifier always predicts the most frequent class.",
+        "A dummy baseline scores 0.8 here with zero learning. Always put a baseline through the SAME CV: a real model at 0.82 accuracy has learned almost nothing.",
+        analogy="Like comparing a new endpoint's latency with a stub that just returns 200: the floor every real implementation must beat.",
+        topic="compare", level=2),
+    mcq("You compare model A and model B with 5-fold CV. Why should both use the exact same folds (same splitter with a fixed random_state)?",
+        ["So differences come from the models, not from one model getting easier folds; it also allows a paired, fold-by-fold comparison",
+         "sklearn requires it",
+         "It makes training faster",
+         "So the models can share weights"], 0,
+        "If A's folds were easier, what would you be measuring?",
+        "Fold-to-fold variation is often bigger than the difference between models. Same folds turn the comparison into paired differences, which cancels out fold difficulty.",
+        analogy="Like A/B testing two builds on the same benchmark machine and input set, not on different machines.",
+        topic="compare", level=2),
+    out("""import numpy as np
+a = np.array([0.81, 0.79, 0.95, 0.80, 0.82])
+b = np.array([0.80, 0.77, 0.94, 0.78, 0.81])
+d = a - b
+print(round(a.mean() - b.mean(), 3), bool((d > 0).all()), round(b.std(), 3) > round(d.std(), 3))""",
+        ["0.014 True True", "0.014 False True", "0.014 True False", "0.0 True True"], 0,
+        "Look at the per-fold differences, not just the two means.",
+        "The means differ by only 0.014 and each model's scores swing a lot (fold 3 is easy for both), but A wins on every fold and the differences barely vary. Paired differences remove shared fold difficulty, the right lens for 'is A better than B?'.",
+        diagram="""
+ fold:   1    2    3    4    5
+ A:     .81  .79  .95  .80  .82
+ B:     .80  .77  .94  .78  .81
+ A-B:  +.01 +.02 +.01 +.02 +.01   <- consistent
+""",
+        topic="compare", level=3),
+    out("""from sklearn.model_selection import RepeatedStratifiedKFold
+cv = RepeatedStratifiedKFold(n_splits=5, n_repeats=3, random_state=0)
+print(cv.get_n_splits())""",
+        ["15", "5", "3", "8"], 0,
+        "Each repeat is a full 5-fold run with a new shuffle.",
+        "5 folds x 3 repeats = 15 fits. Repeating with different shuffles averages out the luck of one particular fold assignment, giving a steadier estimate.",
+        topic="compare", level=2),
+    mcq("You run 10-fold CV, get the mean and std of fold scores, and compute a t-test assuming the 10 scores are independent. Why is that test overconfident?",
+        ["The 10 training sets overlap by about 89%, so fold scores are correlated; corrected tests (e.g. Nadeau-Bengio) inflate the variance to account for it",
+         "10 folds is too few for any test",
+         "The t-test requires accuracy above 0.5",
+         "Fold scores are perfectly independent, so it's fine"], 0,
+        "How different are the training sets of fold 1 and fold 2?",
+        "Fold scores share most of their training data, so they move together and the naive standard error is too small. Use a corrected resampled t-test, or McNemar's test on a single held-out set.",
+        topic="compare", level=4),
+    mcq("You have one fixed test set and two classifiers. Which test compares them using the items where they disagree?",
+        ["McNemar's test: it looks at the counts of items only A got right vs only B got right",
+         "A two-sample t-test on their accuracies",
+         "The KS test on their predicted labels",
+         "Chi-squared on the class balance"], 0,
+        "Items both get right (or both get wrong) tell you nothing about which is better.",
+        "McNemar's test uses the paired 2x2 table of correct/incorrect. If only-A-right = 30 and only-B-right = 12, that imbalance is evidence A is better on this data.",
+        diagram="""
+             B right   B wrong
+ A right       850        30
+ A wrong        12       108
+ only 30 vs 12 (the disagreements) decide it
+""",
+        topic="compare", level=4),
+    mcq("Model A beats model B by 0.4 points of CV accuracy, but A takes 10x longer to train, 5x longer to serve and its fold scores swing by +/- 2 points. What is the sensible engineering call?",
+        ["Prefer B unless the 0.4 points matter for the business: the gain is inside the noise and A costs far more to run",
+         "Always ship the model with the higher mean",
+         "Ship both and average them",
+         "Retune A until it wins by more"], 0,
+        "Is the gap bigger than the noise? And what does it cost?",
+        "Model selection is a trade-off: a difference smaller than the CV spread isn't evidence of improvement, and latency, cost and maintainability count too. Interviewers like candidates who say this out loud.",
+        topic="compare", level=4),
+    tf("Repeated k-fold CV (several shuffles) fixes the problem of having too little data.", False,
+       "Repeats reshuffle the same rows. Do they add information?",
+       "Repeats reduce the variance that comes from one particular fold assignment, but every repeat uses the same rows. The uncertainty from a small sample remains; only more data fixes that.",
+       analogy='Like rerunning the same 20 integration tests in random order: you learn about flakiness, not about code paths no test covers.',
+       topic="compare", level=4),
+    mcq("A Kaggle-style leaderboard shows your model 0.3 points above the next one on a 1,000-row test set. What is the most accurate statement?",
+        ["The gap is likely within noise; rankings this close can easily swap on a new sample",
+         "Your model is definitely better",
+         "The other model is overfitting",
+         "Leaderboards have no noise"], 0,
+        "SE at ~90% accuracy on 1,000 rows is about 1 point.",
+        "With a standard error near 1 point, a 0.3-point lead is noise. Private leaderboards 'shake up' for exactly this reason, plus public-set overfitting.",
+        topic="compare", level=3),
+    fill("The sklearn baseline estimator that ignores the features and predicts the majority class (or the mean) is called ________.",
+         "DummyClassifier",
+         "It's in sklearn.dummy; the regression version is DummyRegressor.",
+         "DummyClassifier (strategy='most_frequent', 'stratified', 'prior'...) gives the floor every real model must beat under the same CV.",
+         topic="compare", level=1),
+    fill("To get exactly 3 repeats of 5-fold stratified CV with different shuffles, use RepeatedStratifiedKFold(n_splits=5, n_repeats=____).",
+         "3",
+         "The parameter name says it.",
+         "n_repeats=3 reruns 5-fold CV three times with different shuffles: 15 scores in total.",
+         topic="compare", level=2),
+    fill("In time-series CV, the TimeSeriesSplit argument that drops rows between the training window and the test block is ____.",
+         "gap",
+         "A buffer zone between past and future.",
+         "TimeSeriesSplit(gap=k) removes the last k training rows before each test block, so labels that look ahead can't overlap the test period.",
+         topic="time-series", level=3),
 ]

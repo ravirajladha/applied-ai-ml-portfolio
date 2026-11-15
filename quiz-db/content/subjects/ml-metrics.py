@@ -15,6 +15,7 @@ TOPICS = [
     ("ranking", "Ranking and retrieval metrics"),
     ("choosing", "Choosing a metric, baselines and significance"),
     ("llm-eval", "LLM evaluation metrics"),
+    ("balanced-metrics", "Balanced accuracy, MCC and Cohen's kappa"),
 ]
 
 CM = """
@@ -613,4 +614,434 @@ QUESTIONS = [
         "Think 'regression test suite' for answers.",
         "Task-specific checks plus a calibrated judge on a stable golden set give comparable numbers across releases. Perplexity and BLEU say little about whether users got correct help.",
         topic="llm-eval", level=4),
+
+    # ================================================================== additions
+    # ------------------------------------------------------------------ confusion-matrix
+    out("from sklearn.metrics import confusion_matrix\ny_true = ['cat', 'dog', 'dog', 'bird', 'cat', 'dog']\ny_pred = ['cat', 'cat', 'dog', 'bird', 'dog', 'cat']\nprint(confusion_matrix(y_true, y_pred))",
+        ["[[1 0 0]\n [0 1 1]\n [0 2 1]]", "[[1 0 0]\n [0 1 2]\n [0 1 1]]", "[[1 1 0]\n [0 2 0]\n [0 1 1]]", "[[1 0 0]\n [0 1 0]\n [0 0 1]]"], 0,
+        "Labels are sorted: bird, cat, dog. Rows are the true class.",
+        "Row 'cat' (true cats): one predicted cat, one predicted dog. Row 'dog': two predicted cat, one dog. The big off-diagonal cell (true dog, predicted cat) tells you which confusion to fix first: more useful than any single score.",
+        topic="confusion-matrix", level=2),
+    out("from sklearn.metrics import confusion_matrix\ny_true = [0, 0, 0, 0, 1, 1]\ny_pred = [0, 0, 0, 1, 1, 0]\nprint(confusion_matrix(y_true, y_pred, normalize='true'))",
+        ["[[0.75 0.25]\n [0.5  0.5 ]]", "[[0.6 0.5]\n [0.4 0.5]]", "[[3 1]\n [1 1]]", "[[0.5  0.17]\n [0.17 0.17]]"], 0,
+        "normalize='true' divides each ROW by its total.",
+        "Each row now sums to 1, so the diagonal is per-class recall: 0.75 for class 0 (specificity) and 0.5 for class 1 (sensitivity). normalize='pred' would divide columns (precision); normalize='all' divides by the grand total.",
+        topic="confusion-matrix", level=3),
+    out("from sklearn.metrics import multilabel_confusion_matrix\ny_true = [0, 1, 2, 2]\ny_pred = [2, 2, 2, 1]\nprint(multilabel_confusion_matrix(y_true, y_pred)[2].ravel())",
+        ["[0 2 1 1]", "[1 1 2 0]", "[1 1 1 1]", "[2 0 1 1]"], 0,
+        "Each class gets its own one-vs-rest 2x2 in the order [[tn, fp], [fn, tp]].",
+        "For class 2: predicted 2 at rows 0, 1, 2; actually 2 at rows 2, 3. TP = 1 (row 2), FP = 2 (rows 0, 1), FN = 1 (row 3), TN = 0. So ravel() = [0 2 1 1]. Handy for per-class precision/recall in multiclass work.",
+        topic="confusion-matrix", level=3),
+
+    # ------------------------------------------------------------------ core-rates
+    mcq("Your on-call alerting paged 50 times last month; 40 pages were real incidents. Which metric is 40 / 50 = 0.8?",
+        ["Precision: of everything flagged, how much was real", "Recall: of all real incidents, how many were caught",
+         "Accuracy", "Specificity"], 0,
+        "The denominator is 'pages sent', i.e. what the system flagged.",
+        "Precision = TP / (TP + FP) = 40 / 50. To get recall you'd need the number of incidents that never paged anyone (FN). Low precision = alert fatigue; low recall = silent outages.",
+        analogy="Precision: 'when my phone buzzes, is it real?' Recall: 'did every outage buzz my phone?'",
+        topic="core-rates", level=1),
+    out("prev, sens, spec = 0.001, 0.99, 0.99\nn = 1_000_000\nsick = n * prev\ntp = sens * sick\nfp = (1 - spec) * (n - sick)\nprint(round(tp), round(fp), round(tp / (tp + fp), 3))",
+        ["990 9990 0.09", "990 10 0.99", "990 9990 0.99", "999 9990 0.5"], 0,
+        "1% of the 999,000 healthy people is a lot of false alarms.",
+        "A 99%-sensitive, 99%-specific test on a disease with 0.1% prevalence: only about 9% of positives are really sick. Precision (PPV) depends on prevalence; sensitivity and specificity don't. That's why screening programmes confirm positives with a second test.",
+        diagram="""
+ 1,000,000 people
+   1,000 sick    -> 99% caught   ->    990 TP
+ 999,000 healthy -> 1% flagged   ->  9,990 FP
+ precision = 990 / (990 + 9,990) = 0.09
+""",
+        question="A screening test on 1 million people. It prints true positives, false positives and precision. What does it print?",
+        topic="core-rates", level=3),
+    mcq("A fraud model built in a region with 2% fraud is deployed to a region with 0.2% fraud. The fraud and normal transactions look the same as before. What happens to its metrics at the same threshold?",
+        ["Recall and FPR stay about the same, but precision drops sharply because there are far fewer frauds per flagged item",
+         "All metrics stay the same",
+         "Recall drops tenfold, precision stays the same",
+         "Precision rises because fraud is rarer"], 0,
+        "Which metrics are computed within one true class, and which mix the classes?",
+        "Recall (within actual frauds) and FPR (within actual normals) don't care how many of each there are. Precision mixes the two: with 10x fewer frauds, the same FPR produces about 10x more false alarms per real fraud. Always re-check precision at the target population's prevalence.",
+        analogy="Like moving an alert rule from a noisy service to a quiet one: it fires on the same share of bad events, but a larger share of its pages are now false alarms.",
+        topic="core-rates", level=4),
+
+    # ------------------------------------------------------------------ f-scores
+    out("from sklearn.metrics import f1_score\ny1, p1 = [1, 0, 0, 0], [1, 0, 0, 0]\ny2, p2 = [1, 1, 1, 1], [1, 0, 0, 0]\navg = (f1_score(y1, p1) + f1_score(y2, p2)) / 2\npooled = f1_score(y1 + y2, p1 + p2)\nprint(round(avg, 2), round(pooled, 2))",
+        ["0.7 0.57", "0.57 0.7", "0.7 0.7", "1.0 0.4"], 0,
+        "F1 is not a simple average of per-row scores, so averaging per batch is not the same as pooling.",
+        "Batch 1 F1 = 1.0, batch 2 F1 = 0.4, mean 0.7. Pooled counts: TP = 2, FN = 3, FP = 0 -> F1 = 4/7 = 0.57. Averaging F1 over batches, folds or days gives a different (here rosier) number than computing it on all rows; say which you report.",
+        question="F1 averaged over two batches vs F1 on the pooled rows. What does this print?",
+        diagram="""
+          TP  FP  FN   F1
+ batch 1   1   0   0   1.0
+ batch 2   1   0   3   0.4    mean of F1s = 0.7
+ pooled    2   0   3   0.57   F1 of all rows
+""",
+        topic="f-scores", level=4),
+    mcq("For a well-calibrated classifier, a known result says the threshold that maximises F1 equals half the best achievable F1. If the best F1 is 0.6, which threshold should you expect to be near-optimal?",
+        ["About 0.3, well below the default 0.5", "0.5, the default", "0.6, the F1 itself", "0.8, to favour precision"], 0,
+        "Threshold* = F1* / 2.",
+        "Since F1 is always at most 1, the F1-optimal threshold is at most 0.5, and on hard problems it is much lower. Maximising F1 at the default 0.5 is rarely right; sweep thresholds on validation data instead.",
+        topic="f-scores", level=4),
+
+    # ------------------------------------------------------------------ thresholds
+    mcq("A cancer-screening model at threshold 0.5 misses 15% of cancers. Doctors say a miss is far worse than an extra biopsy. What is the first thing to change?",
+        ["Lower the decision threshold to raise recall, then check the extra false positives are acceptable",
+         "Raise the threshold to 0.9",
+         "Report accuracy instead",
+         "Retrain with fewer positive examples"], 0,
+        "Which direction catches more positives?",
+        "Lowering the threshold flags more cases: recall up, precision down. Choose the new threshold on validation data so recall meets the clinical target (say 98%) and the biopsy load stays manageable.",
+        analogy="Like setting a CPU alert at 70% instead of 95%: you'll catch every real problem, at the cost of more false pages.",
+        topic="thresholds", level=2),
+    fill("The sklearn 1.5+ meta-estimator that picks a decision threshold by cross-validation for a chosen metric is ____.",
+         "TunedThresholdClassifierCV",
+         "It lives in sklearn.model_selection and wraps any classifier.",
+         "TunedThresholdClassifierCV(estimator, scoring='f1') searches thresholds with internal CV, so you don't tune on the test set. FixedThresholdClassifier applies a threshold you already chose.",
+         topic="thresholds", level=3),
+    out("import numpy as np\ny = np.array([1, 0, 1, 0, 0, 1, 0, 1])\ns = np.array([0.95, 0.9, 0.8, 0.6, 0.5, 0.4, 0.3, 0.1])\nbudget = 3   # analysts can review 3 cases a day\ntop = np.argsort(-s)[:budget]\nhits = int(y[top].sum())\nprint(round(hits / budget, 2), hits / int(y.sum()))",
+        ["0.67 0.5", "0.5 0.67", "0.67 0.75", "1.0 0.5"], 0,
+        "Take the 3 highest scores and count how many are real.",
+        "Top 3 = 0.95 (fraud), 0.9 (not), 0.8 (fraud): precision@3 = 2/3, recall = 2 of 4 frauds = 0.5. When a team can only review k cases, precision and recall at that budget are the metrics that match the job.",
+        question="Fraud alerts with a fixed review budget. It prints precision and recall at the budget. What does it print?",
+        topic="thresholds", level=3),
+    tf("For sklearn's LogisticRegression, decision_function(X) > 0 gives exactly the same labels as predict_proba(X)[:, 1] > 0.5.", True,
+       "The probability is sigmoid(decision value).",
+       "sigmoid(z) > 0.5 exactly when z > 0, so the two cut-offs agree for logistic regression. That is not guaranteed for SVC, whose probabilities come from a separately fitted calibration.",
+       topic="thresholds", level=3),
+    out("import numpy as np\ny = np.array([0, 1, 1, 0, 1])\ns = np.array([0.9, 0.8, 0.7, 0.4, 0.2])\nfor t in [0.6, 0.75, 0.85]:\n    print(t, round(float(y[s >= t].mean()), 2))",
+        ["0.6 0.67\n0.75 0.5\n0.85 0.0", "0.6 0.67\n0.75 1.0\n0.85 1.0", "0.6 0.5\n0.75 0.67\n0.85 1.0", "0.6 0.6\n0.75 0.6\n0.85 0.6"], 0,
+        "The single highest-scored item is a negative.",
+        "Raising the threshold drops the true positives at 0.7 and 0.8 but keeps the 0.9 negative, so precision FALLS from 0.67 to 0.5 to 0.0. Precision is not monotonic in the threshold; always look at the curve, not an assumed direction.",
+        question="Precision of the flagged items at three thresholds. What does it print?",
+        topic="thresholds", level=3),
+
+    # ------------------------------------------------------------------ roc-auc
+    tf("A ROC AUC of 1.0 means the model gives every positive a higher score than every negative.", True,
+       "AUC is about ranking positives above negatives.",
+       "AUC 1.0 = perfect ranking: some threshold separates the classes completely. It does not mean the probabilities are calibrated, only that the order is perfect.",
+       topic="roc-auc", level=1),
+    out("from sklearn.metrics import roc_curve\ny = [0, 0, 1, 1]\ns = [0.1, 0.4, 0.35, 0.8]\nfpr, tpr, thr = roc_curve(y, s)\nprint(fpr.tolist(), tpr.tolist())",
+        ["[0.0, 0.0, 0.5, 0.5, 1.0] [0.0, 0.5, 0.5, 1.0, 1.0]", "[0.0, 0.5, 0.5, 1.0, 1.0] [0.0, 0.0, 0.5, 0.5, 1.0]",
+         "[0.0, 0.5, 1.0] [0.0, 0.5, 1.0]", "[0.0, 0.25, 0.5, 0.75, 1.0] [0.0, 0.5, 0.5, 1.0, 1.0]"], 0,
+        "Lower the threshold past each score in turn: a positive moves you up, a negative moves you right.",
+        "Scores from high to low: 0.8 (pos) up to TPR 0.5; 0.4 (neg) right to FPR 0.5; 0.35 (pos) up to TPR 1.0; 0.1 (neg) right to FPR 1.0. The curve starts at (0, 0) for the 'flag nothing' threshold. Its area is 0.75.",
+        topic="roc-auc", level=3),
+    out("from sklearn.metrics import roc_auc_score\ny = [0, 1, 2, 1]\np = [[0.8, 0.1, 0.1], [0.2, 0.7, 0.1], [0.1, 0.2, 0.7], [0.3, 0.4, 0.3]]\nprint(roc_auc_score(y, p, multi_class='ovr'))\nprint(roc_auc_score(y, p))",
+        ["1.0\nValueError", "1.0\n1.0", "ValueError", "0.5\nValueError"], 0,
+        "For more than two classes you must say how to turn it into binary problems.",
+        "With multi_class='ovr' sklearn computes one-vs-rest AUC per class and averages (macro): every class is ranked perfectly, so 1.0. Without it, the default multi_class='raise' raises ValueError. The rows must be probabilities that sum to 1.",
+        topic="roc-auc", level=3),
+    out("from sklearn.metrics import roc_auc_score\ny = [0, 0, 1, 1, 0, 1]\ns = [0.1, 0.2, 0.3, 0.6, 0.7, 0.9]\nauc = roc_auc_score(y, s)\nprint(round(auc, 3), round(2 * auc - 1, 2))",
+        ["0.778 0.56", "0.778 0.78", "0.667 0.33", "0.556 0.78"], 0,
+        "Gini = 2 x AUC - 1. Count the (positive, negative) pairs ordered correctly first.",
+        "Positives 0.3, 0.6, 0.9 vs negatives 0.1, 0.2, 0.7: 2 + 2 + 3 = 7 of 9 pairs right, AUC = 0.778. Credit-risk teams report the Gini coefficient, 2 x AUC - 1 = 0.56: same information, rescaled so random = 0.",
+        topic="roc-auc", level=3),
+    out("import numpy as np\nfrom scipy.stats import rankdata\nfrom sklearn.metrics import roc_auc_score\ny = np.array([0, 1, 0, 1, 1, 0])\ns = np.array([0.3, 0.8, 0.5, 0.5, 0.9, 0.1])\nr = rankdata(s)                      # ties get the average rank\nn1, n0 = y.sum(), (1 - y).sum()\nauc = (r[y == 1].sum() - n1 * (n1 + 1) / 2) / (n1 * n0)\nprint(round(float(auc), 3), round(roc_auc_score(y, s), 3))",
+        ["0.944 0.944", "0.889 0.944", "0.944 1.0", "1.0 1.0"], 0,
+        "This is the Mann-Whitney U statistic divided by the number of pairs.",
+        "Ranks of the positives: 5, 3.5 (tied with a negative) and 6, total 14.5. Subtract 6, divide by 3 x 3 pairs: 8.5 / 9 = 0.944, the same as sklearn. AUC IS the normalised Mann-Whitney U, which is why ties count half and it can be computed with one sort.",
+        topic="roc-auc", level=4),
+    mcq("Two fraud models have the same ROC AUC, but their ROC curves cross: A is higher at FPR below 1%, B is higher at FPR above 10%. You can only afford FPR around 0.5%. What should you do?",
+        ["Prefer A, and compare models on the region you'll operate in (e.g. partial AUC with roc_auc_score(max_fpr=0.01), or recall at 0.5% FPR)",
+         "They're equal: same AUC means same model",
+         "Prefer B because it wins on more of the curve",
+         "Average the two models' AUCs"], 0,
+        "AUC averages over all thresholds, including ones you'll never use.",
+        "Full AUC sums performance over all FPRs, so a win at high FPR can cancel a loss at low FPR. If your operating point is FPR 0.5%, only the left edge matters. Partial AUC (max_fpr) or 'recall at fixed FPR' match the business constraint.",
+        diagram="""
+ TPR |      B ___-----
+     |   A_-''
+     |  /'  <- A higher here (low FPR, where you operate)
+     | /
+     +--|--------------- FPR
+       0.01
+""",
+        topic="roc-auc", level=4),
+
+    # ------------------------------------------------------------------ pr-curve
+    mcq("The product team needs precision of at least 0.9 on flagged items. From this validation table, what is the best recall you can promise?",
+        ["0.55, at threshold 0.7", "0.70, at threshold 0.5", "0.30, at threshold 0.9", "0.88, at threshold 0.3"], 0,
+        "Keep only rows that meet the precision target, then take the highest recall.",
+        "Thresholds 0.9 and 0.7 both meet precision >= 0.9; 0.7 gives more recall (0.55). Pick the operating point from the constraint, on validation data, and confirm it on test.",
+        diagram="""
+ threshold  precision  recall
+    0.9       0.95      0.30
+    0.7       0.91      0.55
+    0.5       0.82      0.70
+    0.3       0.60      0.88
+""",
+        topic="pr-curve", level=2),
+    out("import numpy as np\nfrom sklearn.metrics import average_precision_score, roc_auc_score\nrng = np.random.default_rng(0)\ny = (rng.random(20000) < 0.05).astype(int)   # 5% positives\ns = rng.random(20000)                        # random scores\nprint(round(roc_auc_score(y, s), 1), round(average_precision_score(y, s), 2))",
+        ["0.5 0.05", "0.5 0.5", "0.05 0.05", "0.5 0.95"], 0,
+        "Random ROC AUC is always about 0.5. What precision does random flagging get?",
+        "Random scores give ROC AUC about 0.5 regardless of class balance, but average precision about equal to the positive rate (0.05 here). So 'AP = 0.25' on a 5%-positive problem is five times better than chance, not 'bad'.",
+        topic="pr-curve", level=3),
+    mcq("Dataset A has 20% positives and dataset B has 1% positives. Your model gets PR AUC 0.60 on A and 0.30 on B. Can you conclude the model is worse on B?",
+        ["No: PR AUC depends on prevalence (random = 0.20 vs 0.01), so compare each to its baseline or use the same population",
+         "Yes: 0.30 is half of 0.60",
+         "Yes: PR AUC is prevalence-free like ROC AUC",
+         "No, because PR AUC is always lower than ROC AUC"], 0,
+        "What does a random model score on each dataset?",
+        "Precision mixes classes, so the whole PR curve shifts with the positive rate. 0.30 is 30x the random baseline on B; 0.60 is 3x on A. Compare PR AUC only across models on the same data, or report lift over prevalence.",
+        topic="pr-curve", level=4),
+
+    # ------------------------------------------------------------------ probabilistic
+    out("from sklearn.calibration import calibration_curve\ny = [0, 0, 1, 0, 1, 1, 1, 1]\np = [0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9]\nfrac, mean_p = calibration_curve(y, p, n_bins=2)\nprint([round(float(v), 2) for v in frac], [round(float(v), 2) for v in mean_p])",
+        ["[0.25, 1.0] [0.25, 0.75]", "[0.25, 0.75] [0.25, 1.0]", "[0.5, 0.5] [0.25, 0.75]", "[0.25, 1.0] [0.5, 0.5]"], 0,
+        "Two bins: probabilities below 0.5 and above 0.5. In each, compare the share of real positives with the average prediction.",
+        "Low bin: 1 positive out of 4, average prediction 0.25: well calibrated. High bin: 4 of 4 positive, average prediction 0.75: under-confident. calibration_curve returns (observed fraction, mean predicted), which is exactly the reliability diagram.",
+        topic="probabilistic", level=3),
+    tf("Applying a fitted Platt (sigmoid) calibration map to a model's scores changes its ROC AUC.", False,
+       "Is the sigmoid map increasing?",
+       "A fitted sigmoid with positive slope is a strictly increasing function, so it keeps the ranking and AUC is unchanged. Calibration fixes what the numbers mean, not how well they rank. (Isotonic can create ties, which can shift AUC slightly.)",
+       topic="probabilistic", level=3),
+    mcq("Why is the Brier score sometimes preferred over log loss for reporting probability quality?",
+        ["It is bounded (0 to 1) and less dominated by a single confident mistake, while log loss can be huge from one row",
+         "It ignores the probabilities and uses labels",
+         "It is the same as accuracy",
+         "It only works for multiclass problems"], 0,
+        "What is the worst possible penalty for one row in each?",
+        "Brier is mean squared error on probabilities: the worst single-row cost is 1. Log loss for a confident wrong answer grows without limit (-ln 0.0001 = 9.2). Log loss is better for training; Brier is a steadier report number. Both reward calibration.",
+        topic="probabilistic", level=3),
+    out("import numpy as np\np = np.array([0.9, 0.9, 0.9, 0.9, 0.6, 0.6, 0.6, 0.6, 0.6])\ny = np.array([1, 1, 0, 0, 1, 1, 1, 0, 0])\nece = 0.0\nfor v in np.unique(p):\n    m = p == v\n    ece += m.mean() * abs(y[m].mean() - v)\nprint(round(float(ece), 3))",
+        ["0.178", "0.4", "0.2", "0.0"], 0,
+        "Per bin: |observed rate - predicted probability|, weighted by the bin's share of rows.",
+        "The 0.6 bin is right on (3 of 5 positive). The 0.9 bin is only 50% positive: gap 0.4, weighted by 4/9 = 0.178. Expected calibration error is the standard single-number calibration summary for classifiers and LLM confidence scores.",
+        diagram="""
+ bin   rows  predicted  observed  |gap|  weight
+ 0.6    5      0.6        0.6      0.0    5/9
+ 0.9    4      0.9        0.5      0.4    4/9
+ ECE = 5/9 * 0.0 + 4/9 * 0.4 = 0.178
+""",
+        question="Expected calibration error with two confidence bins. What does this print?",
+        analogy="A weather forecaster is calibrated if it rains on about 90% of the days they say 90%.",
+        topic="probabilistic", level=4),
+    mcq("A neural classifier is over-confident. You apply temperature scaling: divide the logits by one learned T > 1 before softmax. What does it change?",
+        ["It softens the probabilities (better calibration) but never changes the predicted class, so accuracy is identical",
+         "It changes which class is predicted for most rows",
+         "It retrains the last layer",
+         "It increases accuracy by about T percent"], 0,
+        "Dividing all logits by the same positive number keeps their order.",
+        "argmax(z / T) = argmax(z), so predictions and accuracy are unchanged, but the softmax gets flatter and log loss / ECE usually improve. T is fitted on a validation set. The same knob is the 'temperature' in LLM sampling.",
+        topic="probabilistic", level=4),
+
+    # ------------------------------------------------------------------ multiclass
+    out("from sklearn.metrics import precision_score\ny_true = [0, 0, 0, 0, 1, 2]\ny_pred = [0, 0, 0, 0, 2, 2]\nmi = precision_score(y_true, y_pred, average='micro', zero_division=0)\nma = precision_score(y_true, y_pred, average='macro', zero_division=0)\nprint(round(mi, 2), round(ma, 2))",
+        ["0.83 0.5", "0.5 0.83", "0.83 0.83", "1.0 0.5"], 0,
+        "Class 1 is never predicted, so its precision is 0/0, set to 0 here.",
+        "Micro pools all rows: 5 of 6 right = 0.83 (equals accuracy). Macro averages per class: class 0 = 1.0, class 1 = 0 (never predicted), class 2 = 0.5, mean 0.5. Macro exposes the class the model ignores.",
+        topic="multiclass", level=3),
+    out("from sklearn.metrics import top_k_accuracy_score\ny = [0, 1, 2, 2]\np = [[0.5, 0.3, 0.2], [0.4, 0.35, 0.25], [0.1, 0.6, 0.3], [0.2, 0.3, 0.5]]\nprint(top_k_accuracy_score(y, p, k=1), top_k_accuracy_score(y, p, k=2))",
+        ["0.5 1.0", "0.5 0.75", "1.0 1.0", "0.25 0.5"], 0,
+        "Top-k counts a row as right if the true class is among the k highest scores.",
+        "Top-1: rows 0 and 3 are right = 0.5. Top-2: rows 1 and 2 have the true class in second place, so all 4 count = 1.0. Top-k suits cases where a user sees several suggestions (tag pickers, autocomplete, product categories).",
+        topic="multiclass", level=3),
+
+    # ------------------------------------------------------------------ regression
+    mcq("You built a model that predicts house prices in rupees. Which metric family fits?",
+        ["Regression metrics such as MAE or RMSE", "Accuracy", "Precision and recall", "ROC AUC"], 0,
+        "Is the output a category or a number?",
+        "Accuracy, precision, recall and AUC are for classes. A price is a number, so you measure how far off it is: MAE ('off by 2 lakh on average') or RMSE (punishes big misses more).",
+        topic="regression", level=1),
+    tf("An R² of 0.9 means the predictions are within 10% of the actual values.", False,
+       "R² compares squared errors with the target's variance, not with the values themselves.",
+       "R² = 0.9 means the model removes 90% of the squared error of 'always predict the mean'. Individual predictions can still be far off in percentage terms, especially for small targets. To talk about percent error, report MAPE or MAE alongside.",
+       topic="regression", level=2),
+    out("from sklearn.metrics import mean_absolute_error, median_absolute_error, mean_squared_error\ny = [10, 12, 11, 13, 100]\np = [11, 11, 12, 12, 12]\nprint(mean_absolute_error(y, p), median_absolute_error(y, p), mean_squared_error(y, p))",
+        ["18.4 1.0 1549.6", "1.0 18.4 1549.6", "18.4 1.0 39.4", "18.4 18.4 1549.6"], 0,
+        "Errors are 1, 1, 1, 1 and 88.",
+        "MAE = 92 / 5 = 18.4, MSE = (4 + 7744) / 5 = 1549.6, but the median error is 1.0. One outlier dominates MSE, shifts MAE, and barely touches the median. Report the median (or a percentile) when a few wild rows shouldn't define 'typical'.",
+        topic="regression", level=3),
+    out("from sklearn.metrics import mean_squared_log_error\ny = [100, 100]\nprint(round(mean_squared_log_error(y, [50, 100]), 3), round(mean_squared_log_error(y, [150, 100]), 3))",
+        ["0.233 0.081", "0.081 0.233", "0.233 0.233", "1250.0 1250.0"], 0,
+        "MSLE compares log(1 + y) with log(1 + prediction).",
+        "Missing by 50 below costs ln(101/51)^2 / 2 = 0.233; by 50 above costs ln(151/101)^2 / 2 = 0.081. Log errors measure ratios, so under-predicting is punished more, and a 10% miss on a big house counts the same as on a small one. Plain MSE would score both cases the same (1250).",
+        topic="regression", level=3),
+    mcq("Model A has test R² 0.85 on Bangalore houses; model B has test R² 0.60 on a dataset mixing villas and studio flats. Which conclusion is safe?",
+        ["None about which model is better: R² depends on how spread out each target is, so compare models on the same test set (and look at MAE/RMSE)",
+         "A is better because its R² is higher",
+         "B is better because its data is harder",
+         "R² is unit-free, so it compares across datasets"], 0,
+        "The R² denominator is the target's own variance.",
+        "R² = 1 - SS_res / SS_tot. A dataset with a huge spread (villas + studios) makes SS_tot big, so the same RMSE gives a higher R²; a narrow one does the opposite. R² compares models on one dataset; it is not a universal quality score.",
+        topic="regression", level=4),
+    out("from sklearn.metrics import mean_pinball_loss\ny = [10, 10]\nlow = mean_pinball_loss(y, [8, 10], alpha=0.9)\nhigh = mean_pinball_loss(y, [12, 10], alpha=0.9)\nprint(round(low, 2), round(high, 2))",
+        ["0.9 0.1", "0.1 0.9", "1.0 1.0", "1.8 0.2"], 0,
+        "For alpha = 0.9, being BELOW the truth costs 0.9 per unit; being above costs 0.1.",
+        "Pinball loss for the 90th percentile charges 9x more for under-prediction, so the best prediction is the value the truth exceeds only 10% of the time. That's how quantile models give prediction intervals (e.g. delivery-time 'arrives by' promises). Averaged over 2 rows: 1.8/2 and 0.2/2.",
+        question="Pinball (quantile) loss for a 90th-percentile forecast: 2 units too low vs 2 units too high. What does this print?",
+        diagram="""
+ pinball loss, alpha = 0.9
+ loss
+  |\\
+  | \\                     ..--''
+  |  \\           ..--''
+  |   \\  ..--''
+  +----^-----------------> prediction - truth
+       0
+  too low: slope 0.9      too high: slope 0.1
+""",
+        topic="regression", level=4),
+
+    # ------------------------------------------------------------------ ranking
+    out("first_hit = [1, 4, None, 2, 7]   # rank of the first relevant chunk per question\nfor k in [1, 3, 5]:\n    print(k, sum(r is not None and r <= k for r in first_hit) / len(first_hit))",
+        ["1 0.2\n3 0.4\n5 0.6", "1 0.2\n3 0.6\n5 0.8", "1 0.25\n3 0.5\n5 0.75", "1 1.0\n3 0.67\n5 0.6"], 0,
+        "Hit rate@k: share of questions with at least one relevant chunk in the top k. Failed questions still count in the denominator.",
+        "k=1: only the rank-1 hit = 1/5. k=3: ranks 1 and 2 = 2/5. k=5: ranks 1, 2 and 4 = 3/5. The rank-7 and no-hit questions fail. For RAG, hit rate@k at your real k (how many chunks fit in the prompt) is the first retrieval number to track.",
+        question="Hit rate@k for a RAG retriever over 5 questions. What does it print?",
+        diagram="""
+ question  first hit  @1  @3  @5
+ q1        1          y   y   y
+ q2        4          -   -   y
+ q3        none       -   -   -
+ q4        2          -   y   y
+ q5        7          -   -   -
+""",
+        topic="ranking", level=3),
+    mcq("When should you prefer MAP (mean average precision) over MRR for evaluating retrieval?",
+        ["When the user or the LLM needs MANY of the relevant documents, not just the first one, because AP rewards ranking all of them high",
+         "When only the first relevant result matters",
+         "When relevance labels are graded 0-3",
+         "MAP and MRR always give the same ranking of systems"], 0,
+        "MRR looks only at the first hit.",
+        "MRR stops at the first relevant item, fine for 'find the one answer' search. AP averages precision at every relevant item's rank, so a system that puts all 5 relevant chunks near the top beats one that gets 1 at the top and buries 4. For graded relevance, use nDCG.",
+        topic="ranking", level=4),
+    mcq("Your RAG prompt fits 5 chunks. Recall@20 is 0.95 but recall@5 is 0.60. What does that suggest?",
+        ["The retriever finds the right chunks but ranks them too low; add a reranker or tune retrieval so they reach the top 5",
+         "Retrieval is excellent; nothing to fix",
+         "Increase k to 20 in the metric so the number looks better",
+         "The embeddings must be retrained from scratch"], 0,
+        "Only the chunks that reach the prompt can help the answer.",
+        "The relevant chunks are in the candidate set, but 35% of the time below position 5. That's the classic case for a cross-encoder reranker over the top 20-50. Measure recall at the k you actually use in the prompt.",
+        analogy="Like search results where the right answer is on page 2: technically found, practically missed.",
+        topic="ranking", level=3),
+
+    # ------------------------------------------------------------------ choosing
+    out("c_fp, c_fn = 5, 200        # cost of a false alarm, cost of a missed fraud\nmodels = {'A': (120, 30), 'B': (400, 12)}   # (FP, FN) on the same validation set\nfor name, (fp, fn) in models.items():\n    print(name, fp * c_fp + fn * c_fn)",
+        ["A 6600\nB 4400", "A 4400\nB 6600", "A 150\nB 412", "A 6000\nB 2400"], 0,
+        "Total cost = FP x cost per false alarm + FN x cost per miss.",
+        "A: 600 + 6000 = 6600. B: 2000 + 2400 = 4400. B raises 3x more false alarms yet is cheaper, because misses cost 40x more. When you know the costs, compare models (and thresholds) by expected cost, not by F1.",
+        question="Comparing two fraud models by total business cost. What does this print?",
+        diagram="""
+ model   FP x 5    FN x 200    total
+ A       120 x 5   30 x 200    6,600
+ B       400 x 5   12 x 200    4,400  <- cheaper
+""",
+        topic="choosing", level=3),
+    mcq("Overall recall of your loan-default model is 0.85, but for applicants under 25 (8% of rows) it is 0.40. Which practice would have caught this before launch?",
+        ["Slice-based evaluation: report metrics per important segment (age band, region, device), not only overall",
+         "Using a bigger test set",
+         "Reporting accuracy instead of recall",
+         "Averaging the metrics over 5 random seeds"], 0,
+        "A small segment barely moves the overall average.",
+        "Aggregate metrics are weighted by segment size, so an 8% slice can fail badly while the headline looks fine. Define the slices that matter (fairness, key customers, new markets) and gate releases on each.",
+        analogy="Like a p50 latency dashboard that looks fine while the p99 for one region is on fire.",
+        topic="choosing", level=3),
+    out("import numpy as np\nrng = np.random.default_rng(2)\na = rng.random(200) < 0.85    # model A correct on each row?\nb = rng.random(200) < 0.87    # model B correct on each row?\ndiffs = []\nfor _ in range(2000):\n    i = rng.integers(0, 200, 200)  # resample the SAME rows for both\n    diffs.append(b[i].mean() - a[i].mean())\nlo, hi = np.percentile(diffs, [2.5, 97.5])\nprint(round(float(b.mean() - a.mean()), 3), bool(lo < 0 < hi))",
+        ["0.02 True", "0.02 False", "0.2 False", "0.0 True"], 0,
+        "With 200 rows, a 2-point gap is small compared with the noise.",
+        "B leads by 2 points (0.865 vs 0.845). The paired bootstrap resamples rows and recomputes B - A each time; its 95% interval (about -0.045 to +0.08) includes 0, so the data can't tell the two models apart. Report the interval, not only 'B wins by 2 points'.",
+        question="Paired bootstrap of the accuracy difference between two models on 200 rows. It prints B's observed lead and whether the 95% interval contains 0. What does it print?",
+        topic="choosing", level=4),
+    out("b, c = 15, 5   # rows only A got right, rows only B got right\nstat = (abs(b - c) - 1) ** 2 / (b + c)\nprint(stat, stat > 3.84)",
+        ["4.05 True", "5.0 True", "4.05 False", "0.5 False"], 0,
+        "McNemar uses only the rows where the models disagree; 3.84 is the 5% cut-off for chi-square with 1 degree of freedom.",
+        "(|15 - 5| - 1)^2 / 20 = 81 / 20 = 4.05 > 3.84, so the difference is significant at the 5% level. Rows both models got right (or wrong) carry no evidence and are ignored. The -1 is the continuity correction.",
+        question="McNemar's test (with continuity correction) for two models on the same test rows. What does this print?",
+        diagram="""
+                B right   B wrong
+ A right          160       15  (b)
+ A wrong            5 (c)   20
+ only b and c (the disagreements) enter the test
+""",
+        topic="choosing", level=4),
+
+    # ------------------------------------------------------------------ llm-eval
+    out("def tok_f1(pred, ref):\n    p, r = pred.lower().split(), ref.lower().split()\n    common = sum(min(p.count(w), r.count(w)) for w in set(p))\n    if common == 0:\n        return 0.0\n    prec, rec = common / len(p), common / len(r)\n    return round(2 * prec * rec / (prec + rec), 2)\nprint(tok_f1('New Delhi India', 'new delhi'), tok_f1('Mumbai', 'new delhi'))",
+        ["0.8 0.0", "1.0 0.0", "0.67 0.0", "0.8 0.5"], 0,
+        "Precision = shared tokens / predicted tokens; recall = shared tokens / reference tokens.",
+        "2 shared tokens: precision 2/3, recall 2/2, F1 = 0.8. Exact match would give 0 for 'New Delhi India'; token F1 (used in SQuAD) gives partial credit for extra words but still 0 for a wrong city.",
+        question="SQuAD-style token F1 for two QA answers. What does this print?",
+        topic="llm-eval", level=3),
+    mcq("A RAG answer is fluent and directly addresses the question, but one key claim appears nowhere in the retrieved chunks. Which evaluation dimension does it fail?",
+        ["Faithfulness (groundedness): every claim should be supported by the retrieved context",
+         "Answer relevance",
+         "Context recall",
+         "Fluency"], 0,
+        "Relevant to the question is not the same as supported by the sources.",
+        "RAG evals split the job: context precision/recall (did retrieval find the right chunks?), faithfulness (is every claim backed by them?) and answer relevance (does it address the question?). An unsupported claim is a hallucination even if it happens to be true.",
+        topic="llm-eval", level=3),
+    out("from math import comb\ndef pass_at_k(n, c, k):     # n samples, c of them pass the tests\n    return 1 - comb(n - c, k) / comb(n, k)\nprint(round(pass_at_k(10, 2, 1), 3), round(pass_at_k(10, 2, 5), 3))",
+        ["0.2 0.778", "0.2 1.0", "0.2 0.672", "0.02 0.1"], 0,
+        "pass@k = chance that at least one of k samples, drawn from the n generated, passes.",
+        "With 2 passing out of 10: pass@1 = 2/10 = 0.2. pass@5 = 1 - C(8,5)/C(10,5) = 1 - 56/252 = 0.778. This unbiased estimator (from the Codex paper) is how code-generation models are scored; the naive 1 - (1 - 0.2)^5 = 0.672 assumes sampling with replacement.",
+        question="pass@k for a code model: 10 samples per problem, 2 pass the unit tests. What does this print?",
+        analogy="Like a flaky test you may re-run k times: pass@k asks how likely at least one of k runs goes green.",
+        topic="llm-eval", level=4),
+    mcq("Model A reports perplexity 8.1 and model B reports 12.4 on the same text. They use different tokenizers. Can you say A is the better language model?",
+        ["No: perplexity is per token, and different tokenizers split the same text into different numbers of tokens; compare bits per byte/character or task metrics",
+         "Yes: lower perplexity is always better",
+         "Yes, as long as the text is identical",
+         "No, because perplexity only works for English"], 0,
+        "What is perplexity averaged over?",
+        "Perplexity = exp(loss per token). A tokenizer with bigger tokens has fewer, harder predictions per sentence, so its perplexity is not on the same scale. Normalise by bytes or characters (bits per byte), or compare on downstream tasks.",
+        analogy="Like comparing API latency 'per request' when one client batches 10 calls into one request.",
+        topic="llm-eval", level=4),
+
+    # ------------------------------------------------------------------ balanced-metrics
+    mcq("What is balanced accuracy?",
+        ["The average of recall over the classes, so an always-majority model scores 0.5 on a binary task",
+         "Accuracy computed on a balanced resample of the test set by deleting rows",
+         "Accuracy multiplied by the class ratio",
+         "The harmonic mean of precision and recall"], 0,
+        "It gives each class's recall an equal vote.",
+        "Balanced accuracy = (sensitivity + specificity) / 2 for binary (mean per-class recall in general). On a 98/2 dataset, 'always negative' gets 98% accuracy but only 50% balanced accuracy, which is the honest 'no skill' score.",
+        analogy="Like averaging uptime per region instead of per request: a dead small region can't hide behind a busy healthy one.",
+        topic="balanced-metrics", level=2),
+    out("from sklearn.metrics import balanced_accuracy_score, accuracy_score\ny_true = [0] * 8 + [1] * 2\ny_pred = [0] * 10\nprint(accuracy_score(y_true, y_pred), balanced_accuracy_score(y_true, y_pred))",
+        ["0.8 0.5", "0.8 0.8", "0.5 0.8", "0.8 0.0"], 0,
+        "Recall of class 0 is 1.0, recall of class 1 is 0.0.",
+        "Accuracy rewards the lazy majority guess (8/10). Balanced accuracy averages the two recalls, (1.0 + 0.0) / 2 = 0.5, which is chance level.",
+        topic="balanced-metrics", level=2),
+    out("from sklearn.metrics import matthews_corrcoef, accuracy_score\ny_true = [0] * 9 + [1]\ny_pred = [0] * 10\nprint(accuracy_score(y_true, y_pred), matthews_corrcoef(y_true, y_pred))",
+        ["0.9 0.0", "0.9 0.9", "0.9 -1.0", "0.9 0.5"], 0,
+        "MCC is a correlation between predictions and truth. What is the correlation with a constant?",
+        "A constant prediction has no correlation with the truth, so MCC = 0.0 (sklearn returns 0 for this 0/0 case) even though accuracy is 0.9. MCC runs from -1 (always wrong) through 0 (no skill) to +1 (perfect).",
+        topic="balanced-metrics", level=3),
+    mcq("Why do many practitioners prefer the Matthews correlation coefficient (MCC) over F1 for imbalanced binary problems?",
+        ["MCC uses all four confusion-matrix cells and is high only when the model does well on both classes; F1 ignores true negatives",
+         "MCC is always higher than F1",
+         "MCC needs probabilities, which carry more information",
+         "MCC ignores the minority class"], 0,
+        "Which cell does F1 never look at?",
+        "MCC = (TP*TN - FP*FN) / sqrt((TP+FP)(TP+FN)(TN+FP)(TN+FN)). Because it uses every cell, a model can't score high by doing well on one class only. It is also unchanged if you swap which class is called positive, unlike F1.",
+        diagram="""
+          pred 0   pred 1
+ true 0     TN       FP      F1 uses : TP, FP, FN
+ true 1     FN       TP      MCC uses: TP, FP, FN, TN
+""",
+        topic="balanced-metrics", level=3),
+    tf("Swapping which class you call 'positive' leaves MCC unchanged, while F1 usually changes.", True,
+       "Swapping classes exchanges TP with TN and FP with FN. Look at the MCC formula.",
+       "MCC's formula is symmetric under that swap, so it describes the classifier, not your naming choice. F1 for class 1 and F1 for class 0 are different numbers; always state the positive class when reporting F1.",
+       topic="balanced-metrics", level=3),
+    out("import math\ntp, tn, fp, fn = 90, 5, 4, 1   # positives are the majority here\nmcc = (tp * tn - fp * fn) / math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))\nf1 = 2 * tp / (2 * tp + fp + fn)\nprint(round(f1, 3), round(mcc, 3))",
+        ["0.973 0.656", "0.656 0.973", "0.973 0.973", "0.973 0.946"], 0,
+        "F1 = 2TP / (2TP + FP + FN). The model finds only 5 of the 9 negatives.",
+        "F1 = 180 / 185 = 0.973, which looks excellent. MCC = 446 / 679.6 = 0.656, because the model catches only 5 of 9 negatives (specificity 0.56). When the 'positive' class is the majority, F1 flatters; MCC doesn't.",
+        question="F1 and MCC by hand for a model whose positives are the majority class. What does this print?",
+        topic="balanced-metrics", level=4),
+    out("from sklearn.metrics import cohen_kappa_score\nhuman = ['ok', 'ok', 'bad', 'ok', 'bad', 'ok', 'ok', 'ok', 'bad', 'ok']\njudge = ['ok', 'ok', 'bad', 'bad', 'bad', 'ok', 'ok', 'ok', 'ok', 'ok']\nagree = sum(h == j for h, j in zip(human, judge)) / len(human)\nprint(agree, round(cohen_kappa_score(human, judge), 2))",
+        ["0.8 0.52", "0.8 0.8", "0.52 0.8", "0.8 0.58"], 0,
+        "Kappa = (observed agreement - chance agreement) / (1 - chance agreement).",
+        "Both raters say 'ok' 70% of the time, so chance agreement = 0.7^2 + 0.3^2 = 0.58. Kappa = (0.8 - 0.58) / 0.42 = 0.52: only moderate agreement once luck is removed. This is how you validate an LLM judge against human labels.",
+        question="Raw agreement and Cohen's kappa between a human rater and an LLM judge on 10 answers. What does this print?",
+        topic="balanced-metrics", level=3),
+    mcq("An LLM judge agrees with humans on 95% of answers, but Cohen's kappa is only about 0.35. Humans label 94% of answers 'good' and the judge labels 98% 'good'. What explains this?",
+        ["When one label dominates, chance agreement is already very high, so 95% raw agreement is only a little better than luck",
+         "Kappa is broken for binary labels",
+         "The judge is perfect; kappa should be ignored",
+         "Kappa is always about a third of raw agreement"], 0,
+        "If both raters said 'good' to everything, what would their raw agreement be?",
+        "Two raters who both mostly say 'good' agree by chance most of the time: 0.94 x 0.98 + 0.06 x 0.02 = 0.92. (0.95 - 0.92) / (1 - 0.92) is about 0.35. Kappa subtracts that, revealing the judge barely beats chance on the rare 'bad' answers, which are the ones you care about. Check per-class agreement (judge recall on 'bad').",
+        topic="balanced-metrics", level=4),
 ]

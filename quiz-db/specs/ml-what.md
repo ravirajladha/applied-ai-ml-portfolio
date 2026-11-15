@@ -17,6 +17,7 @@
 | 8 | `inductive-bias` | Inductive bias and no free lunch | every model assumes something | linear can't fit XOR; trees can't extrapolate | inductive biases of kNN, trees, linear, CNNs | what no free lunch really says (and doesn't) |
 | 9 | `parametric` | Parametric vs non-parametric | fixed-size vs grows-with-data | kNN stores the data; linear stores d+1 numbers | trees/kNN vs linear/NN; lazy vs eager learners | "non-parametric" still has parameters; NN with billions of weights is parametric |
 | 10 | `framing` | Framing a business problem as an ML task | input, output, target | choosing the target and a baseline | metric aligned to business cost; prediction point in time | proxy targets and Goodhart's law; label leakage from the future |
+| 11 | `genai-lens` | ML thinking for GenAI apps | calling an LLM API is inference; an LLM is a learned model | evals = regression test suite; prompting is not training | LLM vs small trained classifier (labels, latency, cost); non-deterministic evals; baseline first for RAG | LLM-as-judge bias; benchmark contamination; memory/feedback vs weight updates |
 
 ## Must-know facts
 - Traditional programming: rules + data -> answers. ML: data + answers -> rules (the model).
@@ -37,6 +38,8 @@
 - No free lunch: averaged over all possible problems, no learner beats another; real-world wins come from assumptions that match the problem.
 - Parametric = fixed number of parameters regardless of data size (linear, logistic, a fixed neural net). Non-parametric = model size grows with data (kNN, unpruned trees).
 - Pick the target and the metric from the business cost of mistakes, and only use features available at prediction time.
+- Calling an LLM is inference on frozen weights; an eval set is the model's regression test suite, built before the fancy pipeline.
+- In RAG, the weights are parametric memory and the document index is non-parametric memory.
 
 ## Common traps (each one must have at least one question)
 - "100% training accuracy means a great model" -> it often means memorisation; check unseen data.
@@ -53,6 +56,11 @@
 - "Optimise the easiest-to-measure proxy" -> Goodhart's law: clicks become clickbait.
 - "Decision trees extrapolate trends" -> they predict a constant beyond the training range.
 - "Using a feature that is only known after the event" -> label leakage; great offline score, useless in production.
+- "A second `fit` continues from the first" -> sklearn `fit` restarts from scratch; only `partial_fit`/`warm_start` continue.
+- "No chargeback yet means not fraud" -> immature labels; exclude rows whose label window is still open.
+- "An LLM agent is an RL agent learning as it runs" -> it is a frozen model plus orchestration code.
+- "Always use the biggest LLM" -> with many labels, strict latency and high volume a small trained classifier is usually better.
+- "A high public-benchmark score means it works on my task" -> contamination and distribution mismatch; build your own evals.
 
 ## Interview angle
 - **What is ML, in one line?** Learning a function from examples instead of hand-writing the rules; you trade explicit logic for data plus an objective.
@@ -60,6 +68,8 @@
 - **Explain bias-variance.** Bias is error from wrong/too-simple assumptions; variance is error from over-reacting to the particular training sample. Simple models underfit, complex ones overfit; you pick capacity, regularisation and data size to balance them.
 - **When would you NOT use ML?** When a rule solves it exactly, when there's no data or no learnable pattern, when mistakes must be zero or fully explainable, or when the maintenance cost beats the gain over a heuristic.
 - **How do you frame a business problem as ML?** Define the decision, the prediction point in time, the target label, a metric tied to the cost of errors, a baseline, and which features are actually available at prediction time.
+
+- **When would you use a small trained model instead of an LLM?** When you have plenty of labels, a fixed set of outputs, strict latency or cost limits and huge volume; prompt an LLM when labels are scarce or outputs are open-ended, and either way measure with an eval set first.
 
 ## Source material
 To be added

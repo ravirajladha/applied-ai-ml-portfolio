@@ -19,6 +19,7 @@ QUESTIONS = [
         ["Each training example comes with the correct answer, like a teacher marking work", "A human watches the model train", "The model is checked by a supervisor program", "It only works in supervised environments"], 0,
         "What extra column does supervised data have?",
         "Supervised data has labels: the right answer for each example. The model learns to map inputs to those answers.",
+        analogy="Like learning with an answer key: every practice question comes with the correct answer to check against.",
         topic="supervised", level=1),
     mcq("Which of these is a CLASSIFICATION task?",
         ["Deciding if an X-ray shows pneumonia: yes or no", "Predicting a flat's rent in rupees", "Estimating a delivery time in minutes", "Forecasting next month's revenue"], 0,
@@ -38,6 +39,7 @@ QUESTIONS = [
         ["No labels: the model has to find structure by itself", "Labels for every row", "Rewards for every action", "Only images"], 0,
         "'Un'-supervised: no teacher.",
         "There are no correct answers given. The model looks for groups, patterns or compressed representations.",
+        analogy="Like sorting a box of mixed LEGO with no instructions: you group pieces by what they look like.",
         topic="unsupervised", level=1),
     mcq("A bank wants to flag card transactions that look very unusual compared with normal ones, without having labelled fraud examples. This is:",
         ["Anomaly detection (usually unsupervised)", "Regression", "Reinforcement learning", "Multiclass classification"], 0,
@@ -75,6 +77,10 @@ QUESTIONS = [
         "Reuse what was already learned.",
         "A pretrained model already knows general patterns (edges, words). You adapt it with a little data instead of training from zero.",
         analogy="Like forking a mature open-source library instead of writing one from scratch.",
+        diagram="""
+[pretrained backbone] --> [new head] --> your classes
+  (big generic data)      (your small data)
+""",
         topic="transfer", level=1),
     mcq("Which model can CREATE new examples, like brand-new images of faces?",
         ["A generative model", "A discriminative classifier", "A linear regression", "A decision tree classifier"], 0,
@@ -425,4 +431,408 @@ print(len(set(KMeans(n_clusters=5, n_init=10, random_state=0).fit_predict(X).tol
          "It fits partially.",
          "partial_fit is sklearn's online-learning API (SGDClassifier, MultinomialNB, MiniBatchKMeans...). fit retrains from scratch.",
          topic="online-batch", level=2),
+]
+
+
+TOPICS += [
+    ("rlhf", "RLHF and preference tuning (RL for LLMs)"),
+    ("label-strategy", "Getting labels: weak supervision and active learning"),
+]
+
+QUESTIONS += [
+    # ============================================================ more L1
+    mcq("A photo app predicts the exact price (in rupees) a used phone will sell for. This is:",
+        ["Regression: the output is a number on a scale", "Classification: the output is a category", "Clustering", "Reinforcement learning"], 0,
+        "Is the answer a category or an amount?",
+        "Prices are continuous numbers, so it's regression. If you only predicted 'cheap / mid / premium', it would become classification.",
+        diagram="""
+classification:  input --> [cat | dog | bird]
+regression:      input --> 18,450.75  (any number)
+""",
+        topic="supervised", level=1),
+    mcq("A shop wants to split its customers into groups with similar shopping habits, but nobody has defined the groups. Which technique fits?",
+        ["Clustering", "Regression", "Binary classification", "Reinforcement learning"], 0,
+        "No labels, and you want groups.",
+        "Clustering (e.g. KMeans) finds groups of similar items without labels. The business then looks at each group and gives it a name like 'weekend bargain hunters'.",
+        diagram="""
+ spend
+   |  o o          x x
+   |   o o        x x x     o, x, + = groups found
+   |        + + +              without any labels
+   +--------------------- visits
+""",
+        topic="unsupervised", level=1),
+    tf("Semi-supervised learning trains one model using a small set of labelled examples together with a much larger set of unlabelled ones.", True,
+       "'Semi' = partly labelled.",
+       "Labels are expensive, raw data is cheap. Semi-supervised methods use the unlabelled data's structure (which points sit close together) to spread the few labels further.",
+       diagram="""
+labelled:    A  B            (few, expensive)
+unlabelled:  . . . . . . . . . . . . (many, cheap)
+model uses both: labels spread to nearby dots
+""",
+       topic="semi-self", level=1),
+    mcq("In reinforcement learning, the 'environment' is:",
+        ["The world the agent acts in, which responds with a new situation and a reward", "The computer the code runs on", "The training dataset of correct answers", "The neural network inside the agent"], 0,
+        "The agent acts; something reacts.",
+        "The agent picks an action, the environment (a game, a robot's room, a market) responds with a new state and a reward. The agent learns from that loop.",
+        diagram="""
+      action
+agent ------> environment
+  ^               |
+  +-- state, -----+
+      reward
+""",
+        topic="rl", level=1),
+    mcq("A model that is retrained from scratch every Sunday night on all the data collected so far is doing:",
+        ["Batch (offline) learning", "Online learning", "Reinforcement learning", "Unsupervised learning"], 0,
+        "Does it learn continuously, or in one big job?",
+        "Batch learning trains on a full dataset in one job and then serves that fixed model until the next job. Online learning would update it as each new example arrives.",
+        analogy="Batch learning is a weekly release; online learning is continuous deployment.",
+        topic="online-batch", level=1),
+    mcq("A startup has only 300 labelled photos of its products. What is usually the fastest way to get a good image classifier?",
+        ["Start from a model already trained on millions of images and fine-tune it", "Train a huge model from scratch on the 300 photos", "Use clustering instead", "Label nothing and use reinforcement learning"], 0,
+        "Reuse what someone else already learned.",
+        "A pretrained model already knows edges, shapes and textures. Fine-tuning it on 300 photos only has to learn your specific classes, which is transfer learning.",
+        analogy="Like hiring an experienced developer and teaching them your codebase, instead of teaching someone to code from zero.",
+        topic="transfer", level=1),
+    mcq("A model that only learns to tell spam from not-spam, without being able to write emails, is called:",
+        ["Discriminative", "Generative", "Unsupervised", "Reinforcement"], 0,
+        "It discriminates (separates) between classes.",
+        "Discriminative models learn the boundary between classes. A generative model would learn what emails look like and could produce new ones.",
+        diagram="""
+generative:      learns what each class looks like
+discriminative:  learns only the line between them
+   spam x x x  |  o o o ham
+""",
+        topic="gen-disc", level=1),
+    mcq("After an LLM is pre-trained, people compare pairs of its answers and pick the better one, and the model is tuned to give answers people prefer. This step is often called:",
+        ["RLHF: reinforcement learning from human feedback", "Clustering", "Pre-training", "Data augmentation"], 0,
+        "The human gives a judgement, not a correct answer to copy.",
+        "RLHF turns human preferences into a reward signal and uses RL to make the model's answers more helpful and safe. It comes after pre-training and supervised fine-tuning.",
+        topic="rlhf", level=1),
+    tf("Labelling data by hand is often the slowest and most expensive part of building a supervised model.", True,
+       "Think about paying experts to read 100,000 medical notes.",
+       "That is why teams use tricks like labelling only the most useful examples (active learning) or writing rough rules that label data automatically (weak supervision).",
+       analogy="Labels are the hand-written test fixtures of ML: valuable, slow to write, and always in short supply.",
+       topic="label-strategy", level=1),
+    mcq("A phone keyboard suggests the next word as you type, learned from lots of text. Which learning type mostly powers it?",
+        ["Self-supervised learning: the text itself supplies the next-word answers", "Reinforcement learning from game scores", "Clustering", "Hand-written rules"], 0,
+        "Where do the training answers come from?",
+        "Next-word prediction is trained by hiding the next word in real sentences. It's the same idea as LLM pre-training, at a smaller scale.",
+        topic="scenarios", level=1),
+
+    # ============================================================ more L2
+    out("from sklearn.utils.multiclass import type_of_target\nprint(type_of_target([\"cat\", \"dog\", \"cat\"]), type_of_target([\"a\", \"b\", \"c\"]))",
+        ["binary multiclass", "multiclass multiclass", "unknown unknown", "binary binary"], 0,
+        "Count the distinct values in each list.",
+        "String labels are fine: two distinct values make it binary, three make it multiclass. type_of_target looks at the number and kind of distinct values, not their type.",
+        topic="supervised", level=2),
+    out("from sklearn.linear_model import LogisticRegression\nLogisticRegression().fit([[1], [2], [3]], [1.5, 2.7, 3.1])",
+        ["ValueError", "TypeError", "NotFittedError", "Nothing; it fits fine"], 0,
+        "What kind of target is [1.5, 2.7, 3.1]?",
+        "A classifier needs discrete classes; sklearn detects a 'continuous' target and raises ValueError ('Unknown label type'). Use a regressor such as LinearRegression for numeric targets.",
+        question="What happens when this runs?",
+        topic="supervised", level=2),
+    out("import numpy as np\nfrom sklearn.decomposition import PCA\na = np.arange(10.0)\nX = np.column_stack([a, 2 * a])\nprint(round(PCA().fit(X).explained_variance_ratio_[0], 2))",
+        ["1.0", "0.5", "0.67", "2.0"], 0,
+        "The second column is just twice the first.",
+        "Both columns move together exactly, so all the variation lies along one direction. The first component explains 100% of the variance; the second explains nothing. Redundant features compress perfectly.",
+        topic="unsupervised", level=2),
+    out("tokens = \"the cat sat on the mat\".split()\ni = 2\ninputs = tokens[:i] + [\"[MASK]\"] + tokens[i + 1:]\nprint(\" \".join(inputs), \"->\", tokens[i])",
+        ["the cat [MASK] on the mat -> sat", "the [MASK] sat on the mat -> cat", "the cat sat [MASK] the mat -> on", "the cat [MASK] on the mat -> [MASK]"], 0,
+        "Index 2 is the third token.",
+        "This is one masked-language-model training example (BERT style): hide a token and use the original as the label. The data labels itself, so this is self-supervised.",
+        topic="semi-self", level=2),
+    out("import numpy as np\nQ = [0.0, 0.0]\ncounts = [0, 0]\ntrue_reward = [1.0, 2.0]   # arm 1 is better\nfor t in range(100):\n    a = int(np.argmax(Q))       # always greedy\n    counts[a] += 1\n    Q[a] += (true_reward[a] - Q[a]) / counts[a]\nprint(counts)",
+        ["[100, 0]", "[0, 100]", "[50, 50]", "[1, 99]"], 0,
+        "On a tie, argmax picks index 0. Then what is Q[0]?",
+        "The greedy agent tries arm 0 first (tie), sees reward 1, and now Q[0] = 1 > Q[1] = 0 forever. It never tries the better arm. A little exploration (epsilon-greedy) would find it.",
+        question="A greedy agent with two slot-machine arms. What does this print?",
+        topic="rl", level=2),
+    out("from sklearn.linear_model import LinearRegression, SGDRegressor\nprint(hasattr(LinearRegression(), \"partial_fit\"), hasattr(SGDRegressor(), \"partial_fit\"))",
+        ["False True", "True True", "True False", "False False"], 0,
+        "Which one is trained step by step with gradient descent?",
+        "LinearRegression solves the whole problem at once from all the data, so it has only fit. SGD-based models update in small steps and support partial_fit for online learning.",
+        topic="online-batch", level=2),
+    tf("In transfer learning, 'freezing' the backbone means its weights are not updated during fine-tuning; only the new head learns.", True,
+       "Frozen = doesn't change.",
+       "Freezing keeps the general features the backbone learned and trains only the small task-specific head. It's faster, needs less data and reduces overfitting.",
+       topic="transfer", level=2),
+    mcq("Naive Bayes classifies spam by learning, for each class, how likely each word is. Why is it called a generative model?",
+        ["It models how the data (words) is produced for each class, p(x given y), then uses Bayes' rule to classify", "It writes new emails as its main job", "It needs no labels", "It is a neural network"], 0,
+        "What does it learn about each class?",
+        "Generative = learns how examples of each class are generated, p(x | y) p(y). Classification then comes from Bayes' rule. Logistic regression skips that and learns p(y | x) directly.",
+        topic="gen-disc", level=2),
+    mcq("In RLHF, why do people compare two answers ('A is better than B') instead of writing the perfect answer for each prompt?",
+        ["Judging which answer is better is much faster and more consistent than writing an ideal answer", "Comparisons need no humans at all", "RL can only use yes/no labels", "Writing answers is not allowed"], 0,
+        "Think about grading essays vs writing them.",
+        "Humans are better at ranking than at producing perfect outputs. Pairwise preferences train a reward model, which then scores many more answers than humans could ever label.",
+        analogy="Like code review: it is much easier to say 'version B is better' than to write the perfect version yourself.",
+        topic="rlhf", level=2),
+    out("import numpy as np\nprobs = np.array([0.98, 0.51, 0.75, 0.03])   # model's P(spam) on unlabelled emails\nprint(int(np.argmin(np.abs(probs - 0.5))))",
+        ["1", "0", "3", "2"], 0,
+        "Which email is the model least sure about?",
+        "Uncertainty sampling, the simplest active-learning rule: send the example closest to 0.5 to a human. Labelling confident cases (0.98, 0.03) teaches the model little.",
+        question="Active learning picks which email to send to a human labeller. What does this print?",
+        analogy="Like spending QA time on the flaky tests, not the ones that always pass.",
+        topic="label-strategy", level=2),
+
+    # ============================================================ more L3
+    out("import numpy as np\nfrom sklearn.datasets import load_iris\nfrom sklearn.linear_model import LogisticRegression\nX, y = load_iris(return_X_y=True)\np = LogisticRegression(max_iter=500).fit(X, y).predict_proba(X[:4])\nprint(p.shape, round(p.sum(axis=1)[0], 2))",
+        ["(4, 3) 1.0", "(4,) 1.0", "(4, 3) 3.0", "(3, 4) 1.0"], 0,
+        "One row per flower, one column per class.",
+        "Multiclass: each row is a probability distribution over 3 classes that sums to 1, and predict picks the largest. In multilabel problems, rows do NOT have to sum to 1.",
+        topic="supervised", level=3),
+    out("import numpy as np\nfrom sklearn.multiclass import OneVsRestClassifier\nfrom sklearn.linear_model import LogisticRegression\nX = np.array([[0, 0], [1, 1], [2, 2], [3, 3], [0, 3], [3, 0]])\nY = np.array([[1, 0, 1], [0, 1, 1], [1, 1, 0], [0, 0, 1], [1, 0, 0], [0, 1, 0]])\nclf = OneVsRestClassifier(LogisticRegression()).fit(X, Y)\nprint(len(clf.estimators_), clf.predict(X).shape)",
+        ["3 (6, 3)", "1 (6,)", "6 (6, 3)", "3 (6,)"], 0,
+        "One yes/no model per tag.",
+        "For a multilabel target, one-vs-rest trains a separate binary classifier per label (3 here) and predicts a 0/1 matrix with one column per label.",
+        diagram="""
+x --> clf_tag0 --> 1
+  \\-> clf_tag1 --> 0      -> [1, 0, 1]
+   \\> clf_tag2 --> 1
+""",
+        topic="supervised", level=3),
+    out("from sklearn.cluster import KMeans\nfrom sklearn.datasets import make_blobs\nX, _ = make_blobs(n_samples=300, centers=3, cluster_std=0.6, random_state=0)\nine = [KMeans(n_clusters=k, n_init=10, random_state=0).fit(X).inertia_ for k in (1, 2, 3, 4, 5)]\nprint([round(a / ine[0], 2) for a in ine])",
+        ["[1.0, 0.43, 0.14, 0.12, 0.1]", "[1.0, 1.0, 1.0, 1.0, 1.0]", "[0.1, 0.12, 0.14, 0.43, 1.0]", "[1.0, 0.5, 0.33, 0.25, 0.2]"], 0,
+        "Inertia (total distance to centres) always drops as k grows. Where does it stop dropping fast?",
+        "Inertia keeps falling with more clusters, so 'lowest inertia' would always pick the largest k. The 'elbow' where the big drops stop (k = 3 here) is a hint, not proof, of the natural number of groups.",
+        diagram="""
+inertia
+1.0 |*
+    |  *
+    |     *____*____*   <- elbow at k=3
+    +----------------- k
+     1  2  3    4    5
+""",
+        topic="unsupervised", level=3),
+    out("from sklearn.metrics import adjusted_rand_score\nprint(adjusted_rand_score([0, 0, 1, 1], [1, 1, 0, 0]))",
+        ["1.0", "0.0", "-1.0", "0.5"], 0,
+        "Are the same items grouped together, whatever the names?",
+        "Both labelings put items {0,1} together and {2,3} together; only the cluster names are swapped. Adjusted Rand index ignores names, so it is a perfect 1.0. Compare clusterings with ARI, never with plain accuracy.",
+        topic="unsupervised", level=3),
+    out("import numpy as np\nfrom sklearn.semi_supervised import SelfTrainingClassifier\nfrom sklearn.linear_model import LogisticRegression\nX = np.array([[0.0], [0.5], [1.0], [1.5], [8.0], [8.5], [9.0], [9.5]])\ny = np.array([0, -1, -1, -1, 1, -1, -1, -1])\nst = SelfTrainingClassifier(LogisticRegression(), threshold=0.6).fit(X, y)\nprint(st.transduction_.tolist())",
+        ["[0, 0, 0, 0, 1, 1, 1, 1]", "[0, -1, -1, -1, 1, -1, -1, -1]", "[0, 1, 0, 1, 0, 1, 0, 1]", "[0, 0, 0, 0, 0, 0, 0, 0]"], 0,
+        "-1 means 'no label yet'. Which points are near the 0 and near the 1?",
+        "Self-training fits on the 2 labelled points, labels the unlabelled ones it is confident about (above 0.6), and refits. Here the clusters are clear, so every -1 gets a sensible pseudo-label.",
+        topic="semi-self", level=3),
+    mcq("Why are masked-language models (BERT) usually used for understanding tasks like classification, while next-token models (GPT) are used for generating text?",
+        ["BERT sees words on both sides of the gap, which is great for understanding; GPT only sees the past, which matches writing text left to right", "BERT has no weights", "GPT can't be fine-tuned", "BERT is trained with RL"], 0,
+        "What context does each model get to look at during training?",
+        "Masked prediction uses both left and right context, giving strong representations for a whole input. Next-token prediction matches generation exactly: produce one token, append, repeat.",
+        diagram="""
+BERT: the cat [MASK] on the mat   (sees both sides)
+GPT : the cat sat on  ->  ?       (sees only the past)
+""",
+        analogy="BERT reads the whole sentence like an editor filling a gap; GPT writes like someone typing, one word at a time.",
+        topic="semi-self", level=3),
+    out("q, alpha, gamma = 0.0, 0.5, 0.9\nreward, best_next_q = 1.0, 2.0\nq = q + alpha * (reward + gamma * best_next_q - q)\nprint(round(q, 2))",
+        ["1.4", "2.8", "1.0", "0.5"], 0,
+        "Target = reward + gamma * best next value; move halfway there.",
+        "Q-learning target = 1 + 0.9 * 2 = 2.8. With learning rate 0.5, q moves halfway from 0 to 2.8, so 1.4. The agent learns from its own estimate of the future (bootstrapping), not from a given correct answer.",
+        question="One Q-learning update. What does this print?",
+        diagram="""
+target = r + gamma * max Q(next)
+       = 1 + 0.9 * 2 = 2.8
+q: 0.0 ------- 1.4 ------- 2.8
+         (moves alpha=0.5 of the way)
+""",
+        topic="rl", level=3),
+    out("rewards = [0, 0, 0, 10]   # reward only at the end\nfor gamma in (0.5, 0.99):\n    G = sum(r * gamma ** t for t, r in enumerate(rewards))\n    print(gamma, round(G, 2))",
+        ["0.5 1.25\n0.99 9.7", "0.5 10\n0.99 10", "0.5 5.0\n0.99 9.9", "0.5 1.25\n0.99 10.0"], 0,
+        "The 10 arrives 3 steps later: multiply by gamma three times.",
+        "With gamma 0.5 the delayed 10 is worth only 10 * 0.5^3 = 1.25 now; with 0.99 it keeps 10 * 0.99^3 = 9.7. A short-sighted agent may ignore a big delayed payoff, so long tasks (games, dialogues) use gamma close to 1.",
+        topic="rl", level=3),
+    out("eps, n_actions = 0.1, 4\np_best = (1 - eps) + eps / n_actions\nprint(round(p_best, 3))",
+        ["0.925", "0.9", "0.1", "0.975"], 0,
+        "A random action can also land on the best one.",
+        "With probability 0.9 it exploits (picks the best); with probability 0.1 it picks uniformly at random, which hits the best action 1 time in 4. Total 0.9 + 0.025 = 0.925.",
+        question="Under epsilon-greedy, how often is the current best action chosen?",
+        analogy="Most nights you order from your favourite restaurant; one night in ten you try a random one, and sometimes that random pick is your favourite anyway.",
+        topic="rl", level=3),
+    out("import numpy as np\nfrom sklearn.linear_model import SGDClassifier\nrng = np.random.default_rng(0)\nXA = rng.normal(size=(500, 2)); yA = (XA[:, 0] > 0).astype(int)\nclf = SGDClassifier(random_state=0)\nclf.partial_fit(XA, yA, classes=[0, 1])\nbefore = clf.score(XA, yA)\nfor _ in range(20):\n    XB = rng.normal(size=(500, 2)); yB = (XB[:, 0] < 0).astype(int)  # rule flipped\n    clf.partial_fit(XB, yB)\nprint(before > 0.9, clf.score(XA, yA) < 0.2)",
+        ["True True", "True False", "False True", "False False"], 0,
+        "After 20 updates on the flipped rule, how does it do on the old data?",
+        "The online model adapts to the new pattern and forgets the old one: accuracy on old data falls from >0.9 to <0.2. Good for real drift, bad if the old pattern still matters (catastrophic forgetting).",
+        topic="online-batch", level=3),
+    mcq("A news site's 'trending' model must react within minutes to a sudden event. Which design fits best?",
+        ["Online updates (or very frequent small retrains) with safeguards, because the pattern changes faster than a nightly batch", "Retrain once a year", "Batch training on 10 years of news, never updated", "Clustering once at launch"], 0,
+        "How fast does the world change here?",
+        "When the data shifts in minutes, a nightly batch is always stale. Online learning adapts quickly; add rate limits, monitoring and a fallback because it also adapts to noise and attacks.",
+        analogy="Nightly batch is a daily cron job; online learning is an event-driven consumer reacting to each message.",
+        topic="online-batch", level=3),
+    out("import torch, torch.nn as nn\ntorch.manual_seed(0)\nbackbone, head = nn.Linear(4, 3), nn.Linear(3, 2)\nfor p in backbone.parameters():\n    p.requires_grad = False\nmodel = nn.Sequential(backbone, head)\nopt = torch.optim.SGD([p for p in model.parameters() if p.requires_grad], lr=0.1)\nb0, h0 = backbone.weight.clone(), head.weight.clone()\nmodel(torch.randn(8, 4)).pow(2).mean().backward()\nopt.step()\nprint(torch.equal(b0, backbone.weight), torch.equal(h0, head.weight))",
+        ["True False", "False False", "True True", "False True"], 0,
+        "Which weights got gradients and were given to the optimizer?",
+        "The frozen backbone gets no gradient and isn't in the optimizer, so it stays identical (True). The head is updated (False: it changed). That's the 'freeze backbone, train head' recipe.",
+        topic="transfer", level=3),
+    mcq("You have 50,000 labelled examples in your domain and a pretrained model from a similar domain. Compared with having 500 examples, what changes in the fine-tuning plan?",
+        ["With more data you can safely unfreeze more (or all) layers and use a small learning rate; with 500 you mostly freeze and train the head", "Nothing changes", "With more data you should freeze more layers", "With more data you shouldn't use the pretrained model"], 0,
+        "More data = more weights you can afford to adjust without overfitting.",
+        "Rule of thumb: little data -> freeze most of the backbone; lots of data -> fine-tune deeper layers too. A small learning rate keeps the useful pretrained features from being wiped out.",
+        diagram="""
+  500 examples:  [frozen][frozen][frozen][train head]
+50000 examples:  [frozen][ tune ][ tune ][train head]
+                 small learning rate for tuned layers
+""",
+        topic="transfer", level=3),
+    out("counts = {(\"free\", \"spam\"): 30, (\"free\", \"ham\"): 10, (\"hi\", \"spam\"): 5, (\"hi\", \"ham\"): 55}\nfree_total = counts[(\"free\", \"spam\")] + counts[(\"free\", \"ham\")]\nprint(counts[(\"free\", \"spam\")] / free_total)",
+        ["0.75", "0.3", "0.857", "0.4"], 0,
+        "Among emails containing 'free', what fraction is spam?",
+        "A generative model stores the joint counts p(word, class). The classifier you need, p(spam | 'free') = 30 / 40 = 0.75, falls out by dividing. A discriminative model would learn that 0.75 directly.",
+        question="From a generative model's joint counts to a classifier. What does this print?",
+        topic="gen-disc", level=3),
+    out("import math\nr_chosen, r_rejected = 2.0, 0.5   # reward-model scores\np = 1 / (1 + math.exp(-(r_chosen - r_rejected)))\nprint(round(p, 3))",
+        ["0.818", "0.5", "0.8", "1.5"], 0,
+        "It's a sigmoid of the score difference.",
+        "The reward model is trained so that sigmoid(r_chosen - r_rejected) is high for the answer humans preferred (the Bradley-Terry model). Only the difference matters: adding 10 to both scores changes nothing.",
+        question="How a reward model turns two scores into a preference probability. What does this print?",
+        topic="rlhf", level=3),
+    mcq("What are the three main stages of RLHF, in order?",
+        ["Supervised fine-tuning on demonstrations -> train a reward model on human preference pairs -> optimise the LLM against that reward with RL (e.g. PPO)", "Train the reward model -> pre-train -> cluster", "RL from scratch -> supervised fine-tuning -> pre-training", "Collect preferences -> delete the base model -> train a new one"], 0,
+        "You need a reward before you can do RL.",
+        "SFT teaches the format; the reward model learns to predict which answer people prefer; RL then nudges the LLM towards high-reward answers. All of this happens after self-supervised pre-training.",
+        diagram="""
+pretrained LLM -> SFT -> sample answers -> humans rank
+                                              |
+          RL (PPO) <---- reward model <-------+
+""",
+        topic="rlhf", level=3),
+    tf("DPO (Direct Preference Optimization) trains on the same human preference pairs as RLHF but skips the separate reward model and the RL loop, using a classification-style loss instead.", True,
+       "Same data, simpler training loop?",
+       "DPO shows the RLHF objective can be optimised directly on preference pairs. It's simpler and more stable to run, which is why many open models use it or its variants.",
+       topic="rlhf", level=3),
+    out("import numpy as np\n# 3 labelling functions vote per row: 1=spam, 0=ham, -1=abstain\nvotes = np.array([[1, 1, -1], [0, 1, 0], [-1, -1, 1], [-1, -1, -1]])\nlabels = []\nfor row in votes:\n    v = row[row != -1]\n    labels.append(int(np.bincount(v).argmax()) if v.size else -1)\nprint(labels)",
+        ["[1, 0, 1, -1]", "[1, 1, 1, -1]", "[1, 0, -1, -1]", "[1, 0, 1, 0]"], 0,
+        "Ignore abstentions; a row where everyone abstains stays unlabelled.",
+        "Weak supervision: cheap, noisy rules ('contains a payment link' -> spam) vote, and a combiner (here majority vote) produces training labels. Rows with no votes stay unlabelled (-1).",
+        analogy="Like several flaky but independent health checks: one alone is unreliable, a vote across them is much better.",
+        topic="label-strategy", level=3),
+    mcq("A medical startup can afford expert labels for only 2,000 of its 200,000 scans. Which plan gets the most out of the budget?",
+        ["Active learning: label a seed set, train, then repeatedly send the scans the model is most unsure about to the experts", "Label 2,000 random scans and stop", "Label the 2,000 scans the model is most confident about", "Skip labels and use clustering as the diagnosis"], 0,
+        "Which labels teach the model the most?",
+        "Uncertain examples sit near the decision boundary, where labels change the model most. Keep a random labelled test set too: actively chosen examples are not representative for evaluation.",
+        analogy="Like a code reviewer spending time on the risky diffs, not the typo fixes.",
+        topic="label-strategy", level=3),
+    mcq("An app wants to (1) detect unusual login attempts with no labelled attacks, then (2) once analysts have reviewed a few thousand alerts, improve detection. Which sequence of learning types fits?",
+        ["Unsupervised anomaly detection first, then a supervised classifier trained on the analyst-labelled alerts", "Reinforcement learning only", "Supervised learning from day one", "Clustering forever, never using the labels"], 0,
+        "What do you have on day 1, and what do you have later?",
+        "Start without labels (anomaly scores), and use the analysts' reviews as labels for a supervised model later. Real systems often move from unsupervised to supervised as labels pile up.",
+        topic="scenarios", level=3),
+    mcq("A code-completion tool logs whether developers accept a suggestion (press Tab) or keep typing. The team wants to use these logs to improve suggestions. What kind of learning signal is this?",
+        ["Implicit feedback on the tool's own outputs: a reward-like preference signal, only for suggestions it actually showed", "Clean supervised labels of the correct code", "Unsupervised data with no signal", "Self-supervised next-token labels"], 0,
+        "Does the log tell you the right code, or only how users reacted to what was shown?",
+        "Accept/ignore says how users reacted to one shown option, not what the right answer was. It is noisy and biased by what was shown, so teams treat it like bandit/preference data (rewards, pairwise wins) rather than ground-truth labels.",
+        topic="scenarios", level=3),
+
+    # ============================================================ more L4
+    mcq("A team predicts customer satisfaction on a 1-5 scale. Plain multiclass classification treats 'predicted 1, actual 5' as just as wrong as 'predicted 4, actual 5'. What is the better framing?",
+        ["Treat it as ordinal: use regression (then round) or an ordinal method, and measure with an error that respects distance, like MAE", "Multilabel classification", "Clustering into 5 groups", "Binary classification of 1 vs not-1"], 0,
+        "The classes have an order. Does multiclass know that?",
+        "Ordinal targets carry order that multiclass loss ignores. Regression or ordinal models use it, and MAE punishes far misses more than near ones. Report both MAE and per-class results.",
+        diagram="""
+actual = 5
+ predict 4:  |----|          error 1 (close)
+ predict 1:  |----------------|  error 4 (far)
+ multiclass loss treats both as just 'wrong'
+""",
+        topic="supervised", level=4),
+    mcq("A multilabel tagger uses one independent yes/no classifier per tag. Tags 'python' and 'pandas' almost always appear together. What does this design miss, and what helps?",
+        ["Independent classifiers ignore correlations between labels; classifier chains (feed earlier predictions to later ones) or a shared model can use them", "Nothing; tags are always independent", "It must switch to multiclass", "It needs clustering of the tags first"], 0,
+        "Does the 'pandas' model know what the 'python' model said?",
+        "Binary relevance (one model per label) is simple and strong, but it can't use label co-occurrence. Classifier chains or one network with a shared body and one output per label capture it.",
+        topic="supervised", level=4),
+    out("import numpy as np\nfrom sklearn.cluster import KMeans\nfrom sklearn.metrics import silhouette_score\nfrom sklearn.datasets import make_blobs\nXb, _ = make_blobs(n_samples=300, centers=3, cluster_std=0.5, random_state=0)\nXn = np.random.default_rng(0).uniform(size=(300, 2))\nfor Z in (Xb, Xn):\n    lab = KMeans(n_clusters=3, n_init=10, random_state=0).fit_predict(Z)\n    print(round(silhouette_score(Z, lab), 1))",
+        ["0.7\n0.4", "0.4\n0.7", "1.0\n0.0", "0.7\n0.7"], 0,
+        "Silhouette is near 1 for tight, well-separated clusters.",
+        "Real blobs score about 0.7; uniform noise still gets 3 clusters and a non-zero score (about 0.4). A silhouette is a relative hint, not a yes/no test that groups exist. Check stability across seeds and whether the groups mean something to the business.",
+        topic="unsupervised", level=4),
+    mcq("You run PCA on raw customer features: 'annual income in rupees' (values in lakhs) and 'number of logins per week' (0-50). The first component is almost exactly 'income'. Why?",
+        ["PCA follows variance, and income's huge numeric scale dominates; standardise features before PCA", "Income is the most important feature for the business", "PCA always picks the first column", "Logins are categorical"], 0,
+        "What does PCA maximise, and in which units?",
+        "PCA finds directions of maximum variance. Unscaled, the feature with the biggest numbers wins regardless of meaning. Standardising puts features on equal footing. Unsupervised methods depend heavily on these choices.",
+        topic="unsupervised", level=4),
+    mcq("Contrastive models like CLIP learn by pulling matching (image, caption) pairs together. Why do they need many negatives (non-matching pairs) in each batch?",
+        ["Without pushing different items apart, the model could map everything to the same vector and still look 'correct' (collapse)", "Negatives are the labels humans wrote", "Negatives make the model generative", "They don't; one positive pair is enough"], 0,
+        "What's the laziest way to make every pair 'similar'?",
+        "If the loss only rewarded similarity, outputting a constant vector would win. Negatives force the model to separate things. That's why contrastive training uses big batches (or tricks like momentum encoders).",
+        diagram="""
+ img_dog  <-pull->  'a dog'
+    |
+  push apart
+    |
+ 'a car', 'a pizza', ... (negatives)
+""",
+        topic="semi-self", level=4),
+    mcq("Self-supervised pre-training on web text gives an LLM broad skills. Which limitation comes directly from where the labels came from?",
+        ["The model learns to continue text the way the internet does, including errors and biases, rather than to be correct or helpful", "It can only learn one language", "It needs human labels for every token", "It can't learn grammar"], 0,
+        "The target was 'what comes next on the web', not 'what is true'.",
+        "The objective rewards plausible continuation, so falsehoods and toxic patterns are learned too. That gap is what instruction tuning and preference tuning (RLHF/DPO) try to close.",
+        topic="semi-self", level=4),
+    mcq("Chess rewards only arrive at the end: win, lose or draw. What is the core difficulty this creates for an RL agent?",
+        ["Credit assignment: figuring out which of the many earlier moves actually caused the result", "Too many rewards", "The board has no states", "It turns into supervised learning"], 0,
+        "One number at the end, 40 moves earlier...",
+        "With delayed rewards the agent must spread credit backwards over many actions. Value functions, discounting and bootstrapped updates (like TD learning) exist to solve exactly this.",
+        diagram="""
+move 1 -> move 2 -> ... -> move 40 -> WIN (+1)
+   ?        ?                 ?
+which moves deserve the credit?
+""",
+        topic="rl", level=4),
+    mcq("A recommender is trained only on logs of what it previously showed and what got clicked. Why is this closer to an RL/bandit problem than plain supervised learning?",
+        ["Its own past choices decide which data it sees; items never shown have no feedback, so it needs exploration to learn about them", "Clicks are continuous numbers", "There are no labels at all", "Recommenders can't be trained offline"], 0,
+        "Do you know how users would have reacted to items you never showed?",
+        "Feedback exists only for the action taken (partial feedback). Without exploration the system keeps confirming its own choices. Bandit methods and off-policy evaluation handle this.",
+        topic="rl", level=4),
+    mcq("In RLHF, the LLM is optimised to get high scores from a learned reward model. Why is a KL penalty (staying close to the original model) added?",
+        ["Without it the policy drifts to strange outputs that exploit flaws in the reward model (reward hacking) while losing general ability", "To make training faster", "Because KL is the reward", "To increase the number of tokens"], 0,
+        "The reward model is only a proxy for human judgement.",
+        "Push hard on a learned proxy and the policy finds its blind spots: verbose, flattering or odd text that scores high. The KL term keeps the policy near the SFT model, where the reward model is reliable.",
+        analogy="Like optimising only for a linter score: push hard enough and you get code that passes the linter but is worse.",
+        topic="rlhf", level=4),
+    out("reward, beta = 2.0, 0.1\nlog_ratio = 5.0   # log p_policy(answer) - log p_reference(answer)\nprint(reward - beta * log_ratio)",
+        ["1.5", "2.0", "2.5", "-3.0"], 0,
+        "The further the policy drifts, the more is subtracted.",
+        "The RLHF objective is roughly reward - beta * KL. A high reward from an answer the reference model finds unlikely gets penalised: 2.0 - 0.1 * 5 = 1.5. Larger beta = stay closer to the original model.",
+        question="The KL-penalised reward used in RLHF. What does this print?",
+        topic="rlhf", level=4),
+    tf("Because RLHF optimises for what human raters prefer, it can make a model more sycophantic, agreeing with the user or sounding confident even when that isn't correct.", True,
+       "Do raters always prefer the correct answer, or sometimes the pleasing one?",
+       "The reward reflects rater preferences, which can favour agreeable, confident or long answers. That's a known side effect; mitigations include better rater guidelines, targeted evals and mixing in correctness checks.",
+       topic="rlhf", level=4),
+    mcq("A team trains a model on labels produced by an active-learning loop and then reports accuracy on the actively selected examples it labelled. Why is that number misleading?",
+        ["Those examples were chosen because they're hard and unusual, so they don't represent real traffic; evaluate on a separate random sample", "Active learning makes labels perfect", "The model has already seen them, so the score is too low", "Accuracy can't be computed with active learning"], 0,
+        "How were those examples picked?",
+        "Active selection biases the labelled pool toward the boundary. It's great for training and terrible as a test set. Always label an independent random sample for evaluation.",
+        analogy="Like measuring app speed only on the slowest endpoints you picked to optimise: the number says nothing about typical traffic.",
+        topic="label-strategy", level=4),
+    mcq("Weak supervision combines several noisy rules that each label part of the data. Why not simply train on the output of the single most accurate rule?",
+        ["Rules cover different cases and make different mistakes; combining them (weighting by estimated accuracy) gives more coverage and less noise than any single rule", "Rules are always 100% accurate", "Models can't learn from rule-generated labels", "Combining rules removes the need for any evaluation"], 0,
+        "One rule fires on 10% of the data. What about the other 90%?",
+        "Each rule is precise on a slice; together they cover more. A label model estimates each rule's accuracy and how rules correlate. The end model then generalises beyond the rules, but you still need a small hand-labelled test set.",
+        topic="label-strategy", level=4),
+    mcq("A team fine-tunes all layers of a large pretrained model on 300 examples with a high learning rate. Training accuracy hits 100% but the model is now worse on general inputs than before. What happened?",
+        ["Overfitting plus catastrophic forgetting: large updates on tiny data overwrote the pretrained knowledge", "Negative transfer from a different domain", "The model became non-parametric", "Too much exploration"], 0,
+        "What do big steps on 300 examples do to billions of weights?",
+        "With tiny data, freeze most layers or use parameter-efficient methods (LoRA, adapters) with a small learning rate. Keep a general-ability eval to catch forgetting.",
+        analogy="Like force-pushing a quick hotfix over main: it passes your one test and wipes out work that was already there.",
+        topic="transfer", level=4),
+    mcq("You need to decide for a payments product: what is the most important reason a generative LLM classifier (prompted with labels) might lose to a small discriminative model trained on 100,000 labelled payments?",
+        ["The discriminative model targets p(label given input) directly on in-domain data, so with lots of labels it is usually more accurate, calibrated, cheaper and faster", "Generative models can't output labels", "Discriminative models need no labels", "LLMs never work for classification"], 0,
+        "Which one was trained for exactly this task on this data?",
+        "With abundant labels, a task-specific discriminative model usually wins on accuracy, latency and cost. LLM prompting wins when labels are scarce, classes change often, or inputs need world knowledge.",
+        topic="gen-disc", level=4),
+    mcq("A product for detecting fraudulent sellers combines: embeddings pre-trained with self-supervision, clustering to find seller rings, a supervised classifier on investigated cases, and a bandit that decides which flagged sellers to investigate. What is the main reason to include the bandit?",
+        ["Investigations produce the labels; choosing only the top-scored sellers would never generate labels for borderline cases, so some exploration keeps the classifier learning", "Bandits replace the classifier", "Bandits are needed to compute embeddings", "It makes the clustering deterministic"], 0,
+        "Where do future training labels come from?",
+        "The system's own decisions create its training data. Pure exploitation creates a blind spot; a bandit trades a few 'less likely' investigations for information. Combining learning types is normal in real products.",
+        diagram="""
+self-sup embeddings -> clustering (rings)
+         |
+         v
+  supervised scorer -> bandit picks cases -> investigators
+         ^                                       |
+         +--------------- new labels ------------+
+""",
+        topic="scenarios", level=4),
 ]

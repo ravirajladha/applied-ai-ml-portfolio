@@ -466,3 +466,415 @@ print(round(lr.predict([[20]])[0]), dt.predict([[20]])[0])""",
          "Goodhart's law: optimising a proxy hard enough makes it drift from the real goal (e.g. clicks -> clickbait).",
          topic="framing", level=4),
 ]
+
+
+TOPICS += [
+    ("genai-lens", "ML thinking for GenAI apps"),
+]
+
+QUESTIONS += [
+    # ============================================================ more L1
+    tf("In an ML project you still write plenty of code; the part you don't hand-write is the decision logic inside the model.", True,
+       "Who writes the data loading, the API and the tests?",
+       "You still write pipelines, training scripts, serving code and tests. Only the mapping from input to prediction is learned from examples instead of typed as if-statements.",
+       topic="rules-vs-learned", level=1),
+    out("from sklearn.linear_model import LinearRegression\nm = LinearRegression().fit([[1], [2], [3]], [2, 4, 6])\nprint(m.predict([[5], [6]]).round(1))",
+        ["[10. 12.]", "[5. 6.]", "[2. 4.]", "[10 12]"], 0,
+        "The model learned y = 2x once. Now it is just used.",
+        "Training found the rule y = 2x. Inference applies the frozen rule to any number of new inputs: 2*5 = 10 and 2*6 = 12. predict returns floats, so NumPy prints `10.` and `12.`.",
+        question="Train once, predict many. What does this print?",
+        topic="train-infer", level=1),
+    mcq("In a table of houses with columns size, bedrooms, city and price, what are size, bedrooms and city called when you predict price?",
+        ["Features: the inputs the model uses", "Labels: the answers", "Hyperparameters", "Weights"], 0,
+        "They are what the model gets to look at.",
+        "Features are the input columns (X). The column you predict (price) is the label or target (y). Weights are what the model learns; hyperparameters are knobs you set.",
+        diagram="""
+ size  bedrooms  city  | price
+ 120   3         BLR   | 95 L
+ \\_____ features (X) _/   label (y)
+""",
+        topic="workflow", level=1),
+    out("def shipping_fee(order_total):\n    return 0 if order_total >= 500 else 40\n\nprint(shipping_fee(499), shipping_fee(500))",
+        ["40 0", "0 40", "40 40", "0 0"], 0,
+        "Follow the if-rule exactly; 500 counts as 'at least 500'.",
+        "A business rule like 'free shipping from 500' is exact and known. Plain code does it perfectly; training a model to guess it would only add errors and cost.",
+        question="This business rule needs no ML at all. What does it print?",
+        topic="when-not-ml", level=1),
+    mcq("'Deep learning' means machine learning that uses:",
+        ["Neural networks with many layers", "Very large spreadsheets", "Rules written by experts", "Only image data"], 0,
+        "The 'deep' is about stacking.",
+        "Deep learning = neural networks with many stacked layers, each building on the one below. It works on text, audio and tables too, not just images.",
+        analogy="Like a factory line: each layer (station) turns rough parts into more refined ones, and 'deep' just means many stations.",
+        topic="ai-ml-dl", level=1),
+    mcq("A student memorises the answers to last year's exam word for word, then fails this year's exam with new questions. In ML terms the student:",
+        ["Overfit: memorised the examples instead of learning the pattern", "Generalised well", "Underfit: learned too little from the examples", "Used too much data"], 0,
+        "Did the student learn the subject, or the specific questions?",
+        "Memorising the training examples gives a perfect score on them and a poor one on new cases. Generalising means learning the pattern behind them.",
+        analogy="Overfitting is a test suite that only passes because the code hard-codes the expected outputs.",
+        topic="generalisation", level=1),
+    mcq("A k-nearest-neighbours model keeps every training example and compares new points to them. If you train it on twice as much data, its saved model:",
+        ["Gets about twice as big", "Stays exactly the same size", "Gets smaller", "Stops working"], 0,
+        "What does kNN actually store?",
+        "kNN stores the training data itself, so its size grows with the data. That is what 'non-parametric' means. A linear model would stay the same size.",
+        diagram="""
+linear model:  [w1 w2 w3 b]          same size at any n
+kNN:           [row1 row2 ... rowN]  grows with N
+""",
+        topic="parametric", level=1),
+    mcq("A telecom company asks 'will this customer cancel next month?'. What is a sensible label for each training row?",
+        ["Yes/No: did that customer cancel in the following month", "The customer's name", "The total number of customers", "The model's accuracy"], 0,
+        "The label is the answer you want the model to predict, taken from history.",
+        "You take past customers, look at what happened next (cancelled or not) and use that as the label. It is a yes/no (binary classification) target.",
+        topic="framing", level=1),
+    mcq("Your web app sends a prompt to an LLM API and gets an answer back. In ML terms, that call is:",
+        ["Inference: running an already-trained model on new input", "Training the model on your prompt", "Labelling data", "Hyperparameter tuning"], 0,
+        "Did anyone change the model's weights?",
+        "The provider trained the model earlier. Your request only runs it forward on your input, which is inference. Your prompt does not become training data at that moment.",
+        topic="genai-lens", level=1),
+    tf("An LLM is a machine-learning model: its behaviour came from training on huge amounts of text, not from rules typed in by hand.", True,
+       "Nobody wrote an if-statement for every possible question.",
+       "LLMs learn their weights from data (predicting the next token, then fine-tuning). That is why they can be wrong in surprising ways, like any learned function.",
+       topic="genai-lens", level=1),
+
+    # ============================================================ more L2
+    out("from sklearn.linear_model import Ridge\nX = [[1, 0, 2], [0, 1, 1], [2, 1, 0], [1, 1, 1]]\ny = [3, 2, 4, 3]\nm = Ridge(alpha=1.0).fit(X, y)\nprint(m.alpha, m.coef_.shape)",
+        ["1.0 (3,)", "(3,) 1.0", "1.0 (4,)", "AttributeError"], 0,
+        "alpha is what you set; coef_ is one learned weight per feature.",
+        "alpha (regularisation strength) is a hyperparameter you passed in. coef_ is learned: one weight per column, so 3 columns gives shape (3,). The underscore marks learned attributes.",
+        topic="params-hyper", level=2),
+    out("import numpy as np\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.model_selection import train_test_split\nrng = np.random.default_rng(0)\nX = rng.normal(size=(400, 2))\ny = (X[:, 0] + X[:, 1] + rng.normal(0, 1.2, 400) > 0).astype(int)\nXtr, Xte, ytr, yte = train_test_split(X, y, random_state=0)\nk1 = KNeighborsClassifier(n_neighbors=1).fit(Xtr, ytr)\nk15 = KNeighborsClassifier(n_neighbors=15).fit(Xtr, ytr)\nprint(k1.score(Xtr, ytr), k15.score(Xte, yte) > k1.score(Xte, yte))",
+        ["1.0 True", "1.0 False", "0.78 True", "0.5 False"], 0,
+        "With k=1, every training point's nearest neighbour is itself.",
+        "k=1 scores 1.0 on training data because each point votes for itself, so it memorises the noise. On the test set the smoother k=15 wins (0.78 vs 0.74). The training score said nothing about the test score.",
+        topic="generalisation", level=2),
+    mcq("Why put the scaler inside a scikit-learn Pipeline with the model, instead of scaling the data once in a notebook?",
+        ["The same fitted steps travel with the model, so serving and cross-validation apply them exactly as in training", "Pipelines make the model more accurate by themselves", "Scalers only work inside pipelines", "It removes the need for a test set"], 0,
+        "Think about what the production server must repeat.",
+        "A Pipeline bundles preprocessing and model into one object: fit learns the scaler's mean/std and the weights together, and predict replays both. That prevents train/serve mismatches and leakage inside cross-validation.",
+        diagram="""
+fit:     X --> [scaler.fit+transform] --> [model.fit]
+predict: x --> [scaler.transform]     --> [model.predict]
+          one object, saved and loaded together
+""",
+        topic="workflow", level=2),
+    mcq("A PM wants ML to detect duplicate signups. Nobody has labelled duplicates, and 'same verified email or same phone number' already catches 99% of them. Best first move?",
+        ["Ship the rule, log the cases it misses, and revisit ML only if those misses matter", "Train a deep model on all signups", "Use clustering and call every cluster a duplicate group", "Wait until 1 million duplicates are labelled"], 0,
+        "What does a simple rule already give you?",
+        "A cheap exact rule covers almost everything. Logging its misses also produces labelled examples, which you would need anyway if ML is ever justified.",
+        topic="when-not-ml", level=2),
+    mcq("Which of these is machine learning but NOT deep learning?",
+        ["A random forest predicting loan default from a table of numbers", "A transformer translating text", "A convolutional network spotting cats in photos", "A hand-written chess rule engine"], 0,
+        "Which one learns from data without a multi-layer neural network?",
+        "Random forests learn from data (ML) but are ensembles of decision trees, not neural networks. The transformer and CNN are deep learning; the rule engine is not ML at all.",
+        diagram="""
+ML (learns from data)
+ |-- classic: linear, trees, random forest, kNN
+ +-- deep learning: CNN, RNN, transformer
+""",
+        topic="ai-ml-dl", level=2),
+    mcq("You fit a linear regression of house price on size. Which assumption have you built in before seeing a single house?",
+        ["Each extra square metre adds the same amount to the price, at any size", "Price depends only on the city", "Big houses are always cheaper", "Price can only take a few fixed values"], 0,
+        "What shape can a linear model draw?",
+        "That is the inductive bias of a linear model: a constant slope. If the real effect flattens out for huge houses, the model can't express it unless you add features like size squared.",
+        topic="inductive-bias", level=2),
+    mcq("For a model that predicts 'which customers will churn next month', what should ONE training row usually be?",
+        ["One customer at one point in time, with features up to that date and the label from the month after", "One month of the whole company's data", "One support ticket", "One feature column"], 0,
+        "What is the thing you make a prediction about, and when?",
+        "The unit of prediction is a customer at a snapshot date. Picking it decides what the features and label mean; mixing units (tickets vs customers) quietly breaks the model.",
+        topic="framing", level=2),
+    mcq("In an LLM app, a fixed set of example inputs with the expected (or acceptable) answers that you run after every prompt change is called an eval set. Its closest SDE equivalent is:",
+        ["A regression test suite", "A load balancer", "A database index", "A feature flag"], 0,
+        "You run it to catch things that used to work and broke.",
+        "Evals are to models what tests are to code: a change (new prompt, new model version) is only accepted if the scores don't drop. Without them every prompt tweak is a guess.",
+        analogy="Changing a prompt without evals is like refactoring without tests: it 'looks fine' on the one case you tried.",
+        topic="genai-lens", level=2),
+    out("from sklearn.linear_model import LinearRegression\nm = LinearRegression()\nm.fit([[1], [2], [3]], [2, 4, 6])\nm.fit([[1], [2], [3]], [5, 10, 15])\nprint(round(m.coef_[0], 1))",
+        ["5.0", "2.0", "3.5", "7.0"], 0,
+        "Does the second fit continue from the first?",
+        "In scikit-learn, fit starts over from scratch: the second call throws away the old weights. Only partial_fit (or warm_start on some models) continues learning.",
+        analogy="fit is a clean rebuild, not an incremental build.",
+        topic="train-infer", level=2),
+
+    # ============================================================ more L3
+    out("import numpy as np\nfrom sklearn.linear_model import LinearRegression\nrng = np.random.default_rng(0)\nfor n in (50, 5000):\n    X = rng.uniform(-3, 3, size=(n, 1))\n    y = X[:, 0] ** 2 + rng.normal(0, 0.3, n)\n    print(round(LinearRegression().fit(X, y).score(X, y), 1))",
+        ["0.0\n0.0", "0.0\n0.9", "0.5\n1.0", "1.0\n1.0"], 0,
+        "Can a straight line ever fit a U shape, however many points you give it?",
+        "The data is a parabola; a straight line through a symmetric U is almost flat, so R^2 is about 0 even on training data. 100x more data doesn't help: this is high bias, and only a more flexible model or a better feature (x^2) fixes it.",
+        topic="generalisation", level=3),
+    out("import numpy as np\nfrom sklearn.dummy import DummyRegressor\nX = np.zeros((5, 1))\ny = np.array([10.0, 20.0, 30.0, 40.0, 50.0])\nbase = DummyRegressor(strategy=\"mean\").fit(X, y)\nprint(base.predict(X[:1]), base.score(X, y))",
+        ["[30.] 0.0", "[30.] 1.0", "[10.] 0.0", "[50.] 0.5"], 0,
+        "R^2 compares the model with always predicting the mean.",
+        "The mean baseline always predicts 30, and its R^2 is exactly 0 by definition. Any real model must beat 0; a negative R^2 means it is worse than this one-line baseline.",
+        topic="workflow", level=3),
+    out("from sklearn.model_selection import GridSearchCV\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.datasets import load_iris\nX, y = load_iris(return_X_y=True)\ngrid = {\"n_neighbors\": [1, 3, 5], \"weights\": [\"uniform\", \"distance\"]}\ngs = GridSearchCV(KNeighborsClassifier(), grid, cv=5).fit(X, y)\nprint(len(gs.cv_results_[\"params\"]), gs.n_splits_)",
+        ["6 5", "5 6", "3 5", "30 1"], 0,
+        "Count the combinations of the two lists, then the folds.",
+        "3 values x 2 values = 6 hyperparameter combinations, each scored with 5-fold CV: 30 fits, plus one refit of the winner on all data. Hyperparameter search multiplies training cost quickly.",
+        topic="params-hyper", level=3),
+    out("from sklearn.base import clone\nfrom sklearn.linear_model import LinearRegression\nm = LinearRegression(fit_intercept=False).fit([[1], [2]], [2, 4])\nc = clone(m)\nprint(c.get_params()[\"fit_intercept\"], hasattr(c, \"coef_\"))",
+        ["False False", "False True", "True False", "True True"], 0,
+        "clone copies the recipe, not the result.",
+        "clone builds a fresh unfitted estimator with the same hyperparameters (fit_intercept=False) but no learned attributes, so coef_ is missing. Cross-validation uses this to train each fold from scratch.",
+        analogy="clone copies the config file, not the compiled binary.",
+        topic="train-infer", level=3),
+    out("import numpy as np\nfrom sklearn.tree import DecisionTreeRegressor\nrng = np.random.default_rng(0)\nsizes = []\nfor n in (100, 1000):\n    X = rng.uniform(0, 10, size=(n, 1))\n    y = np.sin(X[:, 0]) + rng.normal(0, 0.3, n)\n    sizes.append(int(DecisionTreeRegressor(random_state=0).fit(X, y).get_n_leaves()))\nprint(sizes)",
+        ["[100, 1000]", "[10, 10]", "[50, 500]", "[1, 1]"], 0,
+        "An unlimited tree keeps splitting until every leaf is pure.",
+        "With no max_depth, the tree grows one leaf per (distinct) training point, so its size scales with the data. That is non-parametric behaviour, and also why unpruned trees overfit.",
+        topic="parametric", level=3),
+    out("import numpy as np\nfrom sklearn.linear_model import LinearRegression\nx = np.arange(-3, 4).reshape(-1, 1)\ny = x[:, 0] ** 2\nlin = LinearRegression().fit(x, y).score(x, y)\nx2 = np.hstack([x, x ** 2])\nquad = LinearRegression().fit(x2, y).score(x2, y)\nprint(round(lin, 2), round(quad, 2))",
+        ["0.0 1.0", "1.0 1.0", "0.0 0.0", "0.5 1.0"], 0,
+        "The second model gets x squared as an extra input column.",
+        "A line through a symmetric parabola has slope 0, so R^2 = 0. Adding x^2 as a feature lets the same linear model fit perfectly. Feature engineering changes what a model can express without changing the algorithm.",
+        topic="inductive-bias", level=3),
+    mcq("A model that spots potholes was trained only on daytime photos. At night it misses most potholes. What does this say about learned rules?",
+        ["They are only reliable inside the kind of data they were trained on; outside it they can fail badly", "The model has a bug in its code", "Night photos must be labelled wrong", "More epochs on the daytime data will fix it"], 0,
+        "Where did the model ever see a dark pothole?",
+        "A learned function is a statistical summary of its training data. Inputs from a region it never saw (night) are out of distribution; you need data from that region, not more training on the old data.",
+        diagram="""
+   brightness
+   high | x x x x x x    <- training data (day)
+        |
+   low  |      ?  ?  ?   <- night: never seen
+        +------------------
+""",
+        topic="rules-vs-learned", level=3),
+    tf("A trained neural network is as easy to debug as hand-written rules, because you can print all of its weights.", False,
+       "Can you read a bug report out of a list of 10 million floats?",
+       "You can print weights, but they don't map to readable reasons. Debugging ML means checking data, slices of errors and evals, not reading the logic line by line. Small trees and linear models are the exception.",
+       analogy="Like trying to debug a program by reading the compiled binary: every byte is visible and none of it explains itself.",
+       topic="rules-vs-learned", level=3),
+    mcq("Which list contains ONLY hyperparameters?",
+        ["Learning rate, number of trees, max_depth, regularisation strength C", "Learning rate, the split thresholds of a tree, max_depth", "coef_, intercept_, learning rate", "Number of layers, the layer weights, batch size"], 0,
+        "Ask of each item: did I choose it, or did training compute it?",
+        "Split thresholds, coef_, intercept_ and layer weights are learned (parameters). Learning rate, tree count, depth, C, number of layers and batch size are chosen before training.",
+        analogy="Hyperparameters are build flags you set; parameters are the binary the build produces.",
+        topic="params-hyper", level=3),
+    mcq("Your new recommendation model beats the old one offline. What is the safest way to confirm it helps real users before switching everyone?",
+        ["An A/B test (or a shadow run first): send a slice of traffic to the new model and compare business metrics", "Deploy it to everyone and watch social media", "Re-run the offline evaluation five times", "Ask the data scientists to vote"], 0,
+        "Offline data is history; users react to what you show them.",
+        "Offline metrics can miss how users respond to new recommendations. A shadow run checks it works on live traffic without showing results; an A/B test measures the real effect.",
+        diagram="""
+traffic --+--> 95% --> old model --> metrics A
+          +-->  5% --> new model --> metrics B
+             compare A vs B, then roll out
+""",
+        topic="workflow", level=3),
+    tf("A nightly job that retrains the model and automatically deploys it, without comparing it against the current model on a held-out set, is a safe setup.", False,
+       "What stops a bad data day from shipping a broken model?",
+       "Retraining needs a gate: evaluate the new model on held-out data (and key slices) and only promote it if it beats or matches the current one. Otherwise one corrupt data load ships straight to users.",
+       analogy="It's like auto-deploying every commit to production without running CI.",
+       topic="workflow", level=3),
+    mcq("For a 'is this message abusive?' model, two expert moderators agree on only 55% of the same messages. What does that tell you before any training?",
+        ["The labels are too inconsistent; fix the labelling guidelines first, because a model can't learn a rule humans don't share", "Use a bigger model to resolve the disagreement", "This is perfect data for unsupervised learning", "Drop the experts and use accuracy as the only metric"], 0,
+        "What would a 'correct' answer even mean here?",
+        "Label agreement caps what any model can achieve and makes evaluation meaningless. Clear guidelines and agreement checks come first; sometimes the honest answer is that the task is not well-defined enough for ML yet.",
+        topic="when-not-ml", level=3),
+    mcq("A sentiment classifier built on BERT and a chatbot built on GPT are both deep learning. What is the key difference in what they output?",
+        ["The classifier outputs a label for the input (discriminative); the chatbot generates new text token by token (generative)", "Only the chatbot uses a neural network", "The classifier is rule-based AI", "There is no difference; both generate text"], 0,
+        "One answers 'which class?', the other writes something new.",
+        "Discriminative models map input to a label, p(y given x). Generative models produce new content, p(next token given previous). GenAI is the generative part of deep learning.",
+        diagram="""
++--------------- AI ----------------+
+| rules   +-------- ML ----------+  |
+|         | trees  +---- DL ---+ |  |
+|         |        | BERT clf  | |  |
+|         |        | [GenAI:   | |  |
+|         |        |  GPT]     | |  |
+|         |        +-----------+ |  |
+|         +----------------------+  |
++-----------------------------------+
+""",
+        topic="ai-ml-dl", level=3),
+    mcq("You plot training and validation error against training-set size. Both curves flatten out close together, at a high error. What is the diagnosis?",
+        ["High bias: the model is too simple, so more data won't help; use a more flexible model or better features", "High variance: get more data", "Data leakage", "The model is perfect"], 0,
+        "A small gap means it isn't memorising. A high floor means...?",
+        "Curves that meet at a high error mean the model can't capture the pattern (underfitting). A big gap between low train error and high validation error would mean variance, which more data does help.",
+        diagram="""
+error
+ |  val   \\_______________   <- both high,
+ |  train /---------------      small gap
+ |
+ +------------------------> training size
+""",
+        topic="generalisation", level=3),
+    tf("Regularisation (for example a larger alpha in Ridge) usually adds a little bias in exchange for a larger drop in variance.", True,
+       "It pulls the weights towards zero. Is that simpler or more complex?",
+       "Shrinking weights makes the model less flexible (more bias) but much less sensitive to the particular training sample (less variance). Tuning alpha on validation data finds the balance.",
+       topic="generalisation", level=3),
+    mcq("On tabular business data (mixed numeric and categorical columns, some irrelevant), gradient-boosted trees often beat neural networks. Which explanation fits best?",
+        ["Trees' inductive bias (axis-aligned splits, no need for scaling, ignoring useless columns) matches tables well", "Neural networks can't take numbers as input", "Boosted trees have more parameters than any neural net", "No free lunch says trees always win"], 0,
+        "Think about what shape of function each model finds easy.",
+        "Tables have features with different units and sharp thresholds ('age > 65'), which split-based models express naturally. NNs prefer smooth functions and lots of data. It's a match of assumptions, not a universal law.",
+        topic="inductive-bias", level=3),
+    mcq("A fraud check must run on a phone in under 5 ms. The training set has 10 million rows. Which model family suits this better, and why?",
+        ["A parametric model (e.g. logistic regression or a small NN): its size and prediction cost don't grow with the training data", "kNN: it learns fastest", "kNN: it has no parameters to store", "Any model, as size never matters"], 0,
+        "What would kNN have to ship to the phone and search per prediction?",
+        "kNN must store and search all 10M rows at prediction time. A parametric model compresses the data into a fixed set of weights, so it is small and fast to serve.",
+        topic="parametric", level=3),
+    mcq("A churn model predicts 'will this customer cancel TOMORROW?' with great accuracy, but the retention team needs two weeks to run a save campaign. What is wrong?",
+        ["The prediction point is too late to act on; predict far enough ahead (e.g. 30 days) for the action to work", "Accuracy is the wrong metric", "Churn should be a regression problem", "Nothing; high accuracy is all that matters"], 0,
+        "A correct prediction you can't act on is worth nothing.",
+        "Framing includes WHEN you predict. The horizon must leave time for the business action. Predicting further ahead is harder (lower accuracy) but useful.",
+        diagram="""
+today ---- 14 days to act ----> cancel date
+  ^ predict here            ^ 'tomorrow' model
+    (useful)                  predicts here (too late)
+""",
+        topic="framing", level=3),
+    mcq("A team must route support tickets into 5 categories. They have 200,000 labelled tickets, a 50 ms latency budget and millions of tickets a day. What fits best?",
+        ["A small classifier trained on the labelled tickets (maybe on top of embeddings); an LLM prompt can help bootstrap or handle rare cases", "Send every ticket to the largest LLM with a prompt", "Clustering, since categories are known", "Hand-write keyword rules for all 5 categories"], 0,
+        "Plenty of labels, strict latency, huge volume.",
+        "With lots of labels and a fixed set of classes, a trained classifier is cheaper, faster and easier to evaluate. LLM prompting shines when you have few labels or open-ended outputs.",
+        topic="genai-lens", level=3),
+    tf("Because an LLM with sampling turned on can answer the same prompt differently each time, one passing run of an eval case is weaker evidence than one passing run of a deterministic unit test.", True,
+       "Would you trust a flaky test that passed once?",
+       "Non-deterministic outputs mean you should run cases several times, use temperature 0 where possible, and track pass rates, not single passes.",
+       topic="genai-lens", level=3),
+    mcq("Before building a RAG system with a re-ranker, query rewriting and agents, what should come first?",
+        ["A simple version (basic retrieval + one prompt) plus a small eval set, so every later addition can be measured", "The most advanced pipeline you can find", "Fine-tuning the LLM on the documents", "A dashboard for the final product"], 0,
+        "How will you know whether the re-ranker helped?",
+        "Same rule as classic ML: baseline first. Without a baseline and evals you can't tell which part adds value and which only adds latency and cost.",
+        analogy="Ship the MVP and its tests before the microservices.",
+        topic="genai-lens", level=3),
+
+    # ============================================================ more L4
+    out("import numpy as np\npreds = np.array([2.0, 4.0, 6.0])   # 3 models trained on 3 samples\ntrue = 5.0\nbias2 = (preds.mean() - true) ** 2\nvar = preds.var()\nmse = ((preds - true) ** 2).mean()\nprint(bias2, round(var, 2), round(mse, 2))",
+        ["1.0 2.67 3.67", "1.0 2.67 2.67", "4.0 2.67 6.67", "1.0 4.0 5.0"], 0,
+        "Average prediction 4 vs truth 5; then the spread around 4.",
+        "Bias^2 = (4 - 5)^2 = 1. Variance = mean of (2-4)^2, 0, (6-4)^2 = 8/3 = 2.67. Average squared error = (9 + 1 + 1)/3 = 3.67 = bias^2 + variance (no noise here). That is the decomposition, made concrete.",
+        diagram="""
+  2.0      4.0  5.0  6.0
+   x--------o----*----x     o = mean prediction
+            |<-->|          * = truth
+           bias = 1, spread = variance
+""",
+        topic="generalisation", level=4),
+    out("import numpy as np\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegression\nX = np.array([[100], [200], [300], [400]]); y = [0, 0, 1, 1]\nsc = StandardScaler().fit(X)\nm = LogisticRegression().fit(sc.transform(X), y)\nq = np.array([[150]])\nprint(m.predict(sc.transform(q))[0], m.predict(q)[0])",
+        ["0 1", "0 0", "1 1", "1 0"], 0,
+        "The second call skips the scaler the model was trained with.",
+        "Training saw scaled inputs (150 becomes about -0.9, class 0). The serving call passes the raw 150, which looks huge, so it flips to class 1. This is training-serving skew in two lines, and why preprocessing must ship inside the model pipeline.",
+        topic="train-infer", level=4),
+    mcq("A bank trains a default model on past loans. It only has outcomes (repaid or defaulted) for applicants it APPROVED. What is the subtle problem?",
+        ["Selection bias: the model never sees outcomes for the kind of people the old policy rejected, so its scores for them are guesses", "Too much data", "Defaults should be predicted with clustering", "There is no problem if the test set is large"], 0,
+        "Whose labels are missing, and were they missing at random?",
+        "The labels exist only where the old decision said yes. The model learns about approved-looking applicants and can be badly wrong elsewhere. Teams fix this with small controlled approvals (exploration), reject inference or careful policy limits.",
+        diagram="""
+applicants -> old policy -+-> approved -> outcome known
+                          +-> rejected -> NEVER seen
+model trains only on the top branch
+""",
+        topic="framing", level=4),
+    mcq("Your model's validation error stopped improving and now matches the rate at which two human experts disagree on the same cases. Best next step?",
+        ["Look for new informative features or cleaner labels; a bigger model mostly can't beat this noise floor", "Train a much bigger model", "Train for 10x more epochs", "Remove the validation set"], 0,
+        "Some error comes from the data itself, not the model.",
+        "If identical-looking cases have different labels, that is irreducible error given these features. Only new information (features) or cleaner labels lower it; more capacity just fits the noise.",
+        diagram="""
+error
+ | \\
+ |  \\___________  <- plateau = noise floor
+ |                  (experts disagree here too)
+ +----------------- model size / epochs
+""",
+        topic="generalisation", level=4),
+    mcq("Vision transformers have weaker built-in assumptions about images than CNNs (no built-in locality or translation sharing). What is the practical consequence?",
+        ["They usually need far more training data (or big pre-training) to match CNNs, but can surpass them at large scale", "They can never match CNNs on images", "They need less data because they assume less", "Inductive bias has no effect on data needs"], 0,
+        "Assumptions are a substitute for data.",
+        "A strong, correct inductive bias lets a model learn from less data. Weaker bias means the model must learn those regularities from examples, which costs data but leaves room to learn things the bias would have ruled out.",
+        diagram="""
+data needed
+ high |            ViT (weak bias)
+      |   CNN (strong bias)
+ low  +--------------------------
+       assumptions built in: few -> many
+""",
+        topic="inductive-bias", level=4),
+    tf("Flipping and cropping training images (data augmentation) is a way to give a model an inductive bias, such as 'a flipped cat is still a cat', through the data instead of the architecture.", True,
+       "What assumption does each flipped copy teach?",
+       "Augmentation encodes invariances you believe are true. It is also where the bias can be wrong: flipping images of text produces mirror writing, and rotating a 6 turns it into a 9.",
+       topic="inductive-bias", level=4),
+    mcq("Which statement about an RBF-kernel SVM is most accurate?",
+        ["It stores support vectors, whose number tends to grow with the training data, so it behaves like a non-parametric model", "It is parametric, because it has hyperparameters C and gamma", "It has no learned values", "It always stores exactly d+1 numbers"], 0,
+        "What does the fitted model keep in order to predict?",
+        "A kernel SVM predicts by comparing new points to stored training points (the support vectors). Model size depends on the data, not just the number of features. Hyperparameters don't decide whether a model is parametric.",
+        topic="parametric", level=4),
+    mcq("A RAG system combines an LLM with a searchable index of company documents. In parametric/non-parametric terms, which description is right?",
+        ["The LLM's weights are parametric memory (fixed size); the document index is non-parametric memory that grows as you add documents", "Both are parametric", "Both are non-parametric", "The index is parametric because it has embeddings"], 0,
+        "Which part gets bigger when you add 10,000 new documents?",
+        "This is the framing used in the original RAG paper. Knowledge baked into weights needs retraining to change; knowledge in the index can be added, fixed or deleted by editing data.",
+        analogy="Weights are constants compiled into the binary; the index is a database you can update at runtime.",
+        diagram="""
+query --> [index: grows with docs] --> top passages
+                                          |
+             [LLM weights: fixed] <-------+
+                    |
+                  answer
+""",
+        topic="parametric", level=4),
+    mcq("Which statement about parameter count and model capacity (how complex a pattern a model can fit) is correct?",
+        ["Parameter count is only a rough guide: a model like y = sin(w*x) has one parameter yet can fit very wiggly data", "More parameters always means more capacity, exactly", "Capacity depends only on the training data size", "A model with fewer parameters can never overfit"], 0,
+        "Can one number make a curve wiggle a lot?",
+        "Capacity depends on how parameters are used, not just how many. Regularisation, architecture and training time also change effective capacity, which is why a huge regularised network can generalise well.",
+        diagram="""
+y = sin(w * x),  ONE parameter w
+w small:  ~~~~          (smooth)
+w large:  /\\/\\/\\/\\/\\/\\    (wiggly, fits almost anything)
+""",
+        topic="params-hyper", level=4),
+    mcq("A chat product has thumbs-up/thumbs-down buttons and a 'memory' feature. A user says 'it learned my name instantly'. What is really happening?",
+        ["Memory is stored text added to future prompts; feedback is logged and may be used in a later offline training run; the served weights don't change per chat", "Each thumbs-up runs gradient descent on the live model", "The model retrains after every message", "The user's browser trains a local copy"], 0,
+        "Where could 'your name' live without touching the weights?",
+        "Updating a giant model per user message would be slow, costly and unsafe. Products store facts as context and collect feedback for future versions. Weights change only when a new model version is trained and deployed.",
+        topic="train-infer", level=4),
+    mcq("A loan default model's true labels arrive 90 days after each prediction. How do you catch problems in the meantime?",
+        ["Monitor input feature distributions and the prediction score distribution for drift, plus any early proxy labels (e.g. first missed payment)", "Wait 90 days; nothing can be checked earlier", "Check the training accuracy daily", "Retrain every hour on unlabelled data"], 0,
+        "What can you observe on day 1 without the label?",
+        "Delayed labels are common (fraud, churn, credit). Input and output drift are early warning signals; proxy labels give earlier, noisier feedback. Real accuracy is checked once labels mature.",
+        diagram="""
+day 0 predict -- day 1..89: drift, proxies -- day 90 label
+      |              (early warnings)            |
+      +--------------- real accuracy ------------+
+""",
+        topic="workflow", level=4),
+    mcq("You retrain last month's model with the same script and get noticeably different results. To make training reproducible, what must be versioned?",
+        ["The exact data snapshot, code, hyperparameters, random seeds and library versions", "Only the code in git", "Only the final model file", "Only the hyperparameters"], 0,
+        "A model is code + data + config + environment.",
+        "Unlike a normal build, the 'source' of a model includes the data. If the training table changed or a library update changed defaults, the same code produces a different model.",
+        analogy="Like a build that needs the lockfile and the exact input assets, not just the source code.",
+        topic="workflow", level=4),
+    mcq("A team adds one new feature to a production model. Accuracy goes up overall, but a downstream fraud rule that used the model's score threshold starts firing far too often. What ML maintenance issue is this?",
+        ["Entanglement (changing anything changes everything): the score's meaning shifted, and hidden consumers depended on it", "Underfitting", "Exploration vs exploitation", "Catastrophic forgetting"], 0,
+        "Who else was reading the model's output?",
+        "In ML, inputs are not independent: one change shifts all weights and the score distribution. Undeclared consumers of the score then break. Version model outputs, document consumers and re-calibrate thresholds on each release.",
+        analogy="Like changing a shared global variable that half the codebase silently reads.",
+        diagram="""
+new feature --> model --> score dist shifts
+                             |
+          fraud rule (score > 0.8) fires 5x more
+""",
+        topic="when-not-ml", level=4),
+    tf("An LLM 'agent' that calls tools in a loop to finish a task is a reinforcement-learning agent, learning from rewards while it runs.", False,
+       "Do the model's weights change between steps of the loop?",
+       "Most LLM agents are frozen models plus orchestration code: the 'learning' within a task is just new text in the context. RL may have been used to train the model earlier (e.g. RLHF), but the running agent isn't updating a policy from rewards.",
+       topic="ai-ml-dl", level=4),
+    mcq("Fraud labels come from chargebacks, which can arrive up to 60 days after a transaction. You build a training set that includes last week's transactions, labelled 'not fraud' if no chargeback exists yet. What goes wrong?",
+        ["Recent rows are falsely labelled 'not fraud' because their labels haven't matured; exclude them or wait for the label window to close", "Nothing; recent data is always the most valuable", "The model will overfit to old fraud", "It turns into an unsupervised problem"], 0,
+        "Has last week's fraud had time to show up?",
+        "Label maturity: a missing chargeback isn't proof of no fraud yet. Training on immature labels teaches the model that recent fraud patterns are safe, exactly the ones you most need to catch.",
+        diagram="""
+txn date:  -90d ........ -60d ..... -7d  today
+labels:    [   mature, trustworthy   ][ still open ]
+train on:  <------------------------>   exclude
+""",
+        topic="framing", level=4),
+    mcq("You use an LLM to grade your chatbot's answers ('LLM-as-judge'). Which risk is real and how do you handle it?",
+        ["The judge has biases (prefers longer answers, the first option shown, or its own style); check its grades against a human-labelled sample and randomise order", "LLM judges are always objective, so no checks are needed", "The judge's weights get updated by grading", "LLM judges can only grade code"], 0,
+        "A judge is also a model, with its own errors.",
+        "An automated judge is a measuring instrument; you calibrate it. Measure agreement with human labels, swap answer positions, and keep a small human-reviewed set as ground truth.",
+        topic="genai-lens", level=4),
+    mcq("A model scores 95% on a famous public benchmark but only 60% on your company's internal test cases of the same kind. What are the two most likely explanations?",
+        ["The benchmark leaked into its pre-training data (contamination), and your cases come from a different distribution than the benchmark", "Your test cases must be labelled wrong", "The model is underfitting the benchmark", "Benchmarks are always harder than real tasks"], 0,
+        "Has the model maybe already seen the benchmark answers? Does the benchmark look like your data?",
+        "Public test sets end up in web-scraped training data, inflating scores. And a benchmark is only a proxy for your task. This is why teams build their own eval sets from real traffic.",
+        topic="genai-lens", level=4),
+]

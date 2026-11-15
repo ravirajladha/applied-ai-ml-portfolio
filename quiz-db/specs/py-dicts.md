@@ -18,6 +18,8 @@
 | 9 | `sets` | Sets | `set()` vs `{}`, de-duplicate with `set(list)` | `&`, `\|`, `-`, `^`, `add`, `discard` vs `remove` | `{1, 1.0, True}` has one item, frozenset, sets are unordered | set-of-strings order varies between runs (hash randomisation) |
 | 10 | `complexity` | Time complexity | — | lookup/insert/delete O(1) average | set membership vs list membership | worst case O(n) with collisions, memory cost of hashing |
 | 11 | `internals` | How dicts work inside | — | — | keys are found by hash, then `==` | compact dict layout, open addressing, `hash(-1) == -2`, identity check before `==` |
+| 12 | `json-nested` | JSON and nested data | `json.loads` gives nested dicts, `d[a][b]` | `json.dumps` spelling (true/null), chained `.get(k, {})`, API response shapes | int keys become str, tuples become lists, sets aren't serialisable, single quotes -> JSONDecodeError, duplicate keys, validating LLM JSON | `NaN` is written as invalid JSON, `1` and `'1'` collide, autovivifying `defaultdict` trees |
+| 13 | `ml-patterns` | Dicts in ML code: vocabularies, label maps, configs | label map id -> name, vocab token -> id | `id2label` inversion, `**cfg` into a function | state_dict prefix filtering, `**kw` duplicate-argument TypeError, union of metric keys, dict vs `list.index` for vocab | `module.` prefix from DataParallel, hashable cache keys from configs, `np.float32` not JSON serialisable |
 
 ## Must-know facts
 - `d[k]` raises KeyError for a missing key; `d.get(k)` returns None (or a default you pass).
@@ -34,6 +36,8 @@
 - Dict and set lookup, insert and delete are O(1) on average; list membership is O(n).
 - Adding or removing keys while iterating a dict raises RuntimeError.
 - `keys()`, `values()`, `items()` are live views, not copies.
+- JSON object keys are always strings; tuples come back as lists; sets, NumPy float32 and custom objects aren't serialisable by default.
+- `f(**cfg)` spreads a dict into keyword arguments; this is how configs reach model constructors.
 - CPython dicts use a hash table with open addressing and a separate compact entries array (which is why order is preserved).
 
 ## Common traps (each one must have at least one question)
@@ -51,6 +55,13 @@
 - `s.remove(x)` on a missing item -> KeyError; `discard` doesn't raise.
 - `Counter(a=3) - Counter(a=5)` -> empty Counter, not -2.
 - Printing a set of strings -> order can change between runs.
+- `json.loads(json.dumps({1: 'a'}))` -> `{'1': 'a'}`; int keys come back as strings.
+- `json.loads("{'a': 1}")` -> JSONDecodeError; JSON needs double quotes (common in LLM output).
+- `d.get('k', default)` when the key exists with value None -> returns None, not the default.
+- `Counter.update` adds counts; `dict.update` replaces values.
+- `json.dumps(np.float32(0.5))` -> TypeError; convert with `float()`.
+- `json.dumps(float('nan'))` -> writes `NaN`, which is not valid JSON.
+- `f(0.5, **{'lr': 0.1})` where lr is the first parameter -> TypeError (multiple values).
 
 ## Interview angle
 - **"How does a dict lookup work and why is it O(1)?"** Python hashes the key to pick a slot in a table, then confirms with `==`. With a good hash and the table kept under about 2/3 full, a lookup touches a constant number of slots on average. Collisions are resolved by probing other slots; the worst case is O(n). SDE analogy: a Java HashMap, but with open addressing instead of buckets.

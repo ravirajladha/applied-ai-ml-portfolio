@@ -15,6 +15,8 @@
 | 6 | `transfer` | Transfer learning and fine-tuning | reuse a pretrained model | freeze backbone, train head | how much to unfreeze vs data size | domain mismatch / negative transfer |
 | 7 | `gen-disc` | Generative vs discriminative models | creates data vs draws boundaries | Naive Bayes vs logistic regression | p(x, y) vs p(y given x) | which needs more data; LLMs as generative models used discriminatively |
 | 8 | `scenarios` | Picking the learning type for a scenario | everyday examples | mixed cases | multi-stage systems | combining types in one product |
+| 9 | `rlhf` | RLHF and preference tuning (RL for LLMs) | humans pick the better answer; model tuned towards it | why comparisons instead of written answers | SFT -> reward model -> RL; Bradley-Terry preference probability; DPO skips the reward model | KL penalty vs reward hacking; sycophancy |
+| 10 | `label-strategy` | Getting labels: weak supervision and active learning | labelling is the expensive part | uncertainty sampling | labelling-function votes; active learning under a label budget | actively chosen examples are a biased test set; why combine noisy rules |
 
 ## Must-know facts
 - Supervised = every training example has the correct answer (label). Unsupervised = no labels.
@@ -33,6 +35,8 @@
 - Transfer learning reuses a model trained on a big task as the starting point for a smaller one.
 - Generative models learn p(x, y) or p(x) and can create data; discriminative models learn p(y | x) and draw decision boundaries.
 - LLM pipeline: self-supervised pre-training -> supervised fine-tuning -> RL from human feedback (or a preference method).
+- RLHF: SFT model -> reward model trained on preference pairs (P(chosen beats rejected) = sigmoid(r_c - r_r)) -> RL (PPO) with a KL penalty to the reference model. DPO uses the same pairs without a reward model or RL loop.
+- Active learning spends a label budget on the examples the model is least sure about; weak supervision combines noisy labelling rules into training labels.
 
 ## Common traps (each one must have at least one question)
 - "Predicting a number like a rating 1-5 is always classification" -> it can be framed either way; order matters.
@@ -48,6 +52,14 @@
 - "Generative models are only for creating images and text" -> Naive Bayes is generative and is used for classification.
 - "Anomaly detection needs labelled anomalies" -> it is usually unsupervised.
 - "sklearn IsolationForest returns 0/1" -> it returns 1 (inlier) and -1 (outlier).
+- "A classifier can fit a numeric target" -> sklearn raises ValueError (unknown label type: continuous).
+- "Lowest KMeans inertia picks k" -> inertia always falls as k grows; look for the elbow and check meaning.
+- "Cluster labelings that differ in names disagree" -> compare with adjusted Rand index, which ignores names.
+- "Run PCA on raw features" -> the largest-scale feature dominates; standardise first.
+- "Push the reward model as hard as possible" -> reward hacking; RLHF adds a KL penalty.
+- "Evaluate on the actively labelled examples" -> they are biased towards hard cases; keep a random test sample.
+- "Fine-tune all layers on 300 examples with a high learning rate" -> overfitting and catastrophic forgetting.
+- "A rating 1-5 is plain multiclass" -> it is ordinal; use regression/ordinal methods and MAE.
 
 ## Interview angle
 - **Supervised vs unsupervised vs RL?** Supervised learns input -> known answer; unsupervised finds structure with no answers; RL learns actions from rewards through trial and error.
@@ -55,6 +67,8 @@
 - **Generative vs discriminative?** Discriminative models learn p(y|x) directly and usually classify better with lots of data; generative models learn how the data is produced, p(x, y), can sample new data and can cope with less data.
 - **When would you use online learning?** When data arrives as a stream and the pattern drifts (ads, fraud), or data is too big to retrain on at once.
 - **How would you build a classifier with 500 labelled images?** Transfer learning: start from a pretrained backbone, freeze it, train a small head, then maybe unfreeze top layers.
+
+- **What is RLHF and why the KL penalty?** Humans rank answer pairs, a reward model learns those preferences, and RL tunes the LLM towards high reward; the KL penalty keeps it close to the original model so it can't exploit the reward model's blind spots. DPO gets a similar result without the RL loop.
 
 ## Source material
 To be added

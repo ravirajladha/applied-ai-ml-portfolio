@@ -19,6 +19,8 @@
 | 10 | `feature-eng` | Feature engineering and the curse of dimensionality | creating a new useful column | date parts, ratios, log transform | why distances break in high dimensions | feature selection vs more data |
 | 11 | `shift` | Sampling bias and dataset shift | sample must look like the real world | sampling bias examples | covariate vs label vs concept shift | detecting shift (adversarial validation) |
 | 12 | `versioning` | Data versioning and lineage | — | — | why data needs versioning like code | content hashing, DVC-style pointers, reproducibility |
+| 13 | `col-pipelines` | ColumnTransformer and train/serve consistency | — | what ColumnTransformer does, output shapes, saving the whole pipeline | feature names, remainder='drop' default, pickle version pinning | select-by-name vs by-position, training/serving skew |
+| 14 | `genai-data` | Data for LLM apps and fine-tuning | X and y for fine-tuning | PII masking, JSONL chat format, length checks | near-duplicate detection (Jaccard/MinHash), synthetic data risks, loss masking | fuzzy dedup across train/eval, quality vs quantity, generated RAG evals |
 
 ## Must-know facts
 - X = features (inputs, one column each); y = label/target (what you predict). One row = one example.
@@ -41,6 +43,13 @@
 - In high dimensions, distances between random points become nearly equal (curse of dimensionality).
 - Covariate shift: p(x) changes; label shift: p(y) changes; concept drift: p(y|x) changes.
 - Version data like code: hash the content, record which data + code produced each model.
+- Features must be point-in-time correct: computed only from data available at the prediction moment (trailing windows, shift before rolling, no center=True).
+- get_dummies on train and test separately gives mismatched columns; fit one encoder on train and reuse it.
+- With n points, the largest possible |z-score| (ddof=0) is sqrt(n-1): small samples mask outliers.
+- Resampling or class weights change the learned prior; recalibrate before using outputs as probabilities.
+- ColumnTransformer drops unlisted columns by default (remainder='drop'); select columns by name, not position.
+- Ship preprocessing and model as one artifact to avoid training/serving skew; pin library versions for pickles.
+- LLM fine-tuning data: mask PII, dedupe near-duplicates (not only exact hashes) against eval sets, compute loss on assistant tokens.
 
 ## Common traps (each one must have at least one question)
 - "Scale the whole dataset before splitting" -> test statistics leak into training.
@@ -61,12 +70,24 @@
 - "test_size=0.25 of 10 rows gives 2 test rows" -> sklearn rounds up to 3.
 - "A dataset collected from app users represents all customers" -> sampling bias.
 - "Duplicates across train and test are harmless" -> they inflate the test score.
+- "rolling(7, center=True) is a fine feature" -> it averages future days into each row.
+- "Call get_dummies on test the same way" -> different columns than train.
+- "z > 3 finds the outlier" -> on small samples the outlier inflates the std and hides itself.
+- "-999 is just a cold reading" -> sentinel codes are missing values in disguise.
+- "A query is a data version" -> late-arriving rows change its result; snapshot and hash.
+- "Training only on approved loans is representative" -> selection bias from the old policy.
+- "ColumnTransformer keeps my other columns" -> remainder='drop' by default.
+- "Re-implementing preprocessing in the serving language is fine" -> training/serving skew.
+- "Exact-hash dedup proves no train/eval overlap" -> near-duplicates slip through.
+- "Impurity importance shows the best feature" -> it favours high-cardinality columns like IDs.
 
 ## Interview angle
 - **How do you handle categorical features?** One-hot for low-cardinality nominal, ordinal encoding with an explicit order for ordinal, target/hash encoding or embeddings for high cardinality, with cross-fitting to avoid leakage.
 - **Why fit the scaler only on training data?** Test data stands in for the future; using its mean/std leaks information and inflates scores. Put preprocessing in a Pipeline so CV handles it automatically.
 - **How do you deal with class imbalance?** Pick the right metric first (recall, PR-AUC), stratify splits, then use class weights or resample the training set only, and tune the decision threshold.
 - **What is dataset shift and how do you detect it?** The production distribution differs from training (covariate, label or concept shift). Monitor feature distributions, train a classifier to tell train from prod (adversarial validation), and track live accuracy when labels arrive.
+- **How do you avoid training/serving skew?** Keep preprocessing and model in one fitted Pipeline artifact, select columns by name, pin library versions, and compute features point-in-time so training sees exactly what serving will see.
+- **How do you prepare data to fine-tune an LLM?** Define X (prompt/conversation) and y (ideal reply), mask PII, dedupe exact and near-duplicates (also against the eval set), check lengths against the context limit, and prefer a small reviewed set over a large noisy one.
 - **How do you make an ML experiment reproducible?** Version the data (content hashes / DVC), the code (git), the config and seeds, and record which data version trained each model.
 
 ## Source material

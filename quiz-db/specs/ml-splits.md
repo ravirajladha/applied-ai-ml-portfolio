@@ -18,6 +18,7 @@
 | 9 | `pipelines` | Pipelines to prevent leakage | why a Pipeline refits per fold | make_pipeline step names, step__param keys, spotting leaky code | handle_unknown='ignore' in a ColumnTransformer pipeline | why label-using steps leak far more than scaling |
 | 10 | `test-reuse` | Test-set reuse and mismatch | — | repeated peeking, Kaggle public vs private | distribution shift between val and test, building validation like the target | adversarial validation, benchmark-level adaptive overfitting |
 | 11 | `llm-evals` | Splits for LLM evals | what contamination is, few-shot examples vs eval items | prompt tuning overfits a fixed eval set | n-gram overlap misses paraphrases, original vs rewritten benchmark gap, near-duplicate tickets | canary strings, tuning an LLM judge on the final eval set |
+| 12 | `compare` | Comparing models fairly (same folds, baselines, repeated CV) | DummyClassifier baseline name | dummy baseline under the same CV, same folds for both models, RepeatedStratifiedKFold counts | paired fold differences, leaderboard gaps vs standard error | correlated fold scores (corrected t-test), McNemar on one test set, repeats don't add data, cost vs tiny gains |
 
 ## Must-know facts
 - Train fits weights, validation picks hyperparameters and models, test is touched once for the final score.
@@ -36,6 +37,13 @@
 - Label-using steps (feature selection, target encoding, oversampling) leak far more than unsupervised scaling.
 - Validation and test should come from the distribution you will deploy on.
 - LLM benchmarks can be contaminated by pre-training data; n-gram checks miss paraphrases; prompt and judge tuning overfit a fixed eval set too.
+- Early stopping is tuning: the validation set that picked the epoch is no longer unbiased.
+- train_test_split: an int test_size is a row count, a float is a fraction; with both train_size and test_size set, leftover rows are dropped.
+- ShuffleSplit test sets can overlap and some rows are never tested; KFold tests every row once.
+- GroupKFold balances folds by row count; GroupShuffleSplit's test_size counts groups. CV splitters that need groups raise if groups= isn't passed to fit.
+- Several series (stores, users) in one table: split by a date cutoff across all series, not by row position.
+- Compare models on identical folds and look at paired per-fold differences; always include a DummyClassifier/naive baseline.
+- CV fold scores are correlated (overlapping training sets), so naive t-tests are overconfident; repeated CV reduces split noise but adds no data.
 
 ## Common traps (each one must have at least one question)
 - "Tune on test, it's just looking" -> the test score becomes optimistic.
@@ -54,12 +62,22 @@
 - "The public leaderboard is the test" -> repeated submissions overfit it.
 - "Prompt tweaking can't overfit" -> it overfits the eval set like any tuning.
 - "n-gram dedup proves no contamination" -> paraphrases slip through.
+- "The early-stopping validation loss is my expected loss" -> it chose the epoch, so it is optimistic.
+- "test_size=3 means 3%" -> an int is a row count.
+- "TimeSeriesSplit sorts by date" -> it uses row order only.
+- "TimeSeriesSplit on a table sorted by store is fine" -> 'future' becomes 'later stores'.
+- "KFold on a sorted regression target is fine" -> each fold is out of range; R^2 goes negative.
+- "A row ID can't leak" -> if rows were assembled by label, the index predicts the label.
+- "Teacher-generated training data seeded with eval items is clean" -> paraphrase contamination.
+- "A beats B on mean CV score, so A is better" -> check the gap against the spread and use paired comparisons.
+- "Repeated CV fixes small data" -> it only averages over split luck.
 
 ## Interview angle
 - **Why three splits, not two?** Training fits weights, validation absorbs all the choosing, test stays untouched so its number is honest. SDE analogy: dev, staging, prod; you don't debug in prod.
 - **What is data leakage and how do you prevent it?** Information the model wouldn't have at prediction time gets into training: target-derived features, preprocessing fit on all data, duplicates, future rows. Prevent with Pipelines, group/time splits, "as of" features, and suspicion of too-good scores.
 - **How do you split time-series data?** By time, never shuffled: expanding or sliding window (TimeSeriesSplit / walk-forward), with a gap when labels look ahead.
 - **What is nested CV and when do you need it?** Inner loop tunes, outer loop scores the tune-then-fit procedure. Needed when you want an unbiased estimate after heavy tuning on small data.
+- **How do you decide model A really beats model B?** Same folds for both, compare paired per-fold differences against their spread, include a dummy baseline, and weigh a tiny gain against latency and cost. On one test set, McNemar's test on the disagreements.
 - **How do you trust an LLM benchmark score?** Check contamination (n-gram overlap, canaries, rewritten questions), keep a private held-out set, don't tune prompts or judges on the reporting set.
 
 ## Source material
