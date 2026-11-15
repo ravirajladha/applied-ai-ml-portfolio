@@ -15,6 +15,8 @@ TOPICS = [
     ("binning", "Binning with cut and qcut"),
     ("datetime", "Dates, times and resampling"),
     ("ml-prep", "Preparing data for ML and performance"),
+    ("windows", "Rolling, expanding and ewm windows"),
+    ("ml-features", "Leak-free feature engineering (lags, windows, target encoding)"),
 ]
 
 QUESTIONS = [
@@ -1303,4 +1305,386 @@ print(round(z.std(), 3), round(((df["x"] - df["x"].mean()) / df["x"].std(ddof=0)
         "What would happen if you imputed once before cross-validation?",
         "Preprocessing done once on all data leaks validation statistics into every fold. A Pipeline refits the preprocessing inside each training fold.",
         topic="ml-prep", level=3),
+
+    # ================================================================== round 2: depth (L3/L4)
+    # ------------------------------------------------------------------ groupby-advanced
+    out("import pandas as pd\ndf = pd.DataFrame({\"g\": [\"a\", \"b\", \"a\", \"c\", \"b\"], \"v\": [1, 2, 3, 4, 5]})\nprint(df.groupby(\"g\").filter(lambda d: len(d) > 1).index.tolist())",
+        ["[0, 1, 2, 4]", "['a', 'b']", "[0, 2, 1, 4]", "[0, 1]"], 0,
+        "filter returns original rows, not one row per group.",
+        "filter keeps or drops whole groups, and the surviving rows come back as they were: original index, original order. Groups a (rows 0, 2) and b (rows 1, 4) have more than one row, c (row 3) is dropped. "
+        "['a', 'b'] is what an agg-then-filter would give. [0, 2, 1, 4] assumes the rows get regrouped. "
+        "It's SQL's HAVING, but returning the detail rows: 'all orders from customers with 2+ orders'.",
+        topic="groupby-advanced", level=3,
+        analogy="SELECT * FROM orders WHERE cust IN (SELECT cust FROM orders GROUP BY cust HAVING COUNT(*) > 1)."),
+    mcq("You want a new column `spread` on every row: that row's group max minus group min. Which line does it?",
+        ["df['spread'] = df.groupby('g')['v'].transform(lambda x: x.max() - x.min())",
+         "df['spread'] = df.groupby('g')['v'].agg(lambda x: x.max() - x.min())",
+         "df['spread'] = df.groupby('g')['v'].max() - df['v'].min()",
+         "df['spread'] = df.groupby('g').apply(len)"], 0,
+        "The result must have one value per ORIGINAL row.",
+        "transform calls the function once per group and broadcasts the scalar result back to every row of that group, keeping df's index, so the assignment lines up. "
+        "agg returns one row per group, indexed by group key. Assigning that to df aligns group labels ('a', 'b') against row labels (0, 1, ...) and gives all-NaN. "
+        "In SQL terms, transform is MAX(v) OVER (PARTITION BY g) - MIN(v) OVER (PARTITION BY g).",
+        code="import pandas as pd\ndf = pd.DataFrame({\"g\": [\"a\", \"b\", \"a\", \"b\"], \"v\": [1, 10, 4, 30]})\ndf[\"spread\"] = df.groupby(\"g\")[\"v\"].transform(lambda x: x.max() - x.min())\nprint(df[\"spread\"].tolist())",
+        topic="groupby-advanced", level=3),
+    out("import pandas as pd\ndf = pd.DataFrame({\"a\": pd.Categorical([\"x\", \"y\"]), \"b\": pd.Categorical([\"p\", \"q\"]), \"v\": [1, 2]})\nprint(df.groupby([\"a\", \"b\"], observed=False).size().tolist(), df.groupby([\"a\", \"b\"], observed=True).size().tolist())",
+        ["[1, 0, 0, 1] [1, 1]", "[1, 1] [1, 1]", "[1, 1] [1, 0, 0, 1]", "[1, 0, 0, 1] [1, 0, 0, 1]"], 0,
+        "With observed=False, the result has one row per combination of categories, seen or not.",
+        "With categorical keys and observed=False (still the 2.2 default, with a FutureWarning), pandas builds the cartesian product of all categories: 2 x 2 = 4 groups, two of them empty. observed=True keeps only combinations that occur. "
+        "With five categorical keys of 100 categories each, observed=False asks for 10^10 groups and can exhaust memory. "
+        "Pass observed=True explicitly. pandas 3.0 makes it the default.",
+        topic="groupby-advanced", level=4,
+        diagram="""a: {x, y}   b: {p, q}
+observed=False -> x,p  x,q  y,p  y,q   (all 4)
+                   1    0    0    1
+observed=True  -> x,p  y,q             (only seen)"""),
+    mcq("You want each order's rank within its customer by amount, highest = 1, with ties broken by row order. Which line?",
+        ["df.groupby('cust')['amount'].rank(ascending=False, method='first')",
+         "df['amount'].rank(ascending=False)",
+         "df.groupby('cust')['amount'].agg('rank')",
+         "df.sort_values('amount').groupby('cust').cumcount()"], 0,
+        "Rank restarts inside each group, and the result must align with the original rows.",
+        "groupby(...).rank is a transform-like method: one rank per original row, computed within each customer. ascending=False makes the largest 1, and method='first' breaks ties by order of appearance (the default 'average' gives 1.5). "
+        "Plain df['amount'].rank() ranks across all customers. The cumcount version ranks ascending, starting at 0. "
+        "SQL equivalent: ROW_NUMBER() OVER (PARTITION BY cust ORDER BY amount DESC).",
+        code="import pandas as pd\ndf = pd.DataFrame({\"cust\": [\"a\", \"a\", \"b\", \"a\"], \"amount\": [5, 9, 1, 7]})\nprint(df.groupby(\"cust\")[\"amount\"].rank(ascending=False, method=\"first\").tolist())",
+        topic="groupby-advanced", level=3),
+    mcq("`clicked` is a bool column. What does `df.groupby('ad')['clicked'].mean()` give you?",
+        ["The click-through rate per ad: the share of rows where clicked is True",
+         "TypeError, because you can't average booleans",
+         "The number of clicks per ad",
+         "1.0 for every ad that has at least one click"], 0,
+        "True counts as 1 and False as 0.",
+        "The mean of a 0/1 column is the proportion of 1s, so this is the CTR (or conversion rate, churn rate...) per group in one line. sum() would give the click count, and mean() divides by the number of rows. "
+        "It's the pandas version of AVG(CASE WHEN clicked THEN 1 ELSE 0 END), and a common way to build rate features or check label balance per segment.",
+        code="import pandas as pd\ndf = pd.DataFrame({\"ad\": [\"A\", \"A\", \"B\", \"B\", \"B\"], \"clicked\": [True, False, True, True, False]})\nprint(df.groupby(\"ad\")[\"clicked\"].mean().round(2).tolist())",
+        topic="groupby-advanced", level=3),
+    out("import pandas as pd\nimport numpy as np\ndf = pd.DataFrame({\"g\": [\"a\", \"a\"], \"v\": [np.nan, 2.0]})\nprint(df.groupby(\"g\")[\"v\"].first().tolist(), df.groupby(\"g\")[\"v\"].nth(0).tolist())",
+        ["[2.0] [nan]", "[nan] [nan]", "[2.0] [2.0]", "[nan] [2.0]"], 0,
+        "One of them skips missing values, the other is purely positional.",
+        "groupby().first() returns the first NON-NULL value in each column of the group, so it skips the NaN and gives 2.0. nth(0) returns the literal first row, NaN included. "
+        "With several columns, first() can stitch together values from different rows into a row that never existed. "
+        "For 'the earliest record per user', sort and use nth(0), head(1) or drop_duplicates(keep='first'), not first().",
+        topic="groupby-advanced", level=4),
+    tf("`df.groupby('g').last()` returns, for each group, exactly the group's last row, the same values as `df.groupby('g').tail(1)`.", False,
+        "Check how last() treats NaN.",
+        "last() takes the last non-null value per column, so with v = [1.0, NaN] it returns 1.0, while tail(1) returns the real last row with NaN. With several columns, last() can mix values from different rows. "
+        "In an event log that matters: 'the user's latest status' via last() can report a status from an older event because the newest row had a blank.",
+        code="import pandas as pd\nimport numpy as np\ndf = pd.DataFrame({\"g\": [\"a\", \"a\"], \"v\": [1.0, np.nan]})\nprint(df.groupby(\"g\")[\"v\"].last().tolist(), df.groupby(\"g\").tail(1)[\"v\"].tolist())",
+        topic="groupby-advanced", level=4),
+    mcq("Which groupby method returns a result with exactly one row per ORIGINAL row (same index as df), and only allows a function that returns either a scalar per group or a same-length result?",
+        ["transform", "agg", "apply", "filter"], 0,
+        "Think about the output shape of each method.",
+        "agg reduces each group to one row. filter returns a subset of the original rows. apply can return anything (scalar, Series, frame) and pandas guesses how to glue it together. transform is the only one that guarantees the original shape and index, so its output can be assigned straight back as a column. "
+        "Picking the method by output shape is the quickest way to answer this in an interview.",
+        topic="groupby-advanced", level=4,
+        diagram="""df (6 rows, 2 groups)
+agg        -> 2 rows    (one per group)
+transform  -> 6 rows    (same index as df)
+filter     -> <=6 rows  (whole groups kept/dropped)
+apply      -> any shape (flexible, slow)"""),
+    fill("To group by a categorical column and get only the categories that actually appear (no empty groups), pass `observed=____`.",
+        "True",
+        "It's a boolean, and pandas 3.0 makes it the default.",
+        "observed=True limits the result to category values (or combinations) present in the data. In pandas 2.2 the default is still False for categoricals, which adds empty groups and warns. "
+        "Being explicit keeps results identical across versions and avoids the cartesian-product blow-up with several categorical keys.",
+        topic="groupby-advanced", level=3),
+    # ------------------------------------------------------------------ merge / reshape (round 2)
+    out("import pandas as pd\na = pd.DataFrame({\"k\": [1, 1, 1, 2]})\nb = pd.DataFrame({\"k\": [1, 1, 2, 2, 3]})\nprint(len(a.merge(b, on=\"k\")), len(a.merge(b, on=\"k\", how=\"left\")), len(a.merge(b, on=\"k\", how=\"outer\")))",
+        ["8 8 9", "4 4 5", "6 6 7", "8 4 9"], 0,
+        "For each key, rows = (left count) x (right count).",
+        "Key 1: 3 x 2 = 6 rows. Key 2: 1 x 2 = 2. Inner = 8. Every left key has a match, so left is also 8, not 4: a left join keeps all left rows but still multiplies them. Outer adds the unmatched right key 3: 9. "
+        "The tempting '4' assumes a left join can't grow the left table. It can whenever the right key is duplicated. "
+        "Before any join, check value_counts() of the key on both sides. That's the cardinality check a DBA does before writing the JOIN.",
+        topic="merge", level=3,
+        diagram="""key   left  right   rows
+ 1      3  x  2   =  6
+ 2      1  x  2   =  2
+ 3      0     1   (outer only) 1
+inner/left = 8, outer = 9"""),
+    tf("`a.merge(b, on='k')` keeps the row index of `a`, so you can still look up merged rows by their old labels.", False,
+        "Check m.index after a merge on columns.",
+        "A merge on columns builds a brand-new frame with a fresh RangeIndex 0..n-1. a's labels (say 'r1', 'r2') are gone. Rows can be duplicated or dropped, so there's no single 'old label' to keep. "
+        "If you need the original id, keep it as a column (a.reset_index()) before merging, or join on the index explicitly with left_index=True / DataFrame.join.",
+        code="import pandas as pd\na = pd.DataFrame({\"k\": [1, 2], \"x\": [5, 6]}, index=[\"r1\", \"r2\"])\nb = pd.DataFrame({\"k\": [2, 1], \"y\": [7, 8]})\nm = a.merge(b, on=\"k\", how=\"left\")\nprint(m.index.tolist(), m[\"y\"].tolist())",
+        topic="merge", level=3),
+    out("import pandas as pd\na = pd.DataFrame({\"k\": [1, 2]})\nb = pd.DataFrame({\"k\": [2]})\nm = a.merge(b, on=\"k\", how=\"left\", indicator=True)\nprint(m[\"_merge\"].value_counts().to_dict())",
+        ["{'left_only': 1, 'both': 1, 'right_only': 0}", "{'left_only': 1, 'both': 1}", "{'both': 1, 'left_only': 1}", "{1: 1, 2: 1}"], 0,
+        "What dtype is the _merge column?",
+        "_merge is a categorical with three fixed categories: left_only, right_only and both. value_counts on a categorical reports every category, including ones with zero rows, so right_only: 0 shows up even though a left join can't produce it. "
+        "It's harmless here, but the same behaviour gives zero-count rows in groupby and value_counts reports on any category column. Filter with m['_merge'] == 'left_only' to find unmatched rows.",
+        topic="merge", level=4),
+    mcq("Which pandas expression is the equivalent of the SQL anti-join `SELECT * FROM a WHERE NOT EXISTS (SELECT 1 FROM b WHERE b.k = a.k)`?",
+        ["a[~a['k'].isin(b['k'])]",
+         "a.merge(b, on='k', how='left')",
+         "a.merge(b, on='k', how='inner')",
+         "a.drop(b.index)"], 0,
+        "You want rows of a whose key never appears in b.",
+        "isin builds a membership mask and ~ negates it, so you keep a's rows with no partner in b, without duplicating anything. "
+        "A plain left join keeps every row of a (and can multiply them). drop(b.index) removes by row label, which has nothing to do with key values. "
+        "For multi-column keys, use merge(how='left', indicator=True) and keep _merge == 'left_only'. Use it to find orders with no customer record before training.",
+        code="import pandas as pd\na = pd.DataFrame({\"k\": [1, 2, 3]})\nb = pd.DataFrame({\"k\": [2]})\nprint(a[~a[\"k\"].isin(b[\"k\"])][\"k\"].tolist())",
+        topic="merge", level=3),
+    mcq("You enrich 1M click events with a `user_daily_stats` table (one row per user PER DAY) using `events.merge(stats, on='user_id', how='left')`. Training data grows to 30M rows. What's wrong, and what's the right join?",
+        ["The key isn't unique on the right (30 days per user), so each event matches every day; join on (user_id, date), or merge_asof on time so each event gets the latest stats before it",
+         "how='left' always multiplies rows; use how='inner'",
+         "merge can't handle 1M rows; use concat",
+         "Nothing is wrong: more rows mean more training data"], 0,
+        "What is the grain of each table?",
+        "The stats table's grain is (user, day), but you joined on user only, which is a many-to-many explosion. Each event now also carries stats from days AFTER it happened, so this is leakage as well as duplication. "
+        "Join on the full grain (user_id, date) with validate='many_to_one', or use merge_asof(by='user_id', direction='backward') so each event only sees stats computed before its timestamp. "
+        "This is the most expensive kind of join bug: the job runs fine and the offline metrics look great.",
+        topic="merge", level=4,
+        analogy="Joining an orders table to a price-history table on product_id alone: every order picks up every price the product ever had."),
+    mcq("What are the columns of `df.pivot_table(index='d', values='v', aggfunc=['sum', 'count'])`?",
+        ["A 2-level MultiIndex: ('sum', 'v') and ('count', 'v')",
+         "Two plain columns named 'sum' and 'count'",
+         "Two plain columns named 'v_sum' and 'v_count'",
+         "One column 'v' holding (sum, count) tuples"], 0,
+        "A list of aggfuncs adds a level on top of the value names.",
+        "With a list of functions, pandas puts the function name on the outer column level and the value column underneath, giving MultiIndex columns. Most downstream tools (CSV, scikit-learn, parquet with some engines) want flat names. "
+        "Flatten with p.columns = ['_'.join(c) for c in p.columns] to get 'sum_v', 'count_v'. Or use groupby().agg(v_sum=('v', 'sum'), ...) named aggregation, which gives flat names directly.",
+        code="import pandas as pd\ndf = pd.DataFrame({\"d\": [\"x\", \"x\", \"y\"], \"v\": [1, 2, 3]})\np = df.pivot_table(index=\"d\", values=\"v\", aggfunc=[\"sum\", \"count\"])\nprint(p.columns.tolist())",
+        topic="reshape", level=3),
+    out("import pandas as pd\na = pd.Series([\"M\", \"M\", \"F\", \"F\", \"F\"], name=\"sex\")\nb = pd.Series([\"y\", \"n\", \"y\", \"y\", \"n\"], name=\"smoker\")\nprint(pd.crosstab(a, b, normalize=\"index\").round(2).values.tolist())",
+        ["[[0.33, 0.67], [0.5, 0.5]]", "[[0.5, 0.5], [0.33, 0.67]]", "[[0.2, 0.4], [0.2, 0.2]]", "[[0.5, 0.67], [0.5, 0.33]]"], 0,
+        "Rows and columns are sorted (F before M, n before y); normalize='index' makes each row sum to 1.",
+        "Row F has n=1 and y=2 out of 3, so [0.33, 0.67]. Row M has n=1 and y=1, so [0.5, 0.5]. normalize='index' gives conditional rates P(smoker | sex). The third option is normalize='all' (share of the grand total), a different question. "
+        "Rates per segment are what you compare when checking whether a feature separates the target. Raw counts mislead when groups have different sizes.",
+        topic="reshape", level=3),
+    tf("`pivot_table` (like `groupby`) silently drops rows whose index key is NaN.", True,
+        "pivot_table is built on groupby.",
+        "pivot_table groups by its index/columns keys and inherits groupby's default of dropping NaN keys, so the NaN row's values vanish from every cell and from the totals (margins=True). "
+        "Totals that don't match df['v'].sum() are the symptom. Fill the key first (df['d'].fillna('unknown')) if missing categories should be reported.",
+        code="import pandas as pd\nimport numpy as np\ndf = pd.DataFrame({\"d\": [\"x\", np.nan, \"y\"], \"c\": [\"m\", \"m\", \"m\"], \"v\": [1, 2, 3]})\nprint(df.pivot_table(index=\"d\", columns=\"c\", values=\"v\", aggfunc=\"sum\")[\"m\"].tolist())",
+        topic="reshape", level=4),
+    out("import pandas as pd\nimport numpy as np\nw = pd.DataFrame({\"m\": [1.0, np.nan], \"n\": [3.0, 4.0]}, index=[\"x\", \"y\"])\nprint(len(w.stack()), len(w.stack(future_stack=True)))",
+        ["3 4", "4 4", "3 3", "4 3"], 0,
+        "The legacy stack has a dropna default; the new implementation doesn't.",
+        "In pandas 2.2 the legacy stack() drops cells that are NaN (here ('y', 'm')), giving 3 values. future_stack=True opts into the pandas 3.0 behaviour, which keeps every cell, NaN included: 4. "
+        "If you reshape wide to long and then count observations per id, the legacy version quietly loses rows, and the count changes when you upgrade. Pass future_stack=True and drop NaN explicitly when you mean it.",
+        topic="reshape", level=4),
+    fill("To add a `_merge` column that says whether each row came from the left table, the right table or both, call `a.merge(b, on='k', how='outer', ____=True)`.",
+        "indicator",
+        "It indicates where each row came from.",
+        "indicator=True adds a categorical _merge column with values left_only, right_only and both. value_counts() on it is a one-line join audit, and filtering on 'left_only' gives an anti-join. "
+        "Run it after every important merge in a data pipeline, the way you'd check row counts after a SQL JOIN.",
+        topic="merge", level=3),
+    # ------------------------------------------------------------------ windows
+    out("import pandas as pd\ns = pd.Series([2, 4, 6, 8])\nprint(s.rolling(3, min_periods=1).mean().tolist())",
+        ["[2.0, 3.0, 4.0, 6.0]", "[nan, nan, 4.0, 6.0]", "[2.0, 3.0, 4.0, 5.0]", "[4.0, 6.0]"], 0,
+        "min_periods=1 lets the window produce a value as soon as it has one observation.",
+        "rolling(3) normally needs 3 values, so the first two outputs are NaN. With min_periods=1 the early windows use what they have: [2] gives 2, [2, 4] gives 3, then [2, 4, 6] gives 4 and [4, 6, 8] gives 6. "
+        "[2.0, 3.0, 4.0, 5.0] is the expanding mean, which never forgets old values. "
+        "Be aware that the first rows' features are computed from fewer points and are noisier. Some teams add a 'window_count' feature so the model knows.",
+        topic="windows", level=3),
+    fill("To compute a running mean over ALL rows so far (a window that only grows), call `s.____().mean()`.",
+        "expanding",
+        "The window expands instead of rolling.",
+        "expanding() includes every row from the start up to the current one, so s.expanding().mean() is the cumulative average: [2, 4, 6, 8] gives [2.0, 3.0, 4.0, 5.0]. cumsum/cummax are special cases. "
+        "In SQL that's AVG(x) OVER (ORDER BY t ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW).",
+        code="import pandas as pd\ns = pd.Series([2, 4, 6, 8])\nprint(s.expanding().mean().tolist(), s.cummax().tolist())",
+        topic="windows", level=3),
+    out("import pandas as pd\nidx = pd.to_datetime([\"2024-01-01\", \"2024-01-02\", \"2024-01-05\", \"2024-01-06\"])\ns = pd.Series([1, 2, 3, 4], index=idx)\nprint(s.rolling(\"2D\").sum().tolist(), s.rolling(2).sum().tolist())",
+        ["[1.0, 3.0, 3.0, 7.0] [nan, 3.0, 5.0, 7.0]", "[nan, 3.0, 5.0, 7.0] [nan, 3.0, 5.0, 7.0]", "[1.0, 3.0, 5.0, 7.0] [nan, 3.0, 5.0, 7.0]", "[1.0, 3.0, 3.0, 7.0] [1.0, 3.0, 3.0, 7.0]"], 0,
+        "'2D' means 'the last 2 days of time', not 'the last 2 rows'.",
+        "A time-based window looks back over (t - 2 days, t]. On 5 Jan the previous row is 3 days old, so only 3 itself is in the window. The row-count window rolling(2) blindly pairs 5 Jan with 2 Jan and gives 5. Time windows also default to min_periods=1, so the first value is 1.0, not NaN. "
+        "For irregular event data (sessions, transactions), time windows are what you mean by 'spend in the last 7 days'. Row windows quietly reach back months for inactive users.",
+        topic="windows", level=4,
+        diagram="""date : 01   02   .    .   05   06
+value: 1    2              3    4
+'2D' : 1   1+2            3   3+4   <- by time
+ 2   : nan 1+2           2+3  3+4   <- by rows"""),
+    out("import pandas as pd\ns = pd.Series([0.0, 10.0, 10.0])\nprint(s.ewm(alpha=0.5, adjust=False).mean().tolist())",
+        ["[0.0, 5.0, 7.5]", "[0.0, 6.667, 8.571]", "[0.0, 10.0, 10.0]", "[nan, 5.0, 7.5]"], 0,
+        "With adjust=False: y_t = alpha * x_t + (1 - alpha) * y_(t-1).",
+        "The recursive form starts at y0 = 0. Then y1 = 0.5*10 + 0.5*0 = 5, and y2 = 0.5*10 + 0.5*5 = 7.5. Recent values weigh more, and old ones fade geometrically without ever fully dropping out. "
+        "[0.0, 6.667, 8.571] is the default adjust=True result, which normalises the weights over the finite history. "
+        "EWMs are popular trend features because they react faster than a long rolling mean and need no window length.",
+        topic="windows", level=3),
+    mcq("`s = [0, 10, 10]`. Why does `s.ewm(alpha=0.5).mean()` (default `adjust=True`) give [0.0, 6.667, 8.571] instead of the recursive [0.0, 5.0, 7.5]?",
+        ["adjust=True divides by the sum of the weights actually used (1, 0.5, 0.25, ...), so the start isn't dragged towards the first value",
+         "adjust=True ignores the first value",
+         "adjust=True uses alpha = 2/(span+1) instead of 0.5",
+         "The defaults add a bias correction of 1/(1 - alpha)"], 0,
+        "Write y_1 as a weighted average of x_1 and x_0 with weights 1 and 0.5.",
+        "With adjust=True, y_t = sum(w_i * x_(t-i)) / sum(w_i) with w_i = (1 - alpha)^i. y1 = (1*10 + 0.5*0) / 1.5 = 6.667, and y2 = (10 + 5 + 0) / 1.75 = 8.571. The recursive form instead treats y0 = x0 as if it summarised an infinite past, which biases early values towards x0. "
+        "The two converge after a few dozen steps. Make sure training and serving use the SAME setting, or the features will drift for new users with short histories.",
+        code="import pandas as pd\ns = pd.Series([0.0, 10.0, 10.0])\nprint(s.ewm(alpha=0.5).mean().round(3).tolist())",
+        topic="windows", level=4),
+    mcq("A teammate builds a feature with `df['smooth'] = df['sales'].rolling(7, center=True).mean()` for a model that forecasts tomorrow's sales. What's the problem?",
+        ["center=True uses the 3 days AFTER each row, so the feature contains future information that won't exist at prediction time",
+         "center=True is slower than the default",
+         "center=True needs an odd window, and 7 is odd, so nothing is wrong",
+         "It drops the first 7 rows"], 0,
+        "Where does a centred window reach?",
+        "A centred 7-row window spans t-3..t+3. It's fine for plotting a smoothed history, but as a feature each row sees its own future, so offline accuracy looks great and production accuracy collapses. "
+        "For features, use trailing windows that end before the prediction point: df['sales'].shift(1).rolling(7).mean().",
+        code="import pandas as pd\ns = pd.Series([1, 2, 3, 4, 5])\nprint(s.rolling(3, center=True).mean().tolist())",
+        topic="windows", level=3),
+    tf("A time-based window like `s.rolling('3D')` raises ValueError if the DatetimeIndex is not sorted.", True,
+        "A time window needs to know which rows are 'the last 3 days'.",
+        "Time windows walk forward through the index and need it to be monotonic, so pandas raises ValueError: index values must be monotonic. Row-count windows don't check, and on unsorted data they silently compute nonsense. "
+        "Always sort_index() (or sort_values('ts')) before any window or shift feature. Data from parallel jobs or UNION queries is rarely in time order.",
+        code="import pandas as pd\nidx = pd.to_datetime([\"2024-01-02\", \"2024-01-01\", \"2024-01-03\"])\ns = pd.Series([1, 2, 3], index=idx)\nprint(s.sort_index().rolling(\"3D\").sum().tolist())",
+        topic="windows", level=3),
+    out("import pandas as pd\nimport numpy as np\ns = pd.Series([1, np.nan, 3, 4])\nprint(s.rolling(2).sum().tolist(), s.rolling(2, min_periods=1).sum().tolist())",
+        ["[nan, nan, nan, 7.0] [1.0, 1.0, 3.0, 7.0]", "[nan, 1.0, 3.0, 7.0] [1.0, 1.0, 3.0, 7.0]", "[nan, nan, nan, 7.0] [nan, nan, nan, 7.0]", "[1.0, 1.0, 3.0, 7.0] [1.0, 1.0, 3.0, 7.0]"], 0,
+        "min_periods counts non-NaN observations, not rows.",
+        "With the default min_periods equal to the window (2), a window holding a NaN has only 1 valid value and returns NaN. A single NaN therefore wipes out two outputs (positions 1 and 2). With min_periods=1 the NaN is skipped: [1], [1, NaN] gives 1, [NaN, 3] gives 3, [3, 4] gives 7. "
+        "Sensor gaps can spread NaN through a rolling feature this way, so decide on min_periods deliberately and log the share of NaN features.",
+        topic="windows", level=4),
+    mcq("A daily sales Series has missing days (no rows when the store was closed). What is the difference between `rolling(7)` and `rolling('7D')`?",
+        ["rolling(7) uses the last 7 ROWS, which can span weeks across gaps; rolling('7D') uses the last 7 calendar days, however many rows that is",
+         "They are identical for daily data",
+         "rolling('7D') needs exactly 7 rows in every window",
+         "rolling(7) is time-aware when the index is a DatetimeIndex"], 0,
+        "One counts rows, the other measures time.",
+        "Integer windows count observations and know nothing about time. If the store was closed for a week, rolling(7) averages over two weeks of real time. Offset strings like '7D' define the window by timestamp, so the window size varies with the data density. "
+        "Pick the one that matches the business definition ('last 7 trading days' vs 'last 7 days'), and remember that '7D' windows need a sorted DatetimeIndex (or on='ts').",
+        topic="windows", level=3,
+        analogy="ROWS BETWEEN 6 PRECEDING AND CURRENT ROW vs RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW in SQL."),
+    # ------------------------------------------------------------------ ml-features
+    out("import pandas as pd\ndf = pd.DataFrame({\"user\": [\"A\", \"A\", \"B\", \"B\"], \"amt\": [10, 20, 30, 40]})\nprint(df[\"amt\"].shift(1).tolist(), df.groupby(\"user\")[\"amt\"].shift(1).tolist())",
+        ["[nan, 10.0, 20.0, 30.0] [nan, 10.0, nan, 30.0]", "[nan, 10.0, 20.0, 30.0] [nan, 10.0, 20.0, 30.0]", "[nan, 10.0, nan, 30.0] [nan, 10.0, nan, 30.0]", "[10.0, 20.0, 30.0, nan] [10.0, nan, 30.0, nan]"], 0,
+        "Where does user B's first 'previous amount' come from in each version?",
+        "A plain shift(1) on a stacked table lets user B's first row inherit user A's last amount (20), which mixes one customer's history into another's features. groupby('user').shift(1) restarts at each user, so B's first lag is NaN. "
+        "This is the classic lag-feature bug. It doesn't crash, it just makes the model a little worse in a way that's hard to find.",
+        topic="ml-features", level=3,
+        analogy="LAG(amt) OVER (ORDER BY ...) vs LAG(amt) OVER (PARTITION BY user ORDER BY ...) in SQL.",
+        diagram="""user amt  shift(1)  groupby.shift(1)
+A    10    nan        nan
+A    20    10         10
+B    30    20 <- A!   nan
+B    40    30         30"""),
+    out("import pandas as pd\ndf = pd.DataFrame({\"u\": [\"A\", \"A\", \"A\", \"B\", \"B\"], \"y\": [1, 3, 5, 10, 20]})\nf = df.groupby(\"u\")[\"y\"].transform(lambda s: s.shift(1).rolling(2, min_periods=1).mean())\nprint(f.tolist())",
+        ["[nan, 1.0, 2.0, nan, 10.0]", "[1.0, 2.0, 4.0, 10.0, 15.0]", "[nan, 2.0, 4.0, nan, 15.0]", "[nan, 1.0, 2.0, 5.0, 10.0]"], 0,
+        "Shift first (exclude today), then roll, and do both inside each user.",
+        "For A: the shifted values are [nan, 1, 3], and a 2-window mean with min_periods=1 gives [nan, 1, 2]. For B: [nan, 10] gives [nan, 10]. Each row only sees that user's strictly earlier targets. "
+        "[1.0, 2.0, 4.0, ...] is the leaky version without shift: every row's feature includes its own label. [.., 5.0, ..] lets A's history bleed into B. "
+        "This 'groupby, shift, then roll' recipe is the standard leak-free 'average of last k outcomes' feature.",
+        topic="ml-features", level=4),
+    out("import pandas as pd\ndf = pd.DataFrame({\"u\": [\"A\", \"A\", \"A\"], \"day\": [3, 1, 2], \"y\": [30, 10, 20]})\nprint(df.groupby(\"u\")[\"y\"].shift(1).tolist(), df.sort_values(\"day\").groupby(\"u\")[\"y\"].shift(1).tolist())",
+        ["[nan, 30.0, 10.0] [nan, 10.0, 20.0]", "[nan, 10.0, 20.0] [nan, 10.0, 20.0]", "[20.0, nan, 10.0] [nan, 10.0, 20.0]", "[nan, 30.0, 10.0] [nan, 30.0, 10.0]"], 0,
+        "shift works on row order, not on the day column.",
+        "groupby().shift(1) takes 'the previous row in the group', whatever order the rows are in. Unsorted, day 1 gets day 3's value (30) as its 'previous' value, so the past is filled from the future. After sort_values('day') the lags are correct: [nan, 10, 20] in day order. "
+        "Sort by (entity, time) before every lag, diff, cumsum or rolling feature, and assert df['day'].is_monotonic_increasing inside each group if you can.",
+        topic="ml-features", level=4),
+    mcq("For target-encoding `city`, you replace each row's value with the mean target of the OTHER rows in its city (leave-one-out). For city P with targets [1, 0, 1], what are the encodings?",
+        ["[0.5, 1.0, 0.5]: each row averages the other two",
+         "[0.67, 0.67, 0.67]: the plain city mean",
+         "[1.0, 0.0, 1.0]: each row's own target",
+         "[0.5, 0.5, 0.5]"], 0,
+        "Row 1 excludes itself: (0 + 1) / 2.",
+        "Leave-one-out = (group sum - own y) / (group count - 1). Rows with y=1 get (2 - 1)/2 = 0.5, and the row with y=0 gets (2 - 0)/2 = 1.0. The plain mean 0.67 includes each row's own label, which is direct target leakage, and it's strongest for small categories. "
+        "LOO itself can still leak, because the encoding is anti-correlated with the row's own label (y=1 rows get lower values), and flexible models exploit that. K-fold (out-of-fold) encoding plus smoothing towards the global mean is the safer default.",
+        code="import pandas as pd\ndf = pd.DataFrame({\"city\": [\"P\", \"P\", \"P\", \"G\", \"G\"], \"y\": [1, 0, 1, 1, 1]})\ng = df.groupby(\"city\")[\"y\"]\nloo = (g.transform(\"sum\") - df[\"y\"]) / (g.transform(\"count\") - 1)\nprint(loo.round(2).tolist())",
+        topic="ml-features", level=4),
+    mcq("Your features use 30-day trailing windows and the label is 'did the user churn in the NEXT 30 days'. You split by time at 1 June. Why do careful teams leave a 30-day gap between the last training label and the first test row?",
+        ["Training labels for late-May rows look into June, the test period, so without a gap train and test overlap in time",
+         "To make the test set smaller",
+         "Because rolling windows need 30 NaN rows to warm up",
+         "A gap is only needed for random splits"], 0,
+        "Over which dates is the label of a 31-May row computed?",
+        "A 31-May row's label is built from 1-30 June, the same days the test rows are evaluated on. A time split alone still leaks the near future through the labels. Leaving a gap the size of the label horizon ('purging' or 'embargo') removes that overlap. "
+        "In scikit-learn, TimeSeriesSplit(gap=...) does this. Without it, offline metrics can look better than what you'll see in production.",
+        topic="ml-features", level=4,
+        diagram="""train rows ....... May31 | gap 30d | test rows June...
+May31 label window: [Jun1 ---- Jun30]
+                     ^ overlaps test without the gap"""),
+    mcq("At serving time a request has city 'z', which training never saw. You encode with `pd.get_dummies(pd.Categorical(req['city'], categories=train_cats))`. What does the encoded row look like?",
+        ["All dummy columns are 0: the unseen value becomes NaN and gets no column, while the columns still match training",
+         "A new column city_z is added",
+         "It raises KeyError",
+         "The row is dropped"], 0,
+        "The categories list is fixed. What happens to a value outside it?",
+        "pd.Categorical with explicit categories turns unknown values into NaN (code -1). get_dummies then emits exactly one column per training category, and the unseen row is all zeros. The schema stays identical to training, which is what the model needs. "
+        "That's the pandas equivalent of OneHotEncoder(handle_unknown='ignore'). Save train_cats with the model and use them at both training and serving time.",
+        code="import pandas as pd\ncats = [\"a\", \"b\", \"c\"]\nreq = pd.Series(pd.Categorical([\"b\", \"z\"], categories=cats))\nd = pd.get_dummies(req)\nprint(d.columns.tolist(), d.sum(axis=1).tolist())",
+        topic="ml-features", level=3),
+    mcq("What's wrong with `df['avg3'] = df.groupby('store')['sales'].transform(lambda s: s.rolling(3).mean())` as a feature for predicting `sales`?",
+        ["Each row's window includes that row's own sales, the label, so the feature leaks the target; shift(1) before rolling",
+         "transform can't be used with rolling",
+         "rolling(3) across stores mixes their data",
+         "Nothing; it's the standard approach"], 0,
+        "Does the window end before or at the current row?",
+        "Trailing windows include the current row by default, so 'average of the last 3 days' contains today's sales, the very value you're predicting. The model learns to read the answer off the feature. "
+        "The fix is s.shift(1).rolling(3).mean() inside the group. Rolling across stores isn't the problem here, since groupby already separates them. "
+        "A feature that correlates suspiciously well with the label is the usual sign of this bug.",
+        topic="ml-features", level=3),
+    tf("Out-of-fold target encoding (each fold's rows are encoded with category means computed on the OTHER folds) stops a row's own label from leaking into its feature.", True,
+        "Is the row's own target ever part of the statistic it receives?",
+        "With K-fold encoding, the statistic for a row comes only from rows in other folds, so its own label never enters its feature. That's what makes it safe to train on. At test time you encode with means from the full training set. "
+        "Adding smoothing (blending with the global mean, weighted by category size) protects rare categories, whose means are mostly noise.",
+        topic="ml-features", level=4,
+        analogy="Like grading each student's essay with a rubric calibrated on the other classes' essays, never on their own."),
+    fill("To make a rolling feature use only PAST rows (excluding the current one), write `s.____(1).rolling(3).mean()`.",
+        "shift",
+        "Move the data down one row first.",
+        "shift(1) moves every value down a row, so the window ending at row t only contains t-1, t-2 and t-3. Without it, the current row (often the label) is inside its own feature. "
+        "In SQL it's ROWS BETWEEN 3 PRECEDING AND 1 PRECEDING instead of ... AND CURRENT ROW.",
+        topic="ml-features", level=3),
+    # ------------------------------------------------------------------ datetime / missing / duplicates (round 2)
+    out("import pandas as pd\nidx = pd.date_range(\"2024-03-30\", periods=3, freq=\"D\", tz=\"Europe/Berlin\")\nprint(idx[2] - idx[0], (idx[2] - idx[0]) / pd.Timedelta(hours=1))",
+        ["1 days 23:00:00 47.0", "2 days 00:00:00 48.0", "2 days 01:00:00 49.0", "TypeError"], 0,
+        "Europe switches to summer time on the last Sunday of March.",
+        "freq='D' on a tz-aware range means 'same wall-clock time each calendar day'. On 31 March 2024 Berlin clocks jumped from 02:00 to 03:00, so that day has only 23 hours, and the elapsed time from 30 March to 1 April midnight is 47 hours. "
+        "A feature like 'hours since signup' or a model of hourly load is off by one around every DST change if you mix calendar and absolute time. Store timestamps in UTC, and convert to local time only for calendar features (hour of day, weekday).",
+        topic="datetime", level=4,
+        analogy="The same rule backend teams use: store UTC in the database and localise only in the UI."),
+    mcq("You parse `['2024-01-01 10:00+05:30', '2024-01-01 10:00+00:00']` with `pd.to_datetime(...)` in pandas 2.2 and get an object Index, not a DatetimeIndex. Why, and what's the fix?",
+        ["A single datetime64 column can hold only one timezone, so mixed offsets fall back to objects (with a FutureWarning); pass utc=True to convert both to UTC",
+         "The strings are invalid; add errors='coerce'",
+         "to_datetime only accepts dates without times",
+         "You must call tz_localize first"], 0,
+        "What dtype would hold +05:30 and +00:00 at the same time?",
+        "datetime64[ns, tz] has one timezone per column. With two different fixed offsets pandas 2.2 can't pick one, so it returns plain Python datetime objects in an object Index and warns. pandas 3 raises instead. "
+        "utc=True converts each value to the same instant in UTC (04:30 and 10:00 here), giving a proper DatetimeIndex you can sort, resample and subtract. "
+        "Logs collected from servers in different regions hit this constantly.",
+        code="import pandas as pd\nt = pd.to_datetime([\"2024-01-01 10:00+05:30\", \"2024-01-01 10:00+00:00\"], utc=True)\nprint(type(t).__name__, t.hour.tolist())",
+        topic="datetime", level=4),
+    out("import pandas as pd\ns = pd.Series(range(10), index=pd.date_range(\"2024-01-01\", periods=10, freq=\"D\"))\nr = s.resample(\"W\").sum()\nprint(str(r.index[0].date()), r.tolist())",
+        ["2024-01-07 [21, 24]", "2024-01-01 [21, 24]", "2024-01-07 [28, 17]", "2024-01-01 [0, 45]"], 0,
+        "'W' is an alias for 'W-SUN'. Which edge labels a weekly bin?",
+        "Weekly bins end on Sunday and are labelled by that end date. 1 Jan 2024 was a Monday, so the first bin covers 1-7 Jan (0+...+6 = 21) and is labelled 2024-01-07. 8-10 Jan sum to 24. "
+        "If you join these weekly aggregates back to daily rows by the label date, every day lines up with the FOLLOWING Sunday's total, which includes days after it. Use 'W-MON' with label='left', or be explicit about the edge.",
+        topic="datetime", level=3),
+    out("import pandas as pd\ns = pd.Series([1, 2, 3, 4], index=pd.date_range(\"2024-01-01 00:00\", periods=4, freq=\"30min\"))\nprint(s.resample(\"h\").mean().tolist(), s.resample(\"h\", closed=\"right\", label=\"right\").mean().tolist())",
+        ["[1.5, 3.5] [1.0, 2.5, 4.0]", "[1.5, 3.5] [1.5, 3.5]", "[1.0, 2.5, 4.0] [1.5, 3.5]", "[1.5, 3.5] [2.5, 4.0]"], 0,
+        "Default hourly bins are [00:00, 01:00): left-closed, left-labelled.",
+        "Default: [00:00, 01:00) holds 1 and 2 (mean 1.5), and [01:00, 02:00) holds 3 and 4 (mean 3.5). With closed='right' the bins become (23:00, 00:00], (00:00, 01:00] and (01:00, 02:00], holding [1], [2, 3] and [4]: three bins with means 1.0, 2.5 and 4.0. "
+        "Data vendors disagree on this (a bar labelled 10:00 can mean 09:00-10:00 or 10:00-11:00). Getting it wrong shifts every feature by one bucket, which is a subtle leak.",
+        topic="datetime", level=4),
+    out("import pandas as pd\ns = pd.Series([1, 2, 3, 4, 5, 6, 7, 8, 9, 100])\nlo, hi = s.quantile(0.1), s.quantile(0.9)\nprint(round(lo, 2), round(hi, 2), round(s.clip(lo, hi).max(), 2))",
+        ["1.9 18.1 18.1", "1 9 9", "1.0 100.0 100.0", "2 9 9"], 0,
+        "quantile interpolates linearly between sorted values by default.",
+        "With 10 values, the 0.1 quantile sits at position 0.9 between 1 and 2, giving 1.9. The 0.9 quantile sits at position 8.1 between 9 and 100, giving 9 + 0.1*91 = 18.1. clip caps the 100 at 18.1. "
+        "Note how far one outlier pulls the upper cap. Winsorising by quantiles is common, but on small groups the cap can be far from 'typical' data. Compute the caps on the training split and reuse them on test.",
+        topic="missing", level=3),
+    mcq("You cap outliers with `s.clip(s.quantile(0.01), s.quantile(0.99))` on the whole dataset, then split into train and test. What's the issue?",
+        ["The caps are statistics of the test rows too, so test information leaks into training; fit the caps on train and apply the same numbers to test and serving",
+         "clip can't take quantiles",
+         "It removes outlier rows, shrinking the dataset",
+         "There is no issue, because clipping isn't learning"], 0,
+        "Is a quantile something learned from data?",
+        "Any number computed from data (mean, std, quantile caps, bin edges) is a fitted parameter. Computing it on all rows lets the test distribution shape the training features. The leak is small on big i.i.d. data, but it's still wrong and can be large for time series, where the future's extremes set today's caps. "
+        "Treat caps like a scaler: fit on train, save lo/hi, and apply them unchanged at serving time.",
+        topic="ml-prep", level=4,
+        analogy="Like setting an API's rate-limit thresholds from last month's traffic, not from the traffic you're about to test against."),
+    tf("`s.value_counts(normalize=True)` divides by the number of non-missing values, so with `dropna=False` the same categories get smaller shares.", True,
+        "What's the denominator when NaN is excluded?",
+        "On ['a', 'a', None, 'b'] the default excludes the None: a = 2/3 and b = 1/3. With dropna=False, NaN becomes its own row and the denominator becomes 4: a = 0.5, NaN = 0.25, b = 0.25. "
+        "Class-balance or 'percentage of users per plan' reports can differ just because of this flag. State which denominator you used.",
+        code="import pandas as pd\ns = pd.Series([\"a\", \"a\", None, \"b\"])\nprint(s.value_counts(normalize=True).round(2).tolist(), s.value_counts(normalize=True, dropna=False).round(2).tolist())",
+        topic="duplicates", level=3),
+    mcq("A sensor table stacks several devices. Missing readings are filled with `df['v'].ffill()`. Why is `df.groupby('device')['v'].ffill()` usually what you want?",
+        ["A plain ffill carries device A's last reading into device B's first missing rows; groupby restarts the fill at each device",
+         "groupby().ffill() is faster but gives the same result",
+         "A plain ffill also fills backwards",
+         "groupby().ffill() fills with the group mean"], 0,
+        "Picture device B's first reading missing, right after device A's rows.",
+        "ffill copies the previous ROW's value, whatever entity it belongs to. On a stacked table that leaks one device's (or user's, or patient's) data into another's. groupby('device').ffill() keeps fills within each device, and a device whose first reading is missing stays NaN, which is honest. "
+        "Sort by (device, time) first, and consider limit= so a device that went offline for a week isn't 'filled' with stale values.",
+        code="import pandas as pd\nimport numpy as np\ndf = pd.DataFrame({\"device\": [\"A\", \"A\", \"B\", \"B\"], \"v\": [1.0, np.nan, np.nan, 4.0]})\nprint(df[\"v\"].ffill().tolist(), df.groupby(\"device\")[\"v\"].ffill().tolist())",
+        topic="missing", level=3),
 ]
