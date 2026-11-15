@@ -4,6 +4,7 @@
 
 ## How this is organized
 - **`materials/`** — original slide decks / PDFs.
+- **`materials/notes/`** — [session-wise study notes](materials/notes/README.md) (slides + lecture transcripts merged) and a [quick revision sheet](materials/notes/Quick-Revision-Sheet.md).
 - **`webinars/`** — webinar notebooks and data.
 - **`practice/<NN Topic>/`** — your own from-scratch practice (`explainer.html` + `practice.ipynb` + `guide.md`).
 
@@ -12,6 +13,7 @@
 | # | Topic | Status |
 |---|-------|--------|
 | 01 | [NLP primer — text to vectors to next word](practice/01%20NLP%20Primer%20-%20Text%20to%20Vectors/guide.md) | template ready |
+| 02 | [Transformer — attention to next token](practice/02%20Transformer%20-%20Attention%20to%20Next%20Token/guide.md) | template ready |
 
 ## Assignments
 

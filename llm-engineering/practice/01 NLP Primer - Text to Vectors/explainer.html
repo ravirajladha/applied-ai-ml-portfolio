@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLP primer for LLMs — an interactive lesson</title>
+<style>
+:root{
+  --bg:#f4f6fb;--panel:#fff;--ink:#0f172a;--muted:#64748b;--edge:#e2e8f0;
+  --b:#3b82f6;--v:#8b5cf6;--g:#10b981;--y:#f59e0b;--r:#ef4444;--c:#06b6d4;
+  --shadow:0 8px 26px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.05);
+}
+html[data-theme="dark"]{
+  --bg:#0b1120;--panel:#151d2e;--ink:#e8eefc;--muted:#94a3b8;--edge:#26324a;
+  --shadow:0 8px 26px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.62;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;padding-bottom:80px}
+.wrap{max-width:820px;margin:0 auto;padding:0 18px}
+h1{font-size:clamp(26px,6vw,38px);letter-spacing:-.7px;line-height:1.12;margin:0 0 10px}
+h2{font-size:clamp(20px,4.4vw,26px);letter-spacing:-.4px;margin:0 0 6px}
+h3{font-size:16px;margin:22px 0 6px}
+p{margin:12px 0}
+code{background:color-mix(in srgb,var(--ink) 8%,transparent);padding:2px 6px;border-radius:5px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.87em}
+header{padding:44px 0 10px}
+.kicker{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--v);background:color-mix(in srgb,var(--v) 13%,transparent);padding:4px 11px;border-radius:99px;margin-bottom:14px}
+.lede{font-size:17px;color:var(--muted);max-width:62ch}
+.toc{display:flex;flex-wrap:wrap;gap:7px;margin:24px 0 8px;padding:0;list-style:none}
+.toc a{font-size:12.5px;text-decoration:none;color:var(--muted);background:var(--panel);
+  border:1px solid var(--edge);border-radius:99px;padding:5px 11px;display:block}
+.toc a:hover{border-color:var(--v);color:var(--v)}
+section{background:var(--panel);border:1px solid var(--edge);border-radius:20px;padding:26px;
+  margin:20px 0;box-shadow:var(--shadow);scroll-margin-top:16px}
+.snum{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;
+  background:var(--v);color:#fff;font-size:13px;font-weight:700;margin-right:9px;flex:none}
+.shead{display:flex;align-items:center;margin-bottom:4px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+.note{border-left:3px solid var(--b);background:color-mix(in srgb,var(--b) 7%,transparent);
+  padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0;font-size:14.5px}
+.note.warn{border-color:var(--y);background:color-mix(in srgb,var(--y) 9%,transparent)}
+.note.key{border-color:var(--g);background:color-mix(in srgb,var(--g) 8%,transparent)}
+.lab{background:color-mix(in srgb,var(--ink) 3.5%,transparent);border:1px solid var(--edge);
+  border-radius:14px;padding:18px;margin:18px 0}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 12px}
+button{font:inherit;font-size:13px;background:var(--panel);color:var(--ink);border:1px solid var(--edge);
+  border-radius:9px;padding:7px 13px;cursor:pointer}
+button:hover{border-color:var(--v)}
+button.pri{background:var(--v);border-color:var(--v);color:#fff;font-weight:600}
+button.on{background:var(--b);border-color:var(--b);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input[type=text]{font:inherit;font-size:14px;padding:8px 11px;border-radius:9px;border:1px solid var(--edge);
+  background:var(--panel);color:var(--ink);width:100%;max-width:420px}
+input[type=range]{width:100%;max-width:340px;accent-color:var(--v)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+.tw{overflow-x:auto;border:1px solid var(--edge);border-radius:12px;margin:14px 0}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--edge);vertical-align:top}
+th{background:color-mix(in srgb,var(--ink) 5%,transparent);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+.tok{display:inline-block;padding:4px 9px;border-radius:7px;font-size:13.5px;font-weight:600;margin:2px;
+  font-family:ui-monospace,Consolas,monospace;border:1.5px solid transparent}
+.c0{background:color-mix(in srgb,var(--b) 16%,transparent);color:var(--b)}
+.c1{background:color-mix(in srgb,var(--v) 16%,transparent);color:var(--v)}
+.c2{background:color-mix(in srgb,var(--g) 18%,transparent);color:var(--g)}
+.c3{background:color-mix(in srgb,var(--y) 20%,transparent);color:#b45309}
+.c4{background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c)}
+.tok.bad{background:color-mix(in srgb,var(--r) 14%,transparent);color:var(--r)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr}}
+.card{border:1px solid var(--edge);border-radius:12px;padding:13px 15px;background:var(--panel)}
+.card h4{margin:0 0 4px;font-size:14px}
+.card p{margin:4px 0;font-size:13.5px}
+.big{font-size:22px;font-weight:700}
+svg{display:block;width:100%;height:auto}
+.cap{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
+.cell{display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;border-radius:5px;margin:1px;
+  font-size:12px;font-family:ui-monospace,Consolas,monospace;border:1px solid var(--edge)}
+.cell.one{background:var(--v);color:#fff;border-color:var(--v);font-weight:700}
+.flow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:14px 0}
+.flow .step{flex:1;min-width:110px;text-align:center;padding:10px 8px;border-radius:12px;border:1px solid var(--edge);font-size:13px}
+.flow .arrow{color:var(--muted);font-size:20px}
+.q{margin:18px 0;padding-top:14px;border-top:1px solid var(--edge)}
+.q button{display:block;width:100%;text-align:left;margin:6px 0}
+.q button.right{background:color-mix(in srgb,var(--g) 18%,transparent);border-color:var(--g)}
+.q button.wrong{background:color-mix(in srgb,var(--r) 14%,transparent);border-color:var(--r)}
+.q .why{font-size:13px;color:var(--muted);display:none;margin-top:4px}
+#theme{position:fixed;top:12px;right:12px;z-index:9}
+</style>
+</head>
+<body>
+<button id="theme" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'':'dark'">◐ theme</button>
+<div class="wrap">
+
+<header>
+  <span class="kicker">Large Language Models for Generative AI · practice 01</span>
+  <h1>NLP primer: how text becomes numbers, and numbers become text</h1>
+  <p class="lede">No NLP background needed. Every fancy word is explained in one line, with an everyday picture first and the
+  technical name second. Poke every box on this page — they all react.</p>
+  <ul class="toc">
+    <li><a href="#s1">1 · Big picture</a></li><li><a href="#s2">2 · Tokens</a></li><li><a href="#s3">3 · Vocabulary &amp; OOV</a></li>
+    <li><a href="#s4">4 · One-hot &amp; embedding</a></li><li><a href="#s5">5 · Static vs contextual</a></li>
+    <li><a href="#s6">6 · Cosine similarity</a></li><li><a href="#s7">7 · Language model</a></li>
+    <li><a href="#s8">8 · Three architectures</a></li><li><a href="#s9">9 · Tasks</a></li><li><a href="#s10">10 · Quiz</a></li>
+  </ul>
+</header>
+
+<!-- 1 -->
+<section id="s1">
+  <div class="shead"><span class="snum">1</span><h2>The big picture</h2></div>
+  <p class="sub">Source: the course's NLP self-study primer slides.</p>
+  <p><b>Analogy.</b> A calculator cannot read “twelve plus five”. You must first translate the words into digits. A language
+  model has the same limit: it only does arithmetic. So the whole field is a translation chain.</p>
+  <div class="flow">
+    <div class="step c0">text<br><small>“the cat sat”</small></div><span class="arrow">→</span>
+    <div class="step c1">tokens<br><small>the | cat | sat</small></div><span class="arrow">→</span>
+    <div class="step c2">IDs<br><small>[9, 2, 8]</small></div><span class="arrow">→</span>
+    <div class="step c3">vectors<br><small>lists of numbers</small></div><span class="arrow">→</span>
+    <div class="step c4">model<br><small>guesses next token</small></div>
+  </div>
+  <div class="note key"><b>Remember this chain.</b> Sections 2–6 build the left half (text → vectors). Section 7 is the model on the right.
+  The practice notebook has you build both.</div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <div class="shead"><span class="snum">2</span><h2>Corpus, token, tokenization</h2></div>
+  <p class="sub">Cutting text into pieces the model can count.</p>
+  <div class="grid3">
+    <div class="card"><h4>Corpus</h4><p>The pile of text a model learns from — like a student's entire library. A model rarely knows what its library lacked.</p></div>
+    <div class="card"><h4>Token</h4><p>One piece of text the model reads: a word, a part of a word, a dot, even one byte. Think Lego brick.</p></div>
+    <div class="card"><h4>Tokenization</h4><p>Cutting text into tokens and giving each an integer ID. Think of sorting text into Lego bricks.</p></div>
+  </div>
+  <div class="lab">
+    <p class="hint">Type anything. The toy tokenizer below uses a small list of sub-word pieces and always grabs the <b>longest</b> piece that fits.</p>
+    <input type="text" id="tokIn" value="unhappiness is unbelievable!">
+    <p id="tokOut" style="margin:14px 0 4px"></p>
+    <p class="hint" id="tokCount"></p>
+  </div>
+  <div class="note"><b>Why you should care.</b> Context length, API price and speed are all counted in <b>tokens, not words</b>.
+  Llama 3 was trained on about 15 trillion tokens. The same sentence can cost a lot more tokens in Hindi or code than in plain English.</div>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <div class="shead"><span class="snum">3</span><h2>Vocabulary and OOV</h2></div>
+  <p class="sub">A fixed menu of pieces, and what happens when you order something not on it.</p>
+  <p><b>Vocabulary (|V|)</b> — the complete, fixed list of tokens a model knows, each with an ID. Like a restaurant menu: decided once, cannot change without reprinting.
+  Llama 3: 128,256 items. Gemma 3: 262,144.</p>
+  <p><b>OOV (out-of-vocabulary)</b> — a word that is not on the menu. Old word-level models wrote <code>[UNK]</code> (“unknown”) and lost the meaning completely.</p>
+  <div class="lab">
+    <p class="hint">Try a made-up word. Watch the three strategies handle it. Our mini word-menu: the, cat, sat, on, mat, dog.</p>
+    <input type="text" id="oovIn" value="the cat sat on the Transformerify">
+    <div class="tw"><table><tbody id="oovOut"></tbody></table></div>
+  </div>
+  <div class="note key"><b>Trade-off.</b> A bigger |V| → fewer tokens per sentence, but a larger embedding table (more parameters).
+  Modern LLMs use <b>byte-level BPE</b> (Byte-Pair Encoding: learn frequent pieces from the corpus; fall back to raw bytes), so nothing is ever unknown — just sometimes expensive.</div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <div class="shead"><span class="snum">4</span><h2>One-hot vs embedding</h2></div>
+  <p class="sub">Two ways to turn a token ID into a list of numbers.</p>
+  <p><b>One-hot</b> — a row of switches, all OFF except one. Like a hotel key-card that only opens room 7: it names the word and says nothing else.
+  <b>Embedding</b> — a short list of <i>learned</i> numbers (size <code>d</code>) per word, like GPS coordinates: nearby places are similar places.</p>
+  <div class="lab">
+    <p class="hint">Click a word. Left: its one-hot (length = |V|). Right: its position on a made-up 2-number embedding map.</p>
+    <div class="row" id="ohBtns"></div>
+    <div class="grid2" style="margin-top:14px">
+      <div><b>One-hot</b><div id="ohVec" style="margin-top:6px"></div><p class="hint" id="ohNote"></p></div>
+      <div><svg viewBox="0 0 260 200" id="embMap"></svg><div class="cap">toy embedding map (d = 2). Real models use d = 4096 or more.</div></div>
+    </div>
+  </div>
+  <div class="note"><b>The trick.</b> Multiplying a one-hot vector by the embedding table <code>E</code> just <i>picks one row</i> — so real models skip the
+  multiplication and index directly. The table has |V| × d numbers: Llama 3 8B has 128,256 × 4,096 ≈ <b>525 million</b> parameters just there.
+  They start random and training nudges them until similar words sit close together.</div>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <div class="shead"><span class="snum">5</span><h2>Static vs contextual embeddings</h2></div>
+  <p class="sub">Does a word get the same vector everywhere?</p>
+  <p><b>Static</b> (word2vec, GloVe): one fixed vector per word — like a dictionary with one entry per word. <b>Contextual</b>: the vector is recomputed from the surrounding
+  words — like a human reading the sentence. Each Transformer layer mixes in the other tokens using <b>attention</b> (each token looks at the others and borrows what's relevant).</p>
+  <div class="lab">
+    <p class="hint">Pick a sentence. The word “bank” is the same on the page, but where does it land on the map?</p>
+    <div class="row"><button onclick="bank(0)" id="bk0" class="on">“sat on the river bank”</button><button onclick="bank(1)" id="bk1">“paid money into the bank”</button></div>
+    <svg viewBox="0 0 320 170" id="bankMap" style="margin-top:12px"></svg>
+    <p class="cap" id="bankCap"></p>
+  </div>
+  <div class="note key">Static = starting point (an LLM's input table is static). Contextual = what the hidden layers produce. That's why LLMs “understand” context.</div>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <div class="shead"><span class="snum">6</span><h2>Cosine similarity</h2></div>
+  <p class="sub">Closeness in meaning becomes geometry.</p>
+  <p><b>Analogy.</b> Two people pointing at things. If they point the same way they agree (1). At right angles they're unrelated (0). Opposite = disagree (−1).
+  Only the <i>direction</i> matters, not how long the arm is.</p>
+  <div class="lab">
+    <p class="hint">Drag the angle between the two arrows.</p>
+    <input type="range" id="ang" min="0" max="180" value="30">
+    <svg viewBox="0 0 300 160" id="cosSvg"></svg>
+    <p class="big" id="cosVal"></p>
+  </div>
+  <p><code>cos θ = (a · b) / (|a| |b|)</code> — dot product (multiply slot by slot, add up) divided by both lengths.</p>
+  <div class="note key"><b>Semantic similarity</b> = how close in <i>meaning</i>, even with no shared words: “How do I reset my password?” ≈ “I forgot my login details”.
+  Embed both, take the cosine. This is the engine of <b>RAG</b> (Retrieval-Augmented Generation: fetch the documents most similar to a question, hand them to the LLM).</div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <div class="shead"><span class="snum">7</span><h2>Language model &amp; autoregression</h2></div>
+  <p class="sub">The one idea behind every LLM: guess the next token.</p>
+  <p><b>Language model</b> — a model giving a probability for each possible next token. Like your phone keyboard's suggestion strip.
+  <b>Autoregressive</b> — produce one token, <i>add it to the input</i>, then predict the next one. Left to right, one at a time.</p>
+  <div class="lab">
+    <p class="hint">A tiny model learned from six sentences about a cat and a dog. Click a suggested next word to build a sentence.</p>
+    <div id="genLine" style="min-height:40px;margin-bottom:10px"></div>
+    <div class="row" id="genOpts"></div>
+    <p class="hint" style="margin-top:12px"><button onclick="genReset()">↺ start over</button></p>
+  </div>
+  <div class="note"><b>Why it matters.</b> This is why answers stream word by word, and why long answers are slow: <b>one full model pass per generated token</b>.
+  Always picking the top word (“greedy”) repeats itself; real chatbots <i>sample</i> in proportion to the probabilities.</div>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <div class="shead"><span class="snum">8</span><h2>Three ways to build a Transformer</h2></div>
+  <p class="sub">Transformer = the network design (attention-based) that all of these use.</p>
+  <div class="grid3">
+    <div class="card"><h4 style="color:var(--b)">Encoder-only</h4><p><b>Reader.</b> Sees the whole text, both directions. Produces understanding, not new text.</p><p>BERT, RoBERTa — classification, NER, the embedding models inside RAG.</p></div>
+    <div class="card"><h4 style="color:var(--g)">Decoder-only</h4><p><b>Writer.</b> Reads left to right, each token sees only earlier ones, predicts the next.</p><p>GPT, Llama 3, Qwen3, DeepSeek-V3 — almost every modern LLM. <b>This course.</b></p></div>
+    <div class="card"><h4 style="color:var(--v)">Encoder-decoder</h4><p><b>Translator.</b> Encoder reads all the input; decoder writes the output while looking back at it.</p><p>Original Transformer, T5, BART — translation, summarization.</p></div>
+  </div>
+  <div class="lab"><p class="hint">Click one for a one-line memory hook.</p>
+    <div class="row"><button onclick="arch(0)">Encoder-only</button><button onclick="arch(1)">Decoder-only</button><button onclick="arch(2)">Encoder-decoder</button></div>
+    <p id="archOut" style="margin:10px 0 0"></p></div>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <div class="shead"><span class="snum">9</span><h2>What it is all used for</h2></div>
+  <p class="sub"><b>NLU</b> (Natural Language Understanding) pulls meaning out. <b>NLG</b> (Natural Language Generation) makes new text. LLMs are generators, but handle NLU by <i>generating the answer</i>, e.g. the word “positive”.</p>
+  <div class="tw"><table>
+    <tr><th>Task</th><th>One line</th><th>Example</th></tr>
+    <tr><td><b>Text classification</b></td><td>One label for the whole text</td><td>spam / not spam; positive / negative</td></tr>
+    <tr><td><b>NER</b> (named entity recognition)</td><td>Find names of real things and tag their type</td><td>[Charles Darwin]<sub>PERSON</sub> published in [London]<sub>PLACE</sub> in [1859]<sub>DATE</sub></td></tr>
+    <tr><td><b>POS tagging</b> (part of speech)</td><td>Grammar role of each word; same word can change role</td><td>“book a flight” → VERB · “read a book” → NOUN</td></tr>
+    <tr><td><b>Machine translation</b></td><td>Same meaning, another language</td><td>Where is the station? → स्टेशन कहाँ है?</td></tr>
+    <tr><td><b>Summarization</b></td><td>Shorter text, same key points</td><td>10-page report → 5 bullets</td></tr>
+    <tr><td><b>Question answering</b></td><td>Answer from its own memory or from given documents</td><td>RAG = QA over <i>your</i> documents</td></tr>
+  </table></div>
+  <div class="note warn">Your NLP practice topic 02 (extractive summarization) is one of these tasks built the old way. This course does the same tasks with LLMs.</div>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <div class="shead"><span class="snum">10</span><h2>Quick check</h2></div>
+  <p class="sub">Five questions. Answer from memory, then read the reason.</p>
+  <div id="quiz"></div>
+  <p class="big" id="score" style="margin-top:20px"></p>
+</section>
+
+</div>
+<script>
+/* ---------- section 2: toy tokenizer ---------- */
+var PIECES=["un","happi","ness","believ","able","is","the","cat","a","ing","ed","s","!","."," "];
+function tokenizeToy(t){
+  var out=[],i=0,s=t.toLowerCase();
+  while(i<s.length){
+    var best="";
+    for(var k=0;k<PIECES.length;k++){var p=PIECES[k];if(p.length>best.length&&s.startsWith(p,i))best=p;}
+    if(!best)best=s[i];                      /* fall back to a single character (byte) */
+    out.push(best);i+=best.length;
+  }
+  return out.filter(function(x){return x!==" ";});
+}
+function renderTok(){
+  var t=tokenizeToy(document.getElementById("tokIn").value);
+  document.getElementById("tokOut").innerHTML=t.map(function(x,i){
+    var known=PIECES.indexOf(x)>=0;
+    return '<span class="tok '+(known?'c'+(i%5):'bad')+'">'+x.replace(/</g,"&lt;")+'</span>';
+  }).join("");
+  var words=document.getElementById("tokIn").value.trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById("tokCount").textContent=t.length+" tokens for "+words+" words. Red pieces were not in the list, so they fell back to single characters.";
+}
+document.getElementById("tokIn").addEventListener("input",renderTok);renderTok();
+
+/* ---------- section 3: OOV ---------- */
+var MENU=["the","cat","sat","on","mat","dog"];
+function renderOov(){
+  var ws=document.getElementById("oovIn").value.trim().split(/\s+/).filter(Boolean);
+  var wl=ws.map(function(w){return MENU.indexOf(w.toLowerCase())>=0?w:"[UNK]";});
+  var sub=ws.map(function(w){return MENU.indexOf(w.toLowerCase())>=0?w:(w.length>5?w.slice(0,5)+" | "+w.slice(5):w);});
+  var bytes=ws.map(function(w){return MENU.indexOf(w.toLowerCase())>=0?w:Array.from(w).slice(0,4).join(" ")+" …";});
+  function pill(a){return a.map(function(x){return '<span class="tok '+(x==="[UNK]"?'bad':'c0')+'">'+x+'</span>';}).join("");}
+  document.getElementById("oovOut").innerHTML=
+    '<tr><th>Word-level</th><td>'+pill(wl)+'</td><td>meaning of the stranger is lost</td></tr>'+
+    '<tr><th>Sub-word</th><td>'+pill(sub)+'</td><td>split into known pieces</td></tr>'+
+    '<tr><th>Byte-level</th><td>'+pill(bytes)+'</td><td>never unknown, just costs more tokens</td></tr>';
+}
+document.getElementById("oovIn").addEventListener("input",renderOov);renderOov();
+
+/* ---------- section 4: one-hot + embedding map ---------- */
+var W=["cat","dog","mat","rug","sat","chased"];
+var POS={cat:[60,60],dog:[85,45],mat:[190,150],rug:[210,135],sat:[130,100],chased:[110,70]};
+var selW=0;
+function renderOh(){
+  document.getElementById("ohBtns").innerHTML=W.map(function(w,i){
+    return '<button class="'+(i===selW?'on':'')+'" onclick="selW='+i+';renderOh()">'+w+'</button>';}).join("");
+  document.getElementById("ohVec").innerHTML=W.map(function(w,i){
+    return '<span class="cell '+(i===selW?'one':'')+'">'+(i===selW?1:0)+'</span>';}).join("");
+  document.getElementById("ohNote").textContent="Length "+W.length+" here; 128,256 for Llama 3. Any two different words share no 1s — no hint they are related.";
+  var s='';
+  W.forEach(function(w,i){
+    var p=POS[w],on=i===selW;
+    s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(on?9:6)+'" fill="'+(on?'#8b5cf6':'#94a3b8')+'"/>'+
+       '<text x="'+(p[0]+10)+'" y="'+(p[1]+4)+'" font-size="12" fill="currentColor">'+w+'</text>';
+  });
+  document.getElementById("embMap").innerHTML='<rect x="1" y="1" width="258" height="198" fill="none" stroke="#cbd5e1" rx="10"/>'+s;
+}
+renderOh();
+
+/* ---------- section 5: bank ---------- */
+function bank(i){
+  document.getElementById("bk0").className=i===0?"on":"";document.getElementById("bk1").className=i===1?"on":"";
+  var river=[[60,40,"river"],[100,60,"water"],[80,100,"mud"]],money=[[240,40,"money"],[220,70,"loan"],[250,100,"cash"]];
+  var s="";
+  river.concat(money).forEach(function(p){s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="5" fill="#94a3b8"/><text x="'+(p[0]+8)+'" y="'+(p[1]+4)+'" font-size="11" fill="currentColor">'+p[2]+'</text>';});
+  var staticPos=[160,140],ctxPos=i===0?[85,75]:[235,70];
+  s+='<circle cx="'+staticPos[0]+'" cy="'+staticPos[1]+'" r="8" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="3 3"/><text x="'+(staticPos[0]+12)+'" y="'+(staticPos[1]+4)+'" font-size="11" fill="#b45309">static “bank”</text>';
+  s+='<circle cx="'+ctxPos[0]+'" cy="'+ctxPos[1]+'" r="9" fill="#8b5cf6"/><text x="'+(ctxPos[0]-14)+'" y="'+(ctxPos[1]-14)+'" font-size="12" font-weight="700" fill="#8b5cf6">contextual “bank”</text>';
+  document.getElementById("bankMap").innerHTML=s;
+  document.getElementById("bankCap").textContent=i===0?"Contextual vector moved next to river / water. The static one stays stuck in the middle, belonging to neither.":"Same word, new sentence → contextual vector jumped over to money / loan. The static one has not moved.";
+}
+bank(0);
+
+/* ---------- section 6: cosine ---------- */
+function drawCos(){
+  var a=+document.getElementById("ang").value,r=a*Math.PI/180,cx=40,cy=130,L=110;
+  var x2=cx+L*Math.cos(r),y2=cy-L*Math.sin(r);
+  document.getElementById("cosSvg").innerHTML=
+    '<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+L)+'" y2="'+cy+'" stroke="#3b82f6" stroke-width="3"/>'+
+    '<line x1="'+cx+'" y1="'+cy+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="#8b5cf6" stroke-width="3"/>'+
+    '<text x="'+(cx+L+6)+'" y="'+(cy+4)+'" font-size="12" fill="#3b82f6">a</text>'+
+    '<text x="'+(x2+6).toFixed(1)+'" y="'+(y2-4).toFixed(1)+'" font-size="12" fill="#8b5cf6">b</text>';
+  var c=Math.cos(r),word=a<15?"almost the same meaning":a<60?"related":a<100?"unrelated (right angle = 0)":"opposite";
+  document.getElementById("cosVal").textContent="cos("+a+"°) = "+c.toFixed(2)+"  —  "+word;
+}
+document.getElementById("ang").addEventListener("input",drawCos);drawCos();
+
+/* ---------- section 7: next-word model ---------- */
+var LM={
+  "the":{cat:.4,dog:.4,mat:.1,rug:.1},"a":{cat:.5,dog:.5},
+  "cat":{sat:.4,chased:.2,saw:.2,".":.2},"dog":{sat:.4,chased:.2,saw:.2,".":.2},
+  "sat":{on:1},"on":{the:1},"mat":{".":1},"rug":{".":1},
+  "chased":{the:1},"saw":{the:.5,a:.5},".":{}
+};
+var gen=["the"];
+function genReset(){gen=["the"];genRender();}
+function genRender(){
+  document.getElementById("genLine").innerHTML=gen.map(function(w,i){return '<span class="tok c'+(i%5)+'">'+w+'</span>';}).join("");
+  var o=LM[gen[gen.length-1]]||{},keys=Object.keys(o).sort(function(a,b){return o[b]-o[a];});
+  document.getElementById("genOpts").innerHTML=keys.length?keys.map(function(k){
+    return '<button onclick="gen.push(\''+k+'\');genRender()">'+k+' &nbsp;<small>'+Math.round(o[k]*100)+'%</small></button>';}).join(""):
+    '<span class="hint">Sentence finished — the model predicted “.” as the end. Press start over.</span>';
+}
+genRender();
+
+/* ---------- section 8 ---------- */
+function arch(i){document.getElementById("archOut").textContent=[
+  "Encoder-only = a reader with a highlighter. It labels and embeds, but cannot write.",
+  "Decoder-only = an author who has to keep writing the next word. Chat models.",
+  "Encoder-decoder = an interpreter: listens to everything, then speaks."][i];}
+
+/* ---------- quiz ---------- */
+var QS=[
+ {q:"Which is TRUE about tokens?",a:["A token is always one whole word","Price and context length are measured in tokens","Tokens are always single letters"],c:1,w:"Tokens can be words, word-pieces, punctuation or bytes. Cost and context limits count tokens, not words."},
+ {q:"Why is a one-hot vector a poor description of meaning?",a:["It is too short","Every pair of different words is equally different","It cannot be turned into an ID"],c:1,w:"Each word has its own lone 1, so cat is exactly as far from dog as from banana."},
+ {q:"Why does a contextual embedding handle “bank” better than a static one?",a:["It has a bigger vocabulary","Its vector is recomputed from the surrounding words","It ignores the other words"],c:1,w:"Attention mixes in neighbouring tokens, so the same word gets a different vector in different sentences."},
+ {q:"Two vectors have cosine similarity 0. They are…",a:["Identical","Opposite","Unrelated (at right angles)"],c:2,w:"1 = same direction, 0 = right angle (unrelated), −1 = opposite."},
+ {q:"Why are long LLM answers slow?",a:["The vocabulary is big","One model pass per generated token (autoregressive)","Tokens must be translated first"],c:1,w:"Each new token needs the whole model run again with the text so far."}
+];
+var correct=0,done=0;
+(function(){
+  document.getElementById("quiz").innerHTML=QS.map(function(q,qi){
+    return '<div class="q"><b>'+(qi+1)+'. '+q.q+'</b>'+q.a.map(function(t,ai){
+      return '<button id="q'+qi+'_'+ai+'" onclick="pick('+qi+','+ai+')">'+t+'</button>';}).join("")+
+      '<div class="why" id="why'+qi+'">'+q.w+'</div></div>';}).join("");
+})();
+function pick(qi,ai){
+  var q=QS[qi];if(document.getElementById("why"+qi).style.display==="block")return;
+  document.getElementById("q"+qi+"_"+ai).className=ai===q.c?"right":"wrong";
+  document.getElementById("q"+qi+"_"+q.c).className="right";
+  document.getElementById("why"+qi).style.display="block";
+  done++;if(ai===q.c)correct++;
+  document.getElementById("score").textContent="Score: "+correct+" / "+done+(done===QS.length?(correct>=4?"  — ready for the notebook.":"  — re-read the sections you missed first."):"");
+}
+</script>
+</body>
+</html>

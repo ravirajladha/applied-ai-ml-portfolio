@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Transformer, from attention to next token — an interactive lesson</title>
+<style>
+:root{
+  --bg:#f4f6fb;--panel:#fff;--ink:#0f172a;--muted:#64748b;--edge:#e2e8f0;
+  --b:#3b82f6;--v:#8b5cf6;--g:#10b981;--y:#f59e0b;--r:#ef4444;--c:#06b6d4;
+  --shadow:0 8px 26px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.05);
+}
+html[data-theme="dark"]{
+  --bg:#0b1120;--panel:#151d2e;--ink:#e8eefc;--muted:#94a3b8;--edge:#26324a;
+  --shadow:0 8px 26px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.62;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;padding-bottom:80px}
+.wrap{max-width:840px;margin:0 auto;padding:0 18px}
+h1{font-size:clamp(26px,6vw,38px);letter-spacing:-.7px;line-height:1.12;margin:0 0 10px}
+h2{font-size:clamp(20px,4.4vw,26px);letter-spacing:-.4px;margin:0 0 6px}
+h3{font-size:16px;margin:22px 0 6px}
+p{margin:12px 0}
+code{background:color-mix(in srgb,var(--ink) 8%,transparent);padding:2px 6px;border-radius:5px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.87em}
+pre{background:color-mix(in srgb,var(--ink) 6%,transparent);border:1px solid var(--edge);border-radius:12px;
+  padding:14px;overflow-x:auto;font-size:12.8px;line-height:1.5;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+header{padding:44px 0 10px}
+.kicker{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--v);background:color-mix(in srgb,var(--v) 13%,transparent);padding:4px 11px;border-radius:99px;margin-bottom:14px}
+.lede{font-size:17px;color:var(--muted);max-width:64ch}
+.toc{display:flex;flex-wrap:wrap;gap:7px;margin:24px 0 8px;padding:0;list-style:none}
+.toc a{font-size:12.5px;text-decoration:none;color:var(--muted);background:var(--panel);
+  border:1px solid var(--edge);border-radius:99px;padding:5px 11px;display:block}
+.toc a:hover{border-color:var(--v);color:var(--v)}
+section{background:var(--panel);border:1px solid var(--edge);border-radius:20px;padding:26px;
+  margin:20px 0;box-shadow:var(--shadow);scroll-margin-top:16px}
+.snum{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;
+  background:var(--v);color:#fff;font-size:13px;font-weight:700;margin-right:9px;flex:none}
+.shead{display:flex;align-items:center;margin-bottom:4px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+.note{border-left:3px solid var(--b);background:color-mix(in srgb,var(--b) 7%,transparent);
+  padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0;font-size:14.5px}
+.note.warn{border-color:var(--y);background:color-mix(in srgb,var(--y) 9%,transparent)}
+.note.key{border-color:var(--g);background:color-mix(in srgb,var(--g) 8%,transparent)}
+.lab{background:color-mix(in srgb,var(--ink) 3.5%,transparent);border:1px solid var(--edge);
+  border-radius:14px;padding:18px;margin:18px 0}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 12px}
+button{font:inherit;font-size:13px;background:var(--panel);color:var(--ink);border:1px solid var(--edge);
+  border-radius:9px;padding:7px 13px;cursor:pointer}
+button:hover{border-color:var(--v)}
+button.pri{background:var(--v);border-color:var(--v);color:#fff;font-weight:600}
+button.on{background:var(--b);border-color:var(--b);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0}
+th,td{border:1px solid var(--edge);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:color-mix(in srgb,var(--ink) 4%,transparent)}
+.theme{position:fixed;top:14px;right:14px;z-index:9}
+/* pipeline */
+.pipe{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0}
+.stage{border:2px solid var(--edge);border-radius:12px;padding:10px 12px;cursor:pointer;font-size:13.5px;font-weight:600;background:var(--panel)}
+.stage.on{border-color:var(--v);background:color-mix(in srgb,var(--v) 12%,transparent)}
+.arrow{color:var(--muted);font-weight:700}
+.box{min-height:70px;font-size:14.5px}
+/* tokens */
+.toks{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.tok{padding:6px 10px;border-radius:9px;border:1px solid var(--edge);cursor:pointer;font-weight:600;font-size:14px;transition:background .2s}
+.tok.sel{outline:3px solid var(--v)}
+/* grids */
+.grid{display:grid;gap:3px;margin:10px 0;font-size:12.5px}
+.cell{padding:6px 4px;text-align:center;border-radius:6px;font-variant-numeric:tabular-nums}
+.cell.h{font-weight:700;background:none}
+.bar{height:16px;background:var(--b);border-radius:4px}
+.barrow{display:grid;grid-template-columns:90px 1fr 60px;gap:8px;align-items:center;font-size:13.5px;margin:4px 0}
+.quiz .q{margin:16px 0}
+.quiz .opt{display:block;margin:6px 0;text-align:left;width:100%}
+.quiz .opt.right{background:color-mix(in srgb,var(--g) 18%,transparent);border-color:var(--g)}
+.quiz .opt.wrong{background:color-mix(in srgb,var(--r) 14%,transparent);border-color:var(--r)}
+.fb{font-size:13.5px;color:var(--muted);min-height:1em}
+.skip li{margin:4px 0}
+</style>
+</head>
+<body>
+<button class="theme" onclick="toggleTheme()">🌓 theme</button>
+<div class="wrap">
+<header>
+  <span class="kicker">Topic 02 · LLM Engineering · practice</span>
+  <h1>The Transformer: how a pile of numbers picks the next word</h1>
+  <p class="lede">You already know text becomes tokens and tokens become vectors (topic 01). This page is the
+  middle of the machine: how those vectors <b>talk to each other</b> (attention), <b>think</b> (feed-forward),
+  and finally <b>vote for the next token</b>. Then we open a real model and find each part by name in code.</p>
+  <ul class="toc">
+    <li><a href="#s1">1 · The assembly line</a></li>
+    <li><a href="#s2">2 · Why attention?</a></li>
+    <li><a href="#s3">3 · Query, Key, Value</a></li>
+    <li><a href="#s4">4 · No peeking: the causal mask</a></li>
+    <li><a href="#s5">5 · Many heads</a></li>
+    <li><a href="#s6">6 · One block, stacked N times</a></li>
+    <li><a href="#s7">7 · LM head &amp; generation</a></li>
+    <li><a href="#s8">8 · Finding it in real code</a></li>
+    <li><a href="#s9">9 · What to skip</a></li>
+    <li><a href="#s10">10 · Quiz</a></li>
+  </ul>
+</header>
+
+<div class="note key"><b>How to use this page.</b> Read one section, click its demo, close the laptop and say the
+idea out loud in one sentence. Nothing here needs maths beyond "multiply and add". The notebook later asks you to
+write only ~12 short lines — every one of them is a sentence from this page turned into code.</div>
+
+<!-- 1 -->
+<section id="s1">
+  <div class="shead"><span class="snum">1</span><h2>The assembly line</h2></div>
+  <p class="sub">An LLM is a factory with four stations. Click each one.</p>
+  <div class="pipe" id="pipe"></div>
+  <div class="lab box" id="pipeBox"></div>
+  <div class="note">🌍 <b>Analogy — a meeting.</b> Each token is a person at a table holding a note card (its vector).
+  In every round (a <i>block</i>), people first <b>listen to each other</b> (attention) and update their card, then
+  each <b>thinks quietly alone</b> (feed-forward) and updates it again. After N rounds, the last person's card is
+  read out to vote on the next word.</div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <div class="shead"><span class="snum">2</span><h2>Why attention?</h2></div>
+  <p class="sub">The embedding table gives "it" the same vector in every sentence. But what "it" means depends on the other words.</p>
+  <p>Click a word to see which earlier words it would mostly "listen to" (hand-set weights, to show the idea).</p>
+  <div class="row"><button class="on" id="sentA" onclick="setSent(0)">…because it was too tired</button>
+  <button id="sentB" onclick="setSent(1)">…because it was too wide</button></div>
+  <div class="toks" id="attnToks"></div>
+  <div id="attnBars"></div>
+  <div class="note">Same word <code>it</code>, different sentence → it listens to a different word (<b>animal</b> vs
+  <b>street</b>) → it ends up with a different vector. That new vector is the <b>contextual embedding</b> from
+  topic 01. <b>Attention is the machine that makes embeddings contextual.</b></div>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <div class="shead"><span class="snum">3</span><h2>Query, Key, Value — the library search</h2></div>
+  <p class="sub">Each token's vector is turned into three smaller vectors by three learned weight matrices.</p>
+  <table>
+    <tr><th>Name</th><th>Plain meaning</th><th>Library analogy</th><th>In code</th></tr>
+    <tr><td><b>Query (Q)</b></td><td>"What am I looking for?"</td><td>What you type in the search box</td><td><code>Q = X @ Wq</code> · <code>q_proj</code></td></tr>
+    <tr><td><b>Key (K)</b></td><td>"What do I contain?" (a label)</td><td>The title on each book's spine</td><td><code>K = X @ Wk</code> · <code>k_proj</code></td></tr>
+    <tr><td><b>Value (V)</b></td><td>"What I hand over if picked"</td><td>The book's actual content</td><td><code>V = X @ Wv</code> · <code>v_proj</code></td></tr>
+  </table>
+  <p><b>Four steps</b>, always the same:</p>
+  <ol>
+    <li><b>Score:</b> how well does my Query match each Key? → dot product <code>Q·K</code> (big = good match).</li>
+    <li><b>Scale:</b> divide by <code>√d</code> (d = length of K) so scores don't get huge.</li>
+    <li><b>Softmax:</b> turn scores into percentages that add to 100%. These are the <b>attention weights</b>.</li>
+    <li><b>Blend:</b> new vector = weighted mix of the Values.</li>
+  </ol>
+  <p style="text-align:center;font-size:17px"><code>Attention(Q,K,V) = softmax( Q·Kᵀ / √d ) · V</code></p>
+
+  <div class="lab">
+    <p class="hint">Live demo — token <b>"it"</b> (the query) looks at 3 tokens. Drag the sliders to change how well
+    each Key matches the query; watch the weights and the blended output change.</p>
+    <div id="qkv"></div>
+    <div id="qkvOut"></div>
+  </div>
+  <div class="note warn"><b>The one thing to remember:</b> the scores decide <i>who you listen to</i>; the Values are
+  <i>what you hear</i>. Every attention layer in every LLM is this, done for all tokens at once with matrices.</div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <div class="shead"><span class="snum">4</span><h2>No peeking: the causal mask</h2></div>
+  <p class="sub">A decoder (GPT, Llama, Qwen) is trained to predict the next word. If token 2 could see token 3, that's cheating.</p>
+  <div class="row"><button class="on" id="mDec" onclick="setMask(true)">Decoder (causal)</button>
+  <button id="mEnc" onclick="setMask(false)">Encoder (BERT, bidirectional)</button></div>
+  <div class="grid" id="maskGrid"></div>
+  <p class="hint">Rows = the token doing the looking. Columns = the token being looked at. Grey = blocked.</p>
+  <div class="note">How it's done in code: before softmax, put <code>−∞</code> in every blocked cell.
+  <code>e<sup>−∞</sup> = 0</code>, so softmax gives those cells exactly 0% weight. That's the whole trick — one line,
+  <code>np.triu</code>, in the notebook.</div>
+  <div class="note key">This is why the first token can only attend to itself (its row is 100% on itself) — and why, during
+  training, all positions can be computed in parallel without cheating (Session 2: "teacher forcing").</div>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <div class="shead"><span class="snum">5</span><h2>Many heads = many reading glasses</h2></div>
+  <p class="sub">One attention computation can only focus one way. So the model runs several in parallel, each smaller.</p>
+  <div class="row" id="headBtns"></div>
+  <div id="headView"></div>
+  <div class="note">Each head has its own small Wq, Wk, Wv. Their outputs are glued side by side (<b>concat</b>) and mixed
+  by one more matrix, <b>Wo</b> (<code>o_proj</code> in code). Example: GPT-2 small has d = 768 split into 12 heads of 64.
+  <br>We didn't hand-design "pronoun head" etc. — heads learn their own roles; the labels here are illustrations.</div>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <div class="shead"><span class="snum">6</span><h2>One block, stacked N times</h2></div>
+  <p class="sub">A Transformer block = attention + feed-forward, each wrapped with a "norm" and a "residual add".</p>
+<pre>
+x ─┬─► Norm ─► Multi-head Attention ─►(+)─┬─► Norm ─► Feed-Forward (MLP) ─►(+)─► to next block
+   └──────────────── residual ────────────┘   └──────────── residual ─────────┘
+</pre>
+  <table>
+    <tr><th>Part</th><th>Job (slide 13)</th><th>Analogy</th></tr>
+    <tr><td><b>Attention</b></td><td>talk between tokens</td><td>the meeting discussion</td></tr>
+    <tr><td><b>Feed-forward (FFN / MLP)</b></td><td>think per token — same small network applied to each token separately</td><td>each person thinking alone; stores lots of "facts"</td></tr>
+    <tr><td><b>Residual (the +)</b></td><td>each sub-layer <i>adds</i> to x, never replaces it</td><td>a shared notebook — everyone writes notes in the margin, nobody erases</td></tr>
+    <tr><td><b>Norm</b> (LayerNorm / RMSNorm)</td><td>keeps the numbers in a sane range</td><td>volume knob so nobody shouts</td></tr>
+  </table>
+  <div class="lab">
+    <p class="hint">Click to push the token "it" through blocks. Watch its vector change a little each time (it is only ever <i>added to</i>).</p>
+    <div class="row"><button class="pri" onclick="stepBlock()">Run next block ▶</button><button onclick="resetBlock()">reset</button>
+    <span id="blockLbl" class="hint" style="margin:0"></span></div>
+    <div id="blockVec"></div>
+  </div>
+  <div class="note"><b>Real sizes:</b> GPT-2 small = 12 blocks · Llama 3 8B = 32 · Qwen2.5-0.5B (your assignment model) = 24.
+  Parameters per block ≈ <b>12·d²</b> (attention 4d² + FFN 8d²) — the formula from Session 2.</div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <div class="shead"><span class="snum">7</span><h2>LM head &amp; generation</h2></div>
+  <p class="sub">After the last block, only the <b>last</b> token's vector is used to choose the next token.</p>
+  <ol>
+    <li>Multiply the last vector by the <b>unembedding</b> matrix (often the embedding table flipped, <code>Eᵀ</code>) → one score (<b>logit</b>) per vocabulary token.</li>
+    <li><b>Softmax</b> → probabilities.</li>
+    <li><b>Pick</b> one (highest = greedy, or sample) → append → run the whole thing again.</li>
+  </ol>
+  <div class="lab">
+    <p class="hint">Toy generator with made-up probabilities. Each click = one full pass through the model.</p>
+    <div style="font-size:18px;font-weight:600;margin:8px 0" id="genText"></div>
+    <div id="genBars"></div>
+    <div class="row"><button class="pri" onclick="genStep()">Generate next token ▶</button><button onclick="genReset()">reset</button></div>
+  </div>
+  <div class="note warn">This loop is why long answers are slow (one pass per token) and why the <b>context window
+  includes the output</b> — every generated token is appended and re-read.</div>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <div class="shead"><span class="snum">8</span><h2>Finding it in real code</h2></div>
+  <p class="sub">This is <code>print(model)</code> for <b>Qwen/Qwen2.5-0.5B</b> — the model in your Assignment 1A notebook (trimmed). Every line is something from this page.</p>
+<pre>
+Qwen2ForCausalLM(
+  (model): Qwen2Model(
+    (embed_tokens): Embedding(151936, 896)          ← §1 embedding table E  (|V| × d)
+    (layers): ModuleList(
+      (0-23): 24 x Qwen2DecoderLayer(               ← §6 the block, stacked 24 times
+        (self_attn): Qwen2Attention(                ← §3 attention
+          (q_proj): Linear(896 → 896)               ←   Wq   (14 heads × 64)
+          (k_proj): Linear(896 → 128)               ←   Wk   (2 shared KV heads × 64)
+          (v_proj): Linear(896 → 128)               ←   Wv
+          (o_proj): Linear(896 → 896)               ← §5 Wo, mixes the heads
+        )
+        (mlp): Qwen2MLP(                            ← §6 feed-forward "think"
+          (gate_proj), (up_proj): Linear(896 → 4864)
+          (down_proj): Linear(4864 → 896)
+        )
+        (input_layernorm), (post_attention_layernorm): Qwen2RMSNorm(896)   ← §6 norms
+      )
+    )
+    (norm): Qwen2RMSNorm(896)
+    (rotary_emb): Qwen2RotaryEmbedding()            ← position (RoPE, Session 1 §11)
+  )
+  (lm_head): Linear(896 → 151936)                   ← §7 LM head
+)
+</pre>
+  <div class="note key"><b>Now your assignment line makes sense:</b><br>
+  <code>LoraConfig(r=16, target_modules=['q_proj','v_proj'])</code><br>
+  = "attach small LoRA matrices B·A next to <b>Wq</b> and <b>Wv</b> inside the attention of all 24 blocks; freeze everything else".
+  You're choosing <i>which matrices from §3</i> get fine-tuned.</div>
+  <div class="note">Why is k_proj smaller (128) than q_proj (896)? <b>Grouped-query attention</b>: 14 query heads share 2 key/value
+  heads to save memory at inference. A Module 3/4 topic — just recognise the name for now.</div>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <div class="shead"><span class="snum">9</span><h2>What to deliberately skip (for now)</h2></div>
+  <p class="sub">These are real, but either taught later in class or not needed to use LLMs. Skipping them is the plan, not a gap.</p>
+  <ul class="skip">
+    <li>❌ The sinusoidal position formula and <b>RoPE maths</b> — Module 3 will teach RoPE in class.</li>
+    <li>❌ Encoder-decoder <b>cross-attention</b> details — the course focuses on decoder-only.</li>
+    <li>❌ LayerNorm vs RMSNorm formulas — "volume knob" is enough.</li>
+    <li>❌ KV cache, FlashAttention, grouped-query maths — Modules 4–5 (inference).</li>
+    <li>❌ Backprop through attention / writing a Transformer in PyTorch from scratch — not examined, not needed for the assignments.</li>
+    <li>✅ <b>Do know cold:</b> Q/K/V meaning, the 4 steps + formula, causal mask, block = attention + FFN + residual + norm, LM head, and where <code>q_proj / v_proj / lm_head</code> sit.</li>
+  </ul>
+</section>
+
+<!-- 10 -->
+<section id="s10" class="quiz">
+  <div class="shead"><span class="snum">10</span><h2>Quiz — 6 questions</h2></div>
+  <p class="sub">Answer before opening the notebook. Wrong answers are useful: they show you which section to re-click.</p>
+  <div id="quiz"></div>
+  <p id="score" style="font-weight:700"></p>
+</section>
+</div>
+
+<script>
+function toggleTheme(){const h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'':'dark'}
+
+/* 1 pipeline */
+const STAGES=[
+ ["Tokenizer","Text → token IDs. <code>\"The animal didn't cross\"</code> → <code>[785, 9864, 3207, 5312]</code> (IDs illustrative). Learned once with BPE (Session 1). <i>Not</i> part of the neural network."],
+ ["Embedding + position","Each ID picks one row of table <b>E</b> (|V| × d) → a vector of d numbers. Position info is added (or, in Llama/Qwen, injected later by RoPE). Output: a matrix <b>X</b> of shape (tokens × d)."],
+ ["N Transformer blocks","The heart. Each block: <b>attention</b> (tokens talk) then <b>feed-forward</b> (each token thinks). Input and output have the <b>same shape</b> (tokens × d), so blocks stack like LEGO. Sections 2–6."],
+ ["LM head","Takes the <b>last</b> token's final vector → a score for every vocabulary token → softmax → probabilities → pick next token. Section 7."]];
+let stageOn=0;
+function drawPipe(){const p=document.getElementById('pipe');p.innerHTML='';
+ STAGES.forEach((s,i)=>{const d=document.createElement('div');d.className='stage'+(i===stageOn?' on':'');d.textContent=(i+1)+'. '+s[0];
+  d.onclick=()=>{stageOn=i;drawPipe()};p.appendChild(d);if(i<3){const a=document.createElement('span');a.className='arrow';a.textContent='→';p.appendChild(a)}});
+ document.getElementById('pipeBox').innerHTML='<b>'+STAGES[stageOn][0]+'.</b> '+STAGES[stageOn][1];}
+drawPipe();
+
+/* 2 attention-by-example */
+const SENTS=[["The","animal","didn't","cross","the","street","because","it","was","too","tired"],
+             ["The","animal","didn't","cross","the","street","because","it","was","too","wide"]];
+const IT_W=[{1:.62,5:.12,7:.08,0:.05,3:.05,6:.04,2:.04},{5:.60,1:.12,7:.08,4:.06,3:.06,6:.04,0:.04}];
+let sent=0,selTok=7;
+function setSent(i){sent=i;document.getElementById('sentA').className=i===0?'on':'';document.getElementById('sentB').className=i===1?'on':'';drawAttn()}
+function weightsFor(t){ if(t===7) return IT_W[sent];
+  const w={};let tot=0;for(let j=0;j<=t;j++){w[j]=(j===t?3:1)+(j===t-1?1.5:0);tot+=w[j]}for(const k in w)w[k]/=tot;return w;}
+function drawAttn(){const box=document.getElementById('attnToks');box.innerHTML='';const w=weightsFor(selTok);
+ SENTS[sent].forEach((t,i)=>{const s=document.createElement('span');s.className='tok'+(i===selTok?' sel':'');s.textContent=t;
+  const a=w[i]||0;s.style.background=`rgba(139,92,246,${Math.min(.85,a*1.4)})`;if(a>.4)s.style.color='#fff';
+  if(i>selTok){s.style.opacity=.35}s.onclick=()=>{selTok=i;drawAttn()};box.appendChild(s)});
+ const bars=document.getElementById('attnBars');bars.innerHTML=`<p class="hint">"${SENTS[sent][selTok]}" listens to (only earlier words — see §4):</p>`;
+ Object.entries(w).sort((a,b)=>b[1]-a[1]).slice(0,4).forEach(([j,v])=>{bars.innerHTML+=`<div class="barrow"><span>${SENTS[sent][j]}</span><div class="bar" style="width:${v*100}%"></div><span>${(v*100).toFixed(0)}%</span></div>`});}
+drawAttn();
+
+/* 3 QKV demo */
+const KEYS=[{t:"animal",s:2.4,v:[0.9,0.1]},{t:"street",s:0.6,v:[0.1,0.9]},{t:"because",s:0.2,v:[0.4,0.4]}];
+function drawQKV(){const box=document.getElementById('qkv');box.innerHTML='';
+ KEYS.forEach((k,i)=>{box.innerHTML+=`<div class="barrow"><span>Q·K(<b>${k.t}</b>)</span><input type="range" min="-2" max="4" step="0.1" value="${k.s}" oninput="KEYS[${i}].s=+this.value;calcQKV()"><span id="sc${i}">${k.s.toFixed(1)}</span></div>`});
+ calcQKV();}
+function calcQKV(){const ex=KEYS.map(k=>Math.exp(k.s)),Z=ex.reduce((a,b)=>a+b,0),w=ex.map(e=>e/Z);
+ KEYS.forEach((k,i)=>document.getElementById('sc'+i).textContent=k.s.toFixed(1));
+ const out=[0,1].map(d=>KEYS.reduce((a,k,i)=>a+w[i]*k.v[d],0));
+ let h='<p class="hint" style="margin-top:12px">Softmax → attention weights (always add to 100%):</p>';
+ KEYS.forEach((k,i)=>h+=`<div class="barrow"><span>${k.t}</span><div class="bar" style="width:${w[i]*100}%;background:var(--g)"></div><span>${(w[i]*100).toFixed(1)}%</span></div>`);
+ h+=`<p style="margin-top:12px">Values: animal=[0.9, 0.1] (≈"living thing"), street=[0.1, 0.9] (≈"place"), because=[0.4, 0.4]<br>
+ New vector for "it" = Σ weight × value = <b>[${out[0].toFixed(2)}, ${out[1].toFixed(2)}]</b> → ${out[0]>out[1]?'mostly <b>"living thing"</b>: it = the animal':'mostly <b>"place"</b>: it = the street'}</p>`;
+ document.getElementById('qkvOut').innerHTML=h;}
+drawQKV();
+
+/* 4 mask */
+const MT=["The","cat","sat","down"];let causal=true;
+function setMask(c){causal=c;document.getElementById('mDec').className=c?'on':'';document.getElementById('mEnc').className=c?'':'on';drawMask()}
+function drawMask(){const g=document.getElementById('maskGrid');g.style.gridTemplateColumns=`70px repeat(${MT.length},1fr)`;g.innerHTML='<div class="cell h"></div>';
+ MT.forEach(t=>g.innerHTML+=`<div class="cell h">${t}</div>`);
+ MT.forEach((r,i)=>{g.innerHTML+=`<div class="cell h">${r}</div>`;const n=causal?i+1:MT.length;
+  MT.forEach((c,j)=>{const ok=!causal||j<=i;g.innerHTML+=ok?`<div class="cell" style="background:color-mix(in srgb,var(--b) ${20+60/n}%,transparent)">${(100/n).toFixed(0)}%</div>`:`<div class="cell" style="background:color-mix(in srgb,var(--ink) 12%,transparent);color:var(--muted)">−∞ → 0</div>`})});}
+drawMask();
+
+/* 5 heads */
+const HEADS=[["Head 1: 'previous word'","Each token looks mostly at the word just before it — useful for grammar like 'the → cat'.",[[0,1],[1,2],[2,3]]],
+ ["Head 2: 'who is it?'","Pronouns look back at the noun they refer to: it → animal.",[[7,1]]],
+ ["Head 3: 'start of sentence'","Many tokens park attention on the first token when nothing else is relevant (a real, well-known pattern).",[[3,0],[5,0],[8,0]]]];
+const HS=SENTS[0];let headOn=0;
+function drawHeads(){const b=document.getElementById('headBtns');b.innerHTML='';HEADS.forEach((h,i)=>{const x=document.createElement('button');x.textContent=h[0];x.className=i===headOn?'on':'';x.onclick=()=>{headOn=i;drawHeads()};b.appendChild(x)});
+ const h=HEADS[headOn];let html=`<p>${h[1]}</p>`;h[2].forEach(([a,c])=>html+=`<div class="barrow" style="grid-template-columns:auto 1fr"><span><b>${HS[a]}</b> → <b>${HS[c]}</b></span><span></span></div>`);
+ document.getElementById('headView').innerHTML=html;}
+drawHeads();
+
+/* 6 blocks */
+let blk=0;const base=[0.2,-0.4,0.5,0.1,-0.3,0.6];let vec=[...base];
+const DELTAS=[[.05,.2,-.1,.0,.1,.05],[.1,.05,.05,-.1,.15,-.05],[-.05,.1,.2,.05,.05,.1],[.15,-.05,.0,.1,.1,.05]];
+function drawVec(){document.getElementById('blockLbl').textContent=blk===0?'after embedding (static "it")':`after block ${blk} — now knows a bit more about its context`;
+ document.getElementById('blockVec').innerHTML='<div class="grid" style="grid-template-columns:repeat(6,1fr)">'+vec.map((v,i)=>`<div class="cell" style="background:${v>=0?'rgba(16,185,129,'+Math.min(.8,Math.abs(v))+')':'rgba(239,68,68,'+Math.min(.8,Math.abs(v))+')'}">${v.toFixed(2)}</div>`).join('')+'</div><p class="hint">x_new = x_old + attention(x) + ffn(x) — added, never replaced.</p>';}
+function stepBlock(){if(blk>=DELTAS.length){document.getElementById('blockLbl').textContent='(a real model would keep going: 24 blocks in Qwen2.5-0.5B)';return}vec=vec.map((v,i)=>v+DELTAS[blk][i]);blk++;drawVec()}
+function resetBlock(){blk=0;vec=[...base];drawVec()}
+drawVec();
+
+/* 7 generation */
+const GEN={"So long and thanks":[["for",.82],["to",.08],["and",.05],["a",.05]],"for":[["all",.71],["the",.15],["your",.09],["this",.05]],
+ "all":[["the",.88],["your",.06],["those",.04],["my",.02]],"the":[["fish",.64],["help",.2],["food",.1],["memories",.06]],"fish":[[".",.9],["!",.07],["and",.03]],".":[["<eos>",1]]};
+let gen=["So long and thanks"];
+function genDraw(){document.getElementById('genText').textContent=gen.join(' ');const last=gen[gen.length-1],opts=GEN[last]||[];
+ document.getElementById('genBars').innerHTML=opts.length?'<p class="hint">LM head probabilities for the next token:</p>'+opts.map(([t,p],i)=>`<div class="barrow"><span>${i===0?'<b>'+t+'</b>':t}</span><div class="bar" style="width:${p*100}%;background:${i===0?'var(--v)':'var(--b)'}"></div><span>${(p*100).toFixed(0)}%</span></div>`).join(''):'<p class="hint">Done — the model produced &lt;eos&gt; (end of sequence).</p>';}
+function genStep(){const opts=GEN[gen[gen.length-1]];if(!opts||opts[0][0]==='<eos>'){if(opts)gen.push('<eos>');genDraw();return}gen.push(opts[0][0]);genDraw()}
+function genReset(){gen=["So long and thanks"];genDraw()}
+genDraw();
+
+/* 10 quiz */
+const Q=[
+ ["What does attention do, in one phrase?",["Lets each token pull in information from other tokens","Splits words into sub-words","Turns logits into probabilities"],0,"§2: attention = tokens talk to each other; it makes embeddings contextual."],
+ ["In the library analogy, the Key is…",["what you're searching for","the label on each book","the book's content"],1,"§3: Query = search, Key = label, Value = content."],
+ ["Why divide Q·K by √d?",["To make the model causal","To stop scores getting too large before softmax","To add position information"],1,"§3: scaling keeps softmax from becoming all-or-nothing."],
+ ["In a decoder, token 3 of 5 may attend to…",["tokens 1–5","tokens 1–3","only token 3"],1,"§4: the causal mask blocks the future; itself and earlier only."],
+ ["Which part 'thinks per token' and is applied to each token separately?",["Attention","Feed-forward (MLP)","LM head"],1,"§6: attention = talk, FFN = think."],
+ ["target_modules=['q_proj','v_proj'] in LoRA means…",["Train only the tokenizer","Add adapters to the Query and Value matrices of attention","Fine-tune the LM head only"],1,"§8: q_proj = Wq, v_proj = Wv inside every attention block."]];
+let score=0,answered=0;
+function drawQuiz(){const box=document.getElementById('quiz');Q.forEach((q,i)=>{const d=document.createElement('div');d.className='q';d.innerHTML=`<b>${i+1}. ${q[0]}</b>`;
+ q[1].forEach((o,j)=>{const b=document.createElement('button');b.className='opt';b.textContent=o;b.onclick=()=>{if(d.dataset.done)return;d.dataset.done=1;answered++;
+  if(j===q[2]){b.classList.add('right');score++}else{b.classList.add('wrong');d.querySelectorAll('.opt')[q[2]].classList.add('right')}
+  d.querySelector('.fb').textContent=q[3];if(answered===Q.length)document.getElementById('score').textContent=`Score: ${score}/${Q.length}`+(score>=5?' — open the notebook 🎉':' — re-click the sections in the feedback, then retry (refresh).')};d.appendChild(b)});
+ const f=document.createElement('div');f.className='fb';d.appendChild(f);box.appendChild(d)});}
+drawQuiz();
+</script>
+</body>
+</html>
