@@ -1,0 +1,295 @@
+from helpers import mcq, tf, out, fill
+
+QUESTIONS = {
+"py-basics": [
+    mcq("What does print() do?",
+        ["Shows a value on the screen", "Sends a file to the printer", "Saves a value to disk", "Creates a variable"], 0,
+        "Think of console.log in JavaScript.",
+        "print() writes its arguments to the output (the screen / notebook cell).",
+        analogy="Same job as console.log or System.out.println."),
+    out('print("Hello", "AI", sep="-")',
+        ["Hello-AI", "Hello AI", "Hello-AI-", "HelloAI"], 0,
+        "sep is what goes BETWEEN the values.",
+        "sep='-' replaces the default space between arguments, so you get Hello-AI."),
+    mcq("Which line is a comment in Python?",
+        ["# this is a comment", "// this is a comment", "/* this is a comment */", "-- this is a comment"], 0,
+        "Python uses a single symbol you also see in hashtags.",
+        "Everything after # on a line is ignored by Python."),
+    tf("Indentation (spaces at the start of a line) changes how Python code runs.", True,
+       "Python has no curly braces { } for blocks.",
+       "Python uses indentation to mark which lines belong to an if, loop or function. Wrong indentation = IndentationError or wrong logic.",
+       diagram="""
+if x > 0:
+    print("inside")   <- 4 spaces: part of the if
+print("outside")      <- 0 spaces: always runs
+"""),
+    out('print(7 / 2, 7 // 2, 7 % 2)',
+        ["3.5 3 1", "3 3 1", "3.5 3.5 1", "3.5 4 1"], 0,
+        "/ is normal division, // drops the decimals, % is the remainder.",
+        "7/2 = 3.5, 7//2 = 3 (floor division), 7%2 = 1 (remainder)."),
+    out('print(2 ** 3)', ["8", "6", "9", "23"], 0,
+        "** is the power operator.",
+        "2 ** 3 means 2 to the power 3 = 2 x 2 x 2 = 8."),
+],
+
+"py-variables": [
+    mcq("In Python, what is a variable?",
+        ["A name that points to a value", "A box that can hold only numbers", "A fixed constant", "A type of loop"], 0,
+        "x = 5 sticks the label 'x' on the value 5.",
+        "A variable is a name bound to a value. You can rebind it to another value any time.",
+        analogy="Like a sticky label on a box, not the box itself.",
+        diagram="""
+  x  ----->  [ 5 ]
+  name       value
+"""),
+    out('x = 5\nx = x + 2\nprint(x)', ["7", "5", "52", "Error"], 0,
+        "The right side is computed first, then stored back into x.",
+        "x + 2 is 7, and that new value is assigned to x."),
+    out('print(type(3.0))', ["<class 'float'>", "<class 'int'>", "<class 'str'>", "<class 'number'>"], 0,
+        "A dot in the number makes it a decimal.",
+        "3.0 has a decimal point, so it's a float even though the value is whole."),
+    out('print("5" + "5")', ["55", "10", "Error", "5 5"], 0,
+        "The quotes make these strings, not numbers.",
+        "+ on strings joins (concatenates) them: '5' + '5' = '55'."),
+    out('print(int("5") + 2)', ["7", "52", "Error", "5.2"], 0,
+        "int() converts text to a whole number.",
+        "int('5') becomes the number 5, then 5 + 2 = 7."),
+    mcq("Which value is a bool?", ["True", "'True'", "1.0", "None"], 0,
+        "Booleans have exactly two values and no quotes.",
+        "True and False (capitalised, no quotes) are Python's booleans. 'True' with quotes is a string."),
+    fill("The special value that means 'nothing / no value' in Python is ____.", "None",
+         "It's like null in JavaScript or Java.",
+         "None is Python's null. A function with no return gives back None."),
+],
+
+"py-strings": [
+    out('s = "python"\nprint(s[0], s[-1])', ["p n", "p o", "y n", "Error"], 0,
+        "Index 0 is the first character; -1 counts from the end.",
+        "s[0] is 'p', s[-1] is the last character 'n'.",
+        diagram="""
+  p   y   t   h   o   n
+  0   1   2   3   4   5
+ -6  -5  -4  -3  -2  -1
+"""),
+    out('s = "python"\nprint(s[0:3])', ["pyt", "pyth", "yth", "py"], 0,
+        "A slice [start:stop] includes start but stops BEFORE stop.",
+        "Characters at positions 0, 1, 2 -> 'pyt'. Position 3 is excluded."),
+    out('name = "Ravi"\nage = 30\nprint(f"{name} is {age}")', ["Ravi is 30", "{name} is {age}", "name is age", "Error"], 0,
+        "The f before the quote turns { } into slots for values.",
+        "f-strings fill each {expression} with its value: like `${name}` in JS template literals.",
+        analogy="Template literals in JavaScript: `${name} is ${age}`."),
+    out('print("hello".upper())', ["HELLO", "Hello", "hello", "Error"], 0,
+        "The method name says what it does.",
+        ".upper() returns a new string with all letters capitalised."),
+    out('print(len("AI ML"))', ["5", "4", "2", "3"], 0,
+        "len counts every character, including the space.",
+        "A, I, space, M, L = 5 characters."),
+    tf("Strings in Python can be changed in place, e.g. s[0] = 'X'.", False,
+       "Try it in a cell and read the error.",
+       "Strings are immutable. s[0] = 'X' raises TypeError; make a new string instead, e.g. 'X' + s[1:].",
+       d=2),
+    out('print("a,b,c".split(","))', ["['a', 'b', 'c']", "abc", "('a', 'b', 'c')", "['a,b,c']"], 0,
+        "split cuts the string wherever it sees the separator.",
+        "split(',') returns a list of the pieces between commas."),
+],
+
+"py-lists": [
+    out('nums = [10, 20, 30]\nprint(nums[1])', ["20", "10", "30", "Error"], 0,
+        "Counting starts at 0.",
+        "Index 0 = 10, index 1 = 20.",
+        diagram="""
+ nums = [ 10 | 20 | 30 ]
+ index     0    1    2
+"""),
+    out('nums = [1, 2]\nnums.append(3)\nprint(nums)', ["[1, 2, 3]", "[3, 1, 2]", "[1, 2]", "[1, 2, [3]]"], 0,
+        "append adds to the end.",
+        ".append(x) adds one item to the end of the list (like push in JS)."),
+    out('print(len([5, 6, 7, 8]))', ["4", "3", "8", "26"], 0,
+        "len counts items, not their values.",
+        "There are four items in the list."),
+    out('a = [1, 2, 3]\nb = a\nb.append(4)\nprint(a)', ["[1, 2, 3, 4]", "[1, 2, 3]", "[4]", "Error"], 0,
+        "b = a does NOT copy the list.",
+        "a and b are two names for the SAME list, so changing b also changes a. Use a.copy() for a real copy.",
+        analogy="Two variables holding the same object reference, exactly like JS arrays.",
+        diagram="""
+  a ---\\
+        >---> [1, 2, 3, 4]
+  b ---/
+""", d=2),
+    out('nums = [3, 1, 2]\nprint(sorted(nums), nums)', ["[1, 2, 3] [3, 1, 2]", "[1, 2, 3] [1, 2, 3]", "[3, 2, 1] [3, 1, 2]", "None [1, 2, 3]"], 0,
+        "sorted() returns a new list; .sort() changes the original.",
+        "sorted(nums) gives a new sorted list and leaves nums untouched.", d=2),
+    out('nums = [1, 2, 3, 4, 5]\nprint(nums[-2:])', ["[4, 5]", "[5]", "[1, 2]", "[3, 4, 5]"], 0,
+        "-2 means 'second from the end', and an empty stop means 'to the end'.",
+        "The slice starts at the 4 and runs to the end: [4, 5]."),
+    mcq("What is the main difference between a list and a tuple?",
+        ["A tuple can't be changed after creation", "A tuple can hold only numbers", "A list can't hold strings", "There is no difference"], 0,
+        "Tuples use ( ), lists use [ ].",
+        "Lists are mutable (changeable); tuples are immutable. Use tuples for fixed groups like (x, y).", d=2),
+],
+
+"py-dicts": [
+    out('user = {"name": "Ravi", "role": "SDE"}\nprint(user["role"])', ["SDE", "Ravi", "role", "Error"], 0,
+        "Look the value up by its key.",
+        "A dict maps keys to values; user['role'] returns 'SDE'.",
+        analogy="A JS object / JSON, or a HashMap in Java.",
+        diagram="""
+  key       value
+ "name" -> "Ravi"
+ "role" -> "SDE"
+"""),
+    out('d = {"a": 1}\nd["b"] = 2\nprint(d)', ["{'a': 1, 'b': 2}", "{'a': 1}", "{'b': 2}", "Error"], 0,
+        "Assigning to a new key adds it.",
+        "d['b'] = 2 creates the key 'b' with value 2."),
+    out('d = {"a": 1}\nprint(d.get("z", 0))', ["0", "None", "Error", "z"], 0,
+        "get has a fallback value as its second argument.",
+        ".get(key, default) returns the default instead of crashing when the key is missing."),
+    mcq("What happens with d['missing'] when 'missing' is not a key?",
+        ["KeyError", "Returns None", "Returns 0", "Adds the key"], 0,
+        "Square-bracket lookup is strict.",
+        "Missing key with [ ] raises KeyError. Use .get() when the key might not exist."),
+    out('d = {"x": 1, "y": 2}\nfor k, v in d.items():\n    print(k, v)', ["x 1\ny 2", "x y\n1 2", "('x', 1)", "1\n2"], 0,
+        ".items() gives (key, value) pairs.",
+        "Each loop step unpacks one pair into k and v.", d=2),
+    tf("A dictionary key can appear twice in the same dict.", False,
+       "Think about what a lookup would return if it could.",
+       "Keys are unique. Assigning to an existing key overwrites the old value."),
+],
+
+"py-conditions": [
+    out('x = 7\nif x > 5:\n    print("big")\nelse:\n    print("small")', ["big", "small", "big small", "Nothing"], 0,
+        "Is 7 greater than 5?",
+        "The condition is True, so only the if-branch runs."),
+    out('x = 0\nif x > 0:\n    print("pos")\nelif x == 0:\n    print("zero")\nelse:\n    print("neg")', ["zero", "pos", "neg", "pos zero"], 0,
+        "Python checks top to bottom and stops at the first True.",
+        "x > 0 is False, x == 0 is True -> prints 'zero'.",
+        diagram="""
+ x > 0 ? --no--> x == 0 ? --yes--> "zero"
+   |yes            |no
+  "pos"          "neg"
+"""),
+    mcq("What is the difference between = and == ?",
+        ["= assigns a value, == compares two values", "They are the same", "== assigns, = compares", "= is for strings only"], 0,
+        "One stores, one asks a question.",
+        "x = 5 stores 5 in x. x == 5 asks 'is x equal to 5?' and gives True or False."),
+    out('print(True and False, True or False, not True)', ["False True False", "True True False", "False False True", "False True True"], 0,
+        "and needs both True; or needs at least one.",
+        "True and False -> False; True or False -> True; not True -> False."),
+    out('items = []\nif items:\n    print("has items")\nelse:\n    print("empty")', ["empty", "has items", "Error", "[]"], 0,
+        "Empty things count as False in an if.",
+        "Empty list, empty string, 0 and None are 'falsy'.", d=2),
+],
+
+"py-loops": [
+    out('for i in range(3):\n    print(i)', ["0\n1\n2", "1\n2\n3", "0\n1\n2\n3", "3"], 0,
+        "range(3) starts at 0 and stops BEFORE 3.",
+        "range(3) gives 0, 1, 2."),
+    out('print(list(range(2, 10, 3)))', ["[2, 5, 8]", "[2, 5, 8, 11]", "[3, 6, 9]", "[2, 3, 4]"], 0,
+        "range(start, stop, step).",
+        "Start at 2, add 3 each time, stop before 10: 2, 5, 8."),
+    out('total = 0\nfor n in [1, 2, 3]:\n    total += n\nprint(total)', ["6", "3", "123", "0"], 0,
+        "total += n means total = total + n.",
+        "0+1=1, 1+2=3, 3+3=6. This 'accumulator' pattern is everywhere in ML (summing losses)."),
+    out('n = 3\nwhile n > 0:\n    print(n)\n    n -= 1', ["3\n2\n1", "3\n2\n1\n0", "2\n1\n0", "Runs forever"], 0,
+        "The loop stops when the condition becomes False.",
+        "Prints 3, 2, 1; then n is 0 and n > 0 is False."),
+    out('for i in range(5):\n    if i == 3:\n        break\n    print(i)', ["0\n1\n2", "0\n1\n2\n3", "3", "0\n1\n2\n4"], 0,
+        "break exits the loop immediately.",
+        "When i hits 3 the loop ends before printing it."),
+    out('for i, fruit in enumerate(["apple", "kiwi"]):\n    print(i, fruit)', ["0 apple\n1 kiwi", "1 apple\n2 kiwi", "apple 0\nkiwi 1", "Error"], 0,
+        "enumerate gives (index, item) pairs.",
+        "enumerate is the Pythonic way to get the index and the value together.", d=2),
+],
+
+"py-functions": [
+    out('def add(a, b):\n    return a + b\n\nprint(add(2, 3))', ["5", "23", "None", "Error"], 0,
+        "return sends the value back to the caller.",
+        "add(2, 3) returns 5, which print shows.",
+        diagram="""
+ inputs  --->  [ add(a, b) ]  --->  output
+ 2, 3          a + b               5
+"""),
+    out('def greet(name):\n    print("Hi", name)\n\nx = greet("Ravi")\nprint(x)', ["Hi Ravi\nNone", "Hi Ravi", "None", "Hi Ravi\nHi Ravi"], 0,
+        "greet prints, but does it return anything?",
+        "A function without return gives back None. Printing is not the same as returning.", d=2),
+    out('def power(x, n=2):\n    return x ** n\n\nprint(power(3), power(3, 3))', ["9 27", "6 9", "9 9", "Error"], 0,
+        "n=2 is a default: used only when you don't pass n.",
+        "power(3) uses n=2 -> 9; power(3, 3) -> 27."),
+    mcq("Why do we write functions?",
+        ["To reuse a piece of logic and give it a name", "Because Python requires them", "To make code run faster", "To store data"], 0,
+        "Think DRY in your web projects.",
+        "Functions package logic so you can call it many times and test it in one place."),
+    out('def f(x):\n    x = x * 2\n    return x\n\na = 5\nf(a)\nprint(a)', ["5", "10", "None", "Error"], 0,
+        "The return value of f(a) is not stored anywhere.",
+        "f returns 10 but nobody saves it, and rebinding x inside f doesn't change a.", d=3),
+    out('square = lambda x: x * x\nprint(square(4))', ["16", "8", "lambda", "Error"], 0,
+        "lambda is a tiny one-line function.",
+        "lambda x: x * x is like the JS arrow function x => x * x.",
+        analogy="An arrow function: const square = x => x * x;", d=2),
+],
+
+"py-comprehensions": [
+    out('print([n * 2 for n in [1, 2, 3]])', ["[2, 4, 6]", "[1, 2, 3, 1, 2, 3]", "[1, 4, 9]", "Error"], 0,
+        "Read it as: 'n * 2, for each n in the list'.",
+        "A list comprehension builds a new list by applying an expression to each item.",
+        analogy="[1, 2, 3].map(n => n * 2) in JavaScript.",
+        diagram="""
+ [ n * 2   for n in [1, 2, 3] ]
+   ^what     ^loop
+ -> [2, 4, 6]
+"""),
+    out('print([n for n in range(6) if n % 2 == 0])', ["[0, 2, 4]", "[2, 4, 6]", "[1, 3, 5]", "[0, 2, 4, 6]"], 0,
+        "The if at the end filters items.",
+        "Keeps only even n from 0..5: 0, 2, 4.",
+        analogy=".filter(n => n % 2 === 0) in JavaScript."),
+    out('words = ["ai", "ml"]\nprint({w: len(w) for w in words})', ["{'ai': 2, 'ml': 2}", "['ai', 'ml']", "{2, 2}", "Error"], 0,
+        "Curly braces with key: value make a dict.",
+        "A dict comprehension maps each word to its length.", d=2),
+    tf("[x for x in data] and list(data) produce the same list when data is a list.", True,
+       "The comprehension doesn't change anything about x.",
+       "Both make a new shallow copy of the list.", d=2),
+],
+
+"py-errors": [
+    mcq("When Python shows a traceback, where is the most useful line usually?",
+        ["The last line (error type and message)", "The first line", "The middle", "There is no useful line"], 0,
+        "Read tracebacks from the bottom up.",
+        "The last line names the error (e.g. KeyError: 'age'); the lines above show where it happened.",
+        analogy="Like a stack trace in Java/Node: the message at the end tells you what broke."),
+    mcq("Which error do you get from int('abc')?", ["ValueError", "TypeError", "KeyError", "SyntaxError"], 0,
+        "The type (a string) is fine; the value inside isn't a number.",
+        "ValueError: the argument has the right type but an unusable value."),
+    mcq("Which error do you get from 'a' + 1?", ["TypeError", "ValueError", "NameError", "IndexError"], 0,
+        "You're mixing two kinds of things.",
+        "TypeError: you can't add a str and an int. Convert one: 'a' + str(1)."),
+    out('try:\n    x = 1 / 0\nexcept ZeroDivisionError:\n    print("cannot divide")', ["cannot divide", "Error", "inf", "0"], 0,
+        "except catches the named error.",
+        "Dividing by zero raises ZeroDivisionError, which the except block handles.",
+        analogy="try / catch in JavaScript or Java."),
+    mcq("What does NameError: name 'df' is not defined usually mean in a notebook?",
+        ["The cell that creates df hasn't been run yet", "df is the wrong type", "Pandas isn't installed", "The file is missing"], 0,
+        "Notebooks remember only cells you've actually run.",
+        "Run the earlier cell that defines df (or Restart & Run All).", d=2),
+],
+
+"py-classes": [
+    mcq("What is a class?",
+        ["A blueprint for making objects", "A kind of loop", "A list of functions", "A Python file"], 0,
+        "Same idea as classes in Java / TypeScript.",
+        "A class defines what data an object holds and what it can do; each object is an instance."),
+    out('class Dog:\n    def __init__(self, name):\n        self.name = name\n\nd = Dog("Rex")\nprint(d.name)', ["Rex", "name", "Dog", "Error"], 0,
+        "__init__ runs when you create the object.",
+        "__init__ is the constructor; self.name stores the value on the object.",
+        analogy="__init__ = constructor, self = this."),
+    mcq("What is self in a method?",
+        ["The object the method was called on", "The class name", "A keyword for return", "A global variable"], 0,
+        "In JS or Java this is called 'this'.",
+        "self is the current instance; Python passes it automatically when you call d.bark()."),
+    out('class Counter:\n    def __init__(self):\n        self.n = 0\n    def inc(self):\n        self.n += 1\n\nc = Counter()\nc.inc()\nc.inc()\nprint(c.n)', ["2", "1", "0", "Error"], 0,
+        "Each inc() adds one to the object's n.",
+        "n starts at 0 and is incremented twice.", d=2),
+    tf("In PyTorch, you build a model by writing a class that inherits from nn.Module.", True,
+       "This is why classes are on the ladder at all.",
+       "class Net(nn.Module) with __init__ (layers) and forward (computation) is the standard pattern.", d=2),
+],
+}
