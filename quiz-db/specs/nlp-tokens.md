@@ -8,16 +8,18 @@
 | # | Topic slug | Topic | Amateur | Intermediate | Advanced | Expert |
 |---|-----------|-------|---------|--------------|----------|--------|
 | 1 | `preprocessing` | Classic text preprocessing | lowercase + split, what stopwords are, what stemming does | stemming vs lemmatisation, stopword removal flipping 'not good', why LLMs skip it | when classic cleanup still helps (TF-IDF search), stopwords are task-dependent | — |
-| 2 | `granularity` | Word vs character vs sub-word tokens | character split, word vocab and `<unk>`, vocab size vs sequence length | why sub-word wins, tokenizer = lexer | sequence length vs attention cost for char-level | — |
-| 3 | `bpe` | BPE: the merge algorithm | merge the most frequent pair, the name | one merge by hand, pair counts weighted by word frequency, vocab = base + merges | applying ordered merges to new text, non-overlapping merges, domain shift, tokenizer is trained separately | merge rank order decides the split, why pre-tokenisation stops merges crossing words |
-| 4 | `wordpiece-unigram` | WordPiece, SentencePiece and Unigram | the `##` prefix | SentencePiece `▁` and lossless decoding | WordPiece greedy longest-match, WordPiece pair score, Unigram pruning and best segmentation, SentencePiece is BPE or Unigram | whole-word `[UNK]` in WordPiece, subword regularisation |
-| 5 | `byte-level` | Byte-level BPE and Unicode | characters vs UTF-8 bytes | 256 base bytes, no `<unk>` | bytes per script, GPT-2's `Ġ` | a token can end mid-character (streaming decode) |
-| 6 | `vocab-size` | Vocabulary size trade-offs | bigger vocab = shorter sequences | typical sizes (30k-256k) | embedding memory, costs of a big vocab | why vocabularies grew, embedding rows padded beyond `len(tokenizer)` |
-| 7 | `special-tokens` | Special tokens | EOS, [CLS], [PAD] | counting special tokens in the length, segment IDs | special-token injection, pad = eos workaround | masking labels by pad id also masks EOS |
-| 8 | `ids-embedding` | Token IDs and the embedding lookup | model receives IDs, lookup = row indexing | (batch, seq) -> (batch, seq, d), IDs carry no meaning | one-hot @ E = lookup, out-of-range ID, embedding param count | weight tying, new tokens' embeddings are untrained |
-| 9 | `padding-masks` | Padding, truncation and attention masks | why pad, mask 1 = real | build padded ids + mask, truncation leaves room for special tokens | left padding for decoder generation, dynamic padding / bucketing | mean pooling without the mask |
-| 10 | `cost-quirks` | Tokens vs words: cost, limits and quirks | words -> tokens rule of thumb, context counts input + output | cost calculation, letter counting, leading spaces, non-English costs more | number chunking, pre-tokenisation regex, digit splitting | glitch tokens, trailing-space prompts |
-| 11 | `templates-mismatch` | Chat templates and tokenizer-model mismatch | what a chat template is | build a ChatML string, generation prompt, missing template, templates differ per family | double BOS, train/serve template skew, wrong tokenizer for the weights | label masking on non-assistant turns, stop-token mismatch, cross-model token counting |
+| 2 | `granularity` | Word vs character vs sub-word tokens | character split, word vocab and `<unk>`, vocab size vs sequence length | why sub-word wins, tokenizer = lexer | sequence length vs attention cost for char-level, byte-level tokenizer-free models | — |
+| 3 | `bpe` | BPE: the merge algorithm | merge the most frequent pair, the name | one merge by hand, pair counts weighted by word frequency, vocab = base + merges | applying ordered merges to new text, non-overlapping merges, domain shift, tokenizer is trained separately | merge rank order decides the split, why pre-tokenisation stops merges crossing words, encode(a)+encode(b) != encode(a+b), tie-breaking makes merge lists differ |
+| 4 | `wordpiece-unigram` | WordPiece, SentencePiece and Unigram | the `##` prefix | SentencePiece `▁` and lossless decoding | WordPiece greedy longest-match, WordPiece pair score, Unigram pruning and best segmentation, SentencePiece is BPE or Unigram, uncased BERT strips accents | whole-word `[UNK]` in WordPiece, subword regularisation |
+| 5 | `byte-level` | Byte-level BPE and Unicode | characters vs UTF-8 bytes | 256 base bytes, no `<unk>` | bytes per script, GPT-2's `Ġ`, NFC vs NFD give different bytes | a token can end mid-character (streaming decode, incremental UTF-8 decoder), SentencePiece byte fallback `<0xNN>` |
+| 6 | `vocab-size` | Vocabulary size trade-offs | bigger vocab = shorter sequences | typical sizes (30k-256k) | embedding memory, costs of a big vocab, logits tensor memory | why vocabularies grew, embedding rows padded beyond `len(tokenizer)`, diminishing returns of more merges, embedding share of a small model |
+| 7 | `special-tokens` | Special tokens | EOS, [CLS], [PAD] | counting special tokens in the length, segment IDs | special-token injection, pad = eos workaround, longest_first pair truncation, missing BOS when scoring | masking labels by pad id also masks EOS |
+| 8 | `ids-embedding` | Token IDs and the embedding lookup | model receives IDs, lookup = row indexing | (batch, seq) -> (batch, seq, d), IDs carry no meaning | one-hot @ E = lookup, out-of-range ID, embedding param count | weight tying, new tokens' embeddings are untrained, mean-initialising new rows |
+| 9 | `padding-masks` | Padding, truncation and attention masks | why pad, mask 1 = real | build padded ids + mask, truncation leaves room for special tokens | left padding for decoder generation, dynamic padding / bucketing, -inf mask before softmax, ignore_index=-100 | mean pooling without the mask, all-padding row gives NaN |
+| 10 | `cost-quirks` | Tokens vs words: cost, limits and quirks | words -> tokens rule of thumb, context counts input + output | cost calculation, letter counting, leading spaces, non-English costs more | number chunking, pre-tokenisation regex, digit splitting, output tokens cost more, re-sent history grows quadratically, JSON/code whitespace | glitch tokens, trailing-space prompts |
+| 11 | `templates-mismatch` | Chat templates and tokenizer-model mismatch | what a chat template is | build a ChatML string, generation prompt, missing template, templates differ per family | double BOS, train/serve template skew, wrong tokenizer for the weights, keep the turn-end token in the labels | label masking on non-assistant turns, stop-token mismatch, cross-model token counting, template-injected default system prompt |
+| 12 | `tokenizer-code` | Tokenizer pipeline in code | — | vocabulary with min-frequency and special tokens first | encode/decode round trip loses information, the four pipeline stages, offsets mapping, pre-tokenize once and cache | per-token streaming decode drops spaces, retraining a tokenizer breaks a pretrained model, NFKC changes lengths and offsets |
+| 13 | `context-budget` | Context budgets, truncation and chunking | prompt + reply share the window | budget arithmetic with a reply reserve, `truncation=True` | sliding-window chunks and the duplicate tail, chunk by tokens not characters, left-truncate chat history, overlap cost | stride windows for QA, KV-cache memory per token, prefix caching needs a stable prefix |
 
 ## Must-know facts
 - A token is a chunk of text from a fixed vocabulary; the model only ever sees integer token IDs.
@@ -35,6 +37,12 @@
 - Attention mask: 1 = real token, 0 = padding. Decoder-only batch generation needs left padding.
 - Leading spaces are part of tokens (' hello' ≠ 'hello'); numbers split oddly; letters are hidden inside tokens.
 - Chat models expect their own chat template; always use the tokenizer from the same checkpoint as the model.
+- Tokenizer pipeline: normalise -> pre-tokenise -> model (BPE/WordPiece/Unigram) -> post-process (special tokens). Offsets map tokens back to original characters.
+- Tokenization is not compositional: encode(a) + encode(b) can differ from encode(a + b). Tokenize the rendered string once.
+- Mask attention with -inf (or dtype min) BEFORE the softmax; an all-masked row gives NaN. Labels of -100 are skipped by cross-entropy, including in the mean.
+- Budget the window as system + history + question + reserved reply; chunk by tokens; overlapping windows (stride) keep answer spans whole.
+- KV cache per token = 2 x layers x kv_heads x head_dim x bytes (128 KiB for a 32-layer, 8-KV-head, 128-dim fp16 model). Prefix caching needs an identical token prefix.
+- Extra merges have diminishing returns; at small scale the vocab matrix can be a quarter of the parameters.
 
 ## Common traps (each one must have at least one question)
 - Removing stopwords "because they mean nothing" -> 'not good' becomes 'good', sentiment flips.
@@ -60,6 +68,15 @@
 - Training on the whole templated chat as labels -> the model learns to write user turns.
 - Stop token not matching the template's turn-end token -> generation never stops.
 - Using one model's tokenizer to estimate another provider's cost -> counts differ.
+- Decoding streamed tokens one at a time -> spaces vanish and split characters break; decode the prefix and emit the diff.
+- Retraining a tokenizer for a pretrained model -> every ID changes meaning; add tokens instead.
+- Visually identical NFC/NFD strings -> different bytes and tokens; normalise at ingestion.
+- Building prompts by concatenating token-ID lists -> sequences the model never saw.
+- Chunking by characters for a token-limited encoder -> silent truncation for code and non-English text.
+- Sliding windows without a stop condition -> a tiny duplicate tail chunk.
+- A timestamp at the top of a cached prompt -> every request misses the prefix cache.
+- Masking the turn-end token in chat labels -> the model never learns to stop.
+- Re-sending the full chat history -> input tokens grow quadratically with turns.
 
 ## Interview angle
 - **"Explain BPE."** Start from characters (or bytes). Count adjacent pairs across the corpus weighted by word frequency, merge the most frequent pair into a new token, repeat until the vocabulary hits the target size. To encode new text, split it into characters and replay the merges in learned order. It is like a compression dictionary built from the data. SDE analogy: a lexer whose token set was learned from logs.
@@ -67,6 +84,8 @@
 - **"Why can't an LLM count the r's in 'strawberry'?"** It sees 2-3 sub-word tokens, not letters. Spelling is only known if memorised per token. Fix: ask it to spell first, or use a tool.
 - **"What vocabulary size would you choose?"** Trade-off: bigger means shorter sequences (cheaper, more context) but a bigger embedding/softmax and more under-trained rare tokens. Modern LLMs use about 32k-256k; multilingual and code-heavy models go larger.
 - **"Name a tokenizer bug you have seen."** Wrong tokenizer for the checkpoint (silent garbage), pad = eos masking the real EOS, right padding in batch generation, double BOS from the chat template, or stop tokens not matching the template.
+
+- **"Why do long contexts cost so much to serve?"** Every token in the context keeps keys and values in every layer (KV cache), about 128 KiB per token for a mid-size model, so a batch of long sequences needs many GB of GPU memory. Output tokens are generated one by one, which is why they are slower and priced higher. Prefix caching helps only if the prompt starts with an identical prefix.
 
 ## Source material
 To be added.

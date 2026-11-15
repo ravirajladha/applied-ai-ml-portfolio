@@ -8,16 +8,19 @@
 | # | Topic slug | Topic | Amateur | Intermediate | Advanced | Expert |
 |---|-----------|-------|---------|--------------|----------|--------|
 | 1 | `one-hot-dense` | One-hot vs dense vectors | build a one-hot vector, why one-hot has no similarity, what a dense embedding is | one-hot dot products are 0 | distributed representations | — |
-| 2 | `bow-tfidf` | Bag-of-words and TF-IDF | CountVectorizer shape, what IDF does | vocabulary order and dropped 1-char tokens, count matrix, word order lost, TF-IDF by hand, IDF = 0 for words in every doc | sklearn smoothed IDF, default L2 norm, unseen words ignored, stop_words='english' removes 'not', lexical vs semantic match | n-gram feature counts |
-| 3 | `word2vec` | Distributional hypothesis and word2vec | distributional hypothesis, skip-gram vs CBOW | keep the weights, skip-gram pairs, CBOW averaging | negative sampling, unigram^0.75, CBOW vs skip-gram trade-off, antonyms are close | window size effect, two matrices and the sigmoid score |
-| 4 | `glove-fasttext` | GloVe and fastText | fastText handles OOV, GloVe's name | character n-grams with boundary markers, GloVe co-occurrence | `<her>` vs inner 'her', morphologically rich languages, OOV vector from n-grams | — |
+| 2 | `bow-tfidf` | Bag-of-words and TF-IDF | CountVectorizer shape, what IDF does | vocabulary order and dropped 1-char tokens, count matrix, word order lost, TF-IDF by hand, IDF = 0 for words in every doc | sklearn smoothed IDF, default L2 norm, unseen words ignored, stop_words='english' removes 'not', lexical vs semantic match, sublinear_tf, HashingVectorizer trade-off | n-gram feature counts |
+| 3 | `word2vec` | Distributional hypothesis and word2vec | distributional hypothesis, skip-gram vs CBOW | keep the weights, skip-gram pairs, CBOW averaging | negative sampling, unigram^0.75, CBOW vs skip-gram trade-off, antonyms are close, subsampling frequent words | window size effect, two matrices and the sigmoid score, SGNS = shifted PMI factorisation |
+| 4 | `glove-fasttext` | GloVe and fastText | fastText handles OOV, GloVe's name | character n-grams with boundary markers, GloVe co-occurrence | `<her>` vs inner 'her', morphologically rich languages, OOV vector from n-grams, n-gram hashing buckets | GloVe weighting function (zero counts, cap) |
 | 5 | `analogies` | Vector arithmetic and analogies | king - man + woman | do the arithmetic, set up the analogy expression | analogies are unreliable, why offsets are parallel | input words must be excluded or 'king' wins |
-| 6 | `similarity` | Cosine, dot product and Euclidean distance | cosine by hand, cosine range, norm and unit vector | cosine_similarity matrix, normalise with norm | dot vs cosine ranking on raw vectors, equivalence after normalisation, row-wise normalisation with keepdims | ‖a−b‖² = 2 − 2cos, use the metric the model was trained with |
-| 7 | `contextual` | Contextual embeddings | static 'bank' has one vector | why BERT is contextual, LLM text is not an embedding | last-token pooling for decoder models | anisotropy and mean-centring, which layer to use |
-| 8 | `sentence` | Sentence embeddings, bi- vs cross-encoders | what a sentence embedding is | bi- vs cross-encoder, retrieve then re-rank, argsort top-k trap | masked mean pooling, raw [CLS] is poor, contrastive training | query/passage prefixes for asymmetric models |
-| 9 | `dimensions` | Embedding dimension and Matryoshka embeddings | typical sizes | storage maths, dimension trade-off | Matryoshka idea, naive truncation of ordinary models | re-normalise after truncation, quantisation, distance concentration |
-| 10 | `vector-search` | Semantic search and vector databases | what semantic search is, vector DB vs SQL index | brute-force top-k, ANN gives up recall | brute-force cost, HNSW idea, efSearch, brute force is fine at small scale | IVF nprobe, filtered search / post-filter trap |
-| 11 | `drift-bias` | Embedding drift, mixing models and bias | can't compare vectors across models | re-embed on model upgrade, bias in analogies | rotation demo of mixed spaces, data drift | silent provider updates and version pinning, projection debiasing and its limits |
+| 6 | `similarity` | Cosine, dot product and Euclidean distance | cosine by hand, cosine range, norm and unit vector | cosine_similarity matrix, normalise with norm | dot vs cosine ranking on raw vectors, equivalence after normalisation, row-wise normalisation with keepdims | ‖a−b‖² = 2 − 2cos, use the metric the model was trained with, zero vector gives NaN by hand but 0 in sklearn |
+| 7 | `contextual` | Contextual embeddings | static 'bank' has one vector | why BERT is contextual, LLM text is not an embedding | last-token pooling for decoder models, word vectors from sub-word tokens | anisotropy and mean-centring, which layer to use |
+| 8 | `sentence` | Sentence embeddings, bi- vs cross-encoders | what a sentence embedding is | bi- vs cross-encoder, retrieve then re-rank, argsort top-k trap | masked mean pooling, raw [CLS] is poor, contrastive training, silent truncation at the max length | query/passage prefixes for asymmetric models, late interaction (ColBERT MaxSim) |
+| 9 | `dimensions` | Embedding dimension and Matryoshka embeddings | typical sizes | storage maths, dimension trade-off | Matryoshka idea, naive truncation of ordinary models, binary quantisation + rescoring | re-normalise after truncation, quantisation, distance concentration |
+| 10 | `vector-search` | Semantic search and vector databases | what semantic search is, vector DB vs SQL index | brute-force top-k, ANN gives up recall | brute-force cost, HNSW idea, efSearch, brute force is fine at small scale, ANN recall vs brute force | IVF nprobe, filtered search / post-filter trap, HNSW tombstone deletes need rebuilds |
+| 11 | `drift-bias` | Embedding drift, mixing models and bias | can't compare vectors across models | re-embed on model upgrade, bias in analogies | rotation demo of mixed spaces, data drift, vectors are not bit-identical across hardware | silent provider updates and version pinning, projection debiasing and its limits, Procrustes alignment as a stopgap |
+| 12 | `embedding-code` | Embedding layers in PyTorch | nn.Embedding weight shape | integer index tensors | padding_idx (zero row, no gradient), EmbeddingBag mean, from_pretrained freezes by default | dense Adam moves rows absent from the batch, sparse=True + SparseAdam, max_norm renormalises in place |
+| 13 | `contrastive` | Contrastive training of embedding models | positive pairs | pull positives, push negatives | InfoNCE with in-batch negatives and temperature, bigger batches = more negatives, triplet loss with margin | false negatives from duplicates, hard negatives that are unlabelled positives, low temperature focuses on hard negatives, loss stuck at ln(B) = collapse |
+| 14 | `hybrid-search` | Hybrid search, fusion and retrieval evaluation | what BM25 is | hybrid search for exact IDs | Reciprocal Rank Fusion, raw-score fusion scale mismatch, recall@k, BM25 tf saturation, chunk granularity | synthetic-query eval leakage, BM25 is a strong zero-shot baseline |
 
 ## Must-know facts
 - One-hot vectors are as long as the vocabulary and all mutually orthogonal: no similarity information.
@@ -38,6 +41,12 @@
 - ANN indexes (HNSW, IVF) trade a little recall for big speed-ups; HNSW is a layered proximity graph searched greedily.
 - Vectors from different models (or model versions) live in different spaces and must never be mixed in one index.
 - Embeddings absorb social biases from their training text.
+- nn.Embedding is a (num_embeddings, dim) table indexed by integer IDs; padding_idx rows are zero and get no gradient; from_pretrained freezes by default.
+- Contrastive (InfoNCE) training: softmax over similarities with the positive as the target; in-batch negatives give B-1 negatives per query; temperature controls sharpness; a loss stuck at ln(B) means collapse.
+- BM25 = TF-IDF with term-frequency saturation (ceiling k1 + 1) and length normalisation; still a strong zero-shot baseline.
+- Hybrid search fuses keyword and dense rankings; RRF score = sum of 1/(k + rank), k = 60, no score calibration needed.
+- Retriever recall@k caps RAG quality; ANN recall is measured against brute force.
+- Late interaction (ColBERT) keeps one vector per token and scores with the sum of per-query-token maxima (MaxSim).
 
 ## Common traps (each one must have at least one question)
 - Expecting 'I' or 'a' in the CountVectorizer vocabulary -> the default token_pattern drops 1-character tokens.
@@ -64,6 +73,17 @@
 - Assuming ANN is exact -> recall is below 100%.
 - Believing projection debiasing removes bias -> bias remains recoverable.
 - Raw contextual embeddings all look similar (0.8+) -> anisotropy; mean-centre or use a similarity-trained model.
+- Loading pretrained vectors with from_pretrained and expecting them to train -> freeze=True by default.
+- Assuming rows absent from a batch never change -> dense Adam momentum keeps moving them.
+- Duplicate questions in one batch -> false negatives push correct answers apart.
+- Mining the top BM25 hits as negatives -> many are unlabelled positives.
+- Adding raw BM25 and cosine scores -> BM25 dominates; use RRF or normalise.
+- Evaluating on LLM-generated queries -> lexical leakage inflates BM25.
+- Dropping keyword search on a new domain -> rare terms and IDs are missed.
+- Embedding long chunks past the max length -> the tail is silently truncated.
+- Computing cosine by hand on zero vectors -> NaN scrambles the ranking.
+- Using exact equality of vectors for dedupe -> floating-point noise breaks it; hash the text.
+- Heavy deletes in HNSW -> tombstones degrade recall until a rebuild.
 
 ## Interview angle
 - **"How does semantic search work end to end?"** Chunk documents, embed each chunk with a bi-encoder, store vectors (plus metadata) in an ANN index such as HNSW. At query time, embed the query with the SAME model, take the top-k by cosine, optionally re-rank with a cross-encoder, and return. SDE analogy: a vector DB is an index for similarity instead of equality.
@@ -71,6 +91,8 @@
 - **"Explain word2vec in a minute."** A shallow network trained on a fake task: predict neighbours from a word (skip-gram) or a word from its neighbours (CBOW). Negative sampling makes it cheap. The learned weight matrix is the embedding table, and words in similar contexts get similar rows.
 - **"Bi-encoder vs cross-encoder?"** Bi-encoder: embed query and document separately, so documents can be pre-computed; fast, used for retrieval. Cross-encoder: reads the pair together; more accurate, but one forward pass per pair, so it is only used to re-rank the top ~100.
 - **"What breaks when you change the embedding model?"** Every stored vector is in the old space. You must re-embed the corpus, version the index by model, and switch atomically. Mixing models gives silent garbage, even with the same dimension.
+
+- **"How do you improve a RAG retriever?"** Measure first: a labelled query set with recall@k and MRR (from real queries, not only synthetic ones). Then add hybrid search (BM25 + dense, fused with RRF), tune chunk size, re-rank the top candidates with a cross-encoder, and if you have data, fine-tune the embedding model contrastively with carefully mined hard negatives.
 
 ## Source material
 To be added.

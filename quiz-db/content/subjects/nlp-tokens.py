@@ -14,6 +14,8 @@ TOPICS = [
     ("padding-masks", "Padding, truncation and attention masks"),
     ("cost-quirks", "Tokens vs words: cost, limits and quirks"),
     ("templates-mismatch", "Chat templates and tokenizer-model mismatch"),
+    ("tokenizer-code", "Tokenizer pipeline in code"),
+    ("context-budget", "Context budgets, truncation and chunking"),
 ]
 
 QUESTIONS = [
@@ -689,4 +691,380 @@ QUESTIONS = [
        "Do different models share one vocabulary?",
        "Each model family has its own tokenizer, and the same text can differ by 20% or more in token count. Budget and truncate with the tokenizer of the model you are actually calling.",
        topic="templates-mismatch", level=4),
+
+    # ------------------------------------------------------------------
+    # tokenizer-code (round 2)
+    # ------------------------------------------------------------------
+    out("""from collections import Counter
+corpus = ["the cat sat", "the dog sat", "a cat ran"]
+counts = Counter(w for s in corpus for w in s.split())
+vocab = ["<pad>", "<unk>"] + sorted(w for w, n in counts.items() if n >= 2)
+print(vocab)""",
+        ["['<pad>', '<unk>', 'cat', 'sat', 'the']",
+         "['<pad>', '<unk>', 'the', 'cat', 'sat']",
+         "['<pad>', '<unk>', 'a', 'cat', 'dog', 'ran', 'sat', 'the']",
+         "['cat', 'sat', 'the']"], 0,
+        "Only words seen at least twice survive, and sorted() orders them.",
+        "Words seen once ('dog', 'a', 'ran') are dropped and will map to <unk> later. Special tokens go first so their IDs (0 and 1) never move. A min-frequency cut-off is how word vocabularies stay small, and it is exactly why they lose rare words. The tempting first-seen order is wrong because sorted() reorders alphabetically.",
+        question="Building a word vocabulary with a minimum frequency of 2. What does this print?",
+        topic="tokenizer-code", level=2),
+    out("""vocab = {"<unk>": 0, "hello": 1, "world": 2}
+inv = {i: w for w, i in vocab.items()}
+ids = [vocab.get(w, 0) for w in "Hello  world!".lower().split()]
+print(ids, " ".join(inv[i] for i in ids))""",
+        ["[1, 0] hello <unk>", "[1, 2] hello world", "[1, 2] Hello  world!", "KeyError"], 0,
+        "split() keeps the '!' glued to 'world'.",
+        "'world!' is not in the vocabulary, so it becomes <unk>; the capital H and the double space are lost too. For this tokenizer decode(encode(text)) != text. Byte-level BPE is lossless by design, which matters when a model must reproduce code, URLs or exact quotes. No KeyError, because dict.get has a default.",
+        question="A word-level encode/decode round trip. What does this print?",
+        topic="tokenizer-code", level=3),
+    mcq("A modern tokenizer library runs four stages. In which order?",
+        ["Normalise -> pre-tokenise -> model (BPE/WordPiece/Unigram) -> post-process (add special tokens)",
+         "Pre-tokenise -> model -> normalise -> post-process",
+         "Model -> normalise -> pre-tokenise -> post-process",
+         "Post-process -> normalise -> model -> pre-tokenise"], 0,
+        "Clean the string first; add [CLS]/[SEP] last.",
+        "Normalisation (Unicode NFKC, lowercasing for uncased models) cleans the raw string. Pre-tokenisation splits it into word-like chunks so merges never cross them. The model stage applies the learned merges or vocabulary. Post-processing adds special tokens. When a tokenizer misbehaves, inspect each stage's output separately, like bisecting a bug.",
+        diagram="""
+ "Héllo world"
+   | normalise     -> "héllo world"
+   | pre-tokenise  -> ["héllo", " world"]
+   | model (BPE)   -> ["h", "éllo", " world"]
+   | post-process  -> ["<s>", "h", "éllo", " world", "</s>"]
+""",
+        analogy="Like an HTTP middleware chain: each stage has one job, and the order matters.",
+        topic="tokenizer-code", level=3),
+    out(r"""import re
+text = "New York rocks"
+offsets = [(m.start(), m.end()) for m in re.finditer(r"\S+", text)]
+print(offsets, text[offsets[1][0]:offsets[1][1]])""",
+        ["[(0, 3), (4, 8), (9, 14)] York", "[(0, 3), (3, 8), (8, 14)] York",
+         "[(0, 2), (4, 7), (9, 13)] Yor", "[(0, 4), (4, 9), (9, 14)] York "], 0,
+        "end is exclusive, like a Python slice.",
+        "Each token gets a (start, end) character span into the ORIGINAL text, end exclusive. Offsets are how NER labels or a QA answer span predicted on tokens are mapped back to exact characters for highlighting. Hugging Face fast tokenizers return them with return_offsets_mapping=True.",
+        question="Computing token offsets for a whitespace tokenizer. What does this print?",
+        topic="tokenizer-code", level=3),
+    out("""pieces = {1: "▁Hello", 2: "▁world", 3: "!"}
+def decode(ids):
+    return "".join(pieces[i] for i in ids).replace("▁", " ").lstrip(" ")
+streamed = "".join(decode([i]) for i in [1, 2, 3])
+print(repr(streamed), repr(decode([1, 2, 3])))""",
+        ["'Helloworld!' 'Hello world!'", "'Hello world!' 'Hello world!'",
+         "' Hello world!' 'Hello world!'", "'Hello world !' 'Hello world!'"], 0,
+        "decode() strips the leading space of whatever it is given.",
+        "SentencePiece-style decoding drops the space marker at the start of a text. Call it one token at a time and every word loses its space. Streaming servers instead keep all IDs, decode the whole prefix each step and emit only the new suffix; that also handles tokens that end mid-character. A classic bug in hand-rolled streaming UIs.",
+        question="Streaming output by decoding each token on its own. What does this print?",
+        topic="tokenizer-code", level=4),
+    mcq("Your legal corpus tokenizes poorly with a pretrained model's tokenizer. A teammate trains a brand-new BPE tokenizer on the legal text (same vocabulary size) and keeps fine-tuning the same pretrained model with it. What happens?",
+        ["Almost every ID now means a different string, so the pretrained embeddings no longer match and most pretraining is wasted; add domain tokens to the existing tokenizer and resize instead",
+         "It works well, because the vocabulary size is unchanged",
+         "The model automatically remaps old IDs to the new tokens",
+         "Only the rare legal words are affected; common words keep their IDs"], 0,
+        "Embedding row 4000 was learned for one specific string.",
+        "The embedding table is keyed by ID. A new tokenizer reassigns IDs, so every row now belongs to the wrong token: no crash, but you have thrown away what the model knew. Safe options: add a few hundred domain tokens (new rows, resize, train them), or accept the old splits. Swapping tokenizers is only done with expensive embedding-transfer tricks and continued pretraining.",
+        analogy="Like re-numbering every primary key in a database but keeping the old foreign keys.",
+        topic="tokenizer-code", level=4),
+    mcq("Your fine-tuning GPU sits at 30% utilisation. Profiling shows the time goes to tokenizing each example in a Python loop inside the Dataset's __getitem__. What is the best fix?",
+        ["Tokenize the whole dataset once, in batches, with a fast (Rust-backed) tokenizer, and cache the token IDs",
+         "Buy a bigger GPU",
+         "Use a smaller vocabulary so tokenizing is faster",
+         "Lower the learning rate"], 0,
+        "The tokenizer is fixed; its output never changes between epochs.",
+        "Tokenization is deterministic, so redoing it every epoch is pure waste. Pre-tokenize once (e.g. a batched map over the dataset), store the IDs, and let the data loader only pad and collate. A bigger GPU would idle even more.",
+        analogy="Like compiling assets at build time instead of on every request.",
+        topic="tokenizer-code", level=3),
+    out("""import unicodedata
+s = "ﬁle ２０２４"
+n = unicodedata.normalize("NFKC", s)
+print(n, len(s), len(n))""",
+        ["file 2024 8 9", "ﬁle ２０２４ 8 8", "file 2024 9 9", "file ２０２４ 8 9"], 0,
+        "NFKC turns compatibility characters (ligatures, full-width digits) into plain ones.",
+        "The single ligature character 'ﬁ' becomes the two letters 'fi', and full-width digits become ASCII digits, so the model sees ordinary 'file 2024'. But the normalised string is longer, so offsets computed on it do not line up with the original text. Tokenizer libraries keep an alignment map for this; if you slice the original string with normalised offsets, highlights drift.",
+        question="Unicode NFKC normalisation, as many tokenizers do first. What does this print?",
+        topic="tokenizer-code", level=4),
+    fill("To get each token's (start, end) character span from a Hugging Face fast tokenizer, pass ____=True.", "return_offsets_mapping",
+         "It returns a mapping of offsets.",
+         "tokenizer(text, return_offsets_mapping=True) adds an 'offset_mapping' list of (start, end) pairs; special tokens get (0, 0). It is the standard way to map token-level predictions (NER, QA spans) back to characters.",
+         topic="tokenizer-code", level=3),
+    # ------------------------------------------------------------------
+    # context-budget (round 2)
+    # ------------------------------------------------------------------
+    tf("If a prompt uses 127,000 tokens of a 128,000-token context window, the model can reply with at most about 1,000 tokens.", True,
+       "The window is shared by the prompt and the reply.",
+       "The context window is one budget for input plus output. A huge prompt leaves little room for the answer, and the reply is cut off at the limit. Always reserve output tokens before you fill the prompt.",
+       topic="context-budget", level=1),
+    mcq("A model has an 8,192-token window. Your system prompt is 600 tokens, the user question 300, and you reserve 1,024 tokens for the answer. How many tokens of chat history can you include?",
+        ["6,268", "7,292", "8,192", "5,244"], 0,
+        "Subtract everything that must fit, including the reply, exactly once.",
+        "8,192 - 600 - 300 - 1,024 = 6,268. Forgetting the reply reserve gives 7,292, and the answer then gets truncated. This budget is computed with the real tokenizer on every request; trim the oldest history to fit.",
+        diagram="""
+ |<------------------ 8,192 tokens ------------------>|
+ | system 600 | history ? | question 300 | reply 1,024 |
+""",
+        topic="context-budget", level=2),
+    fill("In a Hugging Face tokenizer call, pass ____=True together with max_length to cut longer inputs down to size.", "truncation",
+         "The opposite of padding.",
+         "tokenizer(text, truncation=True, max_length=512) cuts anything longer. Without it, a long input either raises an error later in the model or silently exceeds the position limit. Truncation leaves room for the special tokens automatically.",
+         topic="context-budget", level=2),
+    out("""ids = list(range(10))
+size, overlap = 4, 1
+chunks = [ids[i:i + size] for i in range(0, len(ids), size - overlap)]
+print(chunks)""",
+        ["[[0, 1, 2, 3], [3, 4, 5, 6], [6, 7, 8, 9], [9]]",
+         "[[0, 1, 2, 3], [3, 4, 5, 6], [6, 7, 8, 9]]",
+         "[[0, 1, 2, 3], [4, 5, 6, 7], [8, 9]]",
+         "[[0, 1, 2, 3], [2, 3, 4, 5], [4, 5, 6, 7], [6, 7, 8, 9]]"], 0,
+        "The window moves by size - overlap = 3 each step; when does range() stop?",
+        "Starts are 0, 3, 6, 9. The last chunk [9] is only a copy of the previous chunk's tail: a tiny, useless chunk that still costs an embedding and pollutes search results. Stop at len(ids) - overlap, or merge a short tail into the previous chunk.",
+        diagram="""
+ tokens: 0 1 2 3 4 5 6 7 8 9
+ chunk1: 0 1 2 3
+ chunk2:       3 4 5 6
+ chunk3:             6 7 8 9
+ chunk4:                   9   <- duplicate tail
+""",
+        question="Sliding-window chunking of token IDs with overlap. What does this print?",
+        topic="context-budget", level=3),
+    mcq("You split documents into 2,000-character chunks for an embedding model with a 512-token limit. English chunks retrieve well, but Japanese text and source code retrieve badly. What is the most likely cause?",
+        ["Those chunks are well over 512 tokens, so the encoder silently truncates them and their tails are never embedded; chunk by token count with the model's own tokenizer",
+         "Embedding models cannot handle Japanese at all",
+         "Character chunks are always shorter in tokens for non-English text",
+         "The vector database rejects long chunks"], 0,
+        "Characters per token is about 4 for English. Is it the same for Japanese or code?",
+        "Japanese and code use far more tokens per character, so a 2,000-character chunk can be 1,000+ tokens. Most embedding pipelines truncate without warning, so half the chunk is invisible to search. Budget chunks in tokens, not characters or words.",
+        topic="context-budget", level=3),
+    mcq("A chat app's history no longer fits the window. Which truncation strategy is usually right?",
+        ["Keep the system prompt and the newest turns; drop or summarise the oldest turns (truncate the history from the left)",
+         "Cut from the end (right truncation) so the oldest context is kept",
+         "Drop the system prompt first, because it never changes",
+         "Shorten every message to its first 10 tokens"], 0,
+        "Which part of the history does the next reply depend on most?",
+        "The latest turns hold the current question and context; the system prompt holds the rules. Default right truncation would cut off the newest message, the very thing the user just asked. Tokenizers expose this as truncation_side='left'; chat frameworks usually drop or summarise whole old turns.",
+        topic="context-budget", level=3),
+    fill("1,000 tokens are chunked with size 256 and overlap 32 (step 224), with chunk starts 0, 224, 448, ... while start < 1000 - 32. The number of chunks is ____.", "5",
+         "List the starts: add 224 until you pass 968.",
+         "Starts are 0, 224, 448, 672 and 896, so 5 chunks, the last one 104 tokens long. You embed 4 x 256 + 104 = 1,128 tokens for 1,000 tokens of text: overlap is a real storage and cost overhead (about 13% here) traded for not cutting facts in half.",
+         topic="context-budget", level=3),
+    mcq("Extractive QA over a 3,000-token document with a 512-token encoder. You split the document into non-overlapping 512-token windows. Accuracy drops for answers near window edges. What is the standard fix?",
+        ["Use overlapping windows (a stride, e.g. doc_stride=128) so every answer span lies fully inside some window, then take the best-scoring span across windows",
+         "Raise max_length to 3,000 tokens; the encoder will adapt",
+         "Drop the windows that contain no answer from inference",
+         "Use left truncation"], 0,
+        "An answer cut in half by a boundary cannot be extracted from either half.",
+        "With hard boundaries, an answer that straddles a cut exists in no single window. Overlapping windows (return_overflowing_tokens with stride in Hugging Face) guarantee each short span appears whole somewhere. The model's position limit is fixed by pretraining, so simply raising max_length fails.",
+        diagram="""
+ no overlap: [....win1....][....win2....]
+                       answer^^^^  <- split
+ stride:     [....win1....]
+                  [....win2....]   <- answer whole here
+""",
+        topic="context-budget", level=4),
+    out("""layers, kv_heads, head_dim, bytes_per = 32, 8, 128, 2   # fp16, grouped-query attention
+per_token = 2 * layers * kv_heads * head_dim * bytes_per   # 2 = keys and values
+print(per_token, per_token * 8192 / 2**30)""",
+        ["131072 1.0", "65536 0.5", "131072 8.0", "4096 0.03125"], 0,
+        "Every token in the context keeps a key AND a value vector in every layer.",
+        "2 x 32 x 8 x 128 x 2 bytes = 128 KiB per token, so one 8,192-token sequence holds 1 GiB of KV cache. A batch of 16 such users needs 16 GiB on top of the weights. That is why long contexts are expensive to serve, not just to bill, and why providers limit and price by tokens.",
+        question="KV-cache memory for one 8,192-token sequence. What does this print?",
+        topic="context-budget", level=4),
+    mcq("Your provider offers prompt (prefix) caching. You put the current timestamp on the first line of a 3,000-token system prompt that is otherwise identical on every call. What happens?",
+        ["Almost every request misses the cache, because caching reuses an identical token prefix and the timestamp changes it at the start; put static content first and variable content last",
+         "The cache ignores timestamps automatically",
+         "Only the timestamp's tokens are recomputed",
+         "Caching works the same; order inside the prompt does not matter"], 0,
+        "A prefix cache is keyed on the tokens from position 0 up to the first difference.",
+        "Prefix caching stores the KV cache for a token prefix. Any change at position k invalidates everything after k. A timestamp at the top means no shared prefix at all, so you pay full price and latency every time. Order prompts as: fixed instructions, then tools and examples, then per-request data.",
+        analogy="Like adding ?t=<now> to a CDN URL: every request becomes a cache miss.",
+        topic="context-budget", level=4),
+    # ------------------------------------------------------------------
+    # deeper L3/L4 on existing topics (round 2)
+    # ------------------------------------------------------------------
+    out("""import unicodedata
+a = "café"
+b = unicodedata.normalize("NFD", a)
+print(a == b, len(a), len(b), len(b.encode("utf-8")))""",
+        ["False 4 5 6", "True 4 4 5", "False 4 5 5", "True 4 5 6"], 0,
+        "NFD splits 'é' into 'e' plus a combining accent.",
+        "Both strings render as 'café', but NFD stores 5 code points (6 UTF-8 bytes), so a byte-level tokenizer produces different tokens for them. Exact-match dedupe, cache keys and keyword search all miss. Normalise text (usually NFC) once at ingestion, the same way on the indexing and query paths.",
+        question="Two visually identical strings. What does this print?",
+        topic="byte-level", level=3),
+    mcq("Some SentencePiece tokenizers contain 256 tokens named like '<0xE2>' or '<0x9C>'. What are they for?",
+        ["Byte fallback: a character missing from the vocabulary is encoded as its UTF-8 bytes with these tokens instead of becoming <unk>",
+         "They are hexadecimal IDs of the special tokens",
+         "They pad sequences to a multiple of 256",
+         "They represent the numbers 0 to 255 for arithmetic"], 0,
+        "What happens to a rare emoji that has no piece of its own?",
+        "Byte fallback gives a character-level SentencePiece model the 'never unknown' guarantee of byte-level BPE. A rare 4-byte emoji costs 4 tokens instead of collapsing to <unk>. Consequence: rare scripts are representable but expensive, and decoding a single byte token alone gives a broken character.",
+        topic="byte-level", level=4),
+    out("""import codecs
+data = "é!".encode("utf-8")
+dec = codecs.getincrementaldecoder("utf-8")()
+print([dec.decode(data[i:i + 1]) for i in range(len(data))])""",
+        ["['', 'é', '!']", "['�', '�', '!']", "['é', '!']", "UnicodeDecodeError"], 0,
+        "An incremental decoder may hold bytes back until a character is complete.",
+        "'é' is two bytes. Fed the first byte alone, the incremental decoder returns '' and buffers it; the second byte completes 'é'. Decoding each byte token with bytes.decode(errors='replace') would print two U+FFFD marks instead. Streaming LLM output must buffer like this, because byte-level tokens can end mid-character.",
+        diagram="""
+ bytes : C3      A9      21
+ out   : ''      'é'     '!'
+          ^ buffered, waiting for the rest
+""",
+        question="Decoding a UTF-8 stream one byte at a time. What does this print?",
+        topic="byte-level", level=4),
+    mcq("Training with batch 8, sequence length 4,096 and a 128k-token vocabulary, roughly how big is the fp32 logits tensor (batch x seq x vocab x 4 bytes) alone?",
+        ["About 16 GB", "About 1.6 GB", "About 160 MB", "About 160 GB"], 0,
+        "8 x 4,096 x 128,000 x 4.",
+        "8 x 4,096 x 128,256 x 4 bytes is about 16.8e9 bytes (15.7 GiB), often more than the activations of the rest of the model. That is why big-vocabulary training computes the loss in chunks or with fused cross-entropy kernels. A big vocabulary costs output-layer memory, not just embedding rows.",
+        topic="vocab-size", level=3),
+    tf("Doubling a BPE vocabulary (e.g. 64k to 128k merges) roughly halves the number of tokens per text.", False,
+       "Which merges are added last: frequent pairs or rare ones?",
+       "The extra merges are the rarest pairs, so gains shrink fast: going from 32k to 128k typically cuts English token counts by only around 10-20% (more for code and other languages). Meanwhile embedding and softmax costs double, and rare tokens get fewer training updates. Vocabulary growth has strongly diminishing returns.",
+       topic="vocab-size", level=4),
+    out("""vocab, d_model, total = 256_000, 2048, 2_000_000_000
+emb = vocab * d_model
+print(round(emb / total * 100, 1), round(2 * emb / total * 100, 1))""",
+        ["26.2 52.4", "2.6 5.2", "26.2 26.2", "13.1 26.2"], 0,
+        "256,000 x 2,048 is about 524 million parameters.",
+        "One vocab x d matrix is 26% of a 2B model; with untied input and output matrices it would be 52%, half the model spent on lookup tables. This is why small models tie embeddings, and why vocabulary size is a bigger decision at small scale than for a 70B model where the same matrix is under 1%.",
+        question="Share of a 2B-parameter model spent on vocabulary matrices (tied vs untied). What does this print?",
+        topic="vocab-size", level=4),
+    out("""a, b, max_len = list(range(10)), list(range(6)), 12
+budget = max_len - 3                 # [CLS] a [SEP] b [SEP]
+while len(a) + len(b) > budget:
+    if len(a) >= len(b):
+        a.pop()
+    else:
+        b.pop()
+print(len(a), len(b))""",
+        ["4 5", "3 6", "9 0", "5 4"], 0,
+        "Three special tokens are reserved first; then remove one token at a time from the longer side.",
+        "The budget is 12 - 3 = 9. 'longest_first' trims the longer sequence one token at a time, so both shrink toward equal length: (4, 5). Forgetting the 3 special tokens gives over-long inputs; 'only_second' would instead cut b to 0 here. Pick the strategy deliberately: for QA you usually truncate only the context, never the question.",
+        question="'longest_first' truncation of a sentence pair to max_length 12. What does this print?",
+        topic="special-tokens", level=3),
+    mcq("A model was trained with a BOS token at the start of every sequence. You score sentences by log-probability but tokenize with add_special_tokens=False. What is the effect?",
+        ["Scores get systematically worse and noisier, because the first real token is predicted with no BOS 'anchor' the model always had in training",
+         "Nothing; BOS carries no information",
+         "The model raises an error",
+         "Scores improve because the sequence is shorter"], 0,
+        "Has the model ever seen a sequence that did not start with BOS?",
+        "Many models use BOS as an attention 'sink' and as the context for the first token. Removing it puts every input slightly out of distribution, which shows up as worse perplexity and odd rankings. Match the training format exactly: same special tokens, same template.",
+        topic="special-tokens", level=3),
+    tf("A BERT *uncased* tokenizer lowercases and strips accents during normalisation, so 'Café' and 'cafe' produce the same tokens.", True,
+       "'Uncased' changes more than capital letters.",
+       "Uncased BERT normalisation lowercases and removes accents (NFD then drop combining marks). Fine for English search, harmful for languages where accents change meaning (Spanish 'año' vs 'ano'). Pick a cased or multilingual model when diacritics matter.",
+       topic="wordpiece-unigram", level=3),
+    tf("Byte-level 'tokenizer-free' models (e.g. ByT5) avoid tokenizer bugs and unknown words, at the price of sequences several times longer.", True,
+       "One token per byte.",
+       "Every byte is a token, so there is no vocabulary to mismatch and no OOV, and spelling is visible to the model. But English sequences get about 4x longer and attention cost grows with length squared, so such models are slower for the same text. Sub-words remain the practical default.",
+       topic="granularity", level=3),
+    out("""merges = [("h", "e"), ("he", "l"), ("l", "o")]
+def enc(s):
+    t = list(s)
+    for a, b in merges:
+        out, i = [], 0
+        while i < len(t):
+            if i + 1 < len(t) and (t[i], t[i + 1]) == (a, b):
+                out.append(a + b); i += 2
+            else:
+                out.append(t[i]); i += 1
+        t = out
+    return t
+print(enc("he") + enc("lo"), enc("helo"))""",
+        ["['he', 'lo'] ['hel', 'o']", "['he', 'lo'] ['he', 'lo']", "['hel', 'o'] ['hel', 'o']", "['h', 'e', 'l', 'o'] ['hel', 'o']"], 0,
+        "In the joined string, merge 2 ('he' + 'l') fires before merge 3 can make 'lo'.",
+        "Tokenization is not compositional: encode(a) + encode(b) can differ from encode(a + b). Here the joined string grabs 'hel' first. In practice, building a prompt by concatenating token-ID lists (template IDs + user IDs) produces sequences the model never saw in training. Render the full string and tokenize it once, or follow the template's documented rules.",
+        question="Encoding two pieces separately versus the joined string. What does this print?",
+        topic="bpe", level=4),
+    mcq("Two teams train BPE on the same corpus with the same target vocabulary size but get different merge lists. Assuming the same normalisation and pre-tokenisation, what is the most likely cause?",
+        ["Ties between pairs with equal counts are broken differently, and one different early merge changes all later counts",
+         "BPE training uses random initialisation",
+         "BPE is trained with gradient descent, so results vary by seed",
+         "Merge lists are always identical; one team must have a bug"], 0,
+        "BPE training is greedy and deterministic, except for one detail.",
+        "When two pairs have the same count, the winner depends on the implementation (insertion order, lexicographic order). An early tie decided differently changes which pairs exist afterwards, so the lists diverge. This is why the merges file is part of the model artifact: never retrain it and expect the same IDs.",
+        topic="bpe", level=4),
+    mcq("You add 50 new tokens and resize the embeddings. The new rows are random with a much larger norm than the trained rows. Early fine-tuning shows a loss spike and the model starts emitting the new tokens everywhere. What is a better initialisation?",
+        ["Set new rows to the mean of the existing embeddings (or the mean of the sub-tokens each new token replaces)",
+         "Initialise new rows to all zeros and freeze them",
+         "Copy the embedding of the EOS token into every new row",
+         "Leave them random but raise the learning rate"], 0,
+        "With tied weights, a large output row means a large logit for that token.",
+        "Random rows of large norm produce large logits, so the model predicts the new tokens with high probability before training has taught it anything. Mean initialisation keeps them 'average' and harmless; sub-token mean initialisation even gives them a sensible starting meaning. Recent library versions do mean-resizing by default for this reason.",
+        topic="ids-embedding", level=4),
+    out("""import torch
+scores = torch.tensor([[1.0, 2.0, 3.0]])
+mask = torch.tensor([[1, 1, 0]])
+scores = scores.masked_fill(mask == 0, float("-inf"))
+w = torch.softmax(scores, dim=-1)
+print([round(x, 3) for x in w[0].tolist()])""",
+        ["[0.269, 0.731, 0.0]", "[0.09, 0.245, 0.665]", "[0.333, 0.333, 0.333]", "[0.5, 0.5, 0.0]"], 0,
+        "exp(-inf) is 0; the remaining two scores are renormalised.",
+        "The padded position gets exactly zero weight and the real tokens share all of it: softmax([1, 2]) = [0.269, 0.731]. Multiplying the weights by the mask AFTER the softmax would zero the padding but leave the rest summing to less than 1. Masking goes in before the softmax, as an additive -inf (or a very large negative number).",
+        question="Applying an attention mask before the softmax. What does this print?",
+        topic="padding-masks", level=3),
+    out("""import torch
+scores = torch.tensor([[1.0, 2.0, 3.0]])
+mask = torch.tensor([[0, 0, 0]])            # an all-padding row
+w = torch.softmax(scores.masked_fill(mask == 0, float("-inf")), dim=-1)
+print(w.tolist(), torch.isnan(w).any().item())""",
+        ["[[nan, nan, nan]] True", "[[0.0, 0.0, 0.0]] False", "[[0.333, 0.333, 0.333]] False", "RuntimeError"], 0,
+        "softmax of all -inf is 0 / 0.",
+        "Every score is -inf, so softmax computes 0/0 = NaN, and NaN then spreads through the layer, the loss and the gradients: one empty example can NaN a whole training run. Fixes: drop empty examples, mask with torch.finfo(dtype).min instead of -inf, or make sure every sequence has at least one real token (such as BOS).",
+        question="Masking a row where every position is padding. What does this print?",
+        topic="padding-masks", level=4),
+    out("""import torch
+import torch.nn.functional as F
+logits = torch.tensor([[2., 0., 0., 0.], [0., 2., 0., 0.], [0., 0., 0., 0.]])
+labels = torch.tensor([0, 1, -100])          # last position is padding
+print(round(F.cross_entropy(logits, labels).item(), 4))""",
+        ["0.3408", "0.6893", "0.2272", "IndexError"], 0,
+        "-100 is cross_entropy's default ignore_index; the mean is over the remaining positions.",
+        "Each real position has loss -log(e^2 / (e^2 + 3)) = 0.3408, and the -100 position is skipped entirely, including in the average. 0.6893 would include a uniform loss for the pad; 0.2272 would count it as zero but still divide by 3. This is why padded labels are set to -100.",
+        question="Cross-entropy with a padded label. What does this print?",
+        topic="padding-masks", level=3),
+    mcq("Why are output tokens usually priced higher, and slower, than input tokens?",
+        ["Input tokens are processed in parallel in one forward pass; output tokens are generated one at a time, each needing its own pass over the growing context",
+         "Output tokens are longer strings than input tokens",
+         "Output tokens use a bigger vocabulary",
+         "Providers store output tokens forever"], 0,
+        "How many forward passes does a 500-token reply need?",
+        "Prefill reads the whole prompt at once and keeps the GPU busy. Decoding is sequential: one token per step, limited by memory bandwidth. So latency grows with the reply length, and providers price output tokens several times higher. Practical lever: ask for short, structured answers.",
+        topic="cost-quirks", level=3),
+    mcq("A chat app re-sends the full conversation every turn, and each turn adds 200 tokens. Over 10 turns, roughly how many input tokens are billed in total?",
+        ["11,000", "2,000", "20,000", "4,000"], 0,
+        "Turn t sends all t turns so far.",
+        "Billed input = 200 x (1 + 2 + ... + 10) = 200 x 55 = 11,000, growing quadratically with conversation length while the visible text is only 2,000 tokens. Fixes: summarise old turns, cap history, and use prefix caching so the repeated prefix is cheaper.",
+        analogy="Like a stateless HTTP API with no session: every request re-uploads the entire cart.",
+        topic="cost-quirks", level=3),
+    tf("Putting pretty-printed JSON (indentation and newlines) into a prompt costs noticeably more tokens than the same JSON minified.", True,
+       "Whitespace is text, and text is tokens.",
+       "Indentation, newlines and repeated long keys all become tokens. For large tool results or few-shot examples, minifying JSON, dropping null fields and shortening keys can cut prompt size a lot. Check with the real tokenizer before and after.",
+       topic="cost-quirks", level=3),
+    mcq("The same Python file costs far more tokens with a tokenizer trained mostly on prose than with one built for code. What is the main reason?",
+        ["The prose tokenizer has few tokens for runs of spaces, indentation and code identifiers, so each indent and symbol becomes many small tokens",
+         "Code tokenizers remove comments",
+         "Prose tokenizers cannot represent brackets",
+         "Code is compressed before tokenizing"], 0,
+        "Count the spaces in a deeply nested block.",
+        "Tokenizers learn merges for what is frequent in their training data. Code-aware tokenizers add tokens for whitespace runs and common identifiers, so a 4-space indent is one token, not four. The same file can differ by 30% or more in token count, which matters for both cost and how much code fits in context.",
+        topic="cost-quirks", level=3),
+    mcq("Chat fine-tuning sequence: system [1, 2], user [3, 4], assistant [5, 6, 7], then the turn-end token 9 ('<|im_end|>'). Which labels train ONLY the assistant reply correctly?",
+        ["[-100, -100, -100, -100, 5, 6, 7, 9]",
+         "[-100, -100, -100, -100, 5, 6, 7, -100]",
+         "[1, 2, 3, 4, 5, 6, 7, 9]",
+         "[1, 2, 3, 4, -100, -100, -100, -100]"], 0,
+        "The model must also learn when to stop.",
+        "Mask the system and user tokens with -100, but KEEP the assistant's turn-end token as a label. Masking it (option 2) means the model never learns to emit <|im_end|>, so at inference it rambles into a fake next turn. Training on everything teaches it to write user messages.",
+        diagram="""
+ tokens : 1  2 | 3  4 | 5  6  7 | 9
+ role   : sys  | user | asst    | end
+ labels : -100 .. -100| 5  6  7 | 9
+""",
+        topic="templates-mismatch", level=3),
+    mcq("You fine-tune on conversations with no system message. At serving time the same chat template is used, but it silently inserts a default system prompt when none is given. Quality drops slightly. Why?",
+        ["Train/serve skew: the serving token sequence starts with a system block the fine-tuned model never saw in training",
+         "System prompts are ignored by the model, so this cannot be the cause",
+         "The default system prompt uses a different tokenizer",
+         "The template adds padding tokens"], 0,
+        "Render both templated strings and diff them.",
+        "Some templates add a default system message, a date line or a BOS when certain fields are missing. Training data rendered one way and serving requests rendered another are different distributions. Debug by printing the exact rendered prompts from both paths and diffing them, like comparing two environments' configs.",
+        topic="templates-mismatch", level=4),
 ]

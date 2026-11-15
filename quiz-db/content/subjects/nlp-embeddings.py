@@ -14,6 +14,9 @@ TOPICS = [
     ("dimensions", "Embedding dimension and Matryoshka embeddings"),
     ("vector-search", "Semantic search and vector databases"),
     ("drift-bias", "Embedding drift, mixing models and bias"),
+    ("embedding-code", "Embedding layers in PyTorch"),
+    ("contrastive", "Contrastive training of embedding models"),
+    ("hybrid-search", "Hybrid search, fusion and retrieval evaluation"),
 ]
 
 QUESTIONS = [
@@ -491,7 +494,7 @@ QUESTIONS = [
     mcq("Roughly what size are typical embedding vectors?",
         ["A few hundred to a few thousand numbers (e.g. 384, 768, 1536, 3072)", "Exactly 2 or 3 numbers", "About 50,000 numbers", "One number per word in the document"], 0,
         "word2vec used 300.",
-        "Small models use about 384 dims, BERT-base 768, OpenAI text-embedding-3-small 1536, large 3072. Diagrams show 2D only for drawing.",
+        "Small models use about 384 dims, BERT-base 768, popular API embedding models 1536 to 3072. Diagrams show 2D only for drawing.",
         topic="dimensions", level=1),
     out('n_docs, dim, bytes_per_float = 1_000_000, 768, 4\nprint(round(n_docs * dim * bytes_per_float / 1e9, 2), "GB")',
         ["3.07 GB", "0.77 GB", "30.72 GB", "0.31 GB"], 0,
@@ -676,4 +679,378 @@ QUESTIONS = [
        "Can a classifier still guess gender-associated words afterwards?",
        "Gonen & Goldberg (2019) showed that 'debiased' words still cluster by their old gender association. Projection hides bias on one axis but it stays encoded elsewhere.",
        topic="drift-bias", level=4),
+    # ------------------------------------------------------------------
+    # embedding-code (round 2)
+    # ------------------------------------------------------------------
+    out("""import torch
+emb = torch.nn.Embedding(10, 3)
+print(emb.weight.shape)""",
+        ["torch.Size([10, 3])", "torch.Size([3, 10])", "torch.Size([10])", "torch.Size([30])"], 0,
+        "Embedding(num_embeddings, embedding_dim): one row per ID.",
+        "nn.Embedding is a learnable table with one row per token ID (10) and one column per dimension (3). Looking up ID 7 returns row 7. It is just a matrix you index into, trained by backprop like any other weight.",
+        question="Creating a PyTorch embedding table. What does this print?",
+        analogy="A key-value store where the key is an integer ID and the value is a learned vector.",
+        topic="embedding-code", level=1),
+    tf("nn.Embedding expects integer (long or int) index tensors; passing float IDs like torch.tensor([1.0, 2.0]) raises an error.", True,
+       "Can you index row 1.5 of a table?",
+       "Indices must be integer tensors. A common bug is building IDs with torch.tensor(list_of_numpy_floats) or after a division, which produces float32 and a RuntimeError. Cast with .long() at the data-loading boundary.",
+       topic="embedding-code", level=2),
+    out("""import torch
+torch.manual_seed(0)
+emb = torch.nn.Embedding(5, 2, padding_idx=0)
+emb(torch.tensor([0, 3, 0])).sum().backward()
+print(emb.weight[0].tolist(), emb.weight.grad[:, 0].tolist())""",
+        ["[0.0, 0.0] [0.0, 0.0, 0.0, 1.0, 0.0]",
+         "[0.0, 0.0] [2.0, 0.0, 0.0, 1.0, 0.0]",
+         "[1.0, 1.0] [0.0, 0.0, 0.0, 1.0, 0.0]",
+         "[0.0, 0.0] [1.0, 1.0, 1.0, 1.0, 1.0]"], 0,
+        "padding_idx rows start at zero and never receive gradient.",
+        "With padding_idx=0 the pad row is initialised to zeros and its gradient is always zero, so padding contributes a zero vector that never learns. Only looked-up rows get gradient: row 3 gets 1.0, the other rows get nothing. Without padding_idx, row 0 would have received 2.0 from the two pad positions.",
+        question="An embedding with padding_idx, after one backward pass. What does this print?",
+        topic="embedding-code", level=3),
+    out("""import torch
+E = torch.arange(12.).reshape(4, 3)
+bag = torch.nn.EmbeddingBag.from_pretrained(E, mode="mean")
+print(bag(torch.tensor([[0, 2]])).tolist())""",
+        ["[[3.0, 4.0, 5.0]]", "[[6.0, 8.0, 10.0]]", "[[0.0, 1.0, 2.0], [6.0, 7.0, 8.0]]", "[[1.5, 2.5, 3.5]]"], 0,
+        "Rows 0 and 2 are [0, 1, 2] and [6, 7, 8].",
+        "EmbeddingBag looks up the rows and reduces them in one fused op: the mean of [0, 1, 2] and [6, 7, 8] is [3, 4, 5]. It is the classic fast bag-of-embeddings text classifier (fastText-style) and saves materialising the (batch, seq, d) tensor. mode='sum' would give [6, 8, 10].",
+        question="EmbeddingBag in mean mode. What does this print?",
+        topic="embedding-code", level=3),
+    tf("nn.Embedding.from_pretrained(weights) creates a trainable table by default, so loading GloVe vectors this way fine-tunes them.", False,
+       "Check the default of the freeze argument.",
+       "from_pretrained defaults to freeze=True, so weight.requires_grad is False and the vectors never change. If you meant to fine-tune them, pass freeze=False. The reverse bug is also common: fine-tuning pretrained vectors on a tiny dataset and over-fitting them.",
+       topic="embedding-code", level=3),
+    out("""import torch
+torch.manual_seed(0)
+emb = torch.nn.Embedding(3, 2)
+opt = torch.optim.Adam(emb.parameters(), lr=0.1)
+for ids in ([0], [1]):
+    opt.zero_grad()
+    emb(torch.tensor(ids)).sum().backward()
+    before = emb.weight.detach().clone()
+    opt.step()
+    print((emb.weight - before).abs().sum(1).gt(0).tolist())""",
+        ["[True, False, False]\n[True, True, False]",
+         "[True, False, False]\n[False, True, False]",
+         "[True, True, True]\n[True, True, True]",
+         "[True, False, False]\n[True, True, True]"], 0,
+        "In step 2 row 0 has zero gradient, but Adam remembers step 1.",
+        "Step 1 only touches row 0. In step 2, row 0's gradient is zero, but its Adam momentum from step 1 is not, so it keeps moving. Row 2 was never seen, so its momentum is zero and it stays put. With dense Adam, rows that are absent from a batch still drift; for huge vocabularies use sparse=True with SparseAdam, or accept it.",
+        question="Dense Adam on an embedding table over two steps. What does this print?",
+        topic="embedding-code", level=4),
+    mcq("A recommender has a 50-million-row item embedding table, and each batch touches only a few thousand rows. Training is slow and memory-heavy. What is the standard PyTorch remedy?",
+        ["nn.Embedding(..., sparse=True) with an optimizer that supports sparse gradients (e.g. SparseAdam), so only the touched rows are updated",
+         "Use a smaller batch size",
+         "Switch to float64 for more precision",
+         "Freeze the table and train only the top layers"], 0,
+        "A dense gradient for 50M rows is mostly zeros.",
+        "By default the embedding gradient is a dense tensor the size of the whole table, plus two Adam state tensors of the same size. sparse=True produces a sparse gradient of only the touched rows, and SparseAdam updates only those rows and their state. The catch: only some optimizers support sparse gradients, and weight decay on all rows no longer happens.",
+        topic="embedding-code", level=4),
+    tf("nn.Embedding(..., max_norm=1.0) rescales looked-up rows whose norm exceeds 1.0, and it does so by modifying the weight table in place during the forward pass.", True,
+       "Read the documentation note about max_norm.",
+       "max_norm renormalises the selected rows in place. Surprises: the weight changes even under torch.no_grad() lookups, and if the same weight is used elsewhere (e.g. tied to an output layer) the in-place change can break autograd. Many practitioners normalise the output vectors instead.",
+       topic="embedding-code", level=4),
+    # ------------------------------------------------------------------
+    # contrastive (round 2)
+    # ------------------------------------------------------------------
+    fill("In contrastive training, a (query, matching passage) pair that should end up close together is called a ____ pair.", "positive",
+         "The opposite of a negative pair.",
+         "Positive pairs (a question and its answer, two paraphrases) are pulled together; negatives (unrelated texts) are pushed apart. The embedding model learns 'similar' only from which pairs you label as positive, so the training pairs define what your search engine will treat as relevant.",
+         topic="contrastive", level=1),
+    mcq("What does contrastive training of an embedding model do?",
+        ["Pulls the vectors of matching pairs together and pushes non-matching texts apart, so cosine similarity reflects relevance",
+         "Predicts the next token, like a language model",
+         "Clusters texts with k-means and stores the centroids",
+         "Compresses vectors to fewer dimensions"], 0,
+        "Think 'attract positives, repel negatives'.",
+        "The loss looks at similarities directly: the matching passage must score higher than the others. That is why contrastively trained models beat raw BERT or LLM hidden states for search: the objective is the same as the way the vectors are used.",
+        diagram="""
+ before training         after training
+   q .      . d+           q . . d+
+       . d-                            . d-
+ (scattered)             (q near d+, far from d-)
+""",
+        topic="contrastive", level=2),
+    out("""import torch
+import torch.nn.functional as F
+q = F.normalize(torch.tensor([[1., 0.], [0., 1.]]), dim=1)
+d = F.normalize(torch.tensor([[1., 0.1], [0.1, 1.]]), dim=1)
+for t in (1.0, 0.1):
+    print(round(F.cross_entropy(q @ d.T / t, torch.arange(2)).item(), 4))""",
+        ["0.3424\n0.0001", "0.3424\n0.3424", "0.0001\n0.3424", "0.6931\n0.0"], 0,
+        "Row i's correct 'class' is document i; the other document in the batch is the negative.",
+        "This is InfoNCE with in-batch negatives: a softmax over one row of similarities, target = the diagonal. The positive scores 0.995 and the negative 0.0995. At temperature 1 that gap is small in logit terms (loss 0.34); dividing by 0.1 multiplies the gap by 10 and the loss nearly vanishes. Temperature sets how sharply the loss separates scores, so it is a key hyperparameter (typically 0.01-0.1).",
+        question="InfoNCE loss with in-batch negatives at two temperatures. What does this print?",
+        topic="contrastive", level=3),
+    mcq("Why do contrastive embedding models usually benefit from larger batch sizes when using in-batch negatives?",
+        ["Each query is contrasted with every other passage in the batch, so a bigger batch gives more (and harder) negatives per step",
+         "Larger batches always make every model generalise better",
+         "Batch size changes the embedding dimension",
+         "In-batch negatives only work with batch size 1"], 0,
+        "With batch size B, how many negatives does each query get for free?",
+        "With batch size B each query gets B - 1 negatives at no extra cost. More negatives make the task harder and the gradients more informative. That is why embedding training uses batches in the thousands and tricks like gradient caching to fit them in memory.",
+        topic="contrastive", level=3),
+    out("""import numpy as np
+a, p, n = np.array([1., 0.]), np.array([0.8, 0.6]), np.array([0.6, 0.8])
+d = lambda x, y: np.linalg.norm(x - y)
+print(round(max(0.0, d(a, p) - d(a, n) + 0.5), 3))""",
+        ["0.238", "0.0", "0.762", "-0.262"], 0,
+        "Triplet loss = max(0, d(anchor, positive) - d(anchor, negative) + margin).",
+        "d(a, p) = 0.632 and d(a, n) = 0.894. The positive is already closer, but not by the 0.5 margin, so loss = 0.632 - 0.894 + 0.5 = 0.238. Without the margin the loss would be 0, and training would stop as soon as positives are barely closer. The max(0, ...) means satisfied triplets contribute nothing, which is why mining hard triplets matters.",
+        question="Triplet loss with a margin of 0.5. What does this print?",
+        topic="contrastive", level=3),
+    mcq("A Q&A dataset has many near-duplicate questions. With in-batch negatives, two paraphrased questions with the same answer often land in one batch. What goes wrong?",
+        ["False negatives: the other question's answer is treated as a negative although it is correct, so the model is pushed to separate truly relevant pairs",
+         "Nothing; duplicates only add more positives",
+         "The loss becomes negative",
+         "The batch size effectively doubles"], 0,
+        "In-batch negatives assume every other passage in the batch is irrelevant.",
+        "In-batch negatives assume 'everything else is wrong'. Duplicates break that assumption and the loss actively pushes correct answers apart, which hurts recall. Fixes: deduplicate or group by answer before batching, or mask same-answer pairs out of the loss.",
+        topic="contrastive", level=4),
+    mcq("You mine hard negatives by taking the top 5 BM25 results for each training query that are not labelled positive. Fine-tuning makes retrieval worse. What is the most likely reason?",
+        ["Many 'negatives' are actually relevant but unlabelled, so the model learns to push real answers away; mine from lower ranks (e.g. 30-100) or filter with a cross-encoder",
+         "Hard negatives always hurt; only random negatives should be used",
+         "BM25 cannot be used with neural models",
+         "The batch size is too large"], 0,
+        "How complete are relevance labels usually?",
+        "Real datasets label one or two positives per query, and the top BM25 hits often include other correct passages. Treating them as negatives is label noise aimed at your best candidates. Standard practice: skip the very top ranks, and drop candidates a cross-encoder scores as relevant.",
+        topic="contrastive", level=4),
+    tf("In InfoNCE, lowering the temperature makes the loss concentrate on the hardest negatives (those with similarity close to the positive).", True,
+       "Dividing by a small number exaggerates differences before the softmax.",
+       "A low temperature sharpens the softmax, so the negatives scoring nearest the positive dominate the gradient while easy negatives contribute almost nothing. Too low and training becomes unstable and over-sensitive to false negatives; too high and everything looks equally similar. Many models learn the temperature.",
+       topic="contrastive", level=4),
+    out("""import math
+import torch
+import torch.nn.functional as F
+z = F.normalize(torch.ones(8, 4), dim=1)       # every text gets the same vector
+loss = F.cross_entropy(z @ z.T / 0.05, torch.arange(8))
+print(round(loss.item(), 4), round(math.log(8), 4))""",
+        ["2.0794 2.0794", "0.0 2.0794", "0.1386 2.0794", "nan 2.0794"], 0,
+        "If all similarities are equal, the softmax is uniform over the batch.",
+        "When the encoder collapses (every input maps to the same vector), each row of logits is constant, the softmax is uniform and the loss equals ln(batch size) = ln 8 = 2.0794, whatever the temperature. A contrastive loss stuck at ln(B) is a red flag for collapse: check the learning rate, the pooling, and whether the inputs reach the encoder at all.",
+        question="Contrastive loss when the encoder has collapsed. What does this print?",
+        topic="contrastive", level=4),
+    # ------------------------------------------------------------------
+    # hybrid-search (round 2)
+    # ------------------------------------------------------------------
+    mcq("What is BM25?",
+        ["A keyword ranking function: a refined TF-IDF score that rewards documents containing the query's words, especially rare ones",
+         "A 25-layer neural embedding model",
+         "A vector database index type",
+         "A method to compress embeddings to 25 bytes"], 0,
+        "It is the classic engine behind Elasticsearch and Lucene.",
+        "BM25 scores a document by the query terms it contains, weighted by how rare each term is (IDF), with saturation for repeated terms and a correction for document length. No training, no GPU, and still a strong baseline that dense retrieval is measured against.",
+        topic="hybrid-search", level=1),
+    mcq("Users search a support index for error codes like 'ERR-4012'. Dense embedding search returns tickets about other errors. What is the usual fix?",
+        ["Hybrid search: run BM25 keyword search alongside the dense search and fuse the two rankings",
+         "Use a bigger embedding dimension",
+         "Lower the cosine threshold",
+         "Remove all numbers from the documents"], 0,
+        "Which method matches exact strings?",
+        "Dense models capture meaning but blur rare exact tokens: 'ERR-4012' and 'ERR-4013' look almost identical to them. BM25 matches the exact term. Hybrid search gets semantic recall plus exact-match precision for IDs, names, SKUs and code symbols, which is why most production RAG stacks use it.",
+        topic="hybrid-search", level=2),
+    out("""bm25 = {"A": 1, "B": 2, "C": 3}           # doc -> rank
+dense = {"C": 1, "A": 2, "D": 3}
+k = 60
+docs = sorted(set(bm25) | set(dense))
+score = {d: sum(1 / (k + r[d]) for r in (bm25, dense) if d in r) for d in docs}
+print(sorted(score, key=score.get, reverse=True))""",
+        ["['A', 'C', 'B', 'D']", "['C', 'A', 'B', 'D']", "['A', 'B', 'C', 'D']", "['A', 'C', 'D', 'B']"], 0,
+        "A is ranked 1 and 2; C is ranked 3 and 1.",
+        "Reciprocal Rank Fusion adds 1/(k + rank) from every list. A: 1/61 + 1/62; C: 1/63 + 1/61, slightly less; B and D appear in one list each. Documents found by both retrievers float to the top. RRF only uses ranks, so it needs no score calibration between BM25 and cosine.",
+        diagram="""
+ doc  bm25  dense   RRF (k=60)
+  A    1     2      1/61 + 1/62 = 0.03252
+  C    3     1      1/63 + 1/61 = 0.03227
+  B    2     -      1/62        = 0.01613
+  D    -     3      1/63        = 0.01587
+""",
+        question="Reciprocal Rank Fusion of a BM25 ranking and a dense ranking. What does this print?",
+        topic="hybrid-search", level=3),
+    fill("The Reciprocal Rank Fusion score of a document is the sum, over the retrievers, of 1 / (k + ____), with k usually 60.", "rank",
+         "It uses positions in the result lists, not raw scores.",
+         "RRF(d) = sum over lists of 1 / (k + rank_d). The constant k = 60 damps the advantage of the very top ranks. Because it uses only ranks, it fuses retrievers whose scores live on different scales.",
+         topic="hybrid-search", level=3),
+    mcq("A teammate fuses BM25 and dense search by adding the raw scores: bm25_score + cosine. Results are basically the BM25 ranking. Why?",
+        ["The scores are on different scales: BM25 is unbounded (often 5-30) while cosine sits in [-1, 1], so BM25 dominates the sum",
+         "Cosine scores are always negative",
+         "Adding scores is the same as RRF",
+         "Dense scores are ignored when BM25 is present"], 0,
+        "Compare a typical BM25 score with a typical cosine.",
+        "Raw-score fusion needs normalisation (min-max or z-score per query) and a tuned weight, and BM25 ranges vary from query to query. Rank-based fusion (RRF) side-steps this, which is why it is the default in many vector databases. It is the classic mistake of summing values in different units.",
+        analogy="Like adding milliseconds to seconds and wondering why one term always wins.",
+        topic="hybrid-search", level=3),
+    out("""retrieved = [["d3", "d1", "d7"], ["d2", "d9", "d4"], ["d8", "d6", "d5"]]
+relevant = [{"d1"}, {"d4", "d0"}, {"d2"}]
+r = [len(set(ret[:3]) & rel) / len(rel) for ret, rel in zip(retrieved, relevant)]
+print([round(x, 2) for x in r], round(sum(r) / len(r), 2))""",
+        ["[1.0, 0.5, 0.0] 0.5", "[1.0, 1.0, 0.0] 0.67", "[0.33, 0.33, 0.0] 0.22", "[1.0, 0.5, 0.0] 0.75"], 0,
+        "recall@3 = relevant docs found in the top 3 / all relevant docs, per query, then averaged.",
+        "Query 1 finds its only relevant doc (1.0), query 2 finds 1 of 2 (0.5), query 3 finds none (0.0); the mean is 0.5. For RAG, recall@k of the retriever caps answer quality: the LLM cannot use a chunk it never received. Build a small labelled query set and track this before tuning prompts.",
+        question="Mean recall@3 of an embedding retriever over three queries. What does this print?",
+        topic="hybrid-search", level=3),
+    out("""def tf_part(tf, k1=1.2):
+    return tf * (k1 + 1) / (tf + k1)
+print([round(tf_part(t), 2) for t in (1, 2, 10, 100)])""",
+        ["[1.0, 1.38, 1.96, 2.17]", "[1, 2, 10, 100]", "[1.0, 1.69, 3.3, 5.6]", "[2.2, 2.2, 2.2, 2.2]"], 0,
+        "The term-frequency part approaches k1 + 1 = 2.2 as tf grows.",
+        "BM25 saturates term frequency: the 2nd occurrence adds a lot, the 100th almost nothing, and the ceiling is k1 + 1. Raw TF-IDF grows linearly, so keyword-stuffed documents win. Saturation (plus length normalisation, parameter b) is the main reason BM25 beats plain TF-IDF for ranking.",
+        question="The term-frequency saturation part of BM25. What does this print?",
+        topic="hybrid-search", level=3),
+    mcq("You embed whole 20-page documents as single vectors for RAG. Searches for specific facts return the right documents only sometimes. What is the main problem?",
+        ["One vector for a long, multi-topic text is a blurry average (and is often truncated), so a specific fact barely influences it; chunk into passages, optionally returning the parent document",
+         "Long documents always get higher cosine scores",
+         "The vector database cannot store long documents",
+         "Embeddings ignore the first page"], 0,
+        "Average the meaning of 40 different paragraphs: what is left?",
+        "Pooling over thousands of tokens dilutes every individual fact, and most encoders truncate at 512-8k tokens anyway. Chunks of a few hundred tokens keep each vector about one thing. Too-small chunks lose context, so a common pattern is 'retrieve small, return big' (small chunks for search, the parent section for the LLM).",
+        topic="hybrid-search", level=3),
+    mcq("You evaluate a retriever on queries an LLM generated from your own chunks ('write a question this passage answers'). BM25 scores much higher than on real user queries. What is the main issue?",
+        ["Generated questions copy the passage's wording, so the benchmark rewards lexical overlap and overstates recall compared with real users' phrasing",
+         "LLM-generated questions are always too hard",
+         "BM25 cannot handle generated text",
+         "Synthetic queries make dense retrieval look better, not BM25"], 0,
+        "Real users don't know which words the document uses.",
+        "Synthetic queries leak the answer's vocabulary, inflating keyword methods and hiding the paraphrase gap that dense retrieval exists to solve. Mitigations: prompt for paraphrased or high-level questions, mix in real logged queries, and check per-source metrics. An eval set that does not look like production traffic is a test suite that tests the wrong thing.",
+        topic="hybrid-search", level=4),
+    tf("A modern dense retriever always beats BM25, so on a new domain with no training data you can drop keyword search.", False,
+       "Think of the BEIR zero-shot benchmark results.",
+       "Zero-shot benchmarks across many domains (BEIR) showed BM25 is a stubbornly strong baseline: many dense models lost to it out of domain, especially on rare terms and technical jargon. Newer models close the gap, but hybrid search remains the safe default when you can't fine-tune or evaluate on your own data.",
+       topic="hybrid-search", level=4),
+    # ------------------------------------------------------------------
+    # deeper L3/L4 on existing topics (round 2)
+    # ------------------------------------------------------------------
+    out("""import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+a = np.array([[0., 0.]]); b = np.array([[1., 2.]])
+with np.errstate(invalid="ignore", divide="ignore"):
+    manual = (a @ b.T / (np.linalg.norm(a) * np.linalg.norm(b)))[0, 0]
+print(float(manual), float(cosine_similarity(a, b)[0, 0]))""",
+        ["nan 0.0", "0.0 0.0", "nan nan", "ZeroDivisionError"], 0,
+        "A zero vector has norm 0. How does each implementation handle 0 / 0?",
+        "The hand-written formula divides 0 by 0 and returns NaN; sklearn normalises first and leaves zero rows as zeros, so it reports 0.0. NumPy only warns, so a NaN score can slip into a sort and silently scramble the ranking (NaN compares false with everything). Zero vectors appear from empty chunks or failed embedding calls: validate them at ingestion.",
+        question="Cosine similarity with a zero vector, by hand and with sklearn. What does this print?",
+        topic="similarity", level=4),
+    out("""import numpy as np
+Q = np.array([[1., 0.], [0., 1.]])                     # 2 query token vectors
+D = np.array([[0.9, 0.1], [0.2, 0.8], [0.6, 0.6]])     # 3 doc token vectors
+S = Q @ D.T
+print(S.max(axis=1).round(2).tolist(), round(float(S.max(axis=1).sum()), 2))""",
+        ["[0.9, 0.8] 1.7", "[0.9, 0.8, 0.6] 2.3", "[0.6, 0.6] 1.2", "[0.9, 0.8] 0.85"], 0,
+        "For each query token, take its best-matching document token, then add.",
+        "This is ColBERT-style late interaction (MaxSim): every query token finds its best document token, and the per-token maxima are summed. It keeps token-level detail that a single pooled vector loses, at the cost of storing one vector per token (often 50-100x the storage of one vector per chunk). Taking the max over axis 0 instead would score per document token, the wrong direction.",
+        diagram="""
+            doc tok1  tok2  tok3     max
+ query t1    0.9      0.2   0.6  ->  0.9
+ query t2    0.1      0.8   0.6  ->  0.8
+                                sum  1.7
+""",
+        question="Late-interaction (MaxSim) scoring of one document. What does this print?",
+        topic="sentence", level=4),
+    out("""import numpy as np
+rng = np.random.default_rng(0)
+A = rng.normal(size=(50, 3))                     # vectors in space A
+R, _ = np.linalg.qr(rng.normal(size=(3, 3)))     # a random rotation
+B = A @ R                                        # the same vectors, rotated
+U, _, Vt = np.linalg.svd(A.T @ B)
+W = U @ Vt                                       # orthogonal Procrustes
+print(np.allclose(A @ W, B), round(float(np.abs(A @ W - B).max()), 6))""",
+        ["True 0.0", "False 1.0", "True 0.5", "False 0.0"], 0,
+        "Procrustes finds the best rotation from A to B.",
+        "When two spaces differ only by a rotation, orthogonal Procrustes recovers it exactly, using paired vectors of the same items. Real model upgrades are not pure rotations (different training, different geometry), so a learned mapping only approximates the new space and loses recall. It is a stopgap during migration; re-embedding the corpus is the real fix.",
+        question="Aligning two embedding spaces with orthogonal Procrustes. What does this print?",
+        topic="drift-bias", level=4),
+    out("""import math
+t = 1e-5                          # subsampling threshold
+for f in (0.05, 1e-5):            # word frequency: 'the' vs a rare word
+    print(round(1 - math.sqrt(t / f), 3))""",
+        ["0.986\n0.0", "0.05\n1e-05", "0.014\n1.0", "0.986\n1.0"], 0,
+        "This is the probability of DISCARDING an occurrence of the word.",
+        "word2vec randomly drops frequent words during training: 'the' (5% of tokens) is discarded 98.6% of the time, a word at the threshold never. This speeds training and improves rare-word vectors, because 'the' appears next to everything and teaches little. It also effectively widens the context window around content words.",
+        question="word2vec's subsampling of frequent words. What does this print?",
+        topic="word2vec", level=3),
+    out("""exact = [[1, 4, 7], [2, 5, 9]]       # brute-force top-3 (ground truth)
+approx = [[1, 7, 3], [2, 5, 9]]      # what the ANN index returned
+hits = sum(len(set(e) & set(a)) for e, a in zip(exact, approx))
+print(round(hits / 6, 2))""",
+        ["0.83", "0.5", "1.0", "0.67"], 0,
+        "Count how many of the 6 true neighbours the ANN index found.",
+        "ANN recall@k is measured against exact brute-force results on a sample of queries: here 5 of 6 true neighbours were found, recall 0.83. Track it whenever you change index parameters (efSearch, nprobe, quantisation). A fast index with 0.8 recall silently drops one in five good chunks before the LLM ever sees them.",
+        question="Measuring an ANN index's recall@3 against brute force. What does this print?",
+        topic="vector-search", level=3),
+    mcq("To build word-level features from BERT for the word 'tokenization', which WordPiece splits into 'token' + '##ization', what is the usual approach?",
+        ["Average (or take the first of) the vectors of its sub-word tokens, found via the tokenizer's word_ids or offsets",
+         "Use only the [CLS] vector",
+         "Look the word up in BERT's vocabulary; it has one vector",
+         "Concatenate all the sentence's token vectors"], 0,
+        "The model gives one vector per token, not per word.",
+        "Contextual models output a vector per sub-word token. To get one vector per word (for NER or word similarity), map tokens back to words with word_ids() or offsets and pool their vectors (mean or first sub-token). The input embedding table row is NOT contextual, so looking up the vocabulary misses the point.",
+        topic="contextual", level=3),
+    mcq("Your embedding model has a 512-token limit. Some chunks are 900 tokens. What happens in most libraries if you embed them as they are?",
+        ["The input is silently truncated to 512 tokens, so the last ~400 tokens never influence the vector",
+         "An error is always raised",
+         "The model processes all 900 tokens with extended positions",
+         "The vector length grows to fit the extra tokens"], 0,
+        "Truncation is usually on by default in embedding wrappers.",
+        "Most embedding pipelines set truncation on with a max_seq_length, so the tail is dropped without warning. Facts at the end of long chunks become unsearchable. Measure chunk lengths with the model's tokenizer and keep chunks under the limit.",
+        topic="sentence", level=3),
+    mcq("You switch an index to binary quantisation (keep only the sign of each dimension, compare with Hamming distance). Storage drops 32x but recall falls. What is the standard way to recover most of the recall?",
+        ["Retrieve a larger candidate set with the binary vectors, then re-score those candidates with the full-precision (or int8) vectors",
+         "Use more bits per dimension in Hamming distance",
+         "Normalise the binary vectors",
+         "Increase the embedding temperature"], 0,
+        "Cheap filter first, precise scoring second.",
+        "1 bit per dimension (e.g. 1024 dims = 128 bytes) makes search very fast with XOR and popcount, but ranks coarsely. Over-fetch (say top 200) with binary vectors, then rescore with the original floats kept on disk. That two-stage pattern keeps most of the quality at a fraction of the RAM, and only works well for models that tolerate quantisation.",
+        topic="dimensions", level=3),
+    tf("Embedding the same text twice with the same model version is guaranteed to give bit-for-bit identical vectors, even on different hardware or batch sizes.", False,
+       "Floating-point addition is not associative.",
+       "GPU kernels, batch composition and hardware change the order of floating-point sums, so vectors can differ in the last few digits. Cosines match to about 1e-6, but exact-equality dedupe or hashing vectors as cache keys breaks. Hash the input text (plus model version) instead.",
+       topic="drift-bias", level=3),
+    mcq("fastText does not store a vector per character n-gram; it hashes n-grams into a fixed number of buckets (about 2 million by default). What is the consequence?",
+        ["Memory is bounded, but unrelated n-grams can collide and share a vector, adding some noise to every word that uses them",
+         "Every n-gram gets its own unique vector",
+         "Out-of-vocabulary words can no longer be embedded",
+         "The model becomes a word-level model"], 0,
+        "Think of a hash table with fixed capacity and no collision handling.",
+        "The hashing trick caps memory regardless of how many distinct n-grams exist, and collisions are tolerated because each word sums many n-grams. Fewer buckets means smaller models (useful on mobile) but more collisions and lower quality.",
+        analogy="Like a fixed-size hash map that silently lets two keys share a slot.",
+        topic="glove-fasttext", level=3),
+    fill("TfidfVectorizer(____=True) replaces the raw term count tf with 1 + log(tf), so a word repeated 100 times does not dominate.", "sublinear_tf",
+         "The option makes tf grow slower than linearly.",
+         "sublinear_tf=True dampens repetition: 1 occurrence -> 1.0, 3 -> 2.1, 100 -> 5.6. It often helps long or spammy documents, the same intuition as BM25's term-frequency saturation.",
+         topic="bow-tfidf", level=3),
+    mcq("When would you choose HashingVectorizer over CountVectorizer?",
+        ["Very large or streaming corpora: it hashes words to a fixed number of columns, so no vocabulary is stored and new data needs no refit, at the cost of collisions and no inverse mapping to words",
+         "When you need to print the feature names for explanations",
+         "When the corpus has fewer than 100 documents",
+         "When you need exact IDF values"], 0,
+        "What does CountVectorizer have to keep in memory?",
+        "CountVectorizer stores a vocabulary dict that can grow to millions of entries and must be fit before transform. HashingVectorizer is stateless: a word's column is hash(word) % n_features, so it works in parallel and online. You lose get_feature_names_out() and accept rare collisions.",
+        topic="bow-tfidf", level=3),
+    mcq("Theory showed that skip-gram with negative sampling (SGNS) is implicitly doing what?",
+        ["Factorising a word-context matrix of pointwise mutual information shifted by log k (k = number of negative samples)",
+         "Computing the eigenvectors of the raw count matrix",
+         "Training a small transformer",
+         "Building a binary tree over the vocabulary"], 0,
+        "It connects word2vec to classic count-based methods.",
+        "Levy and Goldberg (2014) showed that at the optimum, w . c = PMI(w, c) - log k. So word2vec and count-based methods (PMI + SVD, GloVe) are close cousins: the neural trick mainly changes weighting and efficiency, not the information used. More negatives (larger k) shift the matrix more.",
+        topic="word2vec", level=4),
+    mcq("GloVe minimises a weighted squared error between w_i . w_j and log X_ij. Why does its weighting function f(X_ij) equal 0 when X_ij = 0 and cap at 1 for very frequent pairs?",
+        ["log 0 is undefined, so pairs that never co-occur must be excluded, and capping stops extremely frequent pairs like ('the', 'of') from dominating the loss",
+         "To make the loss always equal to zero",
+         "So that rare pairs get the highest weight",
+         "Because GloVe only uses pairs that occur exactly once"], 0,
+        "Two problems: a math one and a balance one.",
+        "f(x) = (x / x_max)^0.75 below x_max (100 in the paper) and 1 above it. Zero counts would make log X undefined and would swamp training, since most pairs never co-occur. The cap is the same 'damp the frequent ones' idea as the 0.75 power in word2vec's negative sampling.",
+        topic="glove-fasttext", level=4),
+    mcq("Your HNSW-based index gets heavy updates: many documents are deleted and re-inserted every day. Over weeks, recall drops and memory grows, though nothing else changed. Why?",
+        ["Deletes in HNSW are usually tombstones: dead nodes stay in the graph, waste memory and weaken its links, so the index needs periodic compaction or a rebuild",
+         "HNSW forgets vectors after a few weeks",
+         "The embedding model drifts on its own",
+         "HNSW recall always improves with more updates"], 0,
+        "Removing a node from a proximity graph breaks paths through it.",
+        "Removing a node cleanly would mean re-linking its neighbours, so most implementations just mark it deleted and skip it in results. Searches still walk through dead nodes and the graph quality degrades. Plan for it like a database VACUUM: monitor recall on a fixed query set and rebuild or compact the index on a schedule.",
+        analogy="Like soft-deleted rows that still bloat a table until you vacuum it.",
+        topic="vector-search", level=4),
 ]

@@ -14,6 +14,7 @@ TOPICS = [
     ("online-eval", "A/B testing and online metrics"),
     ("llm-monitoring", "LLM-specific monitoring"),
     ("alerting", "Alerting, alert fatigue, logging and privacy"),
+    ("windows", "Monitoring windows, baselines and sample size"),
 ]
 
 QUESTIONS = [
@@ -715,4 +716,447 @@ print(log)""",
         "The phone pattern needs at least 10 characters of digits/spaces.",
         "Both PII values are masked before the line is stored; the short order number survives. Redact at write time: logs get copied to many systems and are hard to clean later.",
         topic="alerting", level=4),
+
+    # ---------------- round 2 additions ----------------
+    tf("A deployed model can get worse even though nobody changed its code, its weights or its server.",
+        True,
+        "The model stays the same; what else can change?",
+        "The world the model sees keeps changing: new users, new products, new fraud tactics, an upstream team editing a feature. A frozen model on moving data slowly decays. That is the core reason ML needs monitoring beyond 'is the service up?'.",
+        analogy="Like a street map printed in 2020: the paper hasn't changed, but the city has.",
+        topic="why-ml", level=1),
+    mcq("Which of these is a 'silent failure' of an ML service?",
+        ["The API keeps returning 200 OK with confident predictions, but a renamed upstream column means one feature is now always zero",
+         "The server crashes and returns HTTP 500",
+         "The container fails its health check and restarts",
+         "Requests time out after 30 seconds"], 0,
+        "Which one would no ordinary uptime alert catch?",
+        "Crashes, 500s and timeouts trip normal alerts. A broken feature still produces numbers, so the service looks healthy while predictions are wrong. Catching it needs data checks (null/zero rates, ranges) and prediction-distribution monitors.",
+        topic="why-ml", level=1),
+    fill("Fill in the blank: a model that keeps returning HTTP 200 with wrong answers is said to fail ____ (one word).",
+        "silently",
+        "No error, no crash, no log line.",
+        "Silent failure is the defining problem of ML monitoring: nothing throws, so you need probes for correctness (data checks, prediction drift, labels, proxies), not just for availability.",
+        topic="why-ml", level=2),
+    tf("Data drift means the distribution of the model's inputs has changed compared with the data it was trained on.",
+        True,
+        "Drift of what, exactly?",
+        "Data drift (covariate shift) = P(x) changes: new age groups, new devices, a new country. It is the easiest drift to see because inputs are available right away, with no labels needed. Whether it hurts accuracy is a separate question.",
+        topic="drift-types", level=1),
+    fill("Fill in the blank: when the same input now deserves a different answer, so P(y | x) has changed, it is called ____ drift.",
+        "concept",
+        "The meaning of the pattern changed, not the pattern.",
+        "Concept drift: fraudsters change tactics, so a transaction that looked safe last year is now fraud. Input monitors cannot see it, because the inputs look the same; you need labels or proxies.",
+        topic="drift-types", level=2),
+    fill("Fill in the blank: KS, the two-sample drift test for numeric features, stands for Kolmogorov-____.",
+        "Smirnov",
+        "Two Russian mathematicians.",
+        "The Kolmogorov-Smirnov test compares two samples by the largest gap between their cumulative distribution curves. In SciPy it is scipy.stats.ks_2samp. It is for continuous numbers; use chi-square for categories.",
+        topic="drift-detection", level=1),
+    fill("Fill in the blank: the real outcome you compare predictions against (did the customer actually churn?) is called the ground ____.",
+        "truth",
+        "Two words, the second one means 'what really happened'.",
+        "Ground truth = the true labels. In production it often arrives late (chargebacks, loan defaults) or only for some cases, which is why monitoring leans on proxies and prediction distributions in the meantime.",
+        topic="ground-truth", level=1),
+    out("""import numpy as np
+
+yesterday = np.array([0.1, 0.2, 0.15, 0.1, 0.2])   # predicted churn probabilities
+today     = np.array([0.6, 0.7, 0.65, 0.5, 0.8])
+print(round(float(yesterday.mean()), 2), round(float(today.mean()), 2))""",
+        ["0.15 0.65", "0.15 0.15", "0.75 0.65", "0.65 0.15"], 0,
+        "Average each day's predictions.",
+        "The average predicted churn jumped from 0.15 to 0.65 overnight. You need no labels to see that: something changed (inputs, a pipeline bug, a new model). Monitoring the prediction distribution is the cheapest early warning you have.",
+        topic="ground-truth", level=1),
+    tf("Monitoring the distribution of a model's predictions requires waiting until the true labels arrive.",
+        False,
+        "Predictions exist the moment you make them.",
+        "Prediction distributions (mean score, % positive, class mix) are available instantly. A sudden shift is a strong hint that inputs or the pipeline changed. Labels are needed to measure accuracy, not to notice that the model's behaviour moved.",
+        topic="ground-truth", level=2),
+    fill("Fill in the blank: an alert that fires when nothing is wrong is a false positive; staying silent during a real incident is a false ____.",
+        "negative",
+        "The opposite kind of mistake.",
+        "Alert design trades the two: tight thresholds give false positives (fatigue, ignored pages), loose ones give false negatives (missed incidents). Same confusion-matrix thinking you use for the model itself, applied to the monitor.",
+        topic="alerting", level=1),
+    mcq("Which statement about the 'reference' (baseline) dataset in drift monitoring is right?",
+        ["It is the data you compare live traffic against, usually the training set or a known-good recent production window, and the choice changes what 'drift' means",
+         "It must always be the most recent hour of live traffic",
+         "It is the test set used once to report accuracy, and it is never used again",
+         "Drift monitoring does not need a reference"], 0,
+        "Drift is always 'different from WHAT?'.",
+        "Against the training set you ask 'is this still the world the model learned?'. Against last month's traffic you ask 'did something change recently?'. Teams often keep both: a fixed training reference to catch slow drift and a rolling one to catch sudden breaks.",
+        topic="windows", level=2),
+    fill("Fill in the blank: the fixed dataset you compare live data against in a drift check is called the ____ dataset (also 'baseline').",
+        "reference",
+        "Tools like Evidently call it 'reference_data'.",
+        "Reference vs current is the standard framing: drift tools take a reference dataset and a current window and compare them feature by feature. Version the reference like code, so a drift score is reproducible.",
+        topic="windows", level=2),
+    tf("Alerting on every metric that moves is the safest monitoring setup, because it guarantees nothing is missed.",
+        False,
+        "What do people do with a pager that rings 200 times a day?",
+        "Too many alerts train people to ignore them, so real incidents get missed: alert fatigue. Page only on a few actionable, user-impacting signals; put the rest on dashboards or in daily reports.",
+        topic="alerting", level=2),
+    out("""import pandas as pd
+
+train_devices = {"android", "ios", "web"}
+live = pd.Series(["ios", "android", "web", "smart_tv", "ios", "smart_tv", "car", "web"])
+unseen = ~live.isin(train_devices)
+print(unseen.sum(), round(unseen.mean(), 2))""",
+        ["3 0.38", "2 0.25", "5 0.62", "3 0.03"], 0,
+        "isin checks membership; ~ flips it.",
+        "smart_tv twice and car once are new categories: 3 of 8 rows, 0.38 (37.5% rounded). A one-hot encoder fitted on training data maps unseen categories to all-zeros (or errors), so a rising 'unseen category' rate is a data-quality alarm, not something drift tests on known categories will show.",
+        topic="data-quality", level=2),
+    fill("Fill in the blank: in Great Expectations a single rule about data, like 'column age is between 0 and 120', is called an ____.",
+        "expectation",
+        "The tool is named after it.",
+        "Expectations are unit tests for data: run them as a pipeline gate before training or scoring, and fail the batch (or quarantine it) when they break, the same way a failing test blocks a deploy.",
+        topic="data-quality", level=2),
+    fill("Fill in the blank: when an A/B test planned 50/50 actually gets 52/48 users, far beyond chance, it is called a sample ratio ____.",
+        "mismatch",
+        "Abbreviated SRM.",
+        "A sample ratio mismatch means assignment or logging is broken (bots filtered on one side, a redirect that drops users). Results from an SRM test cannot be trusted, so check the split with a chi-square test before reading any metric.",
+        topic="online-eval", level=2),
+    tf("Monitoring average output tokens per request can catch a prompt change that quietly makes answers longer and more expensive.",
+        True,
+        "Output tokens are the pricier ones.",
+        "A prompt edit like 'explain your reasoning' can double output length, so cost and latency jump while answers still look fine. Track tokens in and out per feature and per prompt version, and alert on a step change.",
+        topic="llm-monitoring", level=2),
+    out("""requests_per_day = 20_000
+avg_in, avg_out = 1_500, 400          # tokens
+price_in, price_out = 0.40, 1.60      # USD per 1M tokens
+daily = requests_per_day * (avg_in * price_in + avg_out * price_out) / 1e6
+print(round(daily, 2), round(daily * 30))""",
+        ["24.8 744", "12.0 360", "24.8 248", "2480.0 74400"], 0,
+        "Per request: 1,500 x 0.40 + 400 x 1.60 micro-dollars.",
+        "Per request (1500 x 0.40 + 400 x 1.60) / 1e6 = $0.00124; x 20,000 = $24.80/day, about $744/month. Output is 21% of the tokens but more than half the cost. A cost dashboard per feature turns 'the bill doubled' into 'summarise started sending 3x more context on Tuesday'.",
+        topic="llm-monitoring", level=2),
+    mcq("Why should an LLM app record token counts for every request, not only total monthly spend?",
+        ["Cost and latency scale with tokens, so per-request counts show WHICH feature, prompt version or user drives the bill and catch runaway requests early",
+         "Providers require it by law",
+         "Token counts measure answer quality directly",
+         "Monthly totals are always accurate enough"], 0,
+        "A monthly invoice says 'how much', not 'why'.",
+        "Per-request tokens (in and out), tagged with feature, prompt version and model, let you slice cost like any other metric, spot a single agent stuck in a loop, and set per-request caps. It is like per-endpoint latency metrics versus one server-wide average.",
+        topic="llm-monitoring", level=1),
+    out("""import numpy as np
+
+rng = np.random.default_rng(0)
+ref = rng.normal(0, 1, 10_000)
+live = rng.normal(0.5, 1, 10_000)
+edges = np.quantile(ref, np.linspace(0, 1, 11))   # 10 equal-count bins
+edges[0], edges[-1] = -np.inf, np.inf
+e = np.histogram(ref, edges)[0] / len(ref)
+a = np.histogram(live, edges)[0] / len(live)
+psi = np.sum((a - e) * np.log(a / e))
+print(round(float(e[0]), 2), round(float(psi), 2))""",
+        ["0.1 0.24", "0.1 0.0", "0.5 0.24", "0.1 2.4"], 0,
+        "Quantile edges put 10% of the reference in each bin.",
+        "Bins from reference deciles give expected shares of 0.1 each; a half-standard-deviation shift moves mass into the upper bins and PSI comes out about 0.24, the top of the 'moderate' band. The open-ended outer edges (-inf, inf) catch live values outside the training range, which fixed edges would silently drop.",
+        diagram="""
+ ref bins   |10%|10%|10%|10%|10%|10%|10%|10%|10%|10%|
+ live share | 4 | 5 | 6 | 8 | 8 |11 |11 |12 |14 |22 |
+ PSI = sum (a - e) * ln(a / e)  ~ 0.24
+""",
+        topic="drift-detection", level=3),
+    out("""import numpy as np
+from scipy.stats import ks_2samp
+
+ref = np.array([1, 2, 3, 4, 5, 6, 7, 8])
+live = np.array([3, 4, 5, 6, 7, 8, 9, 10])
+grid = np.union1d(ref, live)
+cdf = lambda s: np.searchsorted(np.sort(s), grid, side="right") / len(s)
+by_hand = np.abs(cdf(ref) - cdf(live)).max()
+print(float(by_hand), float(ks_2samp(ref, live).statistic))""",
+        ["0.25 0.25", "0.25 0.5", "2.0 0.25", "0.125 0.125"], 0,
+        "At x = 2 the reference has 2/8 below or equal, the live sample has 0/8.",
+        "The KS statistic is the biggest vertical gap between the two empirical CDFs. Here live is the reference shifted by 2, and the gap peaks at 2/8 = 0.25 (e.g. at x = 2 and x = 8). Computing it by hand once makes the scipy number meaningful: 0.25 means 'at some threshold, 25% of one sample is on a different side than the other'.",
+        topic="drift-detection", level=3),
+    tf("The PSI value you get for the same two samples depends on how you choose the bins.",
+        True,
+        "Try 3 bins versus 30 bins in your head.",
+        "PSI sums over bins, so more or narrower bins usually give a larger value, and empty bins blow it up. The 0.1/0.25 thresholds assume roughly 10 equal-population bins from the reference. Fix the binning (store the edges with the reference) or your drift scores are not comparable over time.",
+        topic="drift-detection", level=3),
+    fill("Fill in the blank (one word): by the usual rule of thumb, a PSI of 0.18 means a ____ shift.",
+        "moderate",
+        "Below 0.1 stable, above 0.25 significant.",
+        "0.1-0.25 is the 'moderate, investigate' band: look at which bins moved and whether performance proxies moved, before deciding to retrain. Treat the thresholds as conventions, not laws; they depend on binning and sample size.",
+        topic="drift-detection", level=3),
+    out("""import pandas as pd
+
+ref_mean = 50.0
+daily = pd.Series([49, 51, 50, 52, 58, 61, 63, 64],
+                  index=pd.date_range("2026-01-01", periods=8))
+rolling = daily.rolling(3).mean()
+flag = (rolling - ref_mean).abs() > 5
+print(flag.idxmax().day, round(float(rolling.iloc[-1]), 1))""",
+        ["6 62.7", "5 62.7", "3 64.0", "6 64.0"], 0,
+        "The first two rolling values are NaN; NaN > 5 is False.",
+        "3-day means: 50, 51, 53.3, 57, ... The first one more than 5 away from 50 is 57 on Jan 6, though the raw value jumped on Jan 5. A rolling window smooths noise but adds detection delay of about half the window; idxmax on a boolean Series returns the first True.",
+        topic="windows", level=3),
+    tf("A smaller monitoring window (say 1 hour instead of 1 day) detects sudden changes faster but raises more false alarms.",
+        True,
+        "Fewer samples per window means noisier statistics.",
+        "Short windows react quickly but have few samples, so drift scores and error rates bounce around. Long windows are stable but slow. Common practice: a short window with a high threshold for big breaks plus a long window with a low threshold for slow drift, like multi-window SLO alerts.",
+        topic="windows", level=3),
+    mcq("A food-delivery model's drift monitor compares each day's inputs with the previous day. It alerts every Saturday and Monday. Nothing is broken. What is the best fix?",
+        ["Account for seasonality: compare each day with the same weekday in past weeks (or a reference covering full weeks) so normal weekly patterns don't count as drift",
+         "Raise the threshold until the weekend alerts stop",
+         "Turn off drift monitoring on weekends",
+         "Retrain the model every Saturday"], 0,
+        "What is different about Saturday compared with Friday, every week?",
+        "Weekend traffic looks different every week, so day-over-day comparison flags a normal cycle. Choose references that contain the same seasonality (same weekday last week, a 4-week rolling baseline). Raising the threshold would also hide real drift.",
+        diagram="""
+ orders  Mon Tue Wed Thu Fri Sat Sun Mon
+         ##  ##  ##  ##  ### #### ### ##
+ day-over-day:            !    !       !   <- false alarms
+ same-weekday ref: no alarm unless the pattern itself moves
+""",
+        topic="windows", level=3),
+    tf("Using a sliding baseline (always comparing this week with last week) can hide slow, gradual drift.",
+        True,
+        "Each week differs only a little from the one before.",
+        "If a feature creeps 2% a week, every week-over-week check looks fine, while after six months it is far from the training data. Keep a fixed training reference alongside the sliding one, the way you track both day-over-day and year-over-year in business metrics.",
+        analogy="Like the boiling frog: each degree feels the same as the last one.",
+        topic="windows", level=4),
+    out("""import numpy as np
+
+pred_day = np.arange(1, 61)          # one batch of predictions per day, days 1..60
+label_delay = 30                     # labels arrive 30 days after the prediction
+today = 45
+matured = pred_day + label_delay <= today
+print(int(matured.sum()), round(float(matured.mean()), 2))""",
+        ["15 0.25", "45 0.75", "30 0.5", "60 1.0"], 0,
+        "A day-d batch is labelled on day d + 30.",
+        "Only batches from days 1-15 have labels by day 45: 15 of 60, 25%. Your 'current accuracy' is really accuracy from 30+ days ago, so anything that broke last week is invisible to it. Always report labelled metrics by prediction date (cohort) and pair them with label-free monitors for recent days.",
+        topic="ground-truth", level=3),
+    out("""slo = 0.999
+error_rate_last_hour = 0.0144
+burn_rate = error_rate_last_hour / (1 - slo)
+budget_used_pct = burn_rate * 1 / (30 * 24) * 100     # 1 hour out of 30 days
+print(round(burn_rate, 1), round(budget_used_pct, 1))""",
+        ["14.4 2.0", "1.4 0.2", "14.4 14.4", "0.0 0.0"], 0,
+        "Burn rate = observed error rate / allowed error rate.",
+        "The SLO allows 0.1% errors; 1.44% is 14.4x that. Burning at 14.4x for one hour uses 14.4 / 720 hours = 2% of the 30-day budget. That is the classic 'page now' threshold from SRE practice: at this pace the whole month's budget is gone in about 2 days.",
+        topic="system-metrics", level=3),
+    out("""import numpy as np
+
+psi = np.array([0.05, 0.31, 0.04, 0.06, 0.27, 0.29, 0.33, 0.08])   # per hour
+breach = psi > 0.25
+single = int(breach.sum())
+# alert only when 3 consecutive hours breach
+three_in_row = int(sum(breach[i:i+3].all() for i in range(len(breach) - 2)))
+print(single, three_in_row)""",
+        ["4 1", "4 2", "1 1", "4 0"], 0,
+        "Hours 5, 6 and 7 (0-based 4, 5, 6) breach together.",
+        "A single-hour rule fires 4 times, including the lone spike at hour 2. Requiring 3 consecutive breaches fires once, for the sustained shift. 'N of M windows' rules are a cheap way to cut false alarms at the cost of a little detection delay.",
+        topic="alerting", level=3),
+    fill("Fill in the blank (decimal): you test 50 features for drift each day and want an overall false-alarm rate of about 5%. With a Bonferroni correction, each feature's p-value threshold is ____.",
+        "0.001",
+        "Divide alpha by the number of tests.",
+        "0.05 / 50 = 0.001. Bonferroni is conservative (it can miss real but small drift), but it turns 'about 2.5 false alarms per day' into 'about one every 20 days'. Alternatives: Benjamini-Hochberg (controls false discovery rate) or alerting on effect size plus importance-weighted features.",
+        topic="alerting", level=3),
+    out("""requests_per_day = 50_000
+sample_rate = 0.02
+judge_tokens = 2_500                 # prompt + answer + context sent to the judge
+price_per_m = 1.00                   # USD per 1M judge tokens
+judged = int(requests_per_day * sample_rate)
+monthly = judged * judge_tokens * price_per_m / 1e6 * 30
+print(judged, round(monthly, 2))""",
+        ["1000 75.0", "1000 2.5", "50000 3750.0", "100 7.5"], 0,
+        "1,000 judged x 2,500 tokens = 2.5M tokens a day.",
+        "2% of 50,000 = 1,000 judged answers a day; 2.5M tokens/day at $1/M = $2.50/day, $75/month. Sampling makes LLM-as-judge quality monitoring affordable; judging 100% would cost $3,750/month and add latency if done inline. Run judges asynchronously, off the request path.",
+        topic="llm-monitoring", level=3),
+    fill("Fill in the blank (whole dollars): 1,000 requests/day, you judge a 5% sample, and each judge call costs $0.002. Over 30 days the judge costs about $____.",
+        "3",
+        "50 calls a day.",
+        "1,000 x 0.05 = 50 judged per day x $0.002 = $0.10/day, $3 per 30 days. At low traffic you can afford a much higher sample rate; at high traffic a fixed number of judged answers per day (stratified by feature) keeps cost flat.",
+        topic="llm-monitoring", level=3),
+    tf("Reviewing only the conversations that got a thumbs-down gives an unbiased estimate of the app's overall hallucination rate.",
+        False,
+        "Who presses thumbs-down, and on which answers?",
+        "Thumbs-down answers are a self-selected, very biased sample: most users never vote, and wrong answers that sound right get no downvote. Use them to find failure examples, but estimate rates from a RANDOM sample of all traffic judged the same way.",
+        topic="llm-monitoring", level=3),
+    tf("Keeping a small random-exploration slice (say 2% of traffic gets a non-personalised ranking) usually costs a little short-term engagement.",
+        True,
+        "Random choices are, on average, worse than the model's choices.",
+        "Exploration is a deliberate cost: those users get slightly worse recommendations. In return you get unbiased data to evaluate and retrain on, and a way to discover items the model never shows. Teams size it as small as possible and treat it like an insurance premium.",
+        topic="feedback-loops", level=3),
+    tf("A model retrained on the latest data is always better than the model currently in production, so it can be deployed without comparison.",
+        False,
+        "What if the latest data is broken, or too small?",
+        "Recent data can hold pipeline bugs, a holiday spike, or labels that are not settled yet. Every retrained challenger must beat the champion on a held-out recent set (plus slice checks) before promotion, then go through canary like any deploy.",
+        topic="retraining", level=3),
+    mcq("A team says 'the model drifted' because the served values of feature `amount` differ from what the training pipeline computes for the SAME transactions. What is this, and how do you tell it apart from drift?",
+        ["Training-serving skew: the two code paths compute the feature differently; compare logged served features with the training pipeline's output for the same IDs (row by row), whereas drift compares different time periods",
+         "Concept drift; retrain the model",
+         "Label shift; reweight the classes",
+         "Normal noise; nothing to do"], 0,
+        "Same rows, different values, so time is not the cause.",
+        "Drift is the world changing between periods; skew is your two pipelines disagreeing about the same event. The test for skew is a join: served features (logged at request time) vs offline-computed features keyed by request ID. Retraining does not fix skew, because the next model will be served through the same broken path.",
+        topic="data-quality", level=3),
+    mcq("Why do teams log the exact feature vector at prediction time instead of recomputing features later from the raw tables when labels arrive?",
+        ["Raw tables change (late updates, backfills, corrected values), so recomputing later leaks future information and does not reproduce what the model actually saw; logged features give point-in-time correct training and debugging data",
+         "Logging is cheaper than computing",
+         "Recomputed features are always identical, so it makes no difference",
+         "Regulations forbid recomputing features"], 0,
+        "Is 'the customer's balance' the same value today as at 10:03 last Tuesday?",
+        "Recomputing a feature after the fact gives its CURRENT value, not the value at decision time, which leaks future information into training and hides skew. Logging served features (or using a feature store with point-in-time joins) is like event sourcing: keep the facts as they were, not a later snapshot.",
+        topic="data-quality", level=3),
+    mcq("A categorical feature `device` is one-hot encoded with `handle_unknown='ignore'`. A new app version sends 'android_tv', which the encoder never saw. What happens and what should monitoring catch?",
+        ["The row is encoded as all zeros for device, so the model silently treats it like no device at all; monitor the unseen-category rate per feature",
+         "sklearn raises an error for every such request",
+         "The encoder adds a new column automatically",
+         "The value is mapped to the most frequent device"], 0,
+        "'ignore' means no error, not 'handled well'.",
+        "With handle_unknown='ignore', unknown categories become an all-zero block: no exception, just a quietly odd input. If 30% of traffic moves to a new device name, predictions shift with no alert. Track the share of unseen categories as a data-quality metric next to null rates.",
+        topic="data-quality", level=3),
+    mcq("A news recommender is retrained on click logs. Items in slot 1 get 10x the clicks of slot 5. Why is 'clicked = relevant' a biased training label here?",
+        ["Position bias: users click top slots partly because they are on top, so the logs reward whatever the old model ranked first; correct with position-aware models, randomised slots, or inverse-propensity weighting",
+         "Clicks are always a perfect relevance label",
+         "Slot 5 items are always worse, so the labels are fine",
+         "Click logs have no bias if the dataset is large enough"], 0,
+        "Would the same article get the same clicks in slot 5?",
+        "The model's own ranking decides exposure, and exposure drives clicks: a feedback loop. Without correction the retrained model learns 'what the old model liked' more than 'what users like'. More data does not remove a systematic bias.",
+        topic="feedback-loops", level=3),
+    mcq("A drift-triggered retraining job fires on PSI > 0.2. During a two-week promotion, PSI bounces around 0.2 and the pipeline retrains and redeploys 9 times. What is the best design fix?",
+        ["Add hysteresis and gates: require the breach to persist, use a cool-down between retrains, and promote only if the challenger beats the champion on recent labelled data",
+         "Lower the threshold to 0.1 so it is more sensitive",
+         "Retrain every hour instead",
+         "Remove the champion/challenger gate to deploy faster"], 0,
+        "A thermostat with no dead band switches on and off constantly.",
+        "Triggers on a noisy signal flap. Persistence (N windows in a row), a cool-down and a dead band (trigger at 0.25, reset below 0.15) stop the thrash. A temporary promotion may not even need a new model, and each churned deploy adds risk and cost for no gain.",
+        analogy="Like a thermostat without a dead band: it clicks the heater on and off every few seconds.",
+        topic="retraining", level=3),
+    out("""import numpy as np
+
+def psi(e, a):
+    return float(np.sum((a - e) * np.log(a / e)))
+
+e = np.array([0.6, 0.3, 0.1])
+a = np.array([0.3, 0.3, 0.4])
+print(round(psi(e, a), 3), round(psi(a, e), 3))""",
+        ["0.624 0.624", "0.624 0.347", "0.347 0.624", "0.624 -0.624"], 0,
+        "Swap e and a: both factors (a - e) and ln(a / e) flip sign.",
+        "PSI is symmetric: swapping the samples flips the sign of both (a - e) and ln(a/e), so each term is unchanged. In fact PSI = KL(a||e) + KL(e||a), the symmetrised KL divergence. So, unlike KL, it does not matter which side you call 'reference', but it is still infinite on empty bins.",
+        topic="drift-detection", level=4),
+    tf("The two-sample KS test is most sensitive to differences in the tails of a distribution and least sensitive near the median.",
+        False,
+        "Where can two CDFs be furthest apart?",
+        "It is the reverse. Both CDFs are pinned to 0 and 1 at the extremes, so gaps there are small and the KS statistic mostly reacts to shifts near the middle. For tail changes (e.g. more very large transactions) use Anderson-Darling, quantile checks (p99 of the feature) or tail-focused bins in PSI.",
+        topic="drift-detection", level=4),
+    fill("Fill in the blank (whole number): with log base 2, the Jensen-Shannon divergence between two distributions is at most ____.",
+        "1",
+        "It is bounded, unlike KL.",
+        "JS divergence lies in [0, 1] with base-2 logs (and [0, ln 2] with natural logs); it hits the maximum when the two distributions do not overlap at all. Bounded, symmetric scores are easy to threshold and compare across features, unlike KL, which can be infinite.",
+        topic="drift-detection", level=4),
+    mcq("Every feature passes its univariate drift test, but the model's error rate doubles. Investigation shows that 'age' and 'income' used to be strongly correlated and now are not. Which monitor would have caught this?",
+        ["A multivariate check, e.g. a domain classifier trained to tell reference rows from live rows (AUC well above 0.5 means the joint distribution moved), or monitoring the model's own score distribution",
+         "Running the same KS tests with a lower p-value threshold",
+         "Checking each feature's mean and standard deviation more often",
+         "A chi-square test on each feature separately"], 0,
+        "Each marginal is unchanged; the relationship between features changed.",
+        "Univariate tests look at one column at a time and cannot see a change in how columns move together. A 'reference vs live' classifier sees all features jointly, and its feature importances show what changed. PCA reconstruction error is another multivariate option.",
+        diagram="""
+ reference          live
+ income             income
+  |      . .         | .    .  .
+  |   . .            |    .  .
+  | . .              |  .  .   .
+  +------- age       +------- age
+ same marginals, different joint
+""",
+        topic="drift-detection", level=4),
+    out("""tpr, fpr = 0.90, 0.05      # the model itself does not change
+
+def precision(prevalence):
+    tp = tpr * prevalence
+    fp = fpr * (1 - prevalence)
+    return round(tp / (tp + fp), 2)
+
+print(precision(0.10), precision(0.01))""",
+        ["0.67 0.15", "0.67 0.67", "0.9 0.9", "0.15 0.67"], 0,
+        "False positives come from the big negative class.",
+        "Same TPR and FPR, but when positives fall from 10% to 1%, precision drops from 0.67 to 0.15, because false positives now outnumber true ones. That is label (prior) shift: the model is unchanged, yet the alert queue fills with false alarms. Monitor the predicted-positive rate and, when labels arrive, precision by cohort.",
+        topic="drift-types", level=4),
+    mcq("A loan model's 'early accuracy' is computed from labels that have arrived so far. In the first month it looks great, then steadily worsens as more labels arrive. No real change happened. Why?",
+        ["Early labels are not a random sample: defaults that happen fast (and the loans that pay off early) arrive first, so early metrics come from a biased subset; compare cohorts at the same label age",
+         "The model is overfitting to new labels",
+         "Accuracy always gets worse over time by definition",
+         "The label pipeline randomly drops rows"], 0,
+        "Which outcomes can be known after 30 days?",
+        "With delayed labels, the label you can observe depends on time. Comparing a 1-month-old cohort with a 12-month-old one mixes label maturity with model quality. Use 'accuracy at 90 days of label age' curves (vintage analysis), the same idea credit teams use for default rates.",
+        topic="ground-truth", level=4),
+    out("""import math
+
+p, delta = 0.10, 0.01           # baseline conversion, smallest lift worth detecting
+n_per_arm = 16 * p * (1 - p) / delta ** 2   # rule of thumb: 80% power, alpha 0.05
+print(round(n_per_arm))""",
+        ["14400", "1440", "144", "900"], 0,
+        "16 x 0.09 / 0.0001.",
+        "About 14,400 users per arm to detect a 1-point lift on 10% conversion. Halving the detectable lift quadruples the sample (delta is squared). Running 'for a week and seeing' without this arithmetic is how teams declare noise a win, or kill a good model that never had enough traffic.",
+        topic="online-eval", level=4),
+    out("""import math
+
+n, flagged = 200, 16            # judged answers, unsupported ones
+p = flagged / n
+half = 1.96 * math.sqrt(p * (1 - p) / n)
+print(p, round(p - half, 3), round(p + half, 3))""",
+        ["0.08 0.042 0.118", "0.08 0.08 0.08", "0.08 0.079 0.081", "16 14 18"], 0,
+        "Standard error of a proportion = sqrt(p(1-p)/n).",
+        "8% unsupported answers, but with only 200 judged samples the 95% interval is about 4% to 12%. A dashboard showing '8% -> 10% hallucination' week over week is well within noise. Report rates with intervals, and size the judged sample for the change you need to see.",
+        topic="llm-monitoring", level=4),
+    out("""alpha, features = 0.05, 100
+p_any = 1 - (1 - alpha) ** features
+bonf = alpha / features
+p_any_bonf = 1 - (1 - bonf) ** features
+print(round(p_any, 3), bonf, round(p_any_bonf, 3))""",
+        ["0.994 0.0005 0.049", "0.05 0.0005 0.05", "0.994 0.05 0.994", "5.0 0.0005 0.05"], 0,
+        "P(at least one false alarm) = 1 - P(no false alarm on any feature).",
+        "With 100 independent tests at 0.05, a drift-free day still fires at least one alert 99.4% of the time. A Bonferroni threshold of 0.0005 brings the family-wise rate back to about 4.9%. That is why 'test every feature at p < 0.05' dashboards are always red, and why people stop looking at them.",
+        topic="alerting", level=4),
+    fill("Fill in the blank (whole number, percent): an SLO-based page fires when the 1-hour burn rate is 14.4. Burning at that rate for 1 hour uses about ____% of a 30-day error budget.",
+        "2",
+        "A 30-day month has 720 hours.",
+        "14.4 x 1 / 720 = 0.02, so 2% of the budget per hour; at that pace the month's budget is gone in about 50 hours. That is why the classic multi-window SLO alert pages on 14.4x over 1 hour (with a 5-minute check that it is still happening) and opens a ticket on slower burns like 1x over 3 days.",
+        topic="system-metrics", level=4),
+    mcq("You replace 'alert if error rate > 1% for 5 minutes' with multi-window burn-rate alerts on a 99.9% SLO. What problem does the pair of windows (e.g. 1 hour AND 5 minutes both above 14.4x) solve?",
+        ["The long window makes sure enough budget was burned to matter (no paging on a 30-second blip); the short window makes the alert stop soon after the problem is fixed",
+         "It doubles the number of alerts so nothing is missed",
+         "It removes the need for an SLO",
+         "It averages p99 latency correctly across hosts"], 0,
+        "One window controls significance, the other controls reset time.",
+        "A long window alone keeps firing for an hour after recovery; a short window alone pages on every spike. Requiring both gives precision (it mattered) and fast reset (it is still happening). The same idea transfers to ML signals: 'drift high over a day AND still high in the last hour'.",
+        topic="alerting", level=4),
+    fill("Fill in the blank: to evaluate a new policy offline from old logs, you weight each logged outcome by 1 / (probability the old policy chose that action). That probability is called the ____.",
+        "propensity",
+        "As in inverse ____ scoring (IPS).",
+        "Inverse propensity scoring re-weights logged data as if the new policy had chosen the actions. It only works if the old policy logged its probabilities AND gave every action some non-zero chance; a purely greedy old policy leaves actions with propensity 0 that you can never evaluate. That is why exploration and logging propensities go together.",
+        topic="feedback-loops", level=4),
+    mcq("An agentic LLM feature's daily cost triples overnight while request count is flat and average latency barely moves. Which monitoring would find the cause fastest?",
+        ["Per-request token and tool-call counts with their p99 and max, broken down by feature and prompt version: a few requests stuck in a tool loop or with huge context dominate cost but hardly move the average latency",
+         "The overall average tokens per request only",
+         "Server CPU utilisation",
+         "The HTTP error rate"], 0,
+        "A cost spike with flat traffic means some requests got much bigger.",
+        "Cost is heavy-tailed: one agent looping 200 tool calls costs as much as thousands of normal requests. Track distributions (p99, max) per request, set hard caps (max steps, max tokens, budget per session) and alert on tail growth. It is like finding the N+1 query that blows up your DB bill: averages hide it.",
+        topic="llm-monitoring", level=4),
+    mcq("A ride-hailing company A/B tests a new pricing model by randomising riders. Treatment riders book more, and the test shows a big win. After full launch, total bookings barely change. What most likely went wrong?",
+        ["Interference: both groups competed for the same drivers, so treatment gained partly by taking supply from control; use cluster or switchback randomisation (by city or time slot)",
+         "The test had a sample ratio mismatch",
+         "The novelty effect always reverses at launch",
+         "The model overfitted to the treatment group"], 0,
+        "Do treatment and control share a limited resource?",
+        "A/B tests assume one user's treatment doesn't affect another's outcome (SUTVA). In two-sided markets that fails: a 'win' can be a transfer from control. Randomise whole markets or alternate treatment by time slot (switchback), accepting more variance for an unbiased answer.",
+        topic="online-eval", level=4),
+    tf("Training-serving skew can exist even when the served and training distributions of a feature look identical in aggregate.",
+        True,
+        "Distributions compare groups; skew is about individual rows.",
+        "If serving computes 'hour of day' in UTC and training in local time, values are shuffled per row while the overall histogram looks similar. Aggregate drift tests pass, yet each prediction gets the wrong input. Only a row-level comparison of logged served features against offline features for the same IDs catches it.",
+        topic="data-quality", level=4),
+    mcq("You design monitoring windows for a fraud model that scores 2,000 transactions a day with a fraud rate of 0.2%. Which choice is most defensible for monitoring precision once labels arrive?",
+        ["Aggregate labelled outcomes over weeks (about 4 frauds a day is far too few for a daily precision), report intervals, and use daily label-free monitors (score distribution, flag rate) for fast detection",
+         "Compute precision every hour so problems show up quickly",
+         "Daily precision is fine because 2,000 rows is a large sample",
+         "Skip precision entirely; only accuracy matters"], 0,
+        "How many positive cases does a day contain?",
+        "A metric's sample size is the number of relevant events, not rows: 0.2% of 2,000 is about 4 frauds a day, so daily precision jumps between 0% and 100% by chance. Use longer windows (or pooled cohorts) for label-based metrics and keep fast windows for high-volume, label-free signals.",
+        topic="windows", level=4),
 ]
