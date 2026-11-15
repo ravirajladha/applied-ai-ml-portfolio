@@ -6,6 +6,14 @@ not from a generic textbook. Every worked number here is traceable to a slide.
 
 Same shape as my ACI revision pack, so the habits carry over.
 
+> ### ▶ Start here for the endsem
+> **[`scheme-drill/`](scheme-drill/README.md)** — built from the **official
+> question-paper structure**. It maps every module to its marks, shows that
+> **~24 of 40 marks can be pure theory**, and holds the theory bank plus easy
+> warm-up numericals the other two packs don't cover.
+> Then: [`pre-midsem/`](pre-midsem/README.md) (Q1–Q2) ·
+> [`post-midsem/`](post-midsem/README.md) (Q3–Q7).
+
 ## How to use this pack
 
 | File | What it is | When to open it |

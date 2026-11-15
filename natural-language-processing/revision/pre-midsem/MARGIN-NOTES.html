@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLP Pre-Midsem — Pencil Margin Notes</title>
+<style>
+:root{--bg:#0e1117;--panel:#161b26;--panel2:#1d2432;--line:#2b3446;--ink:#e6edf7;
+      --dim:#93a1b8;--accent:#5aa9ff;--good:#3ddc97;--warn:#ffb454;--bad:#ff6b6b;--violet:#b78cff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 22px 120px}
+h1{font-size:31px;margin:38px 0 10px;letter-spacing:-.4px;padding-bottom:10px;
+   border-bottom:2px solid var(--accent)}
+h2{font-size:23px;margin:40px 0 12px;padding-top:16px;border-top:1px solid var(--line);color:#cfe3ff}
+h3{font-size:17px;margin:24px 0 8px;color:var(--accent)}
+p{margin:12px 0}
+a{color:var(--accent)}
+code{background:var(--panel2);padding:2px 6px;border-radius:4px;font-size:14px;
+     font-family:ui-monospace,Consolas,monospace;color:#ffd9a0}
+pre{background:#0a0e15;border:1px solid var(--line);border-radius:10px;padding:16px;
+    overflow-x:auto;line-height:1.65}
+pre code{background:none;padding:0;color:#c8d6e8;font-size:13.5px}
+table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14.5px;
+      display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:#b9c8dd;font-weight:600}
+tr:nth-child(even) td{background:#121724}
+blockquote{border-left:3px solid var(--warn);background:#1b1a14;margin:16px 0;
+           padding:12px 18px;border-radius:0 10px 10px 0}
+blockquote p{margin:8px 0}
+blockquote strong{color:var(--warn)}
+hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+ul,ol{padding-left:26px}
+li{margin:5px 0}
+details{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+        padding:12px 16px;margin:14px 0}
+details[open]{border-color:var(--good);background:#111d19}
+summary{cursor:pointer;font-weight:600;color:var(--good);outline:none}
+summary:hover{color:#7ff0bd}
+strong{color:#fff}
+#toc{position:fixed;top:0;right:0;width:250px;height:100vh;overflow-y:auto;
+     background:var(--panel);border-left:1px solid var(--line);padding:20px 16px;font-size:13px}
+#toc b{display:block;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;
+       font-size:11px;margin-bottom:10px}
+#toc a{display:block;padding:5px 8px;border-radius:6px;text-decoration:none;color:#a9bdd6}
+#toc a:hover{background:var(--panel2);color:var(--accent)}
+#toc a.h1{font-weight:700;color:var(--ink);margin-top:8px}
+#toc a.h2{padding-left:18px;font-size:12.5px}
+#bar{position:fixed;top:14px;left:14px;z-index:99;display:flex;gap:8px}
+#bar button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+  border-radius:8px;padding:8px 14px;cursor:pointer;font:600 13px inherit}
+#bar button:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:1400px){#toc{display:none}}
+
+/* ---------- PRINT / PDF ---------- */
+@media print{
+  #toc,#bar{display:none!important}
+  body{background:#fff;color:#111;font-size:10.5pt}
+  .wrap{max-width:100%;padding:0}
+  h1{font-size:19pt;color:#000;border-bottom:2px solid #333;page-break-after:avoid;
+     page-break-before:always;margin-top:0}
+  h1:first-of-type{page-break-before:avoid}
+  h2{font-size:14pt;color:#000;border-top:1px solid #999;page-break-after:avoid}
+  h3{font-size:11.5pt;color:#1a4d80;page-break-after:avoid}
+  a{color:#1a4d80;text-decoration:none}
+  code{background:#eef1f5;color:#7a3d00;border:1px solid #dde3ea}
+  pre{background:#f6f8fa;border:1px solid #c9d1d9;color:#111;page-break-inside:avoid;
+      font-size:9pt;line-height:1.45}
+  pre code{color:#111;font-size:9pt}
+  table{font-size:9pt;display:table;page-break-inside:avoid}
+  th{background:#e8edf3!important;color:#000}
+  td{background:#fff!important}
+  tr:nth-child(even) td{background:#f7f9fb!important}
+  th,td{border:1px solid #b6c0cc;padding:5px 7px}
+  blockquote{background:#fffdf3;border-left:3px solid #d19a20;color:#111;
+             page-break-inside:avoid}
+  blockquote strong{color:#8a5a00}
+  strong{color:#000}
+  details{background:#f4faf7;border:1px solid #b9d9c9;page-break-inside:avoid}
+  details[open]{background:#f4faf7}
+  summary{color:#14663f}
+  hr{border-top:1px solid #bbb}
+  ul,ol{padding-left:20px}
+}
+@page{size:A4;margin:14mm 12mm}
+</style></head>
+<body>
+<div id="bar">
+  <button onclick="doPrint()">&#128424; Print / Save as PDF</button>
+  <button id="tgl" onclick="toggleAll()">Show all answers</button>
+</div>
+<nav id="toc"><b>Jump to</b><div id="toclinks"></div></nav>
+<div class="wrap"><h1 id="pencil-margin-notes--pre-midsem">Pencil Margin Notes — Pre-Midsem</h1>
+<p><strong>What this is:</strong> what to pencil into the corner of your printed handout, page by
+page. Same format as the post-midsem pack:</p>
+<pre><code>RECIPE    the steps
+Q ASKED   the real past-paper question, compressed  (and which paper)
+A         the worked answer, short enough to fit in a margin
+</code></pre>
+<p><strong>Which document the page numbers refer to:</strong>
+<code>notes/NLP_Handout_Part1_Sessions_1-8 (1).pdf</code> — 116 pages, Sessions 1 → 8.
+Page numbers are <strong>PDF page numbers</strong> (page 1 = title page). Each heading names
+the slide title on that page so you can confirm you're on the right sheet.</p>
+<hr />
+<h2 id="-read-this-before-you-pick-up-the-pencil">⚠️ Read this before you pick up the pencil</h2>
+<p>In the <strong>end-semester</strong> paper, pre-midsem material is <strong>only Q1 and Q2 = 10 of 40
+marks</strong>. Across all four past papers those two questions have been the <strong>same two
+topics every single time</strong>:</p>
+<table>
+<thead>
+<tr>
+  <th>Q</th>
+  <th>Marks</th>
+  <th>Always asks</th>
+  <th>Handout pages</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Q1</strong></td>
+  <td>5</td>
+  <td><strong>(A)</strong> bigram probability with <strong>Laplace smoothing</strong> · <strong>(B)</strong> a <strong>neural LM forward pass</strong> ending in <strong>softmax</strong></td>
+  <td><strong>p61</strong>, <strong>p69</strong></td>
+</tr>
+<tr>
+  <td><strong>Q2</strong></td>
+  <td>5</td>
+  <td><strong>HMM</strong> — <strong>Viterbi</strong> <em>or</em> <strong>Forward</strong></td>
+  <td><strong>p98</strong>, <strong>p102</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Plus the official paper structure lists <em>Module 2: Vector Semantics — Problem</em>
+inside Q1, so <strong>TF-IDF / cosine / PPMI are live</strong> → <strong>p17, p19</strong>.</p>
+<p><strong>Sessions 1, 7 and 8</strong> — intro/ambiguity, LLMs, prompting — have <strong>never</strong>
+appeared in Q1 or Q2 of an endsem. They were tested in the mid-sem. Annotate them
+last, or not at all.</p>
+<blockquote>
+<p><strong>So: five pages carry all 10 marks — p17/p19, p61, p69, p98, p102.</strong>
+If you have twenty minutes, do only those.</p>
+</blockquote>
+<hr />
+<h2 id="first-the-inside-front-cover">First: the inside front cover</h2>
+<pre><code> Q1a  Laplace bigram ......... p61
+ Q1a' TF-IDF / cosine / PPMI . p17, p19
+ Q1b  Forward pass + softmax . p69  (network notation p73)
+ Q2   Viterbi / Forward ...... p102 (probability types p98)
+
+ THE FIVE FORMULAS
+ Laplace   P = (count(w1w2) + 1) / (count(w1) + V)     &lt;- add V, NOT 1
+ Fwd pass  z = SUM(wi.xi) + b -&gt; h = ReLU/sigmoid(z) -&gt; scores -&gt; softmax
+ Softmax   e^zA / (e^zA + e^zB)
+ VITERBI   cell = MAX(prev x transition) x emission   + backpointer
+ FORWARD   cell = SUM(prev x transition) x emission
+
+ VITERBI = MAX (best single path).  FORWARD = SUM (total probability).
+ V includes &lt;s&gt; and &lt;/s&gt; when the question says so.
+</code></pre>
+<hr />
+<h1 id="session-1--introduction-handout-p1p10">Session 1 — Introduction (handout p1–p10)</h1>
+<blockquote>
+<p>Never asked in Q1/Q2 of an endsem. One note only, and only if you have time.</p>
+</blockquote>
+<h3 id="p8--levels-of-language-understanding">p8 — &quot;Levels of language understanding&quot;</h3>
+<pre><code>RECIPE  the levels, smallest to largest
+  MORPHOLOGICAL  how words are built from morphemes (un-happy-ness)
+  LEXICAL        what individual words mean, their POS
+  SYNTACTIC      grammatical structure of the sentence
+  SEMANTIC       literal meaning, independent of context
+  DISCOURSE      meaning across sentences (what does &quot;it&quot; refer to?)
+  PRAGMATIC      speaker intent, real-world knowledge
+  AMBIGUITY exists at EVERY level — that is why NLP is hard
+</code></pre>
+<hr />
+<h1 id="sessions-2--3--vector-semantics-and-embeddings-handout-p11p52">Sessions 2 &amp; 3 — Vector Semantics and Embeddings (handout p11–p52)</h1>
+<h3 id="-p17--computing-word-similarity-dot-product-and-cosine">⭐ p17 — &quot;Computing word similarity: Dot product and cosine&quot;</h3>
+<pre><code>RECIPE  cos(a,b) = ( a . b ) / ( |a| x |b| )
+        |[2,0,1]| = sqrt(4+0+1) = sqrt(5) = 2.236
+        range 0..1 for count vectors; 1 = same direction
+        ALWAYS divide by both magnitudes — the raw dot product just
+        rewards long vectors
+
+Q ASKED  cosine similarity of A = [2, 0, 1] and B = [1, 1, 1]
+
+A  dot = 2x1 + 0x1 + 1x1 = 3
+   |a| = sqrt(5) = 2.236 ,  |b| = sqrt(3) = 1.732
+   cos = 3 / (2.236 x 1.732) = 3 / 3.873 = 0.7746  ~ 0.77
+</code></pre>
+<h3 id="-p19--tf-idf-second-factor--also-write-ppmi-here">⭐ p19 — &quot;tf-idf&quot; (second factor) — also write PPMI here</h3>
+<pre><code>RECIPE  TF-IDF = TF x IDF ,  IDF = log10( N / df )
+        N = total documents , df = documents containing the term
+        a word in ALL documents -&gt; log10(1) = 0 -&gt; TF-IDF = 0
+        (the formula saying &quot;this word cannot discriminate&quot;)
+
+Q ASKED  4 documents; &quot;cloud&quot; appears in 2 of them; in D1 it occurs
+         3 times and D1 is 20 words long. TF-IDF of &quot;cloud&quot; in D1?
+
+A  TF  = 3/20 = 0.15
+   IDF = log10(4/2) = log10(2) = 0.301
+   TF-IDF = 0.15 x 0.301 = 0.0452
+
+--- PPMI, same page ---
+RECIPE  PMI  = log2( P(w,c) / ( P(w) x P(c) ) )
+        PPMI = max( 0 , PMI )     &lt;- negative PMI clips to ZERO
+
+Q ASKED  co-occurrence table, total 60
+         cherry: computer 2, data 8  (row 10)
+         digital: computer 30, data 20 (row 50) ; computer column 32
+
+A  digital &amp; computer
+     P(w,c)=30/60=0.500 , P(w)=50/60=0.8333 , P(c)=32/60=0.5333
+     PMI = log2(0.500 / 0.4444) = log2(1.125) = 0.170 -&gt; PPMI 0.170
+   cherry &amp; computer
+     P(w,c)=2/60=0.0333 , P(w)=10/60=0.1667 , P(c)=0.5333
+     PMI = log2(0.0333 / 0.0889) = log2(0.375) = -1.415 -&gt; PPMI 0
+   POINT: cherry-computer co-occurs LESS than chance -&gt; negative -&gt;
+   clipped to 0. That clipping is the whole reason for the &quot;P&quot; in PPMI.
+</code></pre>
+<h3 id="p20--tf-idf-vectors-are-long-and-sparse">p20 — &quot;tf-idf vectors are long and sparse&quot;</h3>
+<pre><code>RECIPE  SPARSE (tf-idf, PPMI): length |V| = 20k-50k, mostly zeros, COUNTED
+        DENSE (word2vec, GloVe): length 50-1000, all non-zero, LEARNED
+        dense wins: fewer parameters, generalises to similar words
+</code></pre>
+<h3 id="p38p41--word2vec--skip-gram-with-negative-sampling">p38–p41 — word2vec / skip-gram with negative sampling</h3>
+<pre><code>RECIPE  SKIP-GRAM: given the TARGET word, predict the CONTEXT words
+        CBOW: given the context, predict the target  (the opposite)
+        turns the dot product into a probability with the sigmoid:
+             P(+ | w,c) = sigmoid(w . c) = 1 / (1 + e^-(w.c))
+        NEGATIVE SAMPLING: for each real (target, context) pair grab k
+        random words as negative examples, sampled by frequency
+        goal: maximise similarity to the real context, minimise it to
+        the k negatives
+</code></pre>
+<h3 id="p31--p48--window-size">p31 / p48 — window size</h3>
+<pre><code>RECIPE  small window (+/-2) -&gt; SYNTACTIC neighbours, same taxonomy
+        large window (+/-5+) -&gt; TOPICAL neighbours, same subject area
+</code></pre>
+<h3 id="p52--glove">p52 — GloVe</h3>
+<pre><code>RECIPE  word2vec PREDICTS (local windows, one at a time)
+        GloVe COUNTS then factorises the global co-occurrence matrix
+        GloVe idea: the RATIO of conditional probabilities carries meaning
+        analogy: king - man + woman = queen  (parallelogram model, p34/p51)
+</code></pre>
+<hr />
+<h1 id="session-4--n-gram-language-models-handout-p53p66">Session 4 — N-gram Language Models (handout p53–p66)</h1>
+<h3 id="p55p56--chain-rule--bigram-model">p55–p56 — chain rule / bigram model</h3>
+<pre><code>RECIPE  chain rule  P(w1..wn) = PRODUCT of P(wk | w1..wk-1)
+        MARKOV ASSUMPTION: only look back n-1 words
+        bigram  P(w1..wn) = PRODUCT of P(wk | wk-1)
+        eg P(I want to eat) = P(I|&lt;s&gt;)P(want|I)P(to|want)P(eat|to)
+        unsmoothed MLE:  P(wk|wk-1) = count(wk-1 wk) / count(wk-1)
+</code></pre>
+<h3 id="-p61--laplace-smoothed-bigrams--the-q1a-page">⭐⭐ p61 — &quot;Laplace-smoothed bigrams&quot; — THE Q1(A) PAGE</h3>
+<pre><code>RECIPE                count(w1 w2) + 1
+        P_Laplace = --------------------      &lt;- add V to the BOTTOM, not 1
+                       count(w1) + V
+
+        V = number of UNIQUE tokens in the corpus.
+        If the question says &quot;including &lt;s&gt; and &lt;/s&gt;&quot;, COUNT THEM.
+        Why: zero counts would kill the whole sentence probability;
+        Laplace steals mass from seen bigrams and shares it out.
+
+Q ASKED (Feb 2026 Q1A, 2m)
+  Corpus:  &lt;s&gt; deep learning &lt;/s&gt;
+           &lt;s&gt; machine learning &lt;/s&gt;
+           &lt;s&gt; deep thought &lt;/s&gt;
+  Laplace-smoothed P(learning | deep)? V includes &lt;s&gt; and &lt;/s&gt;.
+
+A  V = { &lt;s&gt;, &lt;/s&gt;, deep, learning, machine, thought }  -&gt;  V = 6
+   count(&quot;deep learning&quot;) = 1        count(&quot;deep&quot;) = 2
+   P = (1 + 1) / (2 + 6) = 2/8 = 0.25
+   compare unsmoothed MLE = 1/2 = 0.5 — Laplace HALVED it, because it
+   must give mass to the 4 words that never follow &quot;deep&quot;
+
+Q VARIANT (Mar 2026 Q1A) same shape, weather corpus
+  &lt;s&gt; sun hot &lt;/s&gt; / &lt;s&gt; rain cold &lt;/s&gt; / &lt;s&gt; sun bright &lt;/s&gt;
+  P(bright | sun)?
+A  V = {&lt;s&gt;,&lt;/s&gt;,sun,hot,rain,cold,bright} = 7 ; counts 1 and 2
+   Laplace = (1+1)/(2+7) = 2/9 = 0.2222 ; MLE = 1/2 = 0.50
+   The makeup paper never says the word &quot;Laplace&quot; — GIVE 0.2222 as the
+   main answer, show MLE 0.50 in one line, and STATE YOUR ASSUMPTION.
+</code></pre>
+<h3 id="p60--maximum-likelihood-estimates">p60 — Maximum Likelihood Estimates</h3>
+<pre><code>RECIPE  MLE = the estimate that maximises the probability of the
+        training set = just the raw relative frequency
+        P(wk|wk-1) = count(wk-1 wk) / count(wk-1)
+        its fatal flaw: any unseen bigram = 0 -&gt; whole sentence = 0
+</code></pre>
+<h3 id="p62--backoff-and-interpolation">p62 — Backoff and Interpolation</h3>
+<pre><code>RECIPE  BACKOFF      use the trigram if you have good evidence,
+                     otherwise fall back to bigram, then unigram
+        INTERPOLATION always MIX all three with weights that sum to 1
+                     P = L1.P(w|w-2,w-1) + L2.P(w|w-1) + L3.P(w)
+        interpolation usually works better than backoff
+</code></pre>
+<h3 id="-p65--perplexity-as-branching-factor">⭐ p65 — &quot;Perplexity as branching factor&quot;</h3>
+<pre><code>RECIPE  PP(W) = P(w1..wN) ^ (-1/N)     = the Nth root of 1/P
+        lower perplexity = better model
+        read it as the AVERAGE BRANCHING FACTOR: how many words the
+        model thinks could come next
+
+Q ASKED (from the slide) random digits 0-9, model assigns P = 1/10 each
+A  PP = (1/10 ^ N) ^ (-1/N) = 10
+   i.e. the model is &quot;as confused as&quot; a fair 10-way choice — which is
+   exactly right, so 10 is the correct perplexity.
+</code></pre>
+<h3 id="p64--evaluation">p64 — evaluation</h3>
+<pre><code>RECIPE  EXTRINSIC = plug the model into a real task (speller, MT) and
+        measure the task accuracy. Best, but slow.
+        INTRINSIC = perplexity on a held-out test set. Fast, approximate.
+</code></pre>
+<hr />
+<h1 id="session-5--neural-networks-and-neural-lm-handout-p67p81">Session 5 — Neural Networks and Neural LM (handout p67–p81)</h1>
+<h3 id="p68--final-function-the-unit-is-computing">p68 — &quot;Final function the unit is computing&quot;</h3>
+<pre><code>RECIPE  one neuron:  z = w.x + b  then  y = activation(z)
+        sigmoid(z) = 1 / (1 + e^-z)      range 0..1 ,  sigmoid(0) = 0.5
+        ReLU(z)    = max(0, z)           kills negatives, keeps positives
+        tanh(z)                          range -1..1
+</code></pre>
+<h3 id="-p69--an-example-w--020309-b--05--the-q1b-page">⭐⭐ p69 — &quot;An example&quot; (w = [0.2,0.3,0.9], b = 0.5) — THE Q1(B) PAGE</h3>
+<pre><code>RECIPE  THE FOUR STEPS, EVERY TIME
+        1  z = SUM(wi x xi) + b
+        2  h = ReLU(z) = max(z,0)   or   sigmoid(z) = 1/(1+e^-z)
+        3  output scores  z_A = (weight_A) x h  ,  z_B = (weight_B) x h
+        4  softmax  P(A) = e^zA / (e^zA + e^zB)
+        WATCH: negative x negative = POSITIVE in step 1.
+
+Q ASKED (Feb 2026 Q1B, 3m)
+  x = [0.4, -0.2] , 1 hidden neuron with ReLU , w = [0.5, -0.5] , b = 0.1
+  z(learning) = 2h , z(thought) = 0.5h. Softmax probability of &quot;learning&quot;?
+
+A  1  z = (0.5)(0.4) + (-0.5)(-0.2) + 0.1 = 0.20 + 0.10 + 0.10 = 0.40
+   2  h = ReLU(0.4) = 0.4
+   3  z(learning) = 2 x 0.4 = 0.8 ; z(thought) = 0.5 x 0.4 = 0.2
+   4  e^0.8 = 2.2255 , e^0.2 = 1.2214 , sum = 3.4469
+      P(learning) = 2.2255 / 3.4469 = 0.6457  ~ 0.65
+
+Q VARIANT (Mar 2026 Q1B) SIGMOID instead of ReLU
+  x = [0.5, 1.0] , w = [0.2, 0.4] , b = -0.5
+  z(bright) = 1.5h , z(hot) = 0.5h
+A  1  z = (0.2)(0.5) + (0.4)(1.0) - 0.5 = 0.10 + 0.40 - 0.50 = 0.00
+   2  h = sigmoid(0) = 1/(1+1) = 0.5        &lt;- sigmoid(0) is ALWAYS 0.5
+   3  z(bright) = 0.75 , z(hot) = 0.25
+   4  e^0.75 = 2.1170 , e^0.25 = 1.2840 , sum = 3.4010
+      P(bright) = 2.1170 / 3.4010 = 0.6225  ~ 0.62
+
+USEFUL e^x VALUES TO PENCIL IN
+  e^0.1=1.105  e^0.2=1.221  e^0.25=1.284  e^0.5=1.649
+  e^0.75=2.117 e^0.8=2.226  e^1.0=2.718   e^1.5=4.482  e^2=7.389
+</code></pre>
+<h3 id="p71--decision-boundaries--xor">p71 — &quot;Decision boundaries&quot; / XOR</h3>
+<pre><code>RECIPE  a single perceptron draws ONE straight line
+        AND and OR are linearly separable -&gt; one unit is enough
+        XOR is NOT -&gt; you need a HIDDEN LAYER
+        that is the entire argument for multi-layer networks
+</code></pre>
+<h3 id="-p73p74--two-layer-network--multi-layer-notation">⭐ p73–p74 — two-layer network / multi-layer notation</h3>
+<pre><code>RECIPE  h = g( W.x + b )        hidden layer, g = ReLU or tanh
+        z = U.h                 output layer
+        y = softmax(z)          for multi-class ; sigmoid for binary
+        shape check: W is [hidden x input] , U is [output x hidden]
+</code></pre>
+<h3 id="-p77--reminder-multiclass-outputs-softmax">⭐ p77 — &quot;Reminder: Multiclass Outputs&quot; (softmax)</h3>
+<pre><code>RECIPE  softmax(z_i) = e^(z_i) / SUM over all j of e^(z_j)
+        outputs are all positive and SUM TO 1 -&gt; a probability distribution
+        two classes only:  P(A) = e^zA / (e^zA + e^zB)
+        FREE CHECK: your two answers must add to 1.0
+        (0.6457 + 0.3543 = 1.0 ✓)
+</code></pre>
+<h3 id="p80p81--neural-language-models">p80–p81 — Neural language models</h3>
+<pre><code>RECIPE  n-gram LM: words are ATOMS — &quot;dog&quot; and &quot;cat&quot; share nothing,
+        so an unseen context is a dead end
+        NEURAL LM: words are EMBEDDINGS — a sentence like one in
+        training scores well even with different words
+        that generalisation is the whole reason neural LMs beat n-grams
+</code></pre>
+<hr />
+<h1 id="session-6--pos-tagging-and-hmms-handout-p89p108">Session 6 — POS Tagging and HMMs (handout p89–p108)</h1>
+<h3 id="p90p91--pos-tagging--penn-tagset">p90–p91 — POS tagging / Penn tagset</h3>
+<pre><code>RECIPE  POS tagging = assign a lexical class to every word
+        Penn tags worth knowing:
+        DT determiner | NN noun sg | NNS noun pl | NNP proper noun
+        JJ adjective  | VB verb base | VBD past | VBG -ing | VBZ -s
+        IN preposition/subordinating conj | PRP pronoun | RB adverb
+        eg The/DT grand/JJ jury/NN commented/VBD on/IN a/DT number/NN
+</code></pre>
+<h3 id="p96p97--statistical-pos-tagging">p96–p97 — Statistical POS tagging</h3>
+<pre><code>RECIPE  we want  argmax over t1..tn of  P(t1..tn | w1..wn)
+        Bayes -&gt; = argmax P(w1..wn | t1..tn) x P(t1..tn)
+                          \ emission /         \ transition /
+        P(words) is the same for every tag sequence, so it DROPS OUT
+</code></pre>
+<h3 id="-p98--two-kinds-of-probabilities--write-the-distinction-here">⭐ p98 — &quot;Two Kinds of Probabilities&quot; — write the distinction here</h3>
+<pre><code>RECIPE  TRANSITION  P(t_i | t_i-1)   tag -&gt; tag     (the FROM/TO table)
+        EMISSION    P(w_i | t_i)     tag -&gt; word    (the tag/word table)
+        In the exam you are handed two tables. Label them before you start.
+        Rows of BOTH tables sum to 1.
+        every cell you ever compute is  (something) x transition x emission
+</code></pre>
+<h3 id="-p102--viterbi-backpointers--the-q2-page">⭐⭐ p102 — &quot;Viterbi Backpointers&quot; — THE Q2 PAGE</h3>
+<pre><code>RECIPE
+  INIT       cell(tag, word1) = P(tag | START) x P(word1 | tag)
+  RECURSION  cell(tag, wt) = MAX over prev of [ cell(prev) x P(tag|prev) ]
+                             x P(wt | tag)
+             and RECORD which prev won  &lt;- the BACKPOINTER
+  TERMINATE  take the biggest cell in the LAST column
+  BACKTRACE  follow the backpointers left to read the tag sequence
+
+  VITERBI = MAX   (the single best path)
+  FORWARD = SUM   (total probability of the observation)
+  Same table, one word changes. That word is the whole question.
+
+Q ASKED (Feb 2026 Q2A, 3m)  &quot;a dog barks&quot;, tags DT NN VB
+  transitions  START: DT .4 NN .4 VB .2 | DT: .2 .7 .1
+               NN: .1 .3 .6 | VB: .5 .4 .1
+  emissions    DT: a .85 dog .10 barks .05
+               NN: a .10 dog .80 barks .10
+               VB: a .05 dog .10 barks .85
+
+A  INIT &quot;a&quot;   DT 0.4x0.85 = 0.34   NN 0.4x0.10 = 0.04   VB 0.2x0.05 = 0.01
+   &quot;dog&quot;  DT max(.34x.2=.068, .04x.1, .01x.5) = .068 x .10 = 0.0068   bp DT
+          NN max(.34x.7=.238, .04x.3, .01x.4) = .238 x .80 = 0.1904   bp DT
+          VB max(.34x.1=.034, .04x.6, .01x.1) = .034 x .10 = 0.0034   bp DT
+   &quot;barks&quot; DT max(.0068x.2, .1904x.1=.01904, .0034x.5) x .05 = 0.000952 bp NN
+           NN max(.0068x.7, .1904x.3=.05712, .0034x.4) x .10 = 0.005712 bp NN
+           VB max(.0068x.1, .1904x.6=.11424, .0034x.1) x .85 = 0.097104 bp NN
+   BIGGEST last column = VB 0.097104 -&gt; backtrace VB &lt;- NN &lt;- DT
+   ANSWER   a/DT   dog/NN   barks/VB
+</code></pre>
+<h3 id="-p101--hmm-for-ice-cream--write-the-forward-version-here">⭐ p101 — &quot;HMM for Ice Cream&quot; — write the FORWARD version here</h3>
+<pre><code>RECIPE  FORWARD  alpha1(j) = pi(j) x P(o1 | j)
+                 alpha_t(j) = [ SUM over i of alpha_t-1(i) x a(i-&gt;j) ]
+                              x P(o_t | j)
+        P(O) = SUM of the final column
+        posterior at time t = each alpha divided by that total
+        THE ARROW MUST POINT AT the state you are computing: a(i -&gt; j).
+        (the Oct 2024 answer key got this backwards — see below)
+
+Q ASKED (Feb 2026 Q2B, 2m)  states V, C, S ; pi = .5 / .3 / .2
+  transitions V: .6 .3 .1 | C: .4 .4 .2 | S: .3 .3 .4
+  emissions &quot;ah&quot;: .8 .1 .1  |  &quot;sh&quot;: .1 .7 .2
+  O = (&quot;ah&quot;,&quot;sh&quot;). Posterior over states at t=2, and which is most likely?
+
+A  alpha1  V .5x.8 = 0.40   C .3x.1 = 0.03   S .2x.1 = 0.02
+   alpha2  V [.40x.6 + .03x.4 + .02x.3] x .1 = .258 x .1 = 0.0258
+           C [.40x.3 + .03x.4 + .02x.3] x .7 = .138 x .7 = 0.0966
+           S [.40x.1 + .03x.2 + .02x.4] x .2 = .054 x .2 = 0.0108
+   P(O) = 0.0258 + 0.0966 + 0.0108 = 0.1332
+   posterior  V .194   C .725   S .081
+   MOST LIKELY = C (Consonant). WHY: &quot;sh&quot; has a very high emission
+   probability from C (0.7), and enough mass transitions into C.
+
+Q VARIANT (Oct 2024 Q2) 2 states, O = &quot;X Y&quot;, pi = .6/.4
+   trans S1: .7 .3 | S2: .6 .4    emis X: .6 .4 | Y: .3 .7
+A  alpha1  S1 .6x.6 = 0.36   S2 .4x.4 = 0.16
+   alpha2  S1 [.36x.7 + .16x.6] x .3 = .348 x .3 = 0.1044
+           S2 [.36x.3 + .16x.4] x .7 = .172 x .7 = 0.1204
+   P(&quot;X Y&quot;) = 0.2248
+   NOTE: the PRINTED ANSWER KEY IS WRONG here — it swapped a(S2-&gt;S1)
+   with a(S2-&gt;S2). Use this method. Defence sentence: &quot;to reach state j
+   you sum over every predecessor i using a(i -&gt; j).&quot;
+</code></pre>
+<h3 id="p103p104--viterbi-worked-examples-on-the-slides">p103–p104 — Viterbi worked examples on the slides</h3>
+<pre><code>Q ASKED (Oct 2024 Q1, 5m) FORWARD for &quot;cat jumps quickly&quot;
+  emissions cat: N .9 Adj .1 | jumps: N .3 V .7 | quickly: V .3 Adj .7
+  transitions N-&gt;N .5, N-&gt;V .5, V-&gt;V .7, V-&gt;Adj .3
+A  no initial probabilities given -&gt; ASSUME 1/2 each and SAY SO
+   &quot;cat&quot;     P(N) = 0.5 x 0.9 = 0.45   (V impossible, emission is &quot;-&quot;)
+   &quot;jumps&quot;   P(V) = 0.45 x 0.5 x 0.7 = 0.1575
+   &quot;quickly&quot; P(Adj) = 0.1575 x 0.3 x 0.7 = 0.033075
+   P = 0.0331. Only one path survives — every other route hits a zero.
+
+Q ASKED (undated Q1) VITERBI for &quot;run fast&quot;, tags Noun/Verb/Adj
+  trans N: .4 .3 .3 | V: .1 .8 .1 | Adj: .6 .3 .1
+  emis run: N .8 V .2 | fast: N .6 Adj .4
+A  same MAX recipe as p102: init, recurse, take the biggest final cell,
+   backtrace. Show the backpointer column or you lose the method marks.
+</code></pre>
+<h3 id="p105p106--bidirectionality--memm">p105–p106 — bidirectionality / MEMM</h3>
+<pre><code>RECIPE  HMM is GENERATIVE: models P(words, tags), uses Bayes
+        MEMM is DISCRIMINATIVE: models P(tags | words) directly,
+        so it can use arbitrary features (suffixes, capitalisation,
+        neighbouring words) — HMM cannot
+        bidirectional = run extra passes so a tag can see the right context
+</code></pre>
+<hr />
+<h1 id="sessions-7--8--llms-prompting-transfer-learning-p82p88-p109p116">Sessions 7 &amp; 8 — LLMs, Prompting, Transfer Learning (p82–p88, p109–p116)</h1>
+<blockquote>
+<p>Never asked in endsem Q1/Q2. Two notes only, purely as insurance.</p>
+</blockquote>
+<h3 id="p111p113--prompt-engineering">p111–p113 — prompt engineering</h3>
+<pre><code>RECIPE  ZERO-SHOT  instruction only, no examples
+        FEW-SHOT   a handful of worked examples in the prompt
+                   (&quot;in-context learning&quot; — no weights change)
+        CHAIN-OF-THOUGHT  &quot;think step by step&quot; — the model writes its
+                   reasoning before the answer; helps on arithmetic/logic
+        GENERATED KNOWLEDGE  make the model produce background facts
+                   first, then answer using them
+</code></pre>
+<h3 id="p87--p116--transfer-learning">p87 / p116 — transfer learning</h3>
+<pre><code>RECIPE  TRANSDUCTIVE  no labelled data in the target domain
+                      (domain adaptation)
+        INDUCTIVE     labelled target data exists
+        PRETRAIN then FINE-TUNE: generic knowledge first, task second
+        why: deep learning is data-hungry (&gt;50k items); transfer lets a
+        small labelled set work
+</code></pre>
+<hr />
+<h1 id="if-you-only-have-20-minutes-with-a-pencil">If you only have 20 minutes with a pencil</h1>
+<p>These five blocks are the entire 10 marks.</p>
+<table>
+<thead>
+<tr>
+  <th>p</th>
+  <th>Write</th>
+  <th>The number from the real paper</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>p61</strong></td>
+  <td><code>P = (c(w1w2)+1) / (c(w1)+V)</code></td>
+  <td>deep→learning: <code>(1+1)/(2+6)</code> = <strong>0.25</strong> (V counts <code>&lt;s&gt;</code>,<code>&lt;/s&gt;</code>)</td>
+</tr>
+<tr>
+  <td><strong>p69</strong></td>
+  <td><code>z → h → scores → softmax</code></td>
+  <td><code>z=0.4</code>, <code>h=0.4</code>, <code>0.8/0.2</code> → <strong>0.6457</strong></td>
+</tr>
+<tr>
+  <td><strong>p102</strong></td>
+  <td>Viterbi = <code>MAX(prev×trans)×emis</code> + backpointer</td>
+  <td><em>a dog barks</em> → <strong>DT NN VB</strong>, final cell 0.097104</td>
+</tr>
+<tr>
+  <td><strong>p101</strong></td>
+  <td>Forward = <code>SUM(prev×trans)×emis</code></td>
+  <td><code>P(O)=0.1332</code>, posterior C = <strong>0.725</strong></td>
+</tr>
+<tr>
+  <td><strong>p17/p19</strong></td>
+  <td><code>cos = dot/(\|a\|·\|b\|)</code>, <code>TF-IDF = TF·log10(N/df)</code>, <code>PPMI = max(0,PMI)</code></td>
+  <td>cos = <strong>0.7746</strong>; TF-IDF = <strong>0.0452</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="reminders-for-the-exam-itself">Reminders for the exam itself</h1>
+<ul>
+<li><strong>Q1 and Q2 are only 10 of 40 marks.</strong> If you are short on revision time, the
+post-midsem pack (Q3–Q7 = 30 marks) comes first. Do these five pages, then go.</li>
+<li><strong>Laplace: add <code>V</code> to the denominator, not 1.</strong> Adding 1 to the bottom is the
+single most common error on this question.</li>
+<li><strong>Viterbi = MAX, Forward = SUM.</strong> Write which one you're doing at the top of
+your table — examiners look for it, and it stops you drifting mid-question.</li>
+<li><strong>State assumptions.</strong> Both the Mar 2026 Laplace question and the Oct 2024
+forward question are under-specified; one sentence of stated assumption
+protects the marks.</li>
+<li><strong>Softmax sanity check:</strong> your probabilities must sum to 1.</li>
+<li>Full worked solutions: <code>SOLVED-NUMERICALS</code>. Theory: <code>CHEATSHEET</code>. Extra short
+sums (TF-IDF, cosine, PPMI): <code>../scheme-drill/SIMPLE-NUMERICALS</code> §1.</li>
+</ul>
+</div>
+<script>
+var wasOpen = [];
+function openAll(){
+  wasOpen = [];
+  document.querySelectorAll("details").forEach(function(d,i){
+    wasOpen[i] = d.open; d.open = true;
+  });
+}
+function restoreAll(){
+  document.querySelectorAll("details").forEach(function(d,i){ d.open = wasOpen[i]; });
+}
+window.addEventListener("beforeprint", openAll);
+window.addEventListener("afterprint", restoreAll);
+
+function doPrint(){ openAll(); window.print(); }
+function toggleAll(){
+  var ds = document.querySelectorAll("details");
+  var anyClosed = Array.prototype.some.call(ds, function(d){ return !d.open; });
+  ds.forEach(function(d){ d.open = anyClosed; });
+  document.getElementById("tgl").textContent = anyClosed ? "Hide all answers" : "Show all answers";
+}
+
+var out = "";
+document.querySelectorAll(".wrap h1, .wrap h2").forEach(function(h){
+  if(!h.id) return;
+  out += '<a class="' + h.tagName.toLowerCase() + '" href="#' + h.id + '">' +
+         h.textContent.replace(/^[0-9]+[.]\s*/, "") + "</a>";
+});
+document.getElementById("toclinks").innerHTML = out;
+</script>
+</body></html>

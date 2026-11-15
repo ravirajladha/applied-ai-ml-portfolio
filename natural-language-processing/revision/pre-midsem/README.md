@@ -13,17 +13,27 @@ every single time**:
 | **Q1** | 5 | **(A)** bigram probability with **Laplace smoothing** · **(B)** a **neural LM forward pass** ending in **softmax** | 4, 5 |
 | **Q2** | 5 | **HMM** — the **Viterbi** algorithm or the **Forward** algorithm | 6 |
 
-**Chapters 1, 2, 3, 7 and 8** — intro/ambiguity, vector semantics, TF-IDF,
-word2vec, Bi-LSTM/BERT, prompting — **have never appeared in Q1 or Q2** of an
-endsem. They were tested in the *mid-semester* test. Skip them unless you have
-spare time. (They could in principle return; four papers say otherwise.)
+**Chapters 1, 7 and 8** — intro/ambiguity, Bi-LSTM/BERT, prompting — **have
+never appeared in Q1 or Q2** of an endsem. They were tested in the
+*mid-semester* test. Skip them unless you have spare time.
 
-## Two files
+> ### 🛑 Correction — chapters 2 and 3 are back in scope
+> This file used to tell you to skip **vector semantics / TF-IDF / word2vec**
+> too, on the evidence of four past papers. **The official question-paper
+> structure overrides that**: it lists *Module 2: Vector Semantics — Problem*
+> inside the 5-mark Q1, alongside the language-model problems.
+>
+> TF-IDF, cosine similarity and PPMI are live. They are short sums —
+> do them in [`../scheme-drill/SIMPLE-NUMERICALS.md`](../scheme-drill/SIMPLE-NUMERICALS.md) §1,
+> about fifteen minutes for all three.
+
+## Three files
 
 | # | File | What it is | What you do |
 |---|---|---|---|
 | **1** | 🧠 **`CHEATSHEET`** (10 pp) | The theory for exactly those three things — Laplace, forward pass, HMM. Plain English, every term defined | **READ** — ~20 min total |
 | **2** | 📘 **`SOLVED-NUMERICALS`** (22 pp) | **Every real Q1 and Q2 from all four past papers**, question as printed + full solution, then 5 practice questions | **WORK** through it |
+| **3** | ✏️ **`MARGIN-NOTES`** (16 pp) | **What to pencil into the printed handout, page by page.** Keyed to `notes/NLP_Handout_Part1_Sessions_1-8 (1).pdf` — five pages carry all 10 marks | **COPY** into the margins before the exam |
 
 Each exists as `.pdf` (print) and `.html` (dark, on screen, answers hidden until
 you click) plus the `.md` source.

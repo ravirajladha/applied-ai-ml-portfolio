@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLP Theory Bank — every module in the official scheme</title>
+<style>
+:root{--bg:#0e1117;--panel:#161b26;--panel2:#1d2432;--line:#2b3446;--ink:#e6edf7;
+      --dim:#93a1b8;--accent:#5aa9ff;--good:#3ddc97;--warn:#ffb454;--bad:#ff6b6b;--violet:#b78cff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 22px 120px}
+h1{font-size:31px;margin:38px 0 10px;letter-spacing:-.4px;padding-bottom:10px;
+   border-bottom:2px solid var(--accent)}
+h2{font-size:23px;margin:40px 0 12px;padding-top:16px;border-top:1px solid var(--line);color:#cfe3ff}
+h3{font-size:17px;margin:24px 0 8px;color:var(--accent)}
+p{margin:12px 0}
+a{color:var(--accent)}
+code{background:var(--panel2);padding:2px 6px;border-radius:4px;font-size:14px;
+     font-family:ui-monospace,Consolas,monospace;color:#ffd9a0}
+pre{background:#0a0e15;border:1px solid var(--line);border-radius:10px;padding:16px;
+    overflow-x:auto;line-height:1.65}
+pre code{background:none;padding:0;color:#c8d6e8;font-size:13.5px}
+table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14.5px;
+      display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:#b9c8dd;font-weight:600}
+tr:nth-child(even) td{background:#121724}
+blockquote{border-left:3px solid var(--warn);background:#1b1a14;margin:16px 0;
+           padding:12px 18px;border-radius:0 10px 10px 0}
+blockquote p{margin:8px 0}
+blockquote strong{color:var(--warn)}
+hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+ul,ol{padding-left:26px}
+li{margin:5px 0}
+details{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+        padding:12px 16px;margin:14px 0}
+details[open]{border-color:var(--good);background:#111d19}
+summary{cursor:pointer;font-weight:600;color:var(--good);outline:none}
+summary:hover{color:#7ff0bd}
+strong{color:#fff}
+#toc{position:fixed;top:0;right:0;width:250px;height:100vh;overflow-y:auto;
+     background:var(--panel);border-left:1px solid var(--line);padding:20px 16px;font-size:13px}
+#toc b{display:block;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;
+       font-size:11px;margin-bottom:10px}
+#toc a{display:block;padding:5px 8px;border-radius:6px;text-decoration:none;color:#a9bdd6}
+#toc a:hover{background:var(--panel2);color:var(--accent)}
+#toc a.h1{font-weight:700;color:var(--ink);margin-top:8px}
+#toc a.h2{padding-left:18px;font-size:12.5px}
+#bar{position:fixed;top:14px;left:14px;z-index:99;display:flex;gap:8px}
+#bar button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+  border-radius:8px;padding:8px 14px;cursor:pointer;font:600 13px inherit}
+#bar button:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:1400px){#toc{display:none}}
+
+/* ---------- PRINT / PDF ---------- */
+@media print{
+  #toc,#bar{display:none!important}
+  body{background:#fff;color:#111;font-size:10.5pt}
+  .wrap{max-width:100%;padding:0}
+  h1{font-size:19pt;color:#000;border-bottom:2px solid #333;page-break-after:avoid;
+     page-break-before:always;margin-top:0}
+  h1:first-of-type{page-break-before:avoid}
+  h2{font-size:14pt;color:#000;border-top:1px solid #999;page-break-after:avoid}
+  h3{font-size:11.5pt;color:#1a4d80;page-break-after:avoid}
+  a{color:#1a4d80;text-decoration:none}
+  code{background:#eef1f5;color:#7a3d00;border:1px solid #dde3ea}
+  pre{background:#f6f8fa;border:1px solid #c9d1d9;color:#111;page-break-inside:avoid;
+      font-size:9pt;line-height:1.45}
+  pre code{color:#111;font-size:9pt}
+  table{font-size:9pt;display:table;page-break-inside:avoid}
+  th{background:#e8edf3!important;color:#000}
+  td{background:#fff!important}
+  tr:nth-child(even) td{background:#f7f9fb!important}
+  th,td{border:1px solid #b6c0cc;padding:5px 7px}
+  blockquote{background:#fffdf3;border-left:3px solid #d19a20;color:#111;
+             page-break-inside:avoid}
+  blockquote strong{color:#8a5a00}
+  strong{color:#000}
+  details{background:#f4faf7;border:1px solid #b9d9c9;page-break-inside:avoid}
+  details[open]{background:#f4faf7}
+  summary{color:#14663f}
+  hr{border-top:1px solid #bbb}
+  ul,ol{padding-left:20px}
+}
+@page{size:A4;margin:14mm 12mm}
+</style></head>
+<body>
+<div id="bar">
+  <button onclick="doPrint()">&#128424; Print / Save as PDF</button>
+  <button id="tgl" onclick="toggleAll()">Show all answers</button>
+</div>
+<nav id="toc"><b>Jump to</b><div id="toclinks"></div></nav>
+<div class="wrap"><h1 id="nlp-theory-bank--every-module-in-the-official-scheme">NLP Theory Bank — every module in the official scheme</h1>
+<blockquote>
+<p><strong>How to use this.</strong> Read the question. Say your answer <strong>out loud, in your
+own words, before you click</strong>. Getting it half-wrong out loud is the exercise.
+Reading a correct answer you didn't attempt teaches you nothing.</p>
+<p>Answers are written the way you should <strong>write them in the exam</strong>: short
+labelled points, not paragraphs. Examiners tick keywords.</p>
+</blockquote>
+<hr />
+<h2 id="contents">Contents</h2>
+<table>
+<thead>
+<tr>
+  <th>§</th>
+  <th>Module</th>
+  <th>Question type in the scheme</th>
+  <th>Marks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td>2 — Vector Semantics</td>
+  <td>Problem</td>
+  <td>part of Q1 (5)</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>3 — Language Models &amp; Neural LM</td>
+  <td>Problem</td>
+  <td>part of Q1 (5)</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>5 — POS Tagging</td>
+  <td>Problem</td>
+  <td>part of Q2 (5)</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>6 — Hidden Markov Models</td>
+  <td>Problem</td>
+  <td>part of Q2 (5)</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>9 — Statistical Parsing</td>
+  <td>Problem</td>
+  <td>part of Q3 (6)</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td>10 — Dependency Parsing</td>
+  <td><strong>Problem / Theory / Application</strong></td>
+  <td>part of Q3 (6)</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td>11 — Contextual Embeddings</td>
+  <td><strong>Problems and/or Theory</strong></td>
+  <td>Q4 (6)</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td>12 — Word Sense &amp; WordNet</td>
+  <td><strong>Problems and/or Theory</strong></td>
+  <td>part of Q5 (6)</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td>13 — Semantic Web &amp; Ontology</td>
+  <td><strong>Application / Case study</strong></td>
+  <td>part of Q5 (6)</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>14 — RAG</td>
+  <td><strong>Problem and/or Theory</strong></td>
+  <td>Q6 (6)</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>15 — Text Summarization</td>
+  <td><strong>Problem and/or Theory</strong></td>
+  <td>Q7 (6)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>§6 to §11 are where the theory marks live.</strong> If you are short of time,
+start at §11 and work upwards.</p>
+</blockquote>
+<hr />
+<hr />
+<h1 id="1--module-2--vector-semantics">1 · Module 2 — Vector Semantics</h1>
+<p><em>Scheme says <strong>Problem</strong>, so a sum is likely — but these definitions are what
+the sum is built on, and they buy the &quot;explain your answer&quot; marks.</em></p>
+<details>
+<summary><b>Q1.1</b> What is the distributional hypothesis? [1 mark]</summary>
+
+<ul>
+<li>Words that occur in <strong>similar contexts</strong> tend to have <strong>similar meanings</strong>.</li>
+<li>Firth's line: <em>&quot;You shall know a word by the company it keeps.&quot;</em></li>
+<li>Consequence: meaning can be learned <strong>from raw text alone</strong>, with no
+dictionary — just by counting which words appear near which.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q1.2</b> Why TF-IDF instead of raw frequency counts? [2 marks]</summary>
+
+<ul>
+<li>Raw counts are dominated by words like <em>the, of, is</em> — frequent <strong>everywhere</strong>,
+so they carry <strong>no discriminating information</strong>.</li>
+<li><strong>TF</strong> (term frequency) rewards a word for being common <strong>in this document</strong>.</li>
+<li><strong>IDF</strong> (inverse document frequency) penalises it for being common <strong>across all
+documents</strong>: <code>IDF = log(N / df)</code>.</li>
+<li>The product is high only for words <strong>frequent here but rare elsewhere</strong> —
+exactly the words that characterise the document.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q1.3</b> Why cosine similarity rather than Euclidean distance? [2 marks]</summary>
+
+<ul>
+<li>Cosine measures the <strong>angle</strong> between vectors, ignoring their <strong>length</strong>.</li>
+<li>Document length varies enormously; a long document has larger counts for
+<em>every</em> word, so Euclidean distance would call it &quot;far&quot; from a short document
+on the same topic.</li>
+<li>Cosine normalises that away: <code>cos(a,b) = (a·b) / (|a| × |b|)</code>, bounded in
+<code>[-1, 1]</code> — and in <code>[0, 1]</code> for non-negative count vectors.</li>
+<li><strong>1 = same direction = same topic. 0 = unrelated.</strong></details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q1.4</b> Compare sparse and dense vector representations. [2 marks]</summary>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th><strong>Sparse</strong> (TF-IDF, PPMI)</th>
+  <th><strong>Dense</strong> (Word2Vec, GloVe)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Length</td>
+  <td>size of the vocabulary — 20,000+</td>
+  <td>50–300</td>
+</tr>
+<tr>
+  <td>Contents</td>
+  <td>mostly zeros</td>
+  <td>all cells non-zero</td>
+</tr>
+<tr>
+  <td>Built by</td>
+  <td><strong>counting</strong></td>
+  <td><strong>predicting / learning</strong></td>
+</tr>
+<tr>
+  <td>Interpretable?</td>
+  <td>yes — each cell is a word</td>
+  <td>no — cells are latent features</td>
+</tr>
+<tr>
+  <td>Generalises?</td>
+  <td>no — <em>car</em> and <em>automobile</em> are unrelated dimensions</td>
+  <td>yes — similar words land near each other</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><b>Q1.5</b> What is PPMI and why the "positive" part? [2 marks]</summary>
+
+<ul>
+<li><strong>PMI</strong> = <code>log₂( P(w,c) / (P(w) × P(c)) )</code> — how much more often word <code>w</code> and
+context <code>c</code> co-occur than <strong>chance</strong> would predict.</li>
+<li><strong>PPMI</strong> = <code>max(0, PMI)</code> — negative values are clipped to zero.</li>
+<li><strong>Why clip:</strong> a negative PMI claims two words co-occur <em>less</em> than chance. To
+estimate that reliably you would need a colossal corpus, so the number is
+<strong>unreliable noise</strong>. Better to say &quot;no evidence of association&quot; (0).</details>
+
+</li>
+</ul>
+<hr />
+<hr />
+<h1 id="2--module-3--language-models--neural-lm">2 · Module 3 — Language Models &amp; Neural LM</h1>
+<details>
+<summary><b>Q2.1</b> What is the Markov assumption in an n-gram model? [1 mark]</summary>
+
+<ul>
+<li>The probability of the next word depends only on the <strong>previous n−1 words</strong>,
+not on the whole history.</li>
+<li>Bigram: <code>P(wn | w1 … wn-1) ≈ P(wn | wn-1)</code>.</li>
+<li>It is an <strong>approximation</strong> made for tractability — without it we would need
+counts for every possible sentence prefix, which never occur often enough to
+count reliably.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q2.2</b> Why is smoothing necessary? What does Laplace smoothing do? [2 marks]</summary>
+
+<ul>
+<li><strong>The zero-probability problem:</strong> any bigram unseen in training gets
+probability 0, which makes the <strong>whole sentence</strong> probability 0 and perplexity
+<strong>infinite</strong> — even if only one word is new.</li>
+<li><strong>Laplace (add-one):</strong> pretend every bigram was seen one extra time.
+<code>P(w2|w1) = (count(w1 w2) + 1) / (count(w1) + V)</code></li>
+<li><strong>The trap:</strong> the denominator adds <strong>V</strong>, the vocabulary size — <em>not</em> 1 —
+because you added 1 to each of V possible continuations.</li>
+<li>Cost: it steals a lot of probability mass from seen events. That is why
+backoff, interpolation and Kneser-Ney exist.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q2.3</b> What does perplexity measure? Is high or low better? [2 marks]</summary>
+
+<ul>
+<li>Perplexity = the <strong>inverse probability of the test set, normalised by length</strong>:
+<code>PP(W) = P(w1…wN)^(−1/N)</code>.</li>
+<li>Intuition: the <strong>average number of equally-likely words the model is choosing
+between</strong> at each step. Perplexity 100 means it is as confused as if guessing
+uniformly among 100 words.</li>
+<li><strong>Lower is better.</strong> Lower perplexity = higher probability assigned to real
+text = better model.</li>
+<li>Only comparable between models with the <strong>same vocabulary</strong>.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q2.4</b> Give three advantages of a neural LM over an n-gram LM. [3 marks]</summary>
+
+<ol>
+<li><strong>Generalisation via embeddings.</strong> <em>dog</em> and <em>cat</em> have similar vectors, so a
+pattern learned for one transfers to the other. An n-gram model treats them
+as unrelated symbols.</li>
+<li><strong>No sparsity / no zero counts.</strong> Every word gets non-zero probability from
+the softmax — no smoothing needed.</li>
+<li><strong>Longer, cheaper context.</strong> N-gram tables grow as <code>V^n</code>; a neural LM's
+parameters grow roughly linearly, so it can condition on more context.</li>
+<li><em>(bonus)</em> Parameters are <strong>shared</strong> across contexts instead of one stored
+count per context.</details>
+
+</li>
+</ol>
+<details>
+<summary><b>Q2.5</b> What does the softmax layer do, and why exponentiate? [2 marks]</summary>
+
+<ul>
+<li>Softmax turns unbounded real-valued <strong>scores</strong> into a <strong>probability
+distribution</strong>: <code>P(i) = e^(zi) / Σⱼ e^(zj)</code>.</li>
+<li><strong>Why exponentiate:</strong> it forces every value <strong>positive</strong> (raw scores can be
+negative) and <strong>amplifies the leading score</strong>, so the model expresses
+confidence rather than a flat guess.</li>
+<li>The output is guaranteed to <strong>sum to 1</strong> — your free correctness check.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q2.6</b> Why is a non-linear activation needed at all? [1 mark]</summary>
+
+<ul>
+<li>Without it, stacking layers is just multiplying matrices, and the composition
+of linear maps is still <strong>one linear map</strong>. The network could never learn
+anything a single layer couldn't — the classic XOR failure.</li>
+<li>The non-linearity is what makes depth worth having.</details>
+
+</li>
+</ul>
+<hr />
+<hr />
+<h1 id="3--module-5--pos-tagging">3 · Module 5 — POS Tagging</h1>
+<details>
+<summary><b>Q3.1</b> What is POS tagging and why is it hard? [2 marks]</summary>
+
+<ul>
+<li>Assigning each word in a sentence its <strong>part of speech</strong> (noun, verb,
+determiner …) from a fixed tagset.</li>
+<li><strong>Hard because of ambiguity:</strong> the same word takes different tags in different
+contexts. <em>book</em> → noun in <em>&quot;read a book&quot;</em>, verb in <em>&quot;book a flight&quot;</em>.</li>
+<li>Around <strong>85% of word <em>types</em></strong> are unambiguous — but the ambiguous ones are the
+<strong>common</strong> words, so a large share of <em>tokens</em> in running text are ambiguous.</li>
+<li>Also: <strong>unknown words</strong> never seen in training must still be tagged.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q3.2</b> Open class vs closed class words. [2 marks]</summary>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th><strong>Open class</strong></th>
+  <th><strong>Closed class</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Members</td>
+  <td>nouns, verbs, adjectives, adverbs</td>
+  <td>determiners, prepositions, pronouns, conjunctions, auxiliaries</td>
+</tr>
+<tr>
+  <td>New members</td>
+  <td><strong>yes</strong> — new nouns/verbs coined constantly (<em>to google</em>)</td>
+  <td><strong>no</strong> — a fixed, small, stable list</td>
+</tr>
+<tr>
+  <td>Size</td>
+  <td>tens of thousands</td>
+  <td>a few dozen to a few hundred</td>
+</tr>
+<tr>
+  <td>Carry</td>
+  <td><strong>content</strong> meaning</td>
+  <td><strong>grammatical function</strong></td>
+</tr>
+<tr>
+  <td>Unknown words</td>
+  <td>almost always land here (usually nouns)</td>
+  <td>never</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><b>Q3.3</b> What is the most-frequent-tag baseline, and why does it matter? [2 marks]</summary>
+
+<ul>
+<li>Tag every word with the tag it carried <strong>most often in training</strong>; tag unknown
+words as a noun (usually proper noun).</li>
+<li>It scores about <strong>90%</strong> accuracy — surprisingly high, because most tokens are
+unambiguous.</li>
+<li><strong>Why it matters:</strong> it is the number any real tagger must beat. A model at 88%
+is <em>worse than doing nothing clever</em>. Good HMM and neural taggers reach ~97%.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q3.4</b> Name three approaches to POS tagging with one strength each. [3 marks]</summary>
+
+<ol>
+<li><strong>Rule-based</strong> — hand-written linguistic rules. Transparent and debuggable;
+needs no training data.</li>
+<li><strong>Stochastic / HMM</strong> — learns transition and emission probabilities from a
+tagged corpus. Fast, principled, no feature engineering.</li>
+<li><strong>Neural (Bi-LSTM / BERT)</strong> — learns contextual representations. Highest
+accuracy; handles unknown words through sub-word and character information.</details>
+
+</li>
+</ol>
+<hr />
+<hr />
+<h1 id="4--module-6--hidden-markov-models">4 · Module 6 — Hidden Markov Models</h1>
+<details>
+<summary><b>Q4.1</b> What makes an HMM "hidden"? Define its components. [2 marks]</summary>
+
+<ul>
+<li>The <strong>states</strong> (the POS tags) are <strong>not observed</strong> — you only see the
+<strong>emissions</strong> (the words), and must infer the state sequence from them.</li>
+<li>Components:<ul>
+<li><strong>Q</strong> — the set of hidden states (the tagset)</li>
+<li><strong>A</strong> — <strong>transition</strong> probabilities <code>P(tag_i | tag_i-1)</code></li>
+<li><strong>B</strong> — <strong>emission</strong> probabilities <code>P(word | tag)</code></li>
+<li><strong>π</strong> — initial / start probabilities</details>
+
+</li>
+</ul>
+</li>
+</ul>
+<details>
+<summary><b>Q4.2</b> State the two independence assumptions an HMM makes. [2 marks]</summary>
+
+<ol>
+<li><strong>Markov assumption</strong> — the current state depends only on the <strong>immediately
+previous state</strong>, not on the whole history.</li>
+<li><strong>Output independence</strong> — the observed word depends only on the <strong>state that
+produced it</strong>, not on neighbouring words or states.</li>
+</ol>
+<p>Both are clearly false of real language, but they make exact inference cheap —
+which is the whole point.</p>
+</details>
+
+<details>
+<summary><b>Q4.3</b> The three fundamental problems of an HMM, and the algorithm for each. [3 marks]</summary>
+
+<table>
+<thead>
+<tr>
+  <th>#</th>
+  <th>Problem</th>
+  <th>Question it answers</th>
+  <th>Algorithm</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td><strong>Likelihood</strong></td>
+  <td>How probable is this observation sequence?</td>
+  <td><strong>Forward</strong></td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><strong>Decoding</strong></td>
+  <td>What is the most likely <em>hidden state sequence</em>?</td>
+  <td><strong>Viterbi</strong></td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><strong>Learning</strong></td>
+  <td>What are A and B, given only observations?</td>
+  <td><strong>Forward–Backward</strong> (Baum-Welch, an EM algorithm)</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><b>Q4.4</b> Viterbi vs Forward — what is the one difference? [2 marks]</summary>
+
+<ul>
+<li><strong>Identical</strong> recursion, identical table, identical emission multiply. Only the
+combination step differs:<ul>
+<li><strong>Viterbi takes the MAX</strong> over previous states — and stores a
+<strong>backpointer</strong>, so it can reconstruct the best path.</li>
+<li><strong>Forward takes the SUM</strong> over previous states — the total probability of
+<em>all</em> paths. No backpointer.</li>
+</ul>
+</li>
+<li><strong>MAX = &quot;which single path is best&quot;. SUM = &quot;how likely overall&quot;.</strong></li>
+<li>Learn one and you have both.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q4.5</b> Why dynamic programming instead of enumerating all tag sequences? [1 mark]</summary>
+
+<ul>
+<li>With <code>N</code> states and <code>T</code> words there are <code>N^T</code> possible sequences —
+exponential, hopeless for a real sentence.</li>
+<li>Viterbi reuses the best path <em>into</em> each state at each step, giving <code>O(N²T)</code>.
+That reuse <strong>is</strong> the dynamic programming.</details>
+
+</li>
+</ul>
+<hr />
+<hr />
+<h1 id="5--module-9--statistical-parsing">5 · Module 9 — Statistical Parsing</h1>
+<details>
+<summary><b>Q5.1</b> What is a PCFG and what problem does it solve? [2 marks]</summary>
+
+<ul>
+<li>A <strong>Probabilistic Context-Free Grammar</strong>: a CFG in which every rule carries a
+probability, and all rules expanding the <strong>same non-terminal sum to 1</strong>.</li>
+<li><strong>Problem solved — structural ambiguity.</strong> A plain CFG can tell you a sentence
+has five valid parses but not which one is meant. A PCFG <strong>ranks</strong> them: the
+probability of a parse is the <strong>product of the probabilities of every rule
+used</strong>, and the best parse is the highest product.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q5.2</b> What is PP-attachment ambiguity? Give an example. [2 marks]</summary>
+
+<ul>
+<li>A prepositional phrase can attach to <strong>either the verb or the preceding noun</strong>,
+giving two different meanings.</li>
+<li><em>&quot;I saw the man with the telescope.&quot;</em><ul>
+<li><strong>VP-attachment:</strong> <em>with the telescope</em> modifies <strong>saw</strong> → the telescope is
+the instrument I used.</li>
+<li><strong>NP-attachment:</strong> <em>with the telescope</em> modifies <strong>the man</strong> → the man was
+carrying it.</li>
+</ul>
+</li>
+<li>A PCFG chooses whichever attachment uses higher-probability rules.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q5.3</b> Compare top-down and bottom-up parsing. [3 marks]</summary>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th><strong>Top-down</strong></th>
+  <th><strong>Bottom-up</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Starts from</td>
+  <td>the start symbol <strong>S</strong></td>
+  <td>the <strong>words</strong></td>
+</tr>
+<tr>
+  <td>Direction</td>
+  <td>expands rules until it reaches the words</td>
+  <td>combines constituents until it reaches S</td>
+</tr>
+<tr>
+  <td>Wastes effort on</td>
+  <td>trees that <strong>can never match the input words</strong></td>
+  <td>constituents that <strong>can never fit into an S</strong></td>
+</tr>
+<tr>
+  <td>Guarantee</td>
+  <td>every tree it builds is rooted in S</td>
+  <td>every tree it builds is grounded in the input</td>
+</tr>
+<tr>
+  <td>Backtracking</td>
+  <td>yes, on failure</td>
+  <td>yes, on failure</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><b>Q5.4</b> What is CKY and what does it require of the grammar? [2 marks]</summary>
+
+<ul>
+<li><strong>CKY</strong> is a bottom-up <strong>dynamic programming</strong> chart parser. It fills a
+triangular table where cell <code>[i,j]</code> holds every non-terminal that can span
+words <code>i…j</code>, building longer spans from shorter ones. Cost <code>O(n³ × |G|)</code>.</li>
+<li><strong>Requirement: Chomsky Normal Form</strong> — every rule is either <code>A → B C</code> (exactly
+two non-terminals) or <code>A → w</code> (a single terminal).</li>
+<li>Any CFG can be mechanically converted to CNF, so this costs no expressive
+power.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q5.5</b> Name two weaknesses of a plain PCFG. [2 marks]</summary>
+
+<ol>
+<li><strong>No lexical sensitivity.</strong> Rule probabilities ignore the actual words, so the
+grammar cannot know that <em>eat</em> takes a food object. Fixed by
+<strong>lexicalisation</strong> — attaching head words to rules.</li>
+<li><strong>Poor independence assumptions.</strong> Each expansion is assumed independent of
+context, but real expansions depend heavily on position — subject NPs are far
+more often pronouns than object NPs. Fixed by <strong>parent annotation / state
+splitting</strong>.</details>
+
+</li>
+</ol>
+<hr />
+<hr />
+<h1 id="6--module-10--dependency-parsing">6 · Module 10 — Dependency Parsing</h1>
+<blockquote>
+<p><strong>The scheme explicitly allows Theory here.</strong> Oct 2024 asked a 3-mark
+compare-and-contrast with no arithmetic at all.</p>
+</blockquote>
+<details>
+<summary><b>Q6.1</b> ⭐ Constituency vs dependency parsing — compare. [3 marks]</summary>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th><strong>Constituency (phrase structure)</strong></th>
+  <th><strong>Dependency</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Represents</td>
+  <td>how words group into <strong>nested phrases</strong> (NP, VP, PP)</td>
+  <td>direct <strong>head → dependent</strong> relations between words</td>
+</tr>
+<tr>
+  <td>Nodes</td>
+  <td>the words <strong>plus</strong> invented non-terminals</td>
+  <td><strong>only the words</strong> — nothing invented</td>
+</tr>
+<tr>
+  <td>Needs</td>
+  <td>a CFG / PCFG</td>
+  <td>a set of grammatical relations (nsubj, dobj, …)</td>
+</tr>
+<tr>
+  <td>Output</td>
+  <td>a tree with internal phrase nodes</td>
+  <td>labelled arcs over the sentence</td>
+</tr>
+<tr>
+  <td>Suits</td>
+  <td>languages with <strong>fixed word order</strong> (English)</td>
+  <td>languages with <strong>free word order</strong> (Hindi, Czech, Latin)</td>
+</tr>
+<tr>
+  <td>Downstream use</td>
+  <td>grammar checking, phrase extraction</td>
+  <td>relation extraction, QA, machine translation</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><b>Q6.2</b> ⭐ State the well-formedness conditions of a dependency tree. [3 marks]</summary>
+
+<ol>
+<li><strong>Single head</strong> — every word has <strong>exactly one</strong> incoming arc.</li>
+<li><strong>Root</strong> — there is a single ROOT; <strong>nothing points into ROOT</strong>.</li>
+<li><strong>Connected and acyclic</strong> — following arcs backwards from any word must reach
+ROOT. No cycles, no orphans.</li>
+<li><em>(optional)</em> <strong>Projectivity</strong> — no crossing arcs when drawn above the
+sentence.</li>
+</ol>
+<p><strong>Use these as your checklist</strong> whenever you are asked to draw a tree. They
+catch essentially every mistake.</p>
+</details>
+
+<details>
+<summary><b>Q6.3</b> ⭐ Transition-based vs graph-based parsing. [3 marks]</summary>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th><strong>Transition-based</strong> (arc-standard / arc-eager)</th>
+  <th><strong>Graph-based</strong> (MST)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>How</td>
+  <td>a stack + buffer; a classifier picks SHIFT / LEFT-ARC / RIGHT-ARC at each step</td>
+  <td>score <strong>every possible arc</strong>, then find the maximum spanning tree</td>
+</tr>
+<tr>
+  <td>Search</td>
+  <td><strong>greedy, local</strong> — one pass, no going back</td>
+  <td><strong>global</strong> — all trees considered at once</td>
+</tr>
+<tr>
+  <td>Speed</td>
+  <td><strong>linear</strong> <code>O(n)</code> — very fast</td>
+  <td><code>O(n²)</code> or worse</td>
+</tr>
+<tr>
+  <td>Errors</td>
+  <td>an early mistake <strong>propagates</strong> and can never be undone</td>
+  <td>no error propagation</td>
+</tr>
+<tr>
+  <td>Long arcs</td>
+  <td>weaker on long-distance dependencies</td>
+  <td>better on long-distance dependencies</td>
+</tr>
+<tr>
+  <td>Non-projective</td>
+  <td>not natively</td>
+  <td><strong>yes</strong> — Chu-Liu-Edmonds handles it</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><b>Q6.4</b> What is projectivity, and why does it matter? [2 marks]</summary>
+
+<ul>
+<li>A dependency tree is <strong>projective</strong> if, when every arc is drawn above the
+sentence in word order, <strong>no two arcs cross</strong>.</li>
+<li>Equivalently: every word's descendants form a <strong>contiguous block</strong>.</li>
+<li><strong>Why it matters:</strong> the fast standard transition systems (arc-standard,
+arc-eager) can <em>only</em> produce projective trees. Freer-word-order languages
+produce non-projective structures, which need graph-based parsing or an extra
+SWAP transition.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q6.5</b> Define head and dependent. How do you tell which is which? [2 marks]</summary>
+
+<ul>
+<li>The <strong>head</strong> determines the syntactic category and behaviour of the phrase;
+the <strong>dependent</strong> modifies or completes it.</li>
+<li>Tests: the head can usually <strong>stand alone</strong> where the whole phrase stood; the
+dependent cannot. The head controls agreement.</li>
+<li><em>&quot;the red car&quot;</em> → head <strong>car</strong>, dependents <em>the</em> (det) and <em>red</em> (amod).</li>
+<li>In <em>&quot;She ate rice&quot;</em>, the verb <strong>ate</strong> is the head of the sentence and attaches
+to ROOT; <em>She</em> is <code>nsubj</code>, <em>rice</em> is <code>dobj</code>.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q6.6</b> Why is Chu-Liu-Edmonds needed rather than "give each word its best head"? [2 marks]</summary>
+
+<ul>
+<li>Greedily giving every word its highest-scoring head satisfies &quot;one head each&quot;,
+but it can create a <strong>cycle</strong> — A's best head is B and B's best head is A —
+and a cycle is not a tree.</li>
+<li><strong>Chu-Liu-Edmonds</strong> does exactly that greedy step, then <strong>detects each cycle,
+contracts it to a single node, and re-solves</strong>, repeating until nothing
+cycles. It is guaranteed to return the <strong>maximum-scoring valid tree</strong>.</li>
+<li>If the greedy step happens to produce no cycle, you are already finished.</details>
+
+</li>
+</ul>
+<hr />
+<hr />
+<h1 id="7--module-11--contextual-embeddings--attention">7 · Module 11 — Contextual Embeddings &amp; Attention</h1>
+<blockquote>
+<p>Feb 2026 gave <strong>3 of 6 marks</strong> here to pure theory. Mar 2026 gave <strong>2.5 of 6</strong>.
+This section is the highest-yield reading in the file.</p>
+</blockquote>
+<details>
+<summary><b>Q7.1</b> ⭐ What are contextual embeddings and why do they matter? [1.5 marks]</summary>
+
+<ul>
+<li>Vector representations of words whose values <strong>change with the surrounding
+context</strong> — the same word gets a different vector in every sentence.</li>
+<li>Produced by transformer models such as <strong>BERT</strong> and <strong>ELMo</strong>.</li>
+<li>Why they matter:<ul>
+<li>they capture <strong>word sense disambiguation</strong> — <em>bank</em> in a river sentence gets
+a different vector from <em>bank</em> in a finance sentence;</li>
+<li>they encode better <strong>semantic and syntactic relationships</strong>;</li>
+<li>they substantially improve <strong>downstream tasks</strong> (NER, QA, sentiment,
+tagging).</details>
+
+</li>
+</ul>
+</li>
+</ul>
+<details>
+<summary><b>Q7.2</b> ⭐ How do contextual embeddings differ from static ones like Word2Vec? [1.5 marks]</summary>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th><strong>Static</strong> (Word2Vec, GloVe)</th>
+  <th><strong>Contextual</strong> (BERT, ELMo)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Vectors per word</td>
+  <td><strong>one, fixed forever</strong></td>
+  <td><strong>one per occurrence</strong></td>
+</tr>
+<tr>
+  <td>Polysemy</td>
+  <td><strong>cannot handle it</strong> — all senses collapse into one vector</td>
+  <td>handled — each sense gets its own vector</td>
+</tr>
+<tr>
+  <td>Computed from</td>
+  <td>a global co-occurrence/prediction objective</td>
+  <td>the <strong>actual surrounding sentence</strong>, via attention</td>
+</tr>
+<tr>
+  <td>Depends on position?</td>
+  <td>no</td>
+  <td>yes</td>
+</tr>
+<tr>
+  <td>Cost</td>
+  <td>cheap, a lookup table</td>
+  <td>expensive, a forward pass through the model</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><b>Q7.3</b> ⭐ Why do transformers use multiple attention heads instead of one? [1.5 marks]</summary>
+
+<ul>
+<li>Different words in a sentence relate to each other in <strong>many ways at once</strong> —
+a single averaging operation cannot capture all of them.</li>
+<li>Multiple heads let the model:<ul>
+<li>attend to different <strong>representation subspaces</strong>;</li>
+<li>capture different <strong>relationship types</strong> — syntactic, semantic, positional;</li>
+<li>learn <strong>diverse patterns</strong> — one head tracks adjacent words, another
+subject–verb links, another coreference;</li>
+<li><strong>increase capacity</strong> without a proportional increase in computation, since
+the heads run in <strong>parallel</strong> and each is lower-dimensional.</details>
+
+</li>
+</ul>
+</li>
+</ul>
+<details>
+<summary><b>Q7.4</b> Explain the roles of Query, Key and Value. [2 marks]</summary>
+
+<p>Think of a <strong>fuzzy lookup table</strong>.</p>
+<ul>
+<li><strong>Query (q)</strong> — the <em>current focus of attention</em>: the word asking &quot;who here is
+relevant to me?&quot;</li>
+<li><strong>Key (k)</strong> — each other word's <em>advertisement</em>: what it offers, used to be
+compared against the query.</li>
+<li><strong>Value (v)</strong> — each word's <em>actual content</em>, the thing that gets carried
+forward once its key matched.</li>
+<li>Keys and values always come in pairs. You match on the <strong>key</strong> but you
+propagate the <strong>value</strong>.</li>
+<li>All three come from the same input in <strong>self</strong>-attention: <code>q = Qx</code>, <code>k = Kx</code>,
+<code>v = Vx</code>.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q7.5</b> ⭐ Why divide by √d_k in scaled dot-product attention? [1.5 marks]</summary>
+
+<ul>
+<li>Dot products grow with dimension: with <code>d_k</code> terms in the sum, the variance of
+<code>q·k</code> scales with <code>d_k</code>, so scores become <strong>large in magnitude</strong>.</li>
+<li>Large scores push softmax into a region where one weight is ≈1 and the rest
+≈0 — it <strong>saturates</strong>, and its <strong>gradients vanish</strong>, so the model trains badly.</li>
+<li>Dividing by <code>√d_k</code> keeps the scores at a sensible scale. The handout describes
+it as acting as <strong>regularisation that improves performance of larger models</strong>.</li>
+<li>Formula: <code>SelfAttention(Q,K,V) = softmax(QKᵀ / √d_k) V</code></details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q7.6</b> Self-attention has no notion of word order. How is that fixed? [1.5 marks]</summary>
+
+<ul>
+<li>Self-attention is a <strong>weighted average</strong> — permuting the input words permutes
+the output identically. It is <strong>order-blind</strong>; <em>&quot;dog bites man&quot;</em> and
+<em>&quot;man bites dog&quot;</em> would produce the same set of representations.</li>
+<li><strong>Fix: positional encodings</strong> — a position-dependent vector is <strong>added to each
+input embedding</strong> before the first layer, so position information is carried
+in the vectors themselves.</li>
+<li>Either fixed sinusoidal functions or learned position embeddings.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q7.7</b> List the barriers to using self-attention as a building block, and the fix for each. [3 marks]</summary>
+
+<table>
+<thead>
+<tr>
+  <th>Barrier</th>
+  <th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>No inherent notion of order</strong></td>
+  <td>add <strong>position representations</strong> to the inputs</td>
+</tr>
+<tr>
+  <td><strong>No non-linearity</strong> — it is all just weighted averages</td>
+  <td>apply the same <strong>feed-forward network</strong> to each self-attention output</td>
+</tr>
+<tr>
+  <td><strong>Must not look at the future</strong> when predicting a sequence</td>
+  <td><strong>mask</strong> future positions by setting those attention weights to <strong>0</strong> (masked self-attention, used in language modelling and MT decoding)</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><b>Q7.8</b> Self-attention vs cross-attention vs masked self-attention. [2 marks]</summary>
+
+<ul>
+<li><strong>Self-attention</strong> — Q, K and V all come from the <strong>same sequence</strong>. Every
+position may attend to every other.</li>
+<li><strong>Masked (causal) self-attention</strong> — same, but positions <strong>after</strong> the current
+one are masked out, so the model cannot cheat by seeing the future. Used in
+decoders and language models.</li>
+<li><strong>Cross-attention</strong> — the <strong>queries come from the decoder</strong>, while the <strong>keys
+and values come from the encoder</strong>. This is how the decoder reads the source
+sentence in translation.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q7.9</b> How does multi-head attention combine its heads? [1 mark]</summary>
+
+<ul>
+<li>Each head has its <strong>own</strong> <code>W^Q, W^K, W^V</code> matrices and produces its own output
+vector.</li>
+<li>The head outputs are <strong>concatenated</strong> and then <strong>projected back down to
+dimension d</strong> by a matrix <code>W^O</code>, so the output is the <strong>same size as the
+input</strong> and layers can be stacked.</li>
+<li><code>MultiHeadAttention(X) = (head₁ ⊕ head₂ ⊕ … ⊕ head_h) W^O</code></li>
+<li><strong>Exam check:</strong> the number of <strong>rows of W^O</strong> must equal the <strong>length of the
+concatenated vector</strong>.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q7.10</b> What problem did attention solve in the original encoder-decoder? [2 marks]</summary>
+
+<ul>
+<li><strong>The bottleneck problem.</strong> Without attention, the decoder sees a <strong>single
+fixed context vector</strong> — the encoder's last hidden state — which must contain
+the entire source sentence. Long sentences do not fit.</li>
+<li>With attention, the decoder gets a <strong>different, dynamic context vector at each
+step</strong>, computed from <strong>all</strong> the encoder hidden states.</li>
+<li>Extra benefits stated in the slides: it <strong>helps with vanishing gradients</strong> by
+giving a shortcut to faraway states, and it gives <strong>interpretability</strong> — the
+attention distribution shows what the decoder was looking at.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q7.11</b> Given two heads with weights [0.1, 0.2, 0.7] and [0.5, 0.3, 0.2] over ("the", "cat", "sat") — what is each head specialising in? [1 mark]</summary>
+
+<p><em>This is the Mar 2026 Q4(d) question. The method: find the largest weight, name
+the word, then say what kind of relation that word represents.</em></p>
+<ul>
+<li><strong>Head 1</strong> puts 0.7 on <strong>&quot;sat&quot;</strong> — the verb. It appears to track the
+<strong>action / predicate</strong>, i.e. a <strong>syntactic subject–verb relationship</strong>.</li>
+<li><strong>Head 2</strong> puts 0.5 on <strong>&quot;the&quot;</strong> — a determiner. It appears to track
+<strong>grammatical / structural</strong> information rather than content.</li>
+<li>Together they demonstrate that different heads specialise in <strong>different
+linguistic patterns</strong>, which is exactly why multiple heads are used.</details>
+
+</li>
+</ul>
+<hr />
+<hr />
+<h1 id="8--module-12--word-sense--wordnet">8 · Module 12 — Word Sense &amp; WordNet</h1>
+<details>
+<summary><b>Q8.1</b> ⭐ Define homonymy, polysemy, synonymy, antonymy — with examples. [3 marks]</summary>
+
+<table>
+<thead>
+<tr>
+  <th>Term</th>
+  <th>Meaning</th>
+  <th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Homonymy</strong></td>
+  <td>same form, <strong>unrelated</strong> meanings</td>
+  <td><em>bank</em> (river edge) vs <em>bank</em> (financial)</td>
+</tr>
+<tr>
+  <td><strong>Polysemy</strong></td>
+  <td>same form, <strong>related</strong> meanings</td>
+  <td><em>bank</em> (the institution) vs <em>bank</em> (the building it occupies)</td>
+</tr>
+<tr>
+  <td><strong>Synonymy</strong></td>
+  <td>different forms, (nearly) the <strong>same</strong> meaning</td>
+  <td><em>big / large</em>, <em>couch / sofa</em></td>
+</tr>
+<tr>
+  <td><strong>Antonymy</strong></td>
+  <td><strong>opposite</strong> meaning along one dimension</td>
+  <td><em>hot / cold</em>, <em>rise / fall</em></td>
+</tr>
+</tbody>
+</table>
+<p>Sub-types of homonymy: <strong>homophones</strong> (same sound — <em>write/right</em>),
+<strong>homographs</strong> (same spelling — <em>bass</em> the fish / <em>bass</em> the sound).</p>
+</details>
+
+<details>
+<summary><b>Q8.2</b> Define hyponymy, hypernymy and meronymy. [2 marks]</summary>
+
+<ul>
+<li><strong>Hyponym</strong> — a <strong>more specific</strong> term. <em>dog</em> is a hyponym of <em>animal</em>.</li>
+<li><strong>Hypernym</strong> — the <strong>more general</strong> term. <em>animal</em> is a hypernym of <em>dog</em>.
+(Mnemonic: <strong>hyper</strong> = above = broader.)</li>
+<li><strong>Meronym</strong> — a <strong>part of</strong> something. <em>wheel</em> is a meronym of <em>car</em>.
+The reverse, <em>car</em>, is the <strong>holonym</strong>.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q8.3</b> What is WordNet? Describe its structure. [2 marks]</summary>
+
+<ul>
+<li>A large <strong>lexical database</strong> of English, organised by <strong>meaning</strong> rather than
+by spelling.</li>
+<li>The unit is the <strong>synset</strong> — a set of synonyms that share one sense, together
+with a <strong>gloss</strong> (a short definition) and usually <strong>usage examples</strong>.</li>
+<li>Synsets are linked by <strong>semantic relations</strong>: hypernym/hyponym (the &quot;is-a&quot;
+hierarchy), meronym/holonym, antonym.</li>
+<li>Separate hierarchies for <strong>nouns, verbs, adjectives and adverbs</strong>.</li>
+<li>Used for WSD, semantic similarity, query expansion and as a sense inventory.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q8.4</b> What is Word Sense Disambiguation and why is it hard? [2 marks]</summary>
+
+<ul>
+<li>Deciding <strong>which sense</strong> of an ambiguous word is intended in a given context —
+choosing one synset from the inventory.</li>
+<li>Hard because: senses are <strong>fine-grained</strong> and overlapping; the useful context
+may be <strong>far away</strong> in the text or absent entirely; and hand-labelled sense
+data is expensive, so there is a <strong>knowledge-acquisition bottleneck</strong>.</li>
+<li>Matters for machine translation (different senses translate differently),
+information retrieval, and text-to-speech (<em>bass</em> the fish vs the sound).</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q8.5</b> Explain the Lesk algorithm. What is its main weakness? [2 marks]</summary>
+
+<ul>
+<li><strong>Idea:</strong> the correct sense is the one whose <strong>dictionary gloss shares the most
+words with the context sentence</strong>.</li>
+<li><strong>Simplified Lesk:</strong> for each candidate sense, count the overlap between the
+gloss (plus usage examples) and the content words of the sentence; pick the
+highest count. Ties are broken by the most frequent sense.</li>
+<li><strong>Weakness:</strong> glosses are <strong>very short</strong>, so overlaps are tiny and often zero —
+the method is brittle and sensitive to exact wording. Extended Lesk adds the
+glosses of related synsets to enlarge the signature.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q8.6</b> ⭐ Why does WordNet perform poorly on domain-specific text, and what is the fix? [2 marks]</summary>
+
+<p><em>This is the Mar 2026 Q5A question, almost verbatim.</em></p>
+<ul>
+<li>WordNet is a <strong>general-purpose</strong> lexical database. Specialised medical, legal
+and technical vocabulary is <strong>missing or only thinly defined</strong>.</li>
+<li>Domain terms also carry <strong>domain-specific senses</strong> that the general inventory
+does not list, so the correct sense may simply not be an option.</li>
+<li><strong>Fix:</strong> combine WordNet with a <strong>domain-specific ontology or lexicon</strong> — for
+example UMLS/SNOMED in medicine — or extend it with terms mined from a domain
+corpus. This adds expert knowledge and improves accuracy.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q8.7</b> Name the three families of WSD approaches. [2 marks]</summary>
+
+<ol>
+<li><strong>Knowledge-based</strong> — use a dictionary or WordNet, no labelled data.
+Example: <strong>Lesk</strong>, and graph-based measures over the WordNet hierarchy.</li>
+<li><strong>Supervised</strong> — train a classifier on hand-labelled sense examples using
+context features. Most accurate, but limited by labelled-data scarcity.</li>
+<li><strong>Semi-supervised / unsupervised</strong> — bootstrapping from a few seeds
+(Yarowsky), or clustering contexts into senses (word sense induction).</details>
+
+</li>
+</ol>
+<hr />
+<hr />
+<h1 id="9--module-13--semantic-web--ontology">9 · Module 13 — Semantic Web &amp; Ontology</h1>
+<blockquote>
+<p><strong>The scheme says Application / Case study — there is no numerical here.</strong>
+Every mark in this module is prose or triples. Do not skip it because it has
+no formula.</p>
+</blockquote>
+<details>
+<summary><b>Q9.1</b> What is the Semantic Web, in one idea? [2 marks]</summary>
+
+<ul>
+<li>A vision of the Web as a <strong>huge queryable database</strong> rather than a pile of
+documents: data published so that <strong>machines can understand and combine it</strong>,
+not just display it.</li>
+<li>Achieved by publishing data as <strong>RDF triples</strong> with globally unique <strong>URIs</strong>,
+so that a resource named in one dataset is recognisably the <em>same</em> resource in
+another.</li>
+<li>That shared naming is what lets independent datasets <strong>merge automatically</strong> —
+the basis of <strong>Linked Open Data</strong> and projects like <strong>DBpedia</strong>.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q9.2</b> ⭐ What is an RDF triple? Give the data model. [2 marks]</summary>
+
+<ul>
+<li>RDF represents every fact as a <strong>subject – predicate – object</strong> triple.<ul>
+<li><strong>Subject</strong> — the entity being described (a URI)</li>
+<li><strong>Predicate</strong> — the property or relation (a URI)</li>
+<li><strong>Object</strong> — the value: either another resource (a URI) or a literal</li>
+</ul>
+</li>
+<li>A set of triples forms a <strong>directed labelled graph</strong>: subjects and objects are
+nodes, predicates are the edges.</li>
+<li>Example: <code>(Anita, enrolledIn, DataScience)</code>.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q9.3</b> ⭐ RDF vs RDFS vs OWL — which does what? [2 marks]</summary>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th><strong>RDF</strong></th>
+  <th><strong>RDFS</strong></th>
+  <th><strong>OWL</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Purpose</td>
+  <td><strong>represent data</strong> as triples</td>
+  <td>add a <strong>simple vocabulary/schema</strong></td>
+  <td>add <strong>logic and reasoning</strong></td>
+</tr>
+<tr>
+  <td>Gives you</td>
+  <td>subject–predicate–object facts</td>
+  <td>classes, subclasses, properties, domain and range</td>
+  <td>restrictions, cardinality, disjointness, equivalence, inverse and transitive properties</td>
+</tr>
+<tr>
+  <td>Can it infer?</td>
+  <td>no</td>
+  <td>limited (subclass inheritance)</td>
+  <td><strong>yes</strong> — a reasoner derives new facts and detects inconsistency</td>
+</tr>
+<tr>
+  <td>Use it when</td>
+  <td>you are <strong>storing</strong> facts</td>
+  <td>you need a <strong>light taxonomy</strong></td>
+  <td>you must <strong>enforce constraints</strong> or <strong>infer</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>The exam phrasing:</strong> <em>storing book data</em> → <strong>RDF</strong>. <em>Checking &quot;every book must
+have an author&quot;</em> → <strong>OWL</strong>, because that is a constraint requiring reasoning.</p>
+</details>
+
+<details>
+<summary><b>Q9.4</b> ⭐ Case study: model papers, authors and conferences using RDF and OWL. [2 marks]</summary>
+
+<p><em>This is the Mar 2026 Q5C answer pattern. Always answer in two halves — RDF for
+the facts, OWL for the rules.</em></p>
+<p><strong>With RDF — represent the factual data.</strong> Entities become resources linked by
+triples:</p>
+<pre><code>(Paper1, hasAuthor,   Author1)
+(Paper1, presentedAt, Conference1)
+(Author1, affiliatedWith, University1)
+</code></pre>
+<p><strong>With OWL — define the semantics and constraints.</strong></p>
+<ul>
+<li><strong>Classes:</strong> <code>Paper</code>, <code>Author</code>, <code>Conference</code></li>
+<li><strong>Object properties:</strong> <code>hasAuthor</code> (domain Paper, range Author),
+<code>presentedAt</code> (domain Paper, range Conference)</li>
+<li><strong>Constraints:</strong> every <code>Paper</code> must have <strong>at least one</strong> <code>hasAuthor</code>
+(minimum cardinality 1); <code>Paper</code> and <code>Author</code> are <strong>disjoint</strong> classes;
+<code>hasAuthor</code> has the <strong>inverse</strong> property <code>authorOf</code>.</li>
+<li>A reasoner can then flag a paper with no author as inconsistent, and infer
+<code>authorOf</code> links automatically.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q9.5</b> Case study: identify subjects, predicates and objects for a university system. [2 marks]</summary>
+
+<p><em>The Feb 2026 Q6 pattern. Answer in three labelled lists, then the triples.</em></p>
+<ul>
+<li><strong>Entities (subjects):</strong> Student (Anita), Course (Data Science),
+Faculty (Dr. Rao), Department (Computer Science)</li>
+<li><strong>Properties (predicates):</strong> <code>enrolledIn</code>, <code>taughtBy</code>, <code>memberOf</code>,
+<code>hasName</code>, <code>offeredBy</code></li>
+<li><strong>Values (objects):</strong> the course resource, the faculty resource, the
+department resource, and literals such as the name string</li>
+</ul>
+<p><strong>Triples:</strong></p>
+<pre><code>(Anita,        enrolledIn, DataScience)
+(DataScience,  taughtBy,   Dr_Rao)
+(Dr_Rao,       memberOf,   ComputerScienceDept)
+</code></pre>
+</details>
+
+<details>
+<summary><b>Q9.6</b> Why are URIs essential to the Semantic Web? [1 mark]</summary>
+
+<ul>
+<li>A URI is a <strong>globally unique name</strong> for a resource. Two datasets that both use
+<code>http://dbpedia.org/resource/India</code> are demonstrably talking about the <strong>same
+thing</strong>, so their graphs can be <strong>merged without manual reconciliation</strong>.</li>
+<li>Plain strings cannot do this — &quot;India&quot; in one database and &quot;India&quot; in another
+might be a country, a film or a person.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q9.7</b> Name three application areas of ontologies. [1.5 marks]</summary>
+
+<ul>
+<li><strong>Information retrieval and search</strong> — query expansion using the class
+hierarchy; semantic rather than keyword matching.</li>
+<li><strong>Data integration</strong> — merging heterogeneous databases under a shared
+vocabulary (the Linked Open Data cloud, DBpedia).</li>
+<li><strong>Knowledge-based systems and reasoning</strong> — biomedical ontologies, e-commerce
+product taxonomies, enterprise knowledge graphs powering Graph RAG.</details>
+
+</li>
+</ul>
+<hr />
+<hr />
+<h1 id="10--module-14--retrieval-augmented-generation">10 · Module 14 — Retrieval-Augmented Generation</h1>
+<details>
+<summary><b>Q10.1</b> ⭐ What is RAG and what problem does it solve? [2 marks]</summary>
+
+<ul>
+<li><strong>Retrieval-Augmented Generation:</strong> before answering, the system <strong>retrieves
+relevant documents</strong> from an external store and puts them into the LLM's
+prompt, so the model answers <strong>grounded in those documents</strong>.</li>
+<li>Problems it solves:<ul>
+<li><strong>Hallucination</strong> — the model invents plausible but false facts. RAG grounds
+it in retrieved evidence.</li>
+<li><strong>Stale knowledge</strong> — the model's training has a cutoff. Retrieval supplies
+<strong>up-to-date</strong> information without retraining.</li>
+<li><strong>No access to private data</strong> — company documents were never in training.</li>
+<li><strong>No citations</strong> — RAG can point at the source it used.</details>
+
+</li>
+</ul>
+</li>
+</ul>
+<details>
+<summary><b>Q10.2</b> Describe the RAG pipeline end to end. [3 marks]</summary>
+
+<ol>
+<li><strong>Ingestion</strong> — documents are loaded and <strong>chunked</strong> into passages.</li>
+<li><strong>Embedding</strong> — each chunk is converted to a vector and stored in a <strong>vector
+database</strong>.</li>
+<li><strong>Query embedding</strong> — the user's question is embedded with the same model.</li>
+<li><strong>Retrieval</strong> — nearest-neighbour / similarity search returns the top-k
+chunks, usually filtered by a <strong>similarity threshold</strong>.</li>
+<li><strong>Augmentation</strong> — the retrieved chunks are inserted into the prompt
+alongside the question.</li>
+<li><strong>Generation</strong> — the LLM answers using that context, ideally citing it.</details>
+
+</li>
+</ol>
+<details>
+<summary><b>Q10.3</b> ⭐ Why is chunk overlap used? [2 marks]</summary>
+
+<ul>
+<li>Chunk boundaries are <strong>arbitrary</strong>. A sentence or an idea that straddles a
+boundary gets <strong>split in half</strong>, and neither half retrieves well or reads
+coherently.</li>
+<li><strong>Overlap</strong> repeats the last few tokens of one chunk at the start of the next,
+so <strong>context is preserved across the boundary</strong> and no idea is orphaned.</li>
+<li>Cost: overlap <strong>duplicates content</strong>, increasing storage and the risk of near
+identical chunks being retrieved together, wasting context window.</li>
+<li>Typical: 10–20% of the chunk size.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q10.4</b> ⭐ What competes for space in the LLM context window? [2 marks]</summary>
+
+<ul>
+<li>Every LLM has a <strong>fixed context window</strong> measured in tokens. Everything must
+fit inside it:<ul>
+<li>the <strong>system prompt / instructions</strong></li>
+<li>the <strong>user query</strong></li>
+<li>the <strong>retrieved chunks</strong></li>
+<li>the <strong>conversation history</strong></li>
+<li>and the space <strong>reserved for the generated answer</strong></li>
+</ul>
+</li>
+<li>This is why retrieval is thresholded and top-k limited: adding more chunks is
+not free, and eventually crowds out the answer itself.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q10.5</b> ⭐ Traditional (vector) RAG vs Graph RAG. [3 marks]</summary>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th><strong>Traditional / Vector RAG</strong></th>
+  <th><strong>Graph RAG</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Store</td>
+  <td>vector database of text chunks</td>
+  <td><strong>knowledge graph</strong> of entities and relations</td>
+</tr>
+<tr>
+  <td>Retrieval</td>
+  <td><strong>semantic similarity</strong> to the query</td>
+  <td><strong>traversal</strong> of typed relationships</td>
+</tr>
+<tr>
+  <td>Strong on</td>
+  <td>&quot;find me passages about X&quot;</td>
+  <td><strong>multi-hop</strong> questions — &quot;who supervised the author of X?&quot;</td>
+</tr>
+<tr>
+  <td>Weak on</td>
+  <td>questions needing several linked facts; it returns similar text, not connected facts</td>
+  <td>fuzzy, unstructured, semantic queries</td>
+</tr>
+<tr>
+  <td>Explainability</td>
+  <td>returns a passage</td>
+  <td>returns an explicit <strong>path</strong> through the graph</td>
+</tr>
+<tr>
+  <td>Build cost</td>
+  <td>low — chunk and embed</td>
+  <td>high — entity/relation extraction and curation</td>
+</tr>
+</tbody>
+</table>
+<p>Many systems use <strong>both</strong>: the graph for structure, the vector store for
+free text.</p>
+</details>
+
+<details>
+<summary><b>Q10.6</b> What is Agentic RAG? [2 marks]</summary>
+
+<ul>
+<li>A framework in which the LLM acts as an <strong>agent</strong> that <em>decides</em> how to
+retrieve, rather than a passive generator handed a fixed set of chunks.</li>
+<li>Components: an <strong>LLM agent</strong> orchestrating reasoning; a set of <strong>tools</strong>
+(vector search, graph query, web search, calculators); <strong>memory</strong>; and a
+<strong>planning loop</strong>.</li>
+<li>The agent can <strong>reformulate</strong> the query, retrieve <strong>repeatedly</strong>, judge whether
+the evidence is sufficient, and only then answer.</li>
+<li>Better on complex multi-step questions; costs more calls and more latency.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q10.7</b> What is Multimodal RAG? [1 mark]</summary>
+
+<ul>
+<li>Ingestion handles more than text: documents such as PDFs are broken down with
+<strong>text extracted, images isolated, tables parsed</strong>, and each modality is
+embedded (often into a shared space).</li>
+<li>Retrieval can then return an image or a table as evidence, and a multimodal
+model reasons over text and images together.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q10.8</b> How is retrieval quality measured? Define precision and recall here. [2 marks]</summary>
+
+<ul>
+<li><strong>Precision</strong> = relevant chunks retrieved ÷ <strong>total chunks retrieved</strong>.
+&quot;Of what I showed the model, how much was useful?&quot; Low precision means
+<strong>contextual noise</strong>, which degrades generation quality and wastes the window.</li>
+<li><strong>Recall</strong> = relevant chunks retrieved ÷ <strong>total relevant chunks that exist</strong>.
+&quot;Of what was out there, how much did I find?&quot; Low recall means the answer may
+be missing entirely.</li>
+<li>Trade-off: lowering the similarity threshold raises recall and lowers
+precision. <code>F1 = 2PR / (P + R)</code> balances them.</details>
+
+</li>
+</ul>
+<hr />
+<hr />
+<h1 id="11--module-15--text-summarization">11 · Module 15 — Text Summarization</h1>
+<blockquote>
+<p><strong>Mar 2026 gave all 6 marks here to pure theory</strong> — classify three scenarios
+and justify. This is the single most likely place to be asked prose.</p>
+</blockquote>
+<details>
+<summary><b>Q11.1</b> ⭐ Extractive vs abstractive summarization. [2 marks]</summary>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th><strong>Extractive</strong></th>
+  <th><strong>Abstractive</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>How</td>
+  <td><strong>selects</strong> existing sentences from the source and concatenates them</td>
+  <td><strong>generates new</strong> sentences in its own words</td>
+</tr>
+<tr>
+  <td>Wording</td>
+  <td>verbatim from the document</td>
+  <td>may use words not in the document</td>
+</tr>
+<tr>
+  <td>Grammatical?</td>
+  <td>each sentence is, but the joins can be <strong>incoherent</strong> and pronouns may dangle</td>
+  <td>naturally fluent</td>
+</tr>
+<tr>
+  <td>Factual risk</td>
+  <td><strong>cannot hallucinate</strong> — every word came from the source</td>
+  <td><strong>can hallucinate</strong> facts</td>
+</tr>
+<tr>
+  <td>Difficulty</td>
+  <td>easier — a ranking problem</td>
+  <td>harder — a generation problem</td>
+</tr>
+<tr>
+  <td>Typical method</td>
+  <td>sentence scoring, MMR, graph ranking</td>
+  <td>seq2seq / transformer models</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><b>Q11.2</b> ⭐ Classify the types of summarization by input and by user need. [3 marks]</summary>
+
+<p><strong>By number of documents:</strong></p>
+<ul>
+<li><strong>Single-document</strong> — one document in, one summary out. Produces a headline,
+abstract or outline.</li>
+<li><strong>Multi-document</strong> — a set of documents on the same event. Must <strong>remove
+redundancy</strong> and <strong>resolve contradictions</strong> across sources. Used for news
+aggregation.</li>
+</ul>
+<p><strong>By user need:</strong></p>
+<ul>
+<li><strong>Generic</strong> — summarises the overall content, with <strong>no particular query</strong>.
+It ignores user intent by design.</li>
+<li><strong>Query-focused (topic-based)</strong> — tailored to a <strong>specific information need</strong>;
+effectively a form of <strong>complex question answering</strong>. It extracts only the
+parts relevant to the query and ignores the rest.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q11.3</b> ⭐ Scenario drill — name the summarization type for each. [3 marks]</summary>
+
+<p><em>This is the exact Mar 2026 Q7 format. Read the scenario, and ask two questions:
+<strong>how many documents?</strong> and <strong>is there a query?</strong></em></p>
+<table>
+<thead>
+<tr>
+  <th>Scenario</th>
+  <th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>A journalist uploads <strong>one long report</strong> and wants a <strong>headline and a short abstract</strong></td>
+  <td><strong>Single-document, generic</strong></td>
+</tr>
+<tr>
+  <td>An analyst gives <strong>15 articles about the same summit</strong> and wants one overview</td>
+  <td><strong>Multi-document</strong></td>
+</tr>
+<tr>
+  <td>A researcher asks <em>&quot;summarise the sections about <strong>economic impact</strong>&quot;</em></td>
+  <td><strong>Query-focused</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>And the follow-up you will be asked:</strong> <em>why won't one approach do for all
+three?</em> — because the scenarios differ in <strong>input structure</strong> (one vs many
+documents), <strong>user intent</strong> (no query vs an explicit query), and <strong>output
+requirement</strong> (headline vs gist vs targeted answer). Generic summarization
+ignores intent; query-focused summarization requires a query to exist;
+multi-document summarization must additionally manage redundancy and
+contradiction across sources.</p>
+</details>
+
+<details>
+<summary><b>Q11.4</b> ⭐ What is MMR and what problem does it solve? [2 marks]</summary>
+
+<ul>
+<li><strong>Maximal Marginal Relevance.</strong> A greedy sentence-selection criterion that
+balances <strong>relevance to the query</strong> against <strong>redundancy with what has already
+been selected</strong>.</li>
+<li><code>MMR(s) = λ · sim(s, q) − (1 − λ) · sim(s, S)</code>
+where <code>q</code> is the query/topic and <code>S</code> is the set already chosen.</li>
+<li><strong>Problem solved:</strong> picking sentences purely by relevance selects the <strong>same
+fact restated</strong> several times. The second term <strong>penalises</strong> a sentence for
+resembling the summary so far.</li>
+<li><strong>λ = 1</strong> → pure relevance, maximum redundancy. <strong>λ = 0</strong> → pure novelty,
+possibly off-topic. In between, a diverse <em>and</em> relevant summary.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q11.5</b> How do you justify an MMR selection in words? [2 marks]</summary>
+
+<p><em>Marks are given for the reasoning, not the arithmetic. The template:</em></p>
+<blockquote>
+<p>Although <strong>S2</strong> is more relevant to the topic (higher <code>sim(s,q)</code>), it is highly
+similar to the sentence already selected, so it is <strong>redundant</strong> and its
+<code>sim(s,S)</code> penalty is large. <strong>S1</strong> contributes <strong>new, complementary
+information</strong> and therefore scores higher under MMR. MMR deliberately trades a
+little relevance for <strong>coverage and diversity</strong>, which is what makes a summary
+informative rather than repetitive.</p>
+</blockquote>
+<p>Always name <strong>both</strong> halves — relevance <em>and</em> redundancy — and say which one
+decided the outcome.</p>
+</details>
+
+<details>
+<summary><b>Q11.6</b> What is ROUGE and what are its limitations? [2 marks]</summary>
+
+<ul>
+<li><strong>ROUGE</strong> — Recall-Oriented Understudy for Gisting Evaluation. It measures
+<strong>n-gram overlap between a generated summary and one or more human reference
+summaries</strong>.</li>
+<li><strong>ROUGE-N</strong> — overlap of n-grams (ROUGE-1 unigrams, ROUGE-2 bigrams).
+<strong>ROUGE-L</strong> — longest common subsequence, which rewards word order.</li>
+<li>Mainly <strong>recall-oriented</strong>: how much of the reference the summary covers.</li>
+<li><strong>Limitations:</strong> it rewards <strong>surface overlap</strong>, so a correct paraphrase scores
+badly and a fluent nonsense summary made of reference words scores well. It
+ignores <strong>factuality, coherence and readability</strong>, and depends heavily on which
+reference summaries you happen to have.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q11.7</b> Name three applications of summarization. [1.5 marks]</summary>
+
+<ul>
+<li><strong>News aggregation</strong> — one overview from many outlets covering an event.</li>
+<li><strong>Headline and snippet generation</strong> — for publishing and search results.</li>
+<li><strong>Meeting, email and report digests</strong>; <strong>scientific abstract generation</strong>;
+<strong>legal and medical document review</strong>, where the volume makes full reading
+impossible.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>Q11.8</b> What are the standard stages of an extractive summarizer? [2 marks]</summary>
+
+<ol>
+<li><strong>Content selection</strong> — score every sentence for importance (position, cue
+phrases, topic-word overlap, centrality) and choose the best ones.</li>
+<li><strong>Information ordering</strong> — arrange the selected sentences into a coherent
+sequence, usually by original document order for a single document.</li>
+<li><strong>Sentence realisation</strong> — clean up: compress the sentences, fix dangling
+pronouns and broken references so the summary reads as text rather than a
+list.</li>
+</ol>
+<p>MMR sits inside <strong>stage 1</strong>, adding the anti-redundancy term to the score.</p>
+</details>
+
+</div>
+<script>
+var wasOpen = [];
+function openAll(){
+  wasOpen = [];
+  document.querySelectorAll("details").forEach(function(d,i){
+    wasOpen[i] = d.open; d.open = true;
+  });
+}
+function restoreAll(){
+  document.querySelectorAll("details").forEach(function(d,i){ d.open = wasOpen[i]; });
+}
+window.addEventListener("beforeprint", openAll);
+window.addEventListener("afterprint", restoreAll);
+
+function doPrint(){ openAll(); window.print(); }
+function toggleAll(){
+  var ds = document.querySelectorAll("details");
+  var anyClosed = Array.prototype.some.call(ds, function(d){ return !d.open; });
+  ds.forEach(function(d){ d.open = anyClosed; });
+  document.getElementById("tgl").textContent = anyClosed ? "Hide all answers" : "Show all answers";
+}
+
+var out = "";
+document.querySelectorAll(".wrap h1, .wrap h2").forEach(function(h){
+  if(!h.id) return;
+  out += '<a class="' + h.tagName.toLowerCase() + '" href="#' + h.id + '">' +
+         h.textContent.replace(/^[0-9]+[.]\s*/, "") + "</a>";
+});
+document.getElementById("toclinks").innerHTML = out;
+</script>
+</body></html>

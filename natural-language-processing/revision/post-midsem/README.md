@@ -3,6 +3,13 @@
 **AIMLCLZG525 · End-Semester Test · Open Book · 40 marks · 2.5 hours**
 **Q3–Q7 are all post-midsem = 30 of 40 marks = 75% of the paper.**
 
+> ### ⚠️ This pack drills the numericals. It is not the whole paper.
+> The official question-paper structure marks Modules **10, 11, 12, 14 and 15**
+> as *"Problem **and/or Theory**"* and Module **13** as *Application / Case
+> study* — no numerical exists there at all. Mar 2026 answered **two entire
+> 6-mark questions with zero arithmetic**.
+> Pair this pack with **[`../scheme-drill/THEORY-BANK.md`](../scheme-drill/THEORY-BANK.md)**.
+
 ## Three files, in this order
 
 | # | File | What it is | What you do |
@@ -10,6 +17,7 @@
 | **1** | 🧠 **`CHEATSHEET`** (16 pp) | **Learn the theory here.** One page per chapter: what it's for, the words defined, the recipe, a tiny example, the trap | **READ first** — 5 min per chapter |
 | **2** | 📝 **`PRACTICE-PAPER`** (29 pp) | 3 mock sets of Q3–Q7 in exact exam format, fresh numbers | **DO this** — 45 min per set |
 | **3** | 📘 **`SOLVED-NUMERICALS`** (47 pp) | Every **real past-paper** question worked in full | **LOOK UP** when stuck |
+| **4** | ✏️ **`MARGIN-NOTES`** | **What to pencil into the printed handout, page by page.** Keyed to `notes/NLP_Handout_Part2_Sessions_9-end (3).pdf` | **COPY** into the margins the night before |
 
 Each exists as `.pdf` (print) and `.html` (screen, dark, answers hidden until
 you click) plus the `.md` source.

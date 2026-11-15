@@ -11,6 +11,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 FILES = [
+    ("MARGIN-NOTES.md",       "NLP Pre-Midsem — Pencil Margin Notes"),
     ("CHEATSHEET.md",        "NLP Pre-Midsem — Cheat Sheet (Q1 & Q2)"),
     ("SOLVED-NUMERICALS.md", "NLP Pre-Midsem — Every Q1 & Q2 Solved"),
 ]

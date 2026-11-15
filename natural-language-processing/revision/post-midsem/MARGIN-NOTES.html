@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLP Post-Midsem — Pencil Margin Notes</title>
+<style>
+:root{--bg:#0e1117;--panel:#161b26;--panel2:#1d2432;--line:#2b3446;--ink:#e6edf7;
+      --dim:#93a1b8;--accent:#5aa9ff;--good:#3ddc97;--warn:#ffb454;--bad:#ff6b6b;--violet:#b78cff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 22px 120px}
+h1{font-size:31px;margin:38px 0 10px;letter-spacing:-.4px;padding-bottom:10px;
+   border-bottom:2px solid var(--accent)}
+h2{font-size:23px;margin:40px 0 12px;padding-top:16px;border-top:1px solid var(--line);color:#cfe3ff}
+h3{font-size:17px;margin:24px 0 8px;color:var(--accent)}
+p{margin:12px 0}
+a{color:var(--accent)}
+code{background:var(--panel2);padding:2px 6px;border-radius:4px;font-size:14px;
+     font-family:ui-monospace,Consolas,monospace;color:#ffd9a0}
+pre{background:#0a0e15;border:1px solid var(--line);border-radius:10px;padding:16px;
+    overflow-x:auto;line-height:1.65}
+pre code{background:none;padding:0;color:#c8d6e8;font-size:13.5px}
+table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14.5px;
+      display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:#b9c8dd;font-weight:600}
+tr:nth-child(even) td{background:#121724}
+blockquote{border-left:3px solid var(--warn);background:#1b1a14;margin:16px 0;
+           padding:12px 18px;border-radius:0 10px 10px 0}
+blockquote p{margin:8px 0}
+blockquote strong{color:var(--warn)}
+hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+ul,ol{padding-left:26px}
+li{margin:5px 0}
+details{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+        padding:12px 16px;margin:14px 0}
+details[open]{border-color:var(--good);background:#111d19}
+summary{cursor:pointer;font-weight:600;color:var(--good);outline:none}
+summary:hover{color:#7ff0bd}
+strong{color:#fff}
+#toc{position:fixed;top:0;right:0;width:250px;height:100vh;overflow-y:auto;
+     background:var(--panel);border-left:1px solid var(--line);padding:20px 16px;font-size:13px}
+#toc b{display:block;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;
+       font-size:11px;margin-bottom:10px}
+#toc a{display:block;padding:5px 8px;border-radius:6px;text-decoration:none;color:#a9bdd6}
+#toc a:hover{background:var(--panel2);color:var(--accent)}
+#toc a.h1{font-weight:700;color:var(--ink);margin-top:8px}
+#toc a.h2{padding-left:18px;font-size:12.5px}
+#bar{position:fixed;top:14px;left:14px;z-index:99;display:flex;gap:8px}
+#bar button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+  border-radius:8px;padding:8px 14px;cursor:pointer;font:600 13px inherit}
+#bar button:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:1400px){#toc{display:none}}
+
+/* ---------- PRINT / PDF ---------- */
+@media print{
+  #toc,#bar{display:none!important}
+  body{background:#fff;color:#111;font-size:10.5pt}
+  .wrap{max-width:100%;padding:0}
+  h1{font-size:19pt;color:#000;border-bottom:2px solid #333;page-break-after:avoid;
+     page-break-before:always;margin-top:0}
+  h1:first-of-type{page-break-before:avoid}
+  h2{font-size:14pt;color:#000;border-top:1px solid #999;page-break-after:avoid}
+  h3{font-size:11.5pt;color:#1a4d80;page-break-after:avoid}
+  a{color:#1a4d80;text-decoration:none}
+  code{background:#eef1f5;color:#7a3d00;border:1px solid #dde3ea}
+  pre{background:#f6f8fa;border:1px solid #c9d1d9;color:#111;page-break-inside:avoid;
+      font-size:9pt;line-height:1.45}
+  pre code{color:#111;font-size:9pt}
+  table{font-size:9pt;display:table;page-break-inside:avoid}
+  th{background:#e8edf3!important;color:#000}
+  td{background:#fff!important}
+  tr:nth-child(even) td{background:#f7f9fb!important}
+  th,td{border:1px solid #b6c0cc;padding:5px 7px}
+  blockquote{background:#fffdf3;border-left:3px solid #d19a20;color:#111;
+             page-break-inside:avoid}
+  blockquote strong{color:#8a5a00}
+  strong{color:#000}
+  details{background:#f4faf7;border:1px solid #b9d9c9;page-break-inside:avoid}
+  details[open]{background:#f4faf7}
+  summary{color:#14663f}
+  hr{border-top:1px solid #bbb}
+  ul,ol{padding-left:20px}
+}
+@page{size:A4;margin:14mm 12mm}
+</style></head>
+<body>
+<div id="bar">
+  <button onclick="doPrint()">&#128424; Print / Save as PDF</button>
+  <button id="tgl" onclick="toggleAll()">Show all answers</button>
+</div>
+<nav id="toc"><b>Jump to</b><div id="toclinks"></div></nav>
+<div class="wrap"><h1 id="pencil-margin-notes--post-midsem">Pencil Margin Notes — Post-Midsem</h1>
+<p><strong>What this is:</strong> what to pencil into the corner of your printed handout, page by
+page. Every entry now has three parts, so you can <em>recognise</em> the question, not
+just recall a formula:</p>
+<pre><code>RECIPE    the steps
+Q ASKED   the real past-paper question, compressed  (with which paper it came from)
+A         the worked answer, short enough to fit in a margin
+</code></pre>
+<p><strong>Which document the page numbers refer to:</strong>
+<code>notes/NLP_Handout_Part2_Sessions_9-end (3).pdf</code> — 118 pages, Sessions 9 → 15.
+Page numbers are <strong>PDF page numbers</strong> (page 1 = title page). Each heading names
+the slide title on that page so you can confirm you're on the right sheet.</p>
+<p>Sources: Feb 2026 regular, Mar 2026 makeup, Oct 2024 regular, one undated regular
+paper — all in <code>notes/question papers/</code>.</p>
+<p>⭐ = a numerical has actually been set from this page.</p>
+<hr />
+<h2 id="first-the-inside-front-cover">First: the inside front cover</h2>
+<pre><code> Q3  Parsing / Dependency ...... p4, p9, p12, p33
+ Q4  Attention (EASIEST) ....... p43, p45, p46, p49
+ Q5  WordNet / WSD ............. p66, p67
+ Q6  Semantic Web + RAG ........ p82, p85, p97
+ Q7  Summarization ............. p112, p118
+
+ ORDER TO ATTEMPT:  Q4 -&gt; Q7 -&gt; Q6 -&gt; Q5 -&gt; Q3
+
+ 5 THINGS THAT COST MARKS
+ 1. Cosine: DIVIDE by both lengths (biggest dot product is a trap)
+ 2. RAG chunks: round DOWN (floor) — BOTH times
+ 3. MMR: do the arithmetic, the more relevant one usually LOSES
+ 4. Top-down parse: SHOW the failure and the pop
+ 5. Dependency: 1 head/word, nothing into ROOT, all reach ROOT
+</code></pre>
+<hr />
+<h1 id="session-9--parsing-handout-p121">Session 9 — Parsing (handout p1–21)</h1>
+<h3 id="-p4--top-down-parsing-deck-slides-1618">⭐ p4 — &quot;Top down Parsing&quot; (deck slides 16–18)</h3>
+<pre><code>RECIPE   STATE = ((symbols still to find) position)
+  1 leftmost is a CATEGORY -&gt; expand; 2 rules fit? take one,
+    PUT THE OTHER IN BACKUP
+  2 leftmost MATCHES the word -&gt; delete it, position + 1
+  3 does NOT match -&gt; KILL the state, POP the backup
+  4 nothing left -&gt; parsed
+  THE MARKS ARE IN THE FAIL + POP.
+
+Q ASKED (undated paper Q3, 6m; same in Oct 2024)
+  &quot;The flying fish jumped out of the water&quot; — using depth-first
+  top-down parsing show the steps only until &quot;The flying fish&quot;
+  is parsed, one line of explanation per step.
+  Grammar: NP -&gt; Det N   |   NP -&gt; Det Adj N
+
+A   Step State              Backup            Why
+    1  ((S) 1)                                start
+    2  ((NP VP) 1)                            S -&gt; NP VP
+    3  ((Det N VP) 1)     ((Det Adj N VP) 1)  took rule 2, SAVED rule 3
+    4  ((N VP) 2)         &quot;                   'the' = Det, advance
+    5  FAIL                                   'flying' is NOT an N
+    6  ((Det Adj N VP) 1)                     POP THE BACKUP
+    7  ((Adj N VP) 2)                         'the' = Det
+    8  ((N VP) 3)                             'flying' = Adj
+    9  ((VP) 4)                               'fish' = N -&gt; DONE
+</code></pre>
+<h3 id="p5p6--bottom-up-parsing--chart-parsing-slides-1924">p5–p6 — &quot;Bottom up parsing&quot; / &quot;Chart Parsing&quot; (slides 19–24)</h3>
+<pre><code>RECIPE  chart = store partial matches so work is not redone
+        ACTIVE ARC = rule matched so far, dot shows how far
+        NP -&gt; ART . N   means ART found, still need an N
+        complete arc (dot at the end) -&gt; add that constituent to the chart
+</code></pre>
+<h3 id="-p9--formal-definition-of-a-pcfg-slides-3536">⭐ p9 — &quot;Formal Definition of a PCFG&quot; (slides 35–36)</h3>
+<pre><code>RECIPE  P(tree)     = MULTIPLY P(rule) for EVERY rule in the tree
+        P(sentence) = ADD the probabilities of all its trees
+        all rules sharing a left-hand side must sum to 1
+        higher-probability parse is the one the PCFG selects
+</code></pre>
+<h3 id="-p12p13--parsing-with-a-pcfg--astronomers-saw-stars-slides-4753">⭐ p12–p13 — &quot;Parsing with a PCFG&quot; / &quot;astronomers saw stars&quot; (slides 47–53)</h3>
+<pre><code>RECIPE  PP-ATTACHMENT: the two parses differ in EXACTLY ONE rule
+        VP -&gt; VP PP  = the tool was USED to do the verb (instrumental)
+        NP -&gt; NP PP  = the noun HAS the thing (attributive)
+        compare just those two probabilities -&gt; the bigger one wins;
+        then multiply the whole tree out to show working.
+
+Q ASKED (Mar 2026 makeup Q3, 6m)
+  &quot;The chef poked the cake with the fork.&quot;
+  Given: S-&gt;NP VP 1.0 | NP-&gt;Det N 0.3 | VP-&gt;V NP 0.7 | PP-&gt;P NP 1.0
+         NP-&gt;NP PP 0.4 | VP-&gt;VP PP 0.3 | Det-&gt;the 1.0
+         N-&gt;chef 0.4, cake 0.3, fork 0.3 | V-&gt;poked 1.0 | P-&gt;with 1.0
+  (a) draw both parses (b) compute both probabilities (c) which is chosen?
+
+A  Parse 1 VP-attachment (fork = the tool used to poke):
+     1.0 x (0.3x0.4) x [0.3 x (0.7x0.3x0.3) x (1.0x0.3x0.3)]
+     = 0.00020412
+   Parse 2 NP-attachment (the cake has a fork in it):
+     1.0 x (0.3x0.4) x [0.7 x (0.4 x (0.3x0.3) x (1.0x0.3x0.3))]
+     = 0.00027216
+   =&gt; PARSE 2 (NP attachment) wins, 0.000272 &gt; 0.000204
+   WHY: everything cancels except NP-&gt;NP PP (0.4) vs VP-&gt;VP PP (0.3)
+</code></pre>
+<h3 id="-p17p19--probabilistic-cyk-tables-slides-6677">⭐ p17–p19 — &quot;Probabilistic CYK&quot; tables (slides 66–77)</h3>
+<pre><code>RECIPE  cell[i,j] = P(rule) x P(left cell) x P(right cell)
+        fill the diagonal first (lexical), then work upward
+        answer = the S entry in the top-right cell
+        needs CNF: every RHS = 2 non-terminals OR 1 terminal
+
+Q ASKED (from the slide itself — &quot;The flight includes a meal&quot;)
+  Grammar S-&gt;NP VP .80 | NP-&gt;Det N .30 | VP-&gt;V NP .20
+          V-&gt;includes .05 | Det-&gt;the .4 | Det-&gt;a .4
+          N-&gt;meal .01 | N-&gt;flight .02
+
+A  NP[0,2] = P(Det-&gt;the) x P(N-&gt;flight) x P(NP-&gt;Det N)
+           = 0.4 x 0.02 x 0.30 = 0.0024
+   NP[3,5] = 0.4 x 0.01 x 0.30 = 0.0012
+   VP[2,5] = P(V) x NP[3,5] x P(VP-&gt;V NP)
+           = 0.05 x 0.0012 x 0.20 = 0.000012
+   S[0,5]  = NP[0,2] x VP[2,5] x 0.80
+           = 0.0024 x 0.000012 x 0.80 = 2.304e-8
+</code></pre>
+<h3 id="p16--converting-a-cfg-to-cnf-slides-6265">p16 — &quot;Converting a CFG to CNF&quot; (slides 62–65)</h3>
+<pre><code>RECIPE  3 fixes:  mixed terminal + NT -&gt; dummy NT (Det -&gt; the)
+                  unit production      -&gt; splice it through
+                  RHS longer than 2    -&gt; chain new non-terminals
+</code></pre>
+<h3 id="p20p21--evaluating-parsers-slides-7983">p20–p21 — &quot;Evaluating Parsers&quot; (slides 79–83)</h3>
+<pre><code>RECIPE  P  = correct constituents / constituents in MY parse
+        R  = correct constituents / constituents in the GOLD parse
+        F1 = 2PR / (P+R)
+A eg    my parse 8 constituents, gold 10, 6 correct
+        P = 6/8 = 0.75 ; R = 6/10 = 0.6
+        F1 = 2(0.75)(0.6)/(0.75+0.6) = 0.9/1.35 = 0.667
+</code></pre>
+<hr />
+<h1 id="session-10--dependency-parsing-handout-p2238">Session 10 — Dependency Parsing (handout p22–38)</h1>
+<p><em>(file says &quot;Session 10&quot;, the title slide inside says &quot;Session 11&quot; — same deck)</em></p>
+<h3 id="-p22--title-slide-dependency-parsing-slide-2">⭐ p22 — title slide &quot;Dependency Parsing&quot; (slide 2)</h3>
+<pre><code>RECIPE  3 RULES — check EVERY answer against these
+  1 every word has EXACTLY ONE head
+  2 no cycles
+  3 everything reaches ROOT; nothing points INTO ROOT
+</code></pre>
+<h3 id="p23--dependencies-also-resolve-ambiguity-slides-56">p23 — &quot;Dependencies Also Resolve Ambiguity&quot; (slides 5–6)</h3>
+<pre><code>Q ASKED (Oct 2024 Q4a, 3m) &quot;Compare the two parsing approaches&quot;
+
+A  CONSTITUENCY            vs   DEPENDENCY
+   nested phrases               word -&gt; word arrows
+   words only at the leaves     no phrase nodes at all
+   fixed word order (English)   FREE word order (Hindi, Czech)
+   CKY / chart / PCFG           arc-eager, Chu-Liu-Edmonds
+   grammar checking             relation extraction, QA, MT
+</code></pre>
+<h3 id="p24--dependency-graph--formal-conditions-slides-1011">p24 — &quot;Dependency graph&quot; / &quot;Formal conditions&quot; (slides 10–11)</h3>
+<pre><code>RECIPE  head = the boss word, dependent = hangs off it
+        single head + connected + acyclic (+ projective)
+Q ASKED (Oct 2024 Q4b, undated Q4b, 3m)
+  &quot;Draw the constituency AND dependency parse tree for
+   'The desert became very hot'&quot;
+A  DEPENDENCY: ROOT-&gt;became ; became-&gt;desert(nsubj) ; desert-&gt;The(det)
+               became-&gt;hot(xcomp) ; hot-&gt;very(advmod)
+   CONSTITUENCY: (S (NP (Det The)(N desert))
+                    (VP (V became) (AP (Adv very)(Adj hot))))
+</code></pre>
+<h3 id="-p26--arc-eager-parsing-malt-parser-slides-1828">⭐ p26 — &quot;Arc eager parsing (Malt parser)&quot; (slides 18–28)</h3>
+<pre><code>RECIPE  config = ( Stack , Buffer , Arcs )
+  SHIFT      move the front buffer word onto the stack
+  LEFT-ARC   the BUFFER word is the head of the stack top, then pop
+  RIGHT-ARC  the STACK top is the head of the buffer word, then push
+  REDUCE     pop the stack top — only if it ALREADY has a head
+  stop when the buffer is empty
+
+Q ASKED  &quot;Trace arc-eager parsing for 'He likes records'&quot;
+
+A  Step Transition        Stack               Buffer            Arc
+   0  init                [ROOT]              [He,likes,records]
+   1  SHIFT               [ROOT,He]           [likes,records]
+   2  LEFT-ARC(nsubj)     [ROOT]              [likes,records]   likes-&gt;He
+   3  RIGHT-ARC(root)     [ROOT,likes]        [records]         ROOT-&gt;likes
+   4  RIGHT-ARC(dobj)     [ROOT,likes,records][]                likes-&gt;records
+   5  REDUCE              [ROOT,likes]        []
+   6  REDUCE              [ROOT]              []
+   TRAP: in LEFT-ARC the head is the BUFFER word, not the stack word.
+</code></pre>
+<h3 id="-p33--chu-liu-edmonds-algorithm-slide-46">⭐ p33 — &quot;Chu-Liu-Edmonds algorithm&quot; (slide 46)</h3>
+<pre><code>RECIPE
+  STEP 1  each word (not ROOT): keep only its BEST incoming arc
+  STEP 2  no cycle -&gt; that IS the answer, stop
+  STEP 3  cycle -&gt; for each arc entering the cycle from outside:
+          new score = its score - (score of the arc it would replace)
+  STEP 4  take the biggest; DELETE the cycle arc pointing at that node,
+          KEEP the other cycle arc. Any word still headless takes its best.
+
+Q ASKED (Feb 2026 Q3, 6m)  &quot;He likes records&quot;, R=ROOT A=He B=likes C=records
+  R-&gt;A 4 | R-&gt;B 8 | R-&gt;C 2 | A-&gt;B 3 | B-&gt;A 6 | C-&gt;A 1 | B-&gt;C 7 | C-&gt;B 9
+
+A  STEP 1  into A: 4, 6, 1  -&gt; B-&gt;A (6)
+           into B: 8, 3, 9  -&gt; C-&gt;B (9)
+           into C: 2, 7     -&gt; B-&gt;C (7)
+   STEP 2  CYCLE  B -&gt; C -&gt; B
+   STEP 3  enter at B: R-&gt;B  8 - 9 = -1   (would replace C-&gt;B)
+           enter at C: R-&gt;C  2 - 7 = -5   (would replace B-&gt;C)
+           from A:     A-&gt;B  3 - 9 = -6
+           best entry = R-&gt;B
+   STEP 4  break C-&gt;B (the cycle arc into B); keep B-&gt;C; A keeps B-&gt;A
+   ANSWER  ROOT-&gt;likes 8 , likes-&gt;records 7 , likes-&gt;He 6   TOTAL = 21
+   check: one head each, nothing into ROOT, all reach ROOT
+</code></pre>
+<hr />
+<h1 id="session-11--contextual-embeddings--attention-handout-p3954">Session 11 — Contextual Embeddings &amp; Attention (handout p39–54)</h1>
+<blockquote>
+<p><strong>The easiest 6 marks in the paper.</strong> Annotate this session properly.</p>
+</blockquote>
+<h3 id="-p39--session-content-issues-with-recurrent-models">⭐ p39 — session content, &quot;Issues with recurrent models&quot;</h3>
+<pre><code>THEORY (usually 3 of the 6 marks — write these sentences)
+  STATIC (Word2Vec) = ONE vector per word forever
+    -&gt; CANNOT handle polysemy; river bank and money bank share a vector
+  CONTEXTUAL (BERT) = a DIFFERENT vector per sentence, computed
+    from the neighbours using ATTENTION
+  Why it matters: word sense disambiguation, better semantic
+  relationships, better downstream task performance
+</code></pre>
+<h3 id="p40p41--encoder-decoder-architecture">p40–p41 — &quot;Encoder-Decoder architecture&quot;</h3>
+<pre><code>RECIPE  encoder x1..xn -&gt; h1..hn ; ONE fixed context vector c
+        that single c is the BOTTLENECK -&gt; which is WHY attention exists
+</code></pre>
+<h3 id="-p42p43--attention-">⭐ p42–p43 — &quot;Attention !&quot;</h3>
+<pre><code>RECIPE  alpha = softmax(scores)  -&gt;  ALWAYS SUMS TO 1
+        output = SUM( alpha_i x v_i )   = weighted average of the values
+
+Q ASKED (Feb 2026 Q4c, 3m)
+  &quot;The cat sat&quot;. Attention weights for 'cat' = [0.2, 0.5, 0.3] over
+  (the, cat, sat). v_the=[1,0], v_cat=[1,1], v_sat=[0,1].
+  Compute the contextual embedding of 'cat'.
+
+A  = 0.2[1,0] + 0.5[1,1] + 0.3[0,1]
+   = [0.2,0] + [0.5,0.5] + [0,0.3]
+   = [0.7, 0.8]
+   check: 0.2+0.5+0.3 = 1.0  ✓
+</code></pre>
+<h3 id="-p45--query--key--value">⭐ p45 — Query / Key / Value</h3>
+<pre><code>RECIPE  Q = X.Wq   K = X.Wk   V = X.Wv
+        Attention = softmax( Q.K^T / sqrt(d_k) + MASK ) . V
+        Q = the word asking; K = the words compared against;
+        V = the content actually averaged
+        sqrt(d_k) stops big scores saturating softmax
+        MASK: future positions -&gt; -infinity -&gt; 0 after softmax
+</code></pre>
+<h3 id="-p46--the-worked-attention-score-slide">⭐ p46 — the worked attention-score slide</h3>
+<pre><code>Q ASKED (Oct 2024 Q6b, 4m) — the hardest version
+  &quot;Stay Curious&quot;, both embeddings = [1 1].
+  Wq=[[1,0],[0,2]]  Wk=[[0,2],[1,0]]  Wv=[[2,3],[3,2]]
+  d_k = 2, given exp(3.54)=34.31. Show scaling, masking, softmax.
+
+A  1 X = [[1,1],[1,1]]
+   2 Q = [[1,2],[1,2]]   K = [[1,2],[1,2]]   V = [[5,5],[5,5]]
+   3 Q.K^T = [[5,5],[5,5]]
+   4 scale /sqrt2 = 5/1.414 = 3.54  -&gt; [[3.54,3.54],[3.54,3.54]]
+   5 mask row 1 -&gt; [[3.54, -inf],[3.54, 3.54]]
+   6 softmax row1 = [1.00, 0.00] ; row2 = [0.50, 0.50]
+   7 x V -&gt; row1 = [5,5] ; row2 = [5,5]     Output = [[5,5],[5,5]]
+   SAY THIS: both inputs are the same vector, so every value vector
+   is [5,5] and any weighted average of identical vectors is itself.
+</code></pre>
+<h3 id="p47p48--position-encoding">p47–p48 — position encoding</h3>
+<pre><code>RECIPE  self-attention is UNORDERED -&gt; add POSITION ENCODING
+        without it &quot;dog bites man&quot; = &quot;man bites dog&quot;
+</code></pre>
+<h3 id="-p49--several-attention-layers-run-in-parallel">⭐ p49 — &quot;Several attention layers run in parallel&quot;</h3>
+<pre><code>RECIPE  MultiHead = Concat(head_1..head_h) x W_O
+
+Q ASKED (Mar 2026 Q4, 6m)
+  head_1 = [0.7, 0.8], head_2 = [0.6, 0.9]
+  W_O (4x2) = [0.5,0.3 / 0.2,0.4 / 0.1,0.6 / 0.3,0.2]
+  (b) concatenate (c) project through W_O (d) what does each head do?
+
+A  (b) Concat = [0.7, 0.8, 0.6, 0.9]
+       2 heads x 2 dims = 4 numbers =&gt; W_O must have 4 ROWS (free mark)
+   (c) [1x4] x [4x2] = [1x2]
+       c1 = .7(.5)+.8(.2)+.6(.1)+.9(.3) = .35+.16+.06+.27 = 0.84
+       c2 = .7(.3)+.8(.4)+.6(.6)+.9(.2) = .21+.32+.36+.18 = 1.07
+       OUTPUT = [0.84, 1.07]
+   (d) head weights [.1,.2,.7] -&gt; peaks on the VERB   = syntactic role
+       head weights [.5,.3,.2] -&gt; peaks on 'the'      = grammatical structure
+       WHY MANY HEADS: different representation subspaces, different
+       relation types, diverse patterns, more capacity, cheap in parallel
+</code></pre>
+<h3 id="p50p51--subword-tokenization--bpe">p50–p51 — subword tokenization / BPE</h3>
+<pre><code>RECIPE  BPE: start from characters, repeatedly MERGE the most frequent
+        adjacent pair, add the merged token to the vocabulary
+        eg corpus hug/pug/pun/bun/hugs -&gt; &quot;ug&quot; is the most frequent pair
+        -&gt; merge it first. Handles rare and unseen words.
+</code></pre>
+<h3 id="p52p54--pretrain--finetune-bert">p52–p54 — pretrain / finetune, BERT</h3>
+<pre><code>RECIPE  BERT = encoder-only, bidirectional
+        task 1 MLM: mask 15% of tokens and predict them
+        task 2 NSP: is sentence B really the next sentence?
+        base = 12 layers / 768 dim / 12 heads / 110M params
+        pretrain = generic + huge data ; finetune = your task, small data
+</code></pre>
+<hr />
+<h1 id="session-12--wordnet--wsd-handout-p5568">Session 12 — WordNet &amp; WSD (handout p55–68)</h1>
+<h3 id="-p55--title-slide-wsd-and-wordnet-slide-2">⭐ p55 — title slide &quot;WSD and WordNet&quot; (slide 2)</h3>
+<pre><code>RECIPE  HOMONYMY = same form, UNRELATED meanings   (bat stick / bat animal)
+        POLYSEMY = same word, RELATED meanings     (bank building / company)
+        test: are the two meanings historically connected? yes -&gt; polysemy
+</code></pre>
+<h3 id="p56p57--homonymy--synonyms-slides-612">p56–p57 — &quot;Homonymy&quot; / &quot;Synonyms&quot; (slides 6–12)</h3>
+<pre><code>RECIPE  synonym  same meaning              couch / sofa
+        antonym  opposite on ONE feature   hot / cold
+        HYPOnym  more specific   car       (&quot;hypO = lOwer&quot;)
+        HYPERnym more general    vehicle
+</code></pre>
+<h3 id="p58p59--wordnet-slides-1419">p58–p59 — &quot;WordNet&quot; (slides 14–19)</h3>
+<pre><code>RECIPE  WordNet = hierarchical lexical database of these relations
+        SYNSET = a set of synonyms = one concept / one sense
+        GLOSS  = the definition text of a sense
+        senses listed MOST FREQUENT FIRST -&gt; sense 1 is the baseline
+</code></pre>
+<h3 id="p62--most-frequent-sense-slide-31">p62 — &quot;most frequent sense&quot; (slide 31)</h3>
+<pre><code>RECIPE  strongest simple WSD baseline = MOST FREQUENT SENSE
+        = WordNet sense number 1
+</code></pre>
+<h3 id="p63p65--features--bag-of-words-slides-3443">p63–p65 — features / bag of words (slides 34–43)</h3>
+<pre><code>RECIPE  COLLOCATIONAL = words at SPECIFIC positions (+/-2), with POS
+        BAG-OF-WORDS  = counts anywhere in the window, position ignored
+</code></pre>
+<h3 id="-p66--naive-bayes--nearest-neighbour-wsd-slides-4548">⭐ p66 — Naive Bayes / nearest-neighbour WSD (slides 45–48)</h3>
+<pre><code>RECIPE  cos(a,b) = dot(a,b) / ( |a| x |b| )
+        |[2,6,2]| = sqrt(4+36+4) = sqrt(44) = 6.633
+
+Q ASKED (Oct 2024 Q6a, 2m)
+  Target contextual embedding = [2, 6, 2]. Senses of 'bank':
+  N1 financial [1,4,1] | N2 sloping land [2,8,1]
+  V1 tip laterally [4,7,3] | V3 do business [3,3,3]   Which sense?
+
+A  sense  dot            |v|            cosine
+   N1     2+24+2  = 28   sqrt18 = 4.243  28/(6.633x4.243) = 0.9949  &lt;- WINS
+   N2     4+48+2  = 54   sqrt69 = 8.307  54/(6.633x8.307) = 0.9800
+   V1     8+42+6  = 56   sqrt74 = 8.602  56/(6.633x8.602) = 0.9814
+   V3     6+18+6  = 30   sqrt27 = 5.196  30/(6.633x5.196) = 0.8704
+   ANSWER bank_N1, financial institution
+
+   TRAP: N2 has the BIGGEST dot product (54) and is WRONG.
+   The dot product favours long vectors. DIVIDE BY BOTH LENGTHS.
+</code></pre>
+<h3 id="-p67--lesk-algorithm-example-slides-5052">⭐ p67 — &quot;Lesk Algorithm Example&quot; (slides 50–52)</h3>
+<pre><code>RECIPE  1 CONTEXT = content words of the sentence (drop target + stop words)
+        2 for each sense take its GLOSS (+ usage examples if given)
+        3 OVERLAP = how many words appear in BOTH
+        4 highest overlap wins — and write out WHICH words matched
+        knowledge-based: needs NO labelled training data
+
+Q ASKED (Feb 2026 Q5, 3m)
+  &quot;At night, he picked up the bat to hit the ball.&quot;
+  Sense 1 bat = flying mammal {animal, flying, mammal, night, wings}
+  Sense 2 bat = sports equipment {sports, equipment, hit, ball, cricket}
+
+A  Context = [night, picked, hit, ball]
+   Sense 1: night              -&gt; overlap 1
+   Sense 2: hit, ball          -&gt; overlap 2
+   2 &gt; 1 =&gt; SENSE 2, the sports equipment.
+
+Q VARIANT (Oct 2024) &quot;I need to fix the bug in my code.&quot; — gloss PLUS example
+A  Context = [need, fix, bug, code]
+   bug(1) insect + &quot;insecticides can FIX proliferation&quot;      -&gt; 1 (fix)
+   bug(2) flaw in a program + &quot;FIXING defects in CODE ...&quot;   -&gt; 2 (fix, code)
+   ANSWER bug(2). State your stemming assumption: fix = fixing.
+</code></pre>
+<hr />
+<h1 id="session-13--semantic-web--ontology-handout-p6993">Session 13 — Semantic Web / Ontology (handout p69–93)</h1>
+<blockquote>
+<p>Marked as <strong>Application / case study</strong> — often <strong>no arithmetic at all</strong>.
+Annotate definitions and answer templates, not formulas.</p>
+</blockquote>
+<h3 id="-p69--title-slide-semantic-web-ontology-slide-2">⭐ p69 — title slide &quot;Semantic Web Ontology&quot; (slide 2)</h3>
+<pre><code>RECIPE  RDF = FACTS.   OWL = RULES.
+        if the question says &quot;must / every / at least one / constraint&quot;
+        -&gt; the answer is OWL (restrictions + reasoning)
+
+Q ASKED (Mar 2026 Q5B, 2m) &quot;When would you use RDF vs OWL?&quot;
+A  RDF handles DATA REPRESENTATION; OWL handles LOGIC and CONSISTENCY
+   CHECKING. Storing facts -&gt; RDF triples. Enforcing &quot;every book must
+   have an author&quot; -&gt; OWL, because OWL supports restrictions and reasoning.
+</code></pre>
+<h3 id="p79p81--ontology-definition--languages-slides-4251">p79–p81 — ontology definition / languages (slides 42–51)</h3>
+<pre><code>RECIPE  ontology = &quot;a formal, explicit specification of a shared
+        conceptualization&quot; (Gruber 93)
+        parts: concepts, attributes, relations, axioms, instances
+        LADDER: URI -&gt; XML -&gt; RDF -&gt; RDFS -&gt; OWL ; query with SPARQL
+        RDFS adds Class, Property, type, subClassOf, domain, range
+        OWL adds cardinality, disjointWith, inverseOf, sameAs
+</code></pre>
+<h3 id="-p82--the-rdf-data-model-slides-5456">⭐ p82 — &quot;The RDF Data Model&quot; (slides 54–56)</h3>
+<pre><code>RECIPE  TRIPLE = ( subject , predicate , object )
+        ANSWER FORMAT: list the triples, THEN list subjects, predicates
+        and objects separately — there are marks for both halves.
+
+Q ASKED (Feb 2026 Q6) University system for students, courses, faculty.
+  (a) identify entities / properties / values
+  (b) write triples for: Anita is enrolled in Data Science; Data Science
+      is taught by Dr. Rao; Dr. Rao is a faculty member of the CS Dept.
+
+A  (a) Subjects: Anita, DataScience, DrRao, CSDepartment
+       Predicates: enrolledIn, taughtBy, memberOf
+       Objects: DataScience, DrRao, CSDepartment
+   (b) ( Anita       , enrolledIn , DataScience )
+       ( DataScience , taughtBy   , DrRao )
+       ( DrRao       , memberOf   , CSDepartment )
+   graph: Anita -enrolledIn-&gt; DataScience -taughtBy-&gt; DrRao -memberOf-&gt; CSDept
+
+Q VARIANT (Mar 2026 Q5C, 2m) &quot;Model papers, authors, conferences&quot;
+A  RDF (facts):  (Paper1, hasAuthor, Author1) (Paper1, presentedAt, Conf1)
+   OWL (schema): classes Paper/Author/Conference; object properties
+                 hasAuthor, presentedAt; constraint = every Paper must
+                 have AT LEAST ONE Author (owl:minCardinality)
+                 -&gt; enables reasoning and consistency checking
+</code></pre>
+<h3 id="-p83--rdfs-examples-slide-58">⭐ p83 — &quot;RDFS Examples&quot; (slide 58)</h3>
+<pre><code>RECIPE  subClassOf is TRANSITIVE -&gt; it produces INFERRED facts
+
+Q ASKED (Oct 2024) Given
+  LivingThing subClassOf Object | Animal subClassOf LivingThing
+  Person subClassOf Animal      | Faculty type Person
+  What is the derived inference?
+
+A  Faculty -&gt; Person -&gt; Animal -&gt; LivingThing -&gt; Object
+   INFERRED:  Faculty subClassOf Object   (nobody stated it)
+   DRAW the chain and LABEL that last arrow &quot;inferred&quot; — that is the mark.
+</code></pre>
+<h3 id="p85p88--summary-knowledge-graphs-slides-66-79">p85–p88 — summary, knowledge graphs (slides 66, 79)</h3>
+<pre><code>RECIPE  RDF = flexible data model | RDFS = simple inference
+        OWL = expressive but hard to scale to web-size data
+        ONTOLOGY + DATA = KNOWLEDGE GRAPH
+        built by named entity recognition + relation extraction
+        &quot;London is the capital of England&quot; -&gt; (London, capitalOf, England)
+</code></pre>
+<hr />
+<h1 id="session-14--rag-handout-p94105">Session 14 — RAG (handout p94–105)</h1>
+<h3 id="-p94--what-llms-are-great-at--limitations-slides-45">⭐ p94 — &quot;What LLMs are great at / limitations&quot; (slides 4–5)</h3>
+<pre><code>RECIPE  3 LLM PROBLEMS: knowledge CUTOFF, HALLUCINATION, no access
+        to YOUR private documents
+        RAG FIX: don't retrain — retrieve documents and paste them
+        into the prompt at answer time
+</code></pre>
+<h3 id="p95--semantic-search--pipeline-slides-67">p95 — semantic search / pipeline (slides 6–7)</h3>
+<pre><code>RECIPE  query -&gt; embed -&gt; semantic search over chunks -&gt; retrieve top-k
+        -&gt; stuff into the prompt -&gt; generate
+        semantic search = by MEANING: &quot;laptop repair cost&quot; finds
+        &quot;computer hardware pricing&quot;
+</code></pre>
+<h3 id="-p97--retrieval-augmented-generation-top-corner-slide-12">⭐ p97 — &quot;Retrieval Augmented Generation&quot;, TOP corner (slide 12)</h3>
+<pre><code>RECIPE  fixed      = query tokens + system prompt tokens
+        available  = context length - fixed
+        chunks     = FLOOR( available / chunk size )   &lt;- ROUND DOWN
+        total sent = fixed + chunks x chunk size
+
+Q ASKED (Feb 2026, 6m)
+  query 160 | prompt 240 | context 4096 | chunk 480
+  (a) max chunks? (b) if only 75% of that is retrieved, total tokens?
+  (c) does retrieving fewer chunks improve or degrade quality?
+
+A  (a) fixed = 160+240 = 400 ; available = 4096-400 = 3696
+       chunks = floor(3696/480) = floor(7.7) = 7
+       check 7x480 = 3360 &lt;= 3696 ✓ , 8x480 = 3840 &gt; 3696 ✗
+   (b) 75% of 7 = 5.25 -&gt; floor = 5 chunks
+       5 x 480 = 2400 ; total = 400 + 2400 = 2800 tokens
+   (c) fewer but MORE RELEVANT chunks reduce noise, improve factual
+       grounding and lower hallucination -&gt; quality likely IMPROVES
+   BOTH roundings are DOWN. Write the word &quot;floor&quot; — it is a marked step.
+</code></pre>
+<h3 id="-p97--same-page-bottom-corner-slide-11">⭐ p97 — same page, BOTTOM corner (slide 11)</h3>
+<pre><code>RECIPE  precision = relevant retrieved / total retrieved
+        recall    = relevant retrieved / all relevant that exist
+        raising the threshold raises precision, lowers recall
+
+Q ASKED (Mar 2026 Q6, 6m)
+  scores 0.92, 0.86, 0.79, 0.71, 0.64, 0.58 ; threshold 0.75
+  (a) how many pass? (b) precision if all are relevant?
+  (c) precision if one irrelevant chunk is added, and the effect?
+
+A  (a) &gt;= 0.75 : 0.92, 0.86, 0.79  -&gt;  3 chunks
+   (b) 3/3 = 1.0
+   (c) retrieved 4, relevant 3 -&gt; 3/4 = 0.75
+       lower precision = more irrelevant text in the context = more
+       noise = higher hallucination risk = worse generation quality
+</code></pre>
+<h3 id="p98p104--kg-vs-vector-db-multimodal-agentic-slides-1540">p98–p104 — KG vs vector DB, multimodal, agentic (slides 15–40)</h3>
+<pre><code>RECIPE  vector DB = fuzzy similarity, fast, unstructured text
+        KG        = multi-hop and aggregate questions, explainable
+                    (&quot;board meetings where 2+ members abstained&quot;)
+        Graph RAG = retrieve over the KG instead of flat chunks
+        multimodal RAG = text + images + tables + audio, one shared
+                    embedding space, hybrid retrieval
+        agentic RAG = LLM plans: decompose query -&gt; several retrievals
+                    -&gt; tool calls -&gt; iterate -&gt; cite
+                    parts: agent, memory/scratchpad, retrievers, planner
+</code></pre>
+<hr />
+<h1 id="session-15--text-summarization-handout-p106118">Session 15 — Text Summarization (handout p106–118)</h1>
+<h3 id="-p106--session-content-slide-3">⭐ p106 — &quot;Session Content&quot; (slide 3)</h3>
+<pre><code>RECIPE  TYPE DECISION TREE
+        1 doc, headline/abstract           -&gt; single-document, GENERIC
+        many docs on the SAME event        -&gt; MULTI-DOCUMENT (kill redundancy)
+        &quot;summarize only the parts about X&quot; -&gt; QUERY-FOCUSED
+        copies sentences -&gt; EXTRACTIVE ; new words -&gt; ABSTRACTIVE
+
+Q ASKED (Mar 2026 Q7, 6m) Classify three scenarios and justify.
+  1 journalist uploads ONE climate report, wants a headline + abstract
+  2 analyst gives 15 articles from different sources on the same summit
+  3 researcher asks &quot;summarize the sections on economic impact&quot;
+
+A  1 SINGLE-DOCUMENT, GENERIC — one document, overall content, no query
+   2 MULTI-DOCUMENT — same event across sources, remove redundancy
+                      and resolve overlaps
+   3 QUERY-FOCUSED — tailored to a specific information need, a form
+                      of complex question answering
+   Why one approach can't do all three: generic ignores user intent;
+   query-focused needs an explicit need; multi-document must manage
+   redundancy and contradictions. Different input structure, user
+   intent and output requirements.
+</code></pre>
+<h3 id="-p109--summarization-three-stages-slide-14">⭐ p109 — &quot;Summarization Three Stages&quot; (slide 14)</h3>
+<pre><code>RECIPE  1 CONTENT SELECTION    pick which sentences to use
+        2 INFORMATION ORDERING what order — chronological / coherence / topical
+        3 SENTENCE REALIZATION tidy the wording, fix &quot;he&quot;, fix connectives
+</code></pre>
+<h3 id="p110p111--frequency-tf-idf-graph-methods-slides-1624">p110–p111 — frequency, tf-idf, graph methods (slides 16–24)</h3>
+<pre><code>RECIPE  word probability p(w) = count(w) / N
+        sentence weight = AVERAGE p(w) over its content words
+        pick the highest-weight sentence
+        tf-idf = tf x log( N / n_k )
+        graph method (TextRank): nodes = sentences, edges = cosine
+        similarity, rank by centrality
+
+A eg    N = 100 words. &quot;AI improves care&quot;: p(AI)=.05 p(improves)=.01
+        p(care)=.03  -&gt;  weight = (.05+.01+.03)/3 = 0.03
+</code></pre>
+<h3 id="-p112p113--mmr-choosing-informative-sentences-slides-2728">⭐ p112–p113 — &quot;MMR: Choosing informative sentences&quot; (slides 27–28)</h3>
+<pre><code>RECIPE  MMR(s) = L x sim(s,q)   -   (1-L) x sim(s,S)
+                 \ relevance /       \  redundancy  /
+        pick the HIGHEST, add it to S, repeat
+
+Q ASKED (Feb 2026 Q7, 6m)
+  query: government regulations on AI in healthcare
+  already selected S = {&quot;Governments are introducing regulations to
+  ensure safe use of AI in medical diagnosis.&quot;}
+  S1 &quot;New AI laws focus on patient data privacy and ethical use...&quot;
+        sim(q)=0.80  sim(S)=0.30
+  S2 &quot;Several countries have passed laws regulating AI-based medical
+      diagnosis systems.&quot;   sim(q)=0.88  sim(S)=0.70
+  lambda = 0.6. Compute both, choose, justify.
+
+A  MMR(S1) = 0.6(0.80) - 0.4(0.30) = 0.48 - 0.12 = 0.36   &lt;- SELECTED
+   MMR(S2) = 0.6(0.88) - 0.4(0.70) = 0.528 - 0.28 = 0.248
+   JUSTIFY: although S2 is MORE RELEVANT (0.88 vs 0.80) it is highly
+   similar to the already-selected sentence (0.70 vs 0.30), making it
+   REDUNDANT — it repeats what the summary already says. S1 adds NEW
+   COMPLEMENTARY information (ethics, data privacy), so it scores higher.
+
+   LAMBDA: L -&gt; 1 means care only about relevance (summary repeats itself);
+   L -&gt; 0 means care only about novelty (summary drifts off topic).
+   With the same numbers, L=0.7 picks the novel one; L=0.9 flips it back
+   to the relevant one. DO THE ARITHMETIC, never guess.
+</code></pre>
+<h3 id="p116p117--realization-neural-summarization-slides-4552">p116–p117 — realization, neural summarization (slides 45–52)</h3>
+<pre><code>RECIPE  realization fixes pronouns (he -&gt; Pinochet) and discourse
+        connectives (however, moreover, subsequently)
+        extractive  = SELECT existing sentences
+        abstractive = GENERATE new text, seq2seq/transformer (BART, T5, PEGASUS)
+</code></pre>
+<h3 id="-p118--rouge--rouge-2-slides-5355">⭐ p118 — &quot;ROUGE&quot; / &quot;ROUGE-2&quot; (slides 53–55)</h3>
+<pre><code>RECIPE  ROUGE-2 = reference bigrams that ALSO appear in the system summary
+                  --------------------------------------------------------
+                  total bigrams across ALL reference summaries
+        recall-oriented -&gt; the denominator is the HUMAN summaries
+        bigrams in a sentence = (number of words) - 1
+        ROUGE-1 = unigrams , ROUGE-L = longest common subsequence
+
+Q ASKED (from the slide) Q &quot;What is water spinach?&quot;
+  H1 &quot;Water spinach is a green leafy vegetable grown in the tropics.&quot;
+  H2 &quot;Water spinach is a semi-aquatic tropical plant grown as a vegetable.&quot;
+  H3 &quot;Water spinach is a commonly eaten leaf vegetable of Asia.&quot;
+  System X &quot;Water spinach is a leaf vegetable commonly eaten in
+            tropical areas of Asia.&quot;
+
+A  reference   bigrams   matched
+   H1          10        3   (water spinach, spinach is, is a)
+   H2          10        3   (same three)
+   H3           9        6   (+ commonly eaten, leaf vegetable, of asia)
+   TOTAL       29        12
+   ROUGE-2 = 12 / 29 = 0.4138 = 41.4%
+   comment: H3 is phrased closest to the system output, so it supplies
+   half the matches on its own.
+</code></pre>
+<hr />
+<h1 id="if-you-only-have-20-minutes-with-a-pencil">If you only have 20 minutes with a pencil</h1>
+<p>Write these six blocks and stop. They cover Q4, Q7, Q6, Q5 and half of Q3 —
+about <strong>26 of the 30 post-midsem marks</strong>.</p>
+<table>
+<thead>
+<tr>
+  <th>p</th>
+  <th>Formula</th>
+  <th>The number to remember from the real paper</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>p43</strong></td>
+  <td><code>out = Σ αᵢ·vᵢ</code></td>
+  <td><code>[0.2,0.5,0.3]</code> over <code>[1,0],[1,1],[0,1]</code> → <strong>[0.7, 0.8]</strong></td>
+</tr>
+<tr>
+  <td><strong>p112</strong></td>
+  <td><code>MMR = λ·rel − (1−λ)·red</code></td>
+  <td>λ=0.6: <strong>0.36 vs 0.248 → S1</strong>, the <em>less</em> relevant one</td>
+</tr>
+<tr>
+  <td><strong>p97</strong></td>
+  <td><code>chunks = FLOOR(avail/chunk)</code></td>
+  <td>4096−400=3696, /480 = 7.7 → <strong>7</strong>; 75% of 7 → <strong>5</strong>, total <strong>2800</strong></td>
+</tr>
+<tr>
+  <td><strong>p66</strong></td>
+  <td><code>cos = dot/(\|a\|·\|b\|)</code></td>
+  <td><code>[2,6,2]</code> → <strong>N1 wins at 0.9949</strong>, though N2 has the bigger dot (54)</td>
+</tr>
+<tr>
+  <td><strong>p82</strong></td>
+  <td>triple = (S, P, O)</td>
+  <td><code>(Anita, enrolledIn, DataScience)</code>; RDF facts / OWL rules</td>
+</tr>
+<tr>
+  <td><strong>p33</strong></td>
+  <td>CLE</td>
+  <td>cycle B↔C → <code>8−9</code>, <code>2−7</code> → enter at B → <strong>21 total</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="reminders-for-the-exam-itself">Reminders for the exam itself</h1>
+<ul>
+<li><strong>Attempt order: Q4 → Q7 → Q6 → Q5 → Q3.</strong> Q3 eats time; do it last.</li>
+<li><strong>Show every intermediate line.</strong> Open book means the marks are for method.</li>
+<li>If a question says <em>&quot;and/or theory&quot;</em> and the numbers look nasty, the theory
+half is the safer 3 marks — write it fully before attacking the arithmetic.</li>
+<li>Full worked solutions: <code>SOLVED-NUMERICALS</code>. Fresh mock sets: <code>PRACTICE-PAPER</code>.</li>
+</ul>
+</div>
+<script>
+var wasOpen = [];
+function openAll(){
+  wasOpen = [];
+  document.querySelectorAll("details").forEach(function(d,i){
+    wasOpen[i] = d.open; d.open = true;
+  });
+}
+function restoreAll(){
+  document.querySelectorAll("details").forEach(function(d,i){ d.open = wasOpen[i]; });
+}
+window.addEventListener("beforeprint", openAll);
+window.addEventListener("afterprint", restoreAll);
+
+function doPrint(){ openAll(); window.print(); }
+function toggleAll(){
+  var ds = document.querySelectorAll("details");
+  var anyClosed = Array.prototype.some.call(ds, function(d){ return !d.open; });
+  ds.forEach(function(d){ d.open = anyClosed; });
+  document.getElementById("tgl").textContent = anyClosed ? "Hide all answers" : "Show all answers";
+}
+
+var out = "";
+document.querySelectorAll(".wrap h1, .wrap h2").forEach(function(h){
+  if(!h.id) return;
+  out += '<a class="' + h.tagName.toLowerCase() + '" href="#' + h.id + '">' +
+         h.textContent.replace(/^[0-9]+[.]\s*/, "") + "</a>";
+});
+document.getElementById("toclinks").innerHTML = out;
+</script>
+</body></html>

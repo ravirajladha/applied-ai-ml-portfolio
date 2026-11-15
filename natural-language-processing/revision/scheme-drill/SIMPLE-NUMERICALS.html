@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLP Simple Numericals — one easy pass per module</title>
+<style>
+:root{--bg:#0e1117;--panel:#161b26;--panel2:#1d2432;--line:#2b3446;--ink:#e6edf7;
+      --dim:#93a1b8;--accent:#5aa9ff;--good:#3ddc97;--warn:#ffb454;--bad:#ff6b6b;--violet:#b78cff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 22px 120px}
+h1{font-size:31px;margin:38px 0 10px;letter-spacing:-.4px;padding-bottom:10px;
+   border-bottom:2px solid var(--accent)}
+h2{font-size:23px;margin:40px 0 12px;padding-top:16px;border-top:1px solid var(--line);color:#cfe3ff}
+h3{font-size:17px;margin:24px 0 8px;color:var(--accent)}
+p{margin:12px 0}
+a{color:var(--accent)}
+code{background:var(--panel2);padding:2px 6px;border-radius:4px;font-size:14px;
+     font-family:ui-monospace,Consolas,monospace;color:#ffd9a0}
+pre{background:#0a0e15;border:1px solid var(--line);border-radius:10px;padding:16px;
+    overflow-x:auto;line-height:1.65}
+pre code{background:none;padding:0;color:#c8d6e8;font-size:13.5px}
+table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14.5px;
+      display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:#b9c8dd;font-weight:600}
+tr:nth-child(even) td{background:#121724}
+blockquote{border-left:3px solid var(--warn);background:#1b1a14;margin:16px 0;
+           padding:12px 18px;border-radius:0 10px 10px 0}
+blockquote p{margin:8px 0}
+blockquote strong{color:var(--warn)}
+hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+ul,ol{padding-left:26px}
+li{margin:5px 0}
+details{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+        padding:12px 16px;margin:14px 0}
+details[open]{border-color:var(--good);background:#111d19}
+summary{cursor:pointer;font-weight:600;color:var(--good);outline:none}
+summary:hover{color:#7ff0bd}
+strong{color:#fff}
+#toc{position:fixed;top:0;right:0;width:250px;height:100vh;overflow-y:auto;
+     background:var(--panel);border-left:1px solid var(--line);padding:20px 16px;font-size:13px}
+#toc b{display:block;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;
+       font-size:11px;margin-bottom:10px}
+#toc a{display:block;padding:5px 8px;border-radius:6px;text-decoration:none;color:#a9bdd6}
+#toc a:hover{background:var(--panel2);color:var(--accent)}
+#toc a.h1{font-weight:700;color:var(--ink);margin-top:8px}
+#toc a.h2{padding-left:18px;font-size:12.5px}
+#bar{position:fixed;top:14px;left:14px;z-index:99;display:flex;gap:8px}
+#bar button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+  border-radius:8px;padding:8px 14px;cursor:pointer;font:600 13px inherit}
+#bar button:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:1400px){#toc{display:none}}
+
+/* ---------- PRINT / PDF ---------- */
+@media print{
+  #toc,#bar{display:none!important}
+  body{background:#fff;color:#111;font-size:10.5pt}
+  .wrap{max-width:100%;padding:0}
+  h1{font-size:19pt;color:#000;border-bottom:2px solid #333;page-break-after:avoid;
+     page-break-before:always;margin-top:0}
+  h1:first-of-type{page-break-before:avoid}
+  h2{font-size:14pt;color:#000;border-top:1px solid #999;page-break-after:avoid}
+  h3{font-size:11.5pt;color:#1a4d80;page-break-after:avoid}
+  a{color:#1a4d80;text-decoration:none}
+  code{background:#eef1f5;color:#7a3d00;border:1px solid #dde3ea}
+  pre{background:#f6f8fa;border:1px solid #c9d1d9;color:#111;page-break-inside:avoid;
+      font-size:9pt;line-height:1.45}
+  pre code{color:#111;font-size:9pt}
+  table{font-size:9pt;display:table;page-break-inside:avoid}
+  th{background:#e8edf3!important;color:#000}
+  td{background:#fff!important}
+  tr:nth-child(even) td{background:#f7f9fb!important}
+  th,td{border:1px solid #b6c0cc;padding:5px 7px}
+  blockquote{background:#fffdf3;border-left:3px solid #d19a20;color:#111;
+             page-break-inside:avoid}
+  blockquote strong{color:#8a5a00}
+  strong{color:#000}
+  details{background:#f4faf7;border:1px solid #b9d9c9;page-break-inside:avoid}
+  details[open]{background:#f4faf7}
+  summary{color:#14663f}
+  hr{border-top:1px solid #bbb}
+  ul,ol{padding-left:20px}
+}
+@page{size:A4;margin:14mm 12mm}
+</style></head>
+<body>
+<div id="bar">
+  <button onclick="doPrint()">&#128424; Print / Save as PDF</button>
+  <button id="tgl" onclick="toggleAll()">Show all answers</button>
+</div>
+<nav id="toc"><b>Jump to</b><div id="toclinks"></div></nav>
+<div class="wrap"><h1 id="nlp-simple-numericals--one-easy-pass-per-module">NLP Simple Numericals — one easy pass per module</h1>
+<blockquote>
+<p><strong>These are deliberately easy.</strong> The point is not difficulty — it is to run
+the <em>method</em> end to end on numbers small enough to check in your head, so that
+in the exam your hand already knows the shape of the answer.</p>
+<p><strong>Work each one on paper before clicking.</strong> Every answer shows the full
+working, laid out the way you should write it in the script — examiners give
+marks for the substitution line even when the final number is wrong.</p>
+</blockquote>
+<hr />
+<h2 id="contents">Contents</h2>
+<table>
+<thead>
+<tr>
+  <th>§</th>
+  <th>Module</th>
+  <th>Numericals</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td>2 — Vector Semantics</td>
+  <td>TF-IDF · cosine similarity · PPMI</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>3 — Language Models</td>
+  <td>bigram MLE + Laplace · perplexity · neural LM forward pass</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>5 — POS Tagging</td>
+  <td>estimating A and B from a tagged corpus · baseline accuracy</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>6 — HMM</td>
+  <td>Viterbi (2 states, 2 words) · Forward + posterior</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>9 — Statistical Parsing</td>
+  <td>PCFG parse probability · two competing parses</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td>10 — Dependency Parsing</td>
+  <td>best head + cycle check (MST) · well-formedness</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td>11 — Contextual Embeddings</td>
+  <td>weighted sum · softmax weights · scaled dot-product · multi-head</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td>12 — Word Sense</td>
+  <td>Lesk overlap · cosine sense selection</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td>13 — Semantic Web</td>
+  <td><em>(no numerical exists — see THEORY-BANK §9)</em></td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>14 — RAG</td>
+  <td>threshold · token budget · precision/recall/F1 · chunk count</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>15 — Summarization</td>
+  <td>MMR · ROUGE-1 and ROUGE-2 · compression ratio</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<hr />
+<h1 id="1--module-2--vector-semantics">1 · Module 2 — Vector Semantics</h1>
+<h3 id="the-three-formulas">The three formulas</h3>
+<pre><code>TF-IDF   =  TF x IDF          where IDF = log10( N / df )
+                              N  = total documents
+                              df = documents containing the term
+
+cosine   =  (a . b) / ( |a| x |b| )
+
+PMI      =  log2 (  P(w,c)  /  ( P(w) x P(c) )  )
+PPMI     =  max( 0 , PMI )
+</code></pre>
+<details>
+<summary><b>N1.1</b> A corpus has 4 documents. The word "cloud" appears in 2 of them. In document D1 it occurs 3 times and D1 is 20 words long. Compute the TF-IDF of "cloud" in D1. (use log base 10) — answer</summary>
+
+<pre><code>TF  = 3 / 20                         = 0.15
+IDF = log10( N / df ) = log10(4 / 2)
+    = log10(2)                       = 0.301
+
+TF-IDF = 0.15 x 0.301                = 0.0452
+</code></pre>
+<p><strong>Sanity check:</strong> the word is in half the corpus, so IDF is small (0.301). A word
+in <em>all</em> 4 documents would give <code>log10(1) = 0</code> and a TF-IDF of exactly <strong>zero</strong> —
+that is the formula telling you the word is useless for discrimination.</p>
+</details>
+
+<details>
+<summary><b>N1.2</b> Compute the cosine similarity of A = [2, 0, 1] and B = [1, 1, 1]. — answer</summary>
+
+<pre><code>Dot product   a . b = (2x1) + (0x1) + (1x1) = 2 + 0 + 1 = 3
+
+Magnitudes    |a| = sqrt(2^2 + 0^2 + 1^2) = sqrt(5) = 2.236
+              |b| = sqrt(1^2 + 1^2 + 1^2) = sqrt(3) = 1.732
+
+cosine = 3 / (2.236 x 1.732) = 3 / 3.873 = 0.7746
+</code></pre>
+<p><strong>Answer ≈ 0.77</strong> — fairly similar. Always state the range: cosine lies in
+<code>[0, 1]</code> for count vectors, where 1 means identical direction.</p>
+</details>
+
+<details>
+<summary><b>N1.3</b> From this co-occurrence table, compute PPMI(digital, computer) and PPMI(cherry, computer). — answer</summary>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th>computer</th>
+  <th>data</th>
+  <th><strong>row total</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>cherry</strong></td>
+  <td>2</td>
+  <td>8</td>
+  <td>10</td>
+</tr>
+<tr>
+  <td><strong>digital</strong></td>
+  <td>30</td>
+  <td>20</td>
+  <td>50</td>
+</tr>
+<tr>
+  <td><strong>col total</strong></td>
+  <td>32</td>
+  <td>28</td>
+  <td><strong>60</strong></td>
+</tr>
+</tbody>
+</table>
+<pre><code>--- digital &amp; computer ---
+P(digital, computer) = 30 / 60 = 0.500
+P(digital)           = 50 / 60 = 0.8333
+P(computer)          = 32 / 60 = 0.5333
+
+PMI  = log2( 0.500 / (0.8333 x 0.5333) )
+     = log2( 0.500 / 0.4444 )
+     = log2( 1.125 )                    = 0.170
+PPMI = max(0, 0.170)                    = 0.170
+
+--- cherry &amp; computer ---
+P(cherry, computer)  =  2 / 60 = 0.0333
+P(cherry)            = 10 / 60 = 0.1667
+P(computer)          = 32 / 60 = 0.5333
+
+PMI  = log2( 0.0333 / (0.1667 x 0.5333) )
+     = log2( 0.0333 / 0.0889 )
+     = log2( 0.375 )                    = -1.415
+PPMI = max(0, -1.415)                   = 0
+</code></pre>
+<p><strong>The teaching point:</strong> <em>cherry–computer</em> co-occurs <strong>less</strong> than chance, so PMI
+goes negative and PPMI clips it to <strong>0</strong>. That clipping is the whole reason the
+&quot;P&quot; is in PPMI — see THEORY-BANK Q1.5.</p>
+</details>
+
+<hr />
+<hr />
+<h1 id="2--module-3--language-models--neural-lm">2 · Module 3 — Language Models &amp; Neural LM</h1>
+<details>
+<summary><b>N2.1</b> Corpus: <code>&lt;s&gt; i like nlp &lt;/s&gt;</code> · <code>&lt;s&gt; i like ml &lt;/s&gt;</code> · <code>&lt;s&gt; i study nlp &lt;/s&gt;</code>. Compute P(like | i) with MLE, then with Laplace smoothing. — answer</summary>
+
+<pre><code>Step 1 — vocabulary (unique tokens INCLUDING &lt;s&gt; and &lt;/s&gt;)
+  &lt;s&gt;, i, like, nlp, &lt;/s&gt;, ml, study            -&gt;  V = 7
+
+Step 2 — counts
+  count(i like) = 2          (sentences 1 and 2)
+  count(i)      = 3          (all three sentences)
+
+Step 3 — MLE
+  P(like | i) = 2 / 3 = 0.667
+
+Step 4 — Laplace
+  P(like | i) = (count(i like) + 1) / (count(i) + V)
+              = (2 + 1) / (3 + 7)
+              = 3 / 10 = 0.30
+</code></pre>
+<p><strong>The two marks people lose:</strong></p>
+<ol>
+<li>Forgetting <code>&lt;s&gt;</code> and <code>&lt;/s&gt;</code> in V. Read the question — it usually says
+&quot;including&quot; explicitly.</li>
+<li>Adding <strong>1</strong> to the denominator instead of <strong>V</strong>.</li>
+</ol>
+<p>Notice smoothing <em>lowers</em> a well-attested probability (0.667 → 0.30). That is
+the price paid for giving unseen bigrams a non-zero probability.</p>
+</details>
+
+<details>
+<summary><b>N2.2</b> A bigram model assigns probabilities 0.5, 0.25, 0.5, 0.25 to the four words of a test sentence. Compute the perplexity. — answer</summary>
+
+<pre><code>P(W) = 0.5 x 0.25 x 0.5 x 0.25 = 0.015625      ( = 1/64 )
+
+N = 4 words
+
+PP(W) = P(W)^(-1/N)
+      = (1/64)^(-1/4)
+      = 64^(1/4)
+      = 2.828
+</code></pre>
+<p><strong>Answer ≈ 2.83.</strong> Interpretation: at each step the model is about as uncertain
+as if it were choosing uniformly among <strong>2.83 words</strong>. Lower is better.</p>
+<p><strong>Shortcut for the exam:</strong> the geometric mean of the probabilities is
+<code>(1/64)^(1/4) = 0.354</code>, and perplexity is simply its reciprocal, <code>1/0.354 = 2.83</code>.</p>
+</details>
+
+<details>
+<summary><b>N2.3</b> Neural LM forward pass. x = [2.0, 1.0], w = [0.4, −0.2], b = 0.1, hidden activation = <b>sigmoid</b>. Scores: z(A) = 1.5h, z(B) = 0.5h. Find the softmax probability of A. — answer</summary>
+
+<pre><code>Step 1 — pre-activation
+  z = (2.0 x 0.4) + (1.0 x -0.2) + 0.1
+    = 0.8 - 0.2 + 0.1
+    = 0.7
+
+Step 2 — sigmoid
+  h = 1 / (1 + e^-0.7) = 1 / (1 + 0.4966) = 0.6682
+
+Step 3 — output scores
+  z(A) = 1.5 x 0.6682 = 1.0023
+  z(B) = 0.5 x 0.6682 = 0.3341
+
+Step 4 — softmax
+  e^1.0023 = 2.7245
+  e^0.3341 = 1.3967
+  sum      = 4.1212
+
+  P(A) = 2.7245 / 4.1212 = 0.6611
+  P(B) = 1.3967 / 4.1212 = 0.3389
+</code></pre>
+<p><strong>Answer P(A) ≈ 0.661.</strong> Free check: <code>0.661 + 0.339 = 1.000</code>.</p>
+<p><strong>If the activation were ReLU instead:</strong> <code>h = max(0, 0.7) = 0.7</code>, and everything
+downstream repeats identically. Read which activation you were given — it is a
+one-mark trap.</p>
+</details>
+
+<hr />
+<hr />
+<h1 id="3--module-5--pos-tagging">3 · Module 5 — POS Tagging</h1>
+<details>
+<summary><b>N3.1</b> From this tagged corpus, estimate P(NN | DT) and P(dog | NN).<br><code>the/DT dog/NN runs/VB</code> · <code>the/DT cat/NN sleeps/VB</code> · <code>a/DT dog/NN barks/VB</code> — answer</summary>
+
+<pre><code>--- Transition:  P(NN | DT) = count(DT followed by NN) / count(DT)
+
+  DT NN pairs : the-dog , the-cat , a-dog          =  3
+  count(DT)                                        =  3
+
+  P(NN | DT) = 3 / 3 = 1.0
+
+--- Emission:   P(dog | NN) = count(NN emitting &quot;dog&quot;) / count(NN)
+
+  NN tokens : dog , cat , dog                      =  3
+  &quot;dog&quot; among them                                 =  2
+
+  P(dog | NN) = 2 / 3 = 0.667
+</code></pre>
+<p><strong>Remember the direction of each formula</strong> — this is where marks vanish:</p>
+<ul>
+<li><strong>Transition</strong> is <code>P(this tag | previous tag)</code> → divide by the count of the
+<strong>previous</strong> tag.</li>
+<li><strong>Emission</strong> is <code>P(word | tag)</code> → divide by the count of the <strong>tag</strong>, never the
+count of the word.</details>
+
+</li>
+</ul>
+<details>
+<summary><b>N3.2</b> The word "book" appears 10 times in a test set: 7 as NN and 3 as VB. What accuracy does the most-frequent-tag baseline achieve on this word, and what does it get wrong? — answer</summary>
+
+<pre><code>Most frequent tag for &quot;book&quot; = NN  (7 out of 10)
+
+Baseline tags ALL 10 occurrences as NN.
+
+Correct   = 7
+Accuracy  = 7 / 10 = 0.70  =  70%
+</code></pre>
+<p><strong>What it gets wrong:</strong> all <strong>3 verb</strong> uses — <em>&quot;book a flight&quot;</em>, <em>&quot;book the
+room&quot;</em>. The baseline is context-blind by construction, so it can never recover
+the minority tag. That is precisely the gap an HMM closes: the transition
+probability <code>P(VB | DT)</code> is low while <code>P(NN | DT)</code> is high, so context tips the
+decision.</p>
+</details>
+
+<hr />
+<hr />
+<h1 id="4--module-6--hidden-markov-models">4 · Module 6 — Hidden Markov Models</h1>
+<p><strong>The shared setup for both questions below.</strong></p>
+<p>States: <strong>H</strong> (hot), <strong>C</strong> (cold). Observations: ice-creams eaten, <code>3</code> then <code>1</code>.</p>
+<p><strong>Start probabilities (π)</strong></p>
+<table>
+<thead>
+<tr>
+  <th>state</th>
+  <th>P</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>H</td>
+  <td>0.8</td>
+</tr>
+<tr>
+  <td>C</td>
+  <td>0.2</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Transition probabilities (A)</strong> — read as <code>P(next | current)</code></p>
+<table>
+<thead>
+<tr>
+  <th>from ↓ / to →</th>
+  <th>H</th>
+  <th>C</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>H</strong></td>
+  <td>0.7</td>
+  <td>0.3</td>
+</tr>
+<tr>
+  <td><strong>C</strong></td>
+  <td>0.4</td>
+  <td>0.6</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Emission probabilities (B)</strong> — read as <code>P(word | tag)</code></p>
+<table>
+<thead>
+<tr>
+  <th>state</th>
+  <th>&quot;1&quot;</th>
+  <th>&quot;3&quot;</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>H</strong></td>
+  <td>0.2</td>
+  <td>0.4</td>
+</tr>
+<tr>
+  <td><strong>C</strong></td>
+  <td>0.5</td>
+  <td>0.1</td>
+</tr>
+</tbody>
+</table>
+<details>
+<summary><b>N4.1</b> Run <b>Viterbi</b> for the observation sequence (3, 1). Give the best state sequence. — answer</summary>
+
+<pre><code>--- t = 1   (observation = &quot;3&quot;)   initialisation: start x emission
+
+  v1(H) = 0.8 x 0.4 = 0.32
+  v1(C) = 0.2 x 0.1 = 0.02
+
+--- t = 2   (observation = &quot;1&quot;)   recursion: MAX(prev x transition) x emission
+
+  v2(H) : from H  0.32 x 0.7 = 0.224   &lt;-- max
+          from C  0.02 x 0.4 = 0.008
+          v2(H) = 0.224 x 0.2 = 0.0448      backpointer -&gt; H
+
+  v2(C) : from H  0.32 x 0.3 = 0.096   &lt;-- max
+          from C  0.02 x 0.6 = 0.012
+          v2(C) = 0.096 x 0.5 = 0.0480      backpointer -&gt; H
+
+--- termination
+
+  best final state = C   (0.0480 &gt; 0.0448)
+
+--- backtracking
+
+  C at t=2  -&gt;  backpointer says H at t=1
+</code></pre>
+<p><strong>Best sequence = H → C</strong>, probability <strong>0.048</strong>.</p>
+<p><strong>Layout marks:</strong> always write the three labelled stages — <em>initialisation,
+recursion, backtracking</em> — and always write the backpointer next to each cell.
+The question asks for them by name.</p>
+</details>
+
+<details>
+<summary><b>N4.2</b> Same model, same observations. Run the <b>Forward</b> algorithm, give P(O), and the posterior distribution at t = 2. — answer</summary>
+
+<pre><code>--- t = 1   (identical to Viterbi)
+
+  a1(H) = 0.8 x 0.4 = 0.32
+  a1(C) = 0.2 x 0.1 = 0.02
+
+--- t = 2   SUM(prev x transition) x emission     &lt;-- the only change
+
+  a2(H) = (0.32 x 0.7  +  0.02 x 0.4) x 0.2
+        = (0.224 + 0.008) x 0.2
+        = 0.232 x 0.2 = 0.0464
+
+  a2(C) = (0.32 x 0.3  +  0.02 x 0.6) x 0.5
+        = (0.096 + 0.012) x 0.5
+        = 0.108 x 0.5 = 0.0540
+
+--- likelihood of the whole observation sequence
+
+  P(O) = 0.0464 + 0.0540 = 0.1004
+
+--- posterior at t = 2   (divide each cell by P(O))
+
+  P(H at t=2 | O) = 0.0464 / 0.1004 = 0.462
+  P(C at t=2 | O) = 0.0540 / 0.1004 = 0.538
+</code></pre>
+<p><strong>Most likely state at t = 2 is C (0.538)</strong> — because C emits &quot;1&quot; with
+probability 0.5 against H's 0.2, which outweighs H's higher prior.</p>
+<p><strong>Compare with N4.1:</strong> identical table, <code>SUM</code> instead of <code>MAX</code>, no backpointers.
+Forward's numbers are slightly larger because they add all paths rather than
+keeping the best. The posterior must sum to 1 — <code>0.462 + 0.538 = 1.000</code>.</p>
+</details>
+
+<hr />
+<hr />
+<h1 id="5--module-9--statistical-parsing">5 · Module 9 — Statistical Parsing</h1>
+<details>
+<summary><b>N5.1</b> Using this PCFG, compute the probability of the only parse of "the dog ate the bone". — answer</summary>
+
+<table>
+<thead>
+<tr>
+  <th>Rule</th>
+  <th>P</th>
+  <th></th>
+  <th>Rule</th>
+  <th>P</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>S → NP VP</td>
+  <td>1.0</td>
+  <td></td>
+  <td>Det → the</td>
+  <td>1.0</td>
+</tr>
+<tr>
+  <td>NP → Det N</td>
+  <td>0.6</td>
+  <td></td>
+  <td>N → dog</td>
+  <td>0.5</td>
+</tr>
+<tr>
+  <td>NP → N</td>
+  <td>0.4</td>
+  <td></td>
+  <td>N → bone</td>
+  <td>0.5</td>
+</tr>
+<tr>
+  <td>VP → V NP</td>
+  <td>1.0</td>
+  <td></td>
+  <td>V → ate</td>
+  <td>1.0</td>
+</tr>
+</tbody>
+</table>
+<pre><code>Parse:  S -&gt; NP(Det N) VP( V NP(Det N) )
+
+Rules used, in order:
+  S  -&gt; NP VP     1.0
+  NP -&gt; Det N     0.6        (subject)
+  Det-&gt; the       1.0
+  N  -&gt; dog       0.5
+  VP -&gt; V NP      1.0
+  V  -&gt; ate       1.0
+  NP -&gt; Det N     0.6        (object)
+  Det-&gt; the       1.0
+  N  -&gt; bone      0.5
+
+P(parse) = 1.0 x 0.6 x 1.0 x 0.5 x 1.0 x 1.0 x 0.6 x 1.0 x 0.5
+         = 0.09
+</code></pre>
+<p><strong>Method, every time:</strong> the probability of a parse is the <strong>product of the
+probability of every rule used</strong>, counting a rule once per <em>use</em>, not once per
+rule. <code>NP → Det N</code> is used <strong>twice</strong> here, so 0.6 appears twice.</p>
+</details>
+
+<details>
+<summary><b>N5.2</b> Two parses of "I saw the man with the telescope". Compute both probabilities and say which the grammar prefers. — answer</summary>
+
+<table>
+<thead>
+<tr>
+  <th>Rule</th>
+  <th>P</th>
+  <th></th>
+  <th>Rule</th>
+  <th>P</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>S → NP VP</td>
+  <td>1.0</td>
+  <td></td>
+  <td>Det → the</td>
+  <td>1.0</td>
+</tr>
+<tr>
+  <td>VP → V NP</td>
+  <td>0.6</td>
+  <td></td>
+  <td>N → man</td>
+  <td>0.5</td>
+</tr>
+<tr>
+  <td>VP → VP PP</td>
+  <td>0.4</td>
+  <td></td>
+  <td>N → telescope</td>
+  <td>0.5</td>
+</tr>
+<tr>
+  <td>NP → Det N</td>
+  <td>0.5</td>
+  <td></td>
+  <td>V → saw</td>
+  <td>1.0</td>
+</tr>
+<tr>
+  <td>NP → NP PP</td>
+  <td>0.3</td>
+  <td></td>
+  <td>P → with</td>
+  <td>1.0</td>
+</tr>
+<tr>
+  <td>NP → Pron</td>
+  <td>0.2</td>
+  <td></td>
+  <td>Pron → I</td>
+  <td>1.0</td>
+</tr>
+<tr>
+  <td>PP → P NP</td>
+  <td>1.0</td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<pre><code>=== Parse A — VP attachment  (I used the telescope to see) ===
+S -&gt; NP(Pron) VP( VP(V NP) PP )
+
+  S -&gt; NP VP      1.0
+  NP -&gt; Pron      0.2      Pron -&gt; I        1.0
+  VP -&gt; VP PP     0.4
+    VP -&gt; V NP    0.6      V -&gt; saw         1.0
+      NP -&gt; Det N 0.5      Det 1.0 , N-&gt;man 0.5
+    PP -&gt; P NP    1.0      P -&gt; with        1.0
+      NP -&gt; Det N 0.5      Det 1.0 , N-&gt;telescope 0.5
+
+P(A) = 1.0 x 0.2 x [ 0.4 x (0.6 x 0.5 x 0.5) x (1.0 x 0.5 x 0.5) ]
+     = 0.2 x [ 0.4 x 0.15 x 0.25 ]
+     = 0.2 x 0.015
+     = 0.00300
+
+=== Parse B — NP attachment  (the man was holding the telescope) ===
+S -&gt; NP(Pron) VP( V NP( NP PP ) )
+
+  S -&gt; NP VP      1.0
+  NP -&gt; Pron      0.2      Pron -&gt; I        1.0
+  VP -&gt; V NP      0.6      V -&gt; saw         1.0
+    NP -&gt; NP PP   0.3
+      NP -&gt; Det N 0.5      Det 1.0 , N-&gt;man 0.5
+      PP -&gt; P NP  1.0      P -&gt; with        1.0
+        NP-&gt; Det N 0.5     Det 1.0 , N-&gt;telescope 0.5
+
+P(B) = 1.0 x 0.2 x [ 0.6 x ( 0.3 x (0.5 x 0.5) x (1.0 x 0.5 x 0.5) ) ]
+     = 0.2 x [ 0.6 x 0.01875 ]
+     = 0.2 x 0.01125
+     = 0.00225
+</code></pre>
+<p><strong>The grammar selects Parse A, the VP attachment (0.00300 &gt; 0.00225)</strong> — the
+telescope is the instrument of seeing.</p>
+<p><strong>The &quot;why&quot; mark:</strong> say <em>which rule</em> decided it. Here <code>VP → VP PP</code> (0.4) is more
+probable than <code>NP → NP PP</code> (0.3), so the grammar prefers attaching the PP to the
+verb phrase. In the Mar 2026 paper the numbers were the other way round and the
+NP attachment won — so <strong>never memorise the conclusion, only the method</strong>.</p>
+</details>
+
+<hr />
+<hr />
+<h1 id="6--module-10--dependency-parsing">6 · Module 10 — Dependency Parsing</h1>
+<details>
+<summary><b>N6.1</b> Sentence "dogs bark" with ROOT. Arc scores below. Find the maximum spanning tree. — answer</summary>
+
+<table>
+<thead>
+<tr>
+  <th>From → To</th>
+  <th>Score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>ROOT → dogs</td>
+  <td>5</td>
+</tr>
+<tr>
+  <td>ROOT → bark</td>
+  <td>10</td>
+</tr>
+<tr>
+  <td>dogs → bark</td>
+  <td>8</td>
+</tr>
+<tr>
+  <td>bark → dogs</td>
+  <td>6</td>
+</tr>
+</tbody>
+</table>
+<pre><code>Step 1 — give every word its highest-scoring head
+
+  dogs : ROOT gives 5 , bark gives 6   -&gt;  best head = bark  (6)
+  bark : ROOT gives 10 , dogs gives 8  -&gt;  best head = ROOT  (10)
+
+Step 2 — check for a cycle
+
+  arcs = { ROOT -&gt; bark , bark -&gt; dogs }
+  follow backwards from dogs : dogs -&gt; bark -&gt; ROOT     reaches ROOT
+  no cycle  -&gt;  this greedy answer is already the MST
+
+Step 3 — total score
+
+  10 + 6 = 16
+
+  (the only other valid tree is ROOT-&gt;dogs + dogs-&gt;bark = 5 + 8 = 13)
+</code></pre>
+<p><strong>MST = ROOT → bark → dogs, total score 16.</strong> <em>bark</em> is the root verb, <em>dogs</em>
+is its subject (<code>nsubj</code>).</p>
+<p><strong>When it is NOT this easy:</strong> if step 1 produced a cycle (say dogs→bark and
+bark→dogs), you would <strong>contract the cycle into one node, re-score, and
+re-solve</strong> — that is Chu-Liu-Edmonds. See the full worked version in
+<code>../post-midsem/SOLVED-NUMERICALS.md</code> §2.3.</p>
+</details>
+
+<details>
+<summary><b>N6.2</b> Draw the dependency tree for "She ate rice quickly" and verify it is well-formed. — answer</summary>
+
+<pre><code>        ROOT
+          |
+         ate                         ate  is the ROOT (the main verb)
+        / | \
+      /   |   \
+    She  rice quickly
+
+Arcs with labels:
+  ROOT -&gt; ate        (root)
+  ate  -&gt; She        (nsubj  - the subject)
+  ate  -&gt; rice       (dobj   - the direct object)
+  ate  -&gt; quickly    (advmod - the adverbial modifier)
+</code></pre>
+<p><strong>Well-formedness check — write these three lines out, they carry marks:</strong></p>
+<pre><code>1. Single head  : She(1) rice(1) quickly(1) ate(1)      OK - each has exactly one
+2. Root         : nothing points INTO ROOT              OK
+3. Connected /
+   acyclic      : She-&gt;ate-&gt;ROOT , rice-&gt;ate-&gt;ROOT ,
+                  quickly-&gt;ate-&gt;ROOT                    OK - all reach ROOT
+4. Projective   : no arcs cross when drawn above        OK
+</code></pre>
+<p><strong>Method for any sentence:</strong> find the <strong>main verb</strong> first — it is almost always
+the ROOT. Everything else hangs off it or off one of its dependents.</p>
+</details>
+
+<hr />
+<hr />
+<h1 id="7--module-11--contextual-embeddings--attention">7 · Module 11 — Contextual Embeddings &amp; Attention</h1>
+<h3 id="the-formula-box">The formula box</h3>
+<pre><code>Per token:      q_i = Q x_i      k_i = K x_i      v_i = V x_i
+                e_ij = q_i . k_j  /  sqrt(d_k)
+                alpha_ij = exp(e_ij) / SUM_j exp(e_ij)
+                o_i = SUM_j  alpha_ij  x  v_j
+
+Matrix form:    SelfAttention(Q,K,V) = softmax( Q K^T / sqrt(d_k) ) V
+
+Multi-head:     MultiHead(X) = ( head_1 (+) head_2 (+) ... ) W_O
+</code></pre>
+<blockquote>
+<p>Both of these are printed in <strong>Part 2 of the handout, pages 45–46</strong> — as
+images, so <code>Ctrl-F</code> will not find them. Tab those pages.</p>
+</blockquote>
+<details>
+<summary><b>N7.1</b> α = [0.2, 0.3, 0.5] and v₁ = [1,0], v₂ = [0,2], v₃ = [2,2]. Compute the contextual embedding. — answer</summary>
+
+<pre><code>Output = 0.2 x [1,0]  +  0.3 x [0,2]  +  0.5 x [2,2]
+
+       = [0.2, 0.0]  +  [0.0, 0.6]  +  [1.0, 1.0]
+
+       = [1.2, 1.6]
+</code></pre>
+<p><strong>Free check first, always:</strong> <code>0.2 + 0.3 + 0.5 = 1.0</code>. If the given weights do
+not sum to 1, you have misread the question.</p>
+</details>
+
+<details>
+<summary><b>N7.2</b> Attention scores before softmax are [1, 1, 2]. Compute the attention weights. (e¹ = 2.718, e² = 7.389) — answer</summary>
+
+<pre><code>exponentiate :  e^1 = 2.718 ,  e^1 = 2.718 ,  e^2 = 7.389
+
+sum          :  2.718 + 2.718 + 7.389 = 12.825
+
+divide       :  2.718 / 12.825 = 0.212
+                2.718 / 12.825 = 0.212
+                7.389 / 12.825 = 0.576
+
+alpha = [0.212, 0.212, 0.576]     check: sums to 1.000
+</code></pre>
+<p><strong>The point:</strong> a score of 2 against 1 is only <em>double</em>, but the weight is nearly
+<strong>triple</strong> (0.576 vs 0.212). Softmax <strong>exponentiates first</strong>, so it exaggerates
+the leader. That is the intuition examiners want in the &quot;comment&quot; sub-part.</p>
+</details>
+
+<details>
+<summary><b>N7.3</b> q = [1,1], k₁ = [1,0], k₂ = [0,2], v₁ = [1,0], v₂ = [0,1], d_k = 2. Compute the output using <b>scaled</b> dot-product attention. — answer</summary>
+
+<pre><code>Step 1 — raw dot products
+  q . k1 = (1x1) + (1x0) = 1
+  q . k2 = (1x0) + (1x2) = 2
+
+Step 2 — scale by sqrt(d_k) = sqrt(2) = 1.414
+  e1 = 1 / 1.414 = 0.707
+  e2 = 2 / 1.414 = 1.414
+
+Step 3 — softmax
+  e^0.707 = 2.028
+  e^1.414 = 4.113
+  sum     = 6.141
+
+  alpha = [ 2.028/6.141 , 4.113/6.141 ] = [0.330 , 0.670]
+
+Step 4 — weighted sum of values
+  out = 0.330 x [1,0]  +  0.670 x [0,1]
+      = [0.330, 0.670]
+</code></pre>
+<p><strong>Answer = [0.330, 0.670].</strong> Note what the scaling did: without dividing by
+√d_k the scores would have been 1 and 2, giving weights [0.269, 0.731] — a
+sharper, more saturated distribution. Scaling keeps softmax in its
+well-behaved range. That is the answer to &quot;why √d_k&quot; (THEORY-BANK Q7.5).</p>
+</details>
+
+<details>
+<summary><b>N7.4</b> head₁ = [0.2, 0.5], head₂ = [0.4, 0.1], W_O = [[1,0],[0,2],[2,0],[0,1]]. Compute the multi-head output. — answer</summary>
+
+<pre><code>Step 1 — concatenate
+  Concat = [0.2, 0.5, 0.4, 0.1]          4 numbers
+
+  Check: W_O has 4 ROWS, concat has 4 entries.  They must match.
+
+Step 2 — multiply by W_O, one COLUMN at a time
+  (go down the column, multiply element-wise, add)
+
+  column 1 :  0.2x1 + 0.5x0 + 0.4x2 + 0.1x0
+           =  0.2   + 0     + 0.8   + 0       = 1.0
+
+  column 2 :  0.2x0 + 0.5x2 + 0.4x0 + 0.1x1
+           =  0     + 1.0   + 0     + 0.1     = 1.1
+
+Output = [1.0, 1.1]
+</code></pre>
+<p><strong>Answer = [1.0, 1.1].</strong></p>
+<p><strong>Two things to say for the theory marks:</strong> (i) <code>W_O</code> <strong>projects back down to
+the model dimension d</strong>, so the output is the same size as the input and blocks
+can be stacked; (ii) the number of <code>W_O</code> rows equalling the concatenated length
+is your dimension check.</p>
+</details>
+
+<hr />
+<hr />
+<h1 id="8--module-12--word-sense--wordnet">8 · Module 12 — Word Sense &amp; WordNet</h1>
+<details>
+<summary><b>N8.1</b> Simplified Lesk. Which sense of "bank" is used in <i>"He sat on the river bank and watched the water."</i>? — answer</summary>
+
+<pre><code>Sense 1 gloss : { sloping , land , river , water , edge }
+Sense 2 gloss : { financial , institution , money , deposit , loan }
+
+Step 1 — content words of the sentence (drop stop-words and the target itself)
+  { sat , river , watched , water }
+
+Step 2 — overlap with each gloss
+  Sense 1 :  river , water                    -&gt;  2
+  Sense 2 :  (nothing)                        -&gt;  0
+
+Step 3 — pick the maximum
+</code></pre>
+<p><strong>Answer: Sense 1 — the sloping land beside a river.</strong> Overlap 2 vs 0.</p>
+<p><strong>Write the overlapping words out explicitly</strong>, not just the count — the marking
+scheme gives credit for identifying which words matched. Drop stop-words
+(<em>he, on, the, and</em>) and drop the ambiguous word itself before counting.</p>
+</details>
+
+<details>
+<summary><b>N8.2</b> Context vector c = [1, 2]. Sense A = [2, 1], Sense B = [1, 3]. Which sense is selected? — answer</summary>
+
+<pre><code>--- cosine( c , A )
+  dot  = (1x2) + (2x1) = 4
+  |c|  = sqrt(1 + 4)  = sqrt(5)  = 2.236
+  |A|  = sqrt(4 + 1)  = sqrt(5)  = 2.236
+  cos  = 4 / (2.236 x 2.236) = 4 / 5 = 0.800
+
+--- cosine( c , B )
+  dot  = (1x1) + (2x3) = 7
+  |c|  = 2.236
+  |B|  = sqrt(1 + 9)  = sqrt(10) = 3.162
+  cos  = 7 / (2.236 x 3.162) = 7 / 7.071 = 0.990
+</code></pre>
+<p><strong>Sense B is selected (0.990 &gt; 0.800).</strong></p>
+<p><strong>The justification sentence:</strong> B points in almost the same <em>direction</em> as the
+context vector even though its magnitude differs — and cosine ignores magnitude,
+measuring only direction. That is exactly why cosine is the right tool here.</p>
+</details>
+
+<hr />
+<hr />
+<h1 id="9--module-13--semantic-web--ontology">9 · Module 13 — Semantic Web &amp; Ontology</h1>
+<blockquote>
+<p><strong>There is no numerical in this module.</strong> The scheme lists it as <em>Application /
+Case Study</em>, and both past papers asked for RDF triples and a modelling
+justification in prose.</p>
+<p>Go to <strong>THEORY-BANK §9</strong> — questions Q9.2 (write triples), Q9.3 (RDF vs OWL)
+and Q9.4 (the publication-ontology case study) are the three that have actually
+been asked.</p>
+</blockquote>
+<hr />
+<hr />
+<h1 id="10--module-14--retrieval-augmented-generation">10 · Module 14 — Retrieval-Augmented Generation</h1>
+<details>
+<summary><b>N10.1</b> A retriever returns similarity scores 0.91, 0.83, 0.77, 0.68, 0.55 with a threshold of 0.75. How many chunks reach the LLM? — answer</summary>
+
+<pre><code>Keep every score &gt;= 0.75 :
+
+  0.91  &gt;= 0.75   keep
+  0.83  &gt;= 0.75   keep
+  0.77  &gt;= 0.75   keep
+  0.68  &lt;  0.75   drop
+  0.55  &lt;  0.75   drop
+
+Chunks passed to the LLM = 3
+</code></pre>
+<p><strong>State the boundary rule you used</strong> (&quot;greater than or equal to&quot;), because a
+score sitting exactly on the threshold is a favourite trap. Then add the reason
+a threshold exists at all: low-similarity chunks are <strong>contextual noise</strong> that
+consumes the context window and degrades generation.</p>
+</details>
+
+<details>
+<summary><b>N10.2</b> Context window = 8000 tokens. System prompt 300, user query 100, and 1000 reserved for the answer. Each chunk is 450 tokens. How many chunks fit? — answer</summary>
+
+<pre><code>Step 1 — subtract everything that is not a chunk
+
+  8000  total window
+  - 300  system prompt
+  - 100  user query
+  -1000  reserved for the generated answer
+  ------
+   6600  available for retrieved chunks
+
+Step 2 — divide by the chunk size
+
+  6600 / 450 = 14.67
+
+Step 3 — round DOWN (a partial chunk is not usable)
+
+  14 chunks
+</code></pre>
+<p><strong>Answer: 14 chunks</strong>, using 6300 tokens and leaving 300 spare.</p>
+<p><strong>Always round down and say why.</strong> And never forget the <strong>reserve for the
+answer</strong> — if you fill the window with context, the model has no room to reply.</p>
+</details>
+
+<details>
+<summary><b>N10.3</b> 8 chunks are retrieved, of which 5 are relevant. The corpus contains 10 relevant chunks in total. Compute precision, recall and F1. — answer</summary>
+
+<pre><code>Precision = relevant retrieved / total retrieved
+          = 5 / 8  = 0.625
+
+Recall    = relevant retrieved / total relevant that exist
+          = 5 / 10 = 0.500
+
+F1 = 2PR / (P + R)
+   = (2 x 0.625 x 0.500) / (0.625 + 0.500)
+   = 0.625 / 1.125
+   = 0.556
+</code></pre>
+<p><strong>Precision 0.625 · Recall 0.50 · F1 0.556.</strong></p>
+<p><strong>The comment sub-part:</strong> precision below 1 means <strong>irrelevant chunks are
+polluting the prompt</strong> — contextual noise that can pull the generated answer
+off-course. Recall of 0.5 means <strong>half the relevant evidence was never
+retrieved</strong>, so the answer may simply be incomplete. Lowering the similarity
+threshold raises recall but lowers precision — that is the trade-off to name.</p>
+</details>
+
+<details>
+<summary><b>N10.4</b> A 2000-token document is chunked with chunk size 500 and overlap 100. How many chunks are produced? — answer</summary>
+
+<pre><code>Stride (how far the window advances) = chunk size - overlap
+                                     = 500 - 100 = 400
+
+Chunk start positions: 0 , 400 , 800 , 1200 , 1600
+
+  chunk 1 :    0 -  500
+  chunk 2 :  400 -  900
+  chunk 3 :  800 - 1300
+  chunk 4 : 1200 - 1700
+  chunk 5 : 1600 - 2000     (the last one, ends at the document end)
+
+Number of chunks = 5
+
+Formula: ceil( (2000 - 500) / 400 ) + 1 = ceil(3.75) + 1 = 4 + 1 = 5
+</code></pre>
+<p><strong>Answer: 5 chunks.</strong> Without overlap it would be exactly 4 — the overlap costs
+you one extra chunk of storage, and that is the price of not cutting an idea in
+half at a boundary (THEORY-BANK Q10.3).</p>
+</details>
+
+<hr />
+<hr />
+<h1 id="11--module-15--text-summarization">11 · Module 15 — Text Summarization</h1>
+<details>
+<summary><b>N11.1</b> MMR with λ = 0.7. S1: sim(q) = 0.90, sim(S) = 0.60. S2: sim(q) = 0.75, sim(S) = 0.20. Which is selected? — answer</summary>
+
+<pre><code>MMR(s) = lambda x sim(s,q)  -  (1 - lambda) x sim(s,S)
+
+lambda = 0.7   so   (1 - lambda) = 0.3
+
+MMR(S1) = 0.7 x 0.90  -  0.3 x 0.60
+        = 0.630 - 0.180
+        = 0.450
+
+MMR(S2) = 0.7 x 0.75  -  0.3 x 0.20
+        = 0.525 - 0.060
+        = 0.465
+</code></pre>
+<p><strong>S2 is selected (0.465 &gt; 0.450).</strong></p>
+<p><strong>The justification — this is where the marks are:</strong> S1 is <em>more relevant</em> to the
+query (0.90 vs 0.75), but it is also <strong>highly redundant</strong> with what has already
+been chosen (0.60 vs 0.20), so the penalty term wipes out its advantage. S2
+contributes <strong>new, complementary information</strong>. MMR deliberately trades a little
+relevance for <strong>diversity and coverage</strong>, which is what stops a summary
+repeating the same fact.</p>
+</details>
+
+<details>
+<summary><b>N11.2</b> Reference: "the cat sat on the mat". Candidate: "the cat sat on a mat". Compute ROUGE-1 and ROUGE-2 recall. — answer</summary>
+
+<pre><code>=== ROUGE-1 (unigrams) ===
+
+Reference tokens : the , cat , sat , on , the , mat      (6)
+Candidate tokens : the , cat , sat , on , a  , mat       (6)
+
+Overlapping unigrams (clipped to how often each appears in the candidate):
+  the (1) , cat (1) , sat (1) , on (1) , mat (1)         = 5
+
+  Recall    = 5 / 6 = 0.833
+  Precision = 5 / 6 = 0.833
+
+=== ROUGE-2 (bigrams) ===
+
+Reference bigrams : (the cat)(cat sat)(sat on)(on the)(the mat)    = 5
+Candidate bigrams : (the cat)(cat sat)(sat on)(on a )(a  mat)      = 5
+
+Overlap : (the cat)(cat sat)(sat on)                               = 3
+
+  Recall = 3 / 5 = 0.600
+</code></pre>
+<p><strong>ROUGE-1 = 0.833 · ROUGE-2 = 0.600.</strong></p>
+<p><strong>Why ROUGE-2 is so much lower:</strong> one substituted word (<em>the</em> → <em>a</em>) breaks
+<strong>two</strong> bigrams, not one. Bigram overlap punishes local word changes far harder
+than unigram overlap — which is exactly why ROUGE-2 is reported alongside
+ROUGE-1, and why both are poor at recognising a valid paraphrase.</p>
+</details>
+
+<details>
+<summary><b>N11.3</b> A 500-word document is summarised in 75 words. Compute the compression ratio. — answer</summary>
+
+<pre><code>Compression ratio = summary length / original length
+                  = 75 / 500
+                  = 0.15   =  15%
+</code></pre>
+<p>The summary is <strong>15% of the original</strong>; equivalently the text was compressed by
+<strong>85%</strong>. Typical extractive summaries sit between 10% and 30% — tighter than
+that and content selection starts dropping essential facts.</p>
+<p><strong>If asked the other way round:</strong> &quot;compressed to 15%&quot; and &quot;compressed <strong>by</strong> 85%&quot;
+mean the same thing. State which one you are giving.</p>
+</details>
+
+</div>
+<script>
+var wasOpen = [];
+function openAll(){
+  wasOpen = [];
+  document.querySelectorAll("details").forEach(function(d,i){
+    wasOpen[i] = d.open; d.open = true;
+  });
+}
+function restoreAll(){
+  document.querySelectorAll("details").forEach(function(d,i){ d.open = wasOpen[i]; });
+}
+window.addEventListener("beforeprint", openAll);
+window.addEventListener("afterprint", restoreAll);
+
+function doPrint(){ openAll(); window.print(); }
+function toggleAll(){
+  var ds = document.querySelectorAll("details");
+  var anyClosed = Array.prototype.some.call(ds, function(d){ return !d.open; });
+  ds.forEach(function(d){ d.open = anyClosed; });
+  document.getElementById("tgl").textContent = anyClosed ? "Hide all answers" : "Show all answers";
+}
+
+var out = "";
+document.querySelectorAll(".wrap h1, .wrap h2").forEach(function(h){
+  if(!h.id) return;
+  out += '<a class="' + h.tagName.toLowerCase() + '" href="#' + h.id + '">' +
+         h.textContent.replace(/^[0-9]+[.]\s*/, "") + "</a>";
+});
+document.getElementById("toclinks").innerHTML = out;
+</script>
+</body></html>

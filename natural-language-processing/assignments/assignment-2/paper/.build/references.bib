@@ -1,0 +1,184 @@
+% Bibliography for the review-summarization paper.
+% Every entry here has its PDF downloaded in refs/ under the same short name
+% as the citation key, so you can always open what you are citing.
+
+% ---------------------------------------------------------------------
+% Encoder-decoder lineage  ->  motivates the architecture choice
+% ---------------------------------------------------------------------
+
+@inproceedings{sutskever2014seq2seq,
+  title     = {Sequence to Sequence Learning with Neural Networks},
+  author    = {Sutskever, Ilya and Vinyals, Oriol and Le, Quoc V.},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {27},
+  year      = {2014},
+  note      = {refs/seq2seq-sutskever-2014.pdf}
+}
+
+@inproceedings{bahdanau2015attention,
+  title     = {Neural Machine Translation by Jointly Learning to Align and Translate},
+  author    = {Bahdanau, Dzmitry and Cho, Kyunghyun and Bengio, Yoshua},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2015},
+  note      = {refs/attention-bahdanau-2015.pdf. This is the additive attention
+               implemented in our attention.py}
+}
+
+@inproceedings{vaswani2017attention,
+  title     = {Attention is All you Need},
+  author    = {Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob
+               and Jones, Llion and Gomez, Aidan N. and Kaiser, {\L}ukasz and Polosukhin, Illia},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {30},
+  year      = {2017},
+  note      = {refs/transformer-vaswani-2017.pdf}
+}
+
+% ---------------------------------------------------------------------
+% Pretrained summarization models  ->  why t5-small, and what the ceiling is
+% ---------------------------------------------------------------------
+
+@article{raffel2020t5,
+  title   = {Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer},
+  author  = {Raffel, Colin and Shazeer, Noam and Roberts, Adam and Lee, Katherine
+             and Narang, Sharan and Matena, Michael and Zhou, Yanqi and Li, Wei
+             and Liu, Peter J.},
+  journal = {Journal of Machine Learning Research},
+  volume  = {21},
+  number  = {140},
+  pages   = {1--67},
+  year    = {2020},
+  note    = {refs/t5-raffel-2020.pdf. The model we fine-tune; also the source of
+             the "summarize: " task prefix}
+}
+
+@inproceedings{see2017pointer,
+  title     = {Get To The Point: Summarization with Pointer-Generator Networks},
+  author    = {See, Abigail and Liu, Peter J. and Manning, Christopher D.},
+  booktitle = {Proceedings of the 55th Annual Meeting of the Association for
+               Computational Linguistics (ACL)},
+  pages     = {1073--1083},
+  year      = {2017},
+  note      = {refs/pointer-generator-see-2017.pdf}
+}
+
+@inproceedings{zhang2020pegasus,
+  title     = {{PEGASUS}: Pre-training with Extracted Gap-sentences for Abstractive Summarization},
+  author    = {Zhang, Jingqing and Zhao, Yao and Saleh, Mohammad and Liu, Peter J.},
+  booktitle = {Proceedings of the 37th International Conference on Machine Learning (ICML)},
+  pages     = {11328--11339},
+  year      = {2020},
+  note      = {refs/pegasus-zhang-2020.pdf}
+}
+
+@inproceedings{liu2019bertsum,
+  title     = {Text Summarization with Pretrained Encoders},
+  author    = {Liu, Yang and Lapata, Mirella},
+  booktitle = {Proceedings of the 2019 Conference on Empirical Methods in
+               Natural Language Processing (EMNLP)},
+  pages     = {3730--3740},
+  year      = {2019},
+  note      = {refs/bertsum-liu-lapata-2019.pdf}
+}
+
+% ---------------------------------------------------------------------
+% Evaluation  ->  the core of our ROUGE argument
+% ---------------------------------------------------------------------
+
+@inproceedings{lin2004rouge,
+  title     = {{ROUGE}: A Package for Automatic Evaluation of Summaries},
+  author    = {Lin, Chin-Yew},
+  booktitle = {Text Summarization Branches Out, ACL Workshop},
+  pages     = {74--81},
+  year      = {2004},
+  note      = {refs/rouge-lin-2004.pdf. Cite for the definition of ROUGE-N and
+               ROUGE-L, and for the fact that it was designed against
+               multi-sentence references}
+}
+
+@inproceedings{zhang2020bertscore,
+  title     = {{BERTScore}: Evaluating Text Generation with {BERT}},
+  author    = {Zhang, Tianyi and Kishore, Varsha and Wu, Felix and
+               Weinberger, Kilian Q. and Artzi, Yoav},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2020},
+  note      = {refs/bertscore-zhang-2020.pdf. Our "what we should have also
+               measured" citation}
+}
+
+@article{fabbri2021summeval,
+  title   = {{SummEval}: Re-evaluating Summarization Evaluation},
+  author  = {Fabbri, Alexander R. and Kry{\'s}ci{\'n}ski, Wojciech and McCann, Bryan
+             and Xiong, Caiming and Socher, Richard and Radev, Dragomir},
+  journal = {Transactions of the Association for Computational Linguistics (TACL)},
+  volume  = {9},
+  pages   = {391--409},
+  year    = {2021},
+  note    = {refs/summeval-fabbri-2021.pdf. Evidence that ROUGE correlates
+             weakly with human judgement}
+}
+
+@inproceedings{maynez2020faithfulness,
+  title     = {On Faithfulness and Factuality in Abstractive Summarization},
+  author    = {Maynez, Joshua and Narayan, Shashi and Bohnet, Bernd and McDonald, Ryan},
+  booktitle = {Proceedings of the 58th Annual Meeting of the Association for
+               Computational Linguistics (ACL)},
+  pages     = {1906--1919},
+  year      = {2020},
+  note      = {refs/faithfulness-maynez-2020.pdf. Frames our "praise kept,
+               complaint dropped" failure case}
+}
+
+% ---------------------------------------------------------------------
+% Opinion summarization  ->  our actual task setting
+% ---------------------------------------------------------------------
+
+@inproceedings{chu2019meansum,
+  title     = {{MeanSum}: A Neural Model for Unsupervised Multi-Document
+               Abstractive Summarization},
+  author    = {Chu, Eric and Liu, Peter J.},
+  booktitle = {Proceedings of the 36th International Conference on Machine Learning (ICML)},
+  pages     = {1223--1232},
+  year      = {2019},
+  note      = {refs/meansum-chu-liu-2019.pdf. Closest prior work to our
+               map-reduce aggregation}
+}
+
+@inproceedings{brazinskas2020fewshot,
+  title     = {Few-Shot Learning for Opinion Summarization},
+  author    = {Bra{\v{z}}inskas, Arthur and Lapata, Mirella and Titov, Ivan},
+  booktitle = {Proceedings of the 2020 Conference on Empirical Methods in
+               Natural Language Processing (EMNLP)},
+  pages     = {4119--4135},
+  year      = {2020},
+  note      = {refs/fewshot-opinion-brazinskas-2020.pdf}
+}
+
+% ---------------------------------------------------------------------
+% Data and sentiment tooling
+% ---------------------------------------------------------------------
+
+@inproceedings{mcauley2013amazon,
+  title     = {From Amateurs to Connoisseurs: Modeling the Evolution of User
+               Expertise through Online Reviews},
+  author    = {McAuley, Julian and Leskovec, Jure},
+  booktitle = {Proceedings of the 22nd International Conference on World Wide Web (WWW)},
+  pages     = {897--908},
+  year      = {2013},
+  note      = {refs/amazon-reviews-mcauley-2013.pdf. Source of the Amazon Fine
+               Food Reviews dataset}
+}
+
+@inproceedings{hutto2014vader,
+  title     = {{VADER}: A Parsimonious Rule-based Model for Sentiment Analysis
+               of Social Media Text},
+  author    = {Hutto, C.J. and Gilbert, Eric},
+  booktitle = {Proceedings of the International AAAI Conference on Web and
+               Social Media (ICWSM)},
+  volume    = {8},
+  number    = {1},
+  pages     = {216--225},
+  year      = {2014},
+  note      = {refs/vader-hutto-gilbert-2014.pdf. The sentiment scorer inside
+               our aspect miner}
+}
