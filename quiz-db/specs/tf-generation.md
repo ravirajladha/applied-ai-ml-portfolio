@@ -18,6 +18,8 @@
 | 9 | `latency` | Latency: TTFT, tokens/sec, prefill vs decode | Time to first token and streaming | Total time ≈ TTFT + tokens / speed | Prefill is compute-bound, decode is memory-bound; KV-cache memory | Batching, continuous batching, KV cache limits concurrency |
 | 10 | `inference-opt` | Speculative decoding and quantisation | — | Quantisation stores weights in fewer bits | Memory arithmetic for fp16 / int8 / int4 | Speculative decoding is lossless; acceptance rate maths; quantisation quality trade-offs |
 | 11 | `determinism` | Determinism and seeds | Same prompt can give different answers | Temperature 0 = greedy | Seeds make sampling repeatable on one setup | Why temperature 0 still isn't always deterministic (float non-associativity, batching, MoE routing) |
+| 12 | `sampler-code` | Building a sampler in code | argmax of logits = argmax of probs | torch.multinomial | top-k renormalise; top-p boundary token; temperature widens the nucleus; sampler order (penalties -> T -> top-k -> top-p -> sample) | No renormalise -> ValueError in NumPy; T = 0 division gives NaN, special-case it |
+| 13 | `structured-output` | Constrained decoding and structured output | Use structured-output modes + validate | JSON mode = syntax only; logit bias bans tokens | Masking disallowed logits to -inf; grammar/FSM constrained decoding; valid ≠ correct | Token/grammar boundary mismatch; schema field order (reasoning before answer) |
 
 ## Must-know facts
 - An LLM outputs one logit per vocabulary token; softmax turns logits into probabilities for the next token.
@@ -40,6 +42,15 @@
 - Speculative decoding: a small draft model proposes tokens, the big model verifies them in one pass; with the right acceptance rule the output distribution is unchanged.
 - Quantising weights (fp16 -> int8 -> int4) cuts memory 2x/4x and usually speeds up decoding, at some quality cost.
 - Temperature 0 is not guaranteed deterministic: floating-point addition isn't associative, and batch composition changes kernel reduction order.
+- Common sampler order: penalties -> temperature -> top-k -> top-p -> softmax -> sample; T = 0 is special-cased to argmax.
+- Multiplicative repetition penalty divides positive logits and multiplies negative ones; frequency/presence penalties subtract count·fp and a flat pp.
+- Beam search: width 1 = greedy; finished hypotheses go to a separate list; very wide beams can hurt quality (beam search curse); work in log-probs to avoid underflow.
+- Constrained decoding masks invalid tokens to -inf each step from a grammar/FSM; it guarantees form, not correct values. Basic JSON mode guarantees only syntax.
+- LM training shifts labels: logits[:, :-1] vs tokens[:, 1:]; pads must be excluded from loss and perplexity.
+- Chat APIs are stateless: re-sending history makes input tokens grow quadratically with turns; prompt caching discounts only an identical prefix.
+- Reasoning tokens are billed as output and count against max tokens.
+- Speculative sampling accepts with min(1, p/q) (acceptance rate Σ min(p, q)) and resamples from norm(max(0, p − q)); draft must share the tokenizer; gains shrink at large batch.
+- Continuous batching adds/removes sequences at every decode step.
 
 ## Common traps (each one must have at least one question)
 - "Temperature 0 means identical output every time" -> usually, but GPU reduction order, batching and MoE routing can change it.
@@ -61,6 +72,17 @@
 - "Speculative decoding trades quality for speed" -> with proper verification it is exactly the big model's distribution.
 - "Repetition penalty = divide the logit by the penalty" -> dividing a negative logit makes it more likely; negatives must be multiplied.
 - "Stop sequences appear in the returned text" -> most APIs cut the text before the stop sequence.
+- "Zero out filtered probs and sample" -> without renormalising, NumPy raises ValueError (PyTorch silently accepts).
+- "Temperature 0 is just logits / 0" -> inf/nan; implementations switch to argmax.
+- "Wider beam is always better" -> very wide beams give short/degenerate outputs.
+- "Multiply probabilities to score a sequence" -> underflows to 0.0; sum log-probs.
+- "JSON mode / schema constraints make the answer correct" -> they constrain form only.
+- "Put the answer field first in the schema" -> the model commits before reasoning.
+- "Strong repetition penalty is harmless" -> it punishes needed repeats (identifiers, quotes) in RAG/code.
+- "Including pads in the perplexity mean is fine" -> it fakes a lower perplexity.
+- "Speculative decoding speeds up any batch size" -> at high batch the GPU is compute-bound and gains vanish.
+- "Hand-written 'User:/Assistant:' prompt is fine for a chat model" -> must match the chat template.
+- "A stop string is detected per streamed chunk" -> it can span chunks; match on accumulated text.
 
 ## Interview angle
 1. **Walk me through how an LLM generates a reply.** Tokenise the prompt, run a forward pass (prefill) to get logits for the next token, apply temperature/top-p, sample a token, append it, and repeat with the KV cache until an end token, stop sequence or max_tokens. Stream tokens as they're produced.
@@ -68,6 +90,9 @@
 3. **Why do LLMs hallucinate and what do you do about it?** They are trained to produce plausible continuations, and evaluation/RLHF often rewards confident answers over "I don't know". Mitigate with retrieval (RAG), asking for citations, allowing abstention, constrained outputs, and evals that check groundedness.
 4. **Explain TTFT vs tokens/sec and how to improve each.** TTFT = prefill of the whole prompt (compute-bound): shorten prompts, use prompt caching. Tokens/sec = decode (memory-bandwidth bound, one token at a time): quantisation, speculative decoding, GQA, smaller models, batching.
 5. **Why isn't temperature 0 deterministic?** Floating-point sums give slightly different results in different orders; server-side batching changes the reduction order, so near-tied logits can flip and the outputs diverge from that token onward.
+
+6. **How do you get reliable JSON out of an LLM?** Use schema-constrained decoding (logits of tokens that would break the grammar are masked to -inf each step), validate with a schema anyway, put reasoning fields before answer fields, and handle truncation by max_tokens.
+7. **Why does speculative decoding not change the output distribution?** Accept a drafted token with min(1, p/q); on rejection resample from norm(max(0, p − q)). The combined distribution equals p exactly; the speed-up depends on acceptance rate (Σ min(p, q)) and on decode being memory-bound.
 
 SDE analogy: the generation loop is a `while` loop calling a pure function `next_token(context)`; the KV cache is memoisation; the context window is a fixed-size buffer; max_tokens is a loop guard.
 
