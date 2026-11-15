@@ -7,17 +7,19 @@
 
 | # | Topic slug | Topic | Amateur | Intermediate | Advanced | Expert |
 |---|-----------|-------|---------|--------------|----------|--------|
-| 1 | `chat-anatomy` | Anatomy of a chat request | system / user / assistant roles, a messages list in Python | the API is stateless: resend history, appending turns | trimming history under a token budget, orphaned turns | — |
+| 1 | `chat-anatomy` | Anatomy of a chat request | system / user / assistant roles, a messages list in Python | the API is stateless: resend history, appending turns, cost grows each turn | trimming history under a token budget, orphaned turns, prefilling the assistant turn | — |
 | 2 | `instructions` | Clear instructions, roles, delimiters, templates | specific vs vague asks, delimiters, role prompting | positive vs negative instructions, templates with placeholders | `str.format` and JSON braces, separating instructions from data | — |
-| 3 | `few-shot` | Zero-shot vs few-shot | what zero-shot and few-shot mean | label/format bias from examples, examples beat instructions | dynamic (retrieved) example selection | models copying surface details of examples |
-| 4 | `reasoning` | Chain-of-thought and reasoning models | what "think step by step" means | when CoT helps and when it only adds cost | reasoning models, CoT is not a faithful trace | — |
-| 5 | `structured-output` | Structured outputs and validation | parse JSON with `json.loads` | invalid JSON (quotes, fences), why to validate even in JSON mode | — | bool-is-int, NaN, schema field order vs reasoning |
-| 6 | `tool-calling` | Tool / function calling | the app runs the tool, not the model | the loop: model asks, app runs, result goes back | bad arguments, parallel calls matched by id | tool design as prompt design, recoverable errors |
-| 7 | `injection` | Prompt injection, jailbreaks, defence in depth | what prompt injection is (SQL-injection analogy) | indirect injection via retrieved content, delimiters are not security | keyword filters are bypassable, defence-in-depth layers | the private-data + untrusted-input + exfiltration trifecta |
-| 8 | `sampling` | Temperature for different tasks | low temp for extraction, higher for brainstorming | softmax with temperature arithmetic | temperature 0 is not a determinism guarantee | — |
-| 9 | `evals` | Evaluating prompts | what a golden set is | accuracy on a golden set, regression tests | LLM-as-judge biases | swap-consistency, small-sample noise |
-| 10 | `cost-context` | Tokens, cost, caching, long context | you pay per input and output token | cost arithmetic, `max_tokens` limits output only | prompt caching arithmetic and prefix rules, lost in the middle | cache invalidation by tools/prefix, needle tests vs real long-context reasoning |
-| 11 | `agents` | Agent basics | an agent = LLM in a loop choosing tools | when a fixed workflow beats an agent | step limits and loop guards | compounding error over many steps |
+| 3 | `few-shot` | Zero-shot vs few-shot | what zero-shot and few-shot mean | label/format bias from examples, examples beat instructions, examples as user/assistant pairs | dynamic (retrieved) example selection, ordering / recency effects | models copying surface details of examples, contextual calibration with a content-free input |
+| 4 | `reasoning` | Chain-of-thought and reasoning models | what "think step by step" means | when CoT helps and when it only adds cost, `<thinking>`/`<answer>` tags and parsing them | reasoning models, CoT is not a faithful trace, self-consistency voting (needs temperature > 0) | — |
+| 5 | `structured-output` | Structured outputs and validation | parse JSON with `json.loads`, `json.dumps` for tool results | invalid JSON (quotes, fences, prose around it), schema mode + validation, `json.loads` may not return a dict | validator with field-level errors, retry with the error, enums, truncation under `max_tokens` | bool-is-int, NaN, schema field order vs reasoning, required fields force hallucinated values, duplicate keys, raw control characters |
+| 6 | `tool-calling` | Tool / function calling | the app runs the tool, not the model; what a tool definition contains | the loop: model asks, app runs, result goes back; unknown-tool errors | bad arguments, parallel calls matched by id, trimming large results, simulating the loop, authorisation + human confirmation | tool design as prompt design, confused deputy / IDOR, idempotency of side-effecting retries |
+| 7 | `injection` | Prompt injection, jailbreaks, defence in depth | what prompt injection is (SQL-injection analogy), direct injection | indirect injection via retrieved content, delimiters are not security, secret system prompts aren't a control | keyword filters are bypassable, defence-in-depth layers, markdown-image exfiltration, output URL allowlists | the private-data + untrusted-input + exfiltration trifecta, dual-LLM (quarantine) pattern, tool role is not a boundary |
+| 8 | `sampling` | Temperature and sampling | low temp for extraction, higher for brainstorming; temperature is a request parameter | softmax with temperature arithmetic, top-p (nucleus) filtering by code | temperature 0 is not a determinism guarantee | — |
+| 9 | `evals` | Evaluating prompts | what a golden set is, same set for old vs new prompt | accuracy on a golden set, regression tests, exact match for closed labels | LLM-as-judge biases, assertion-based checks in code, swap order for position bias | swap-consistency, small-sample noise (55/45 is not significant), judge kappa vs raw agreement, overfitting the golden set |
+| 10 | `cost-context` | Tokens, cost, caching, long context | you pay per input and output token, context window = input + output, ~4 chars/token | cost arithmetic, `max_tokens` limits output only, output tokens cost more, caching needs a shared prefix | prompt caching arithmetic and prefix rules, lost in the middle, long document first / question last | cache invalidation by tools/prefix, cache-write premium vs TTL for sparse traffic, needle tests vs real long-context reasoning |
+| 11 | `agents` | Agent basics | an agent = LLM in a loop choosing tools, step limit | when a fixed workflow beats an agent | step limits and loop guards, repeated-call detection, human approval for side effects | compounding error over many steps, multi-agent hand-off costs |
+| 12 | `prompt-code` | Building prompts in code: templates, budgets, escaping | why templates live in files/constants | `string.Template` and `safe_substitute` | newest-first history trimming to a token budget, context-window budget arithmetic | `$5` in a Template raises ValueError, double-formatting lets user text read other variables |
+| 13 | `prompt-ops` | Prompt versioning, rollout and monitoring | prompt edits need review and tests like code | logging a prompt version with every response | A/B metrics (success + cost + latency + parse failures), pinning dated model versions | canary rollout with rollback |
 
 ## Must-know facts
 - A chat request is a list of messages with roles: `system` (standing rules), `user` (the human or app input), `assistant` (the model's earlier replies), and usually `tool` (tool results).
@@ -37,6 +39,16 @@
 - Prompt caching reuses the computation for an identical prefix. Put static content (instructions, tools, docs) first and variable content last.
 - Long contexts suffer "lost in the middle": facts in the middle are used less reliably than those at the start or end.
 - Use an agent only when the steps can't be known in advance; a fixed pipeline is cheaper, faster and testable.
+- Budget the context window explicitly: window - reserved output - system - tools - history = room for documents.
+- Few-shot order matters (recency bias); balance and interleave labels, then freeze the order. A content-free input ("N/A") reveals the prompt's label prior.
+- Self-consistency = sample several reasoning paths at temperature > 0 and majority-vote the answers.
+- A required schema field with no legal "absent" value forces the model to invent one; allow null.
+- Python `json` keeps the last duplicate key, rejects raw newlines inside strings (strict mode) and accepts NaN.
+- Tools run with your server's privileges: authorise from the session identity, never from model-supplied ids; side-effecting retries need idempotency keys.
+- Rendering model output (markdown images, links) is an exfiltration channel; sanitise output and allowlist hosts.
+- Cache writes often cost more than base input and expire after minutes; sparse traffic can make caching more expensive.
+- An LLM judge needs chance-corrected agreement (kappa) on the failures it must catch; 55/45 on 100 paired cases is noise.
+- Prompts are versioned artifacts: log the version per response, pin dated model versions, roll out by canary.
 
 ## Common traps (each one must have at least one question)
 - "The model remembers my last call" -> no, the API is stateless; you resend history.
@@ -58,6 +70,20 @@
 - Trusting an LLM judge's verdict as objective -> position and verbosity bias.
 - Using an agent for a known, fixed sequence of steps -> slower, costlier, less reliable than a workflow.
 - Python validators: `isinstance(True, int)` is True; Python's `json` accepts `NaN`.
+- "`json.loads` succeeded, so it's a dict" -> it may be a list, string or number.
+- Required schema field for optional information -> the model fills in 0 or a guess.
+- Duplicate JSON keys -> Python keeps the last; a validator and a consumer can disagree.
+- "Retry the timed-out `send_email`" -> it may already have been sent; duplicates.
+- Trusting a `user_id` argument from the model -> confused deputy / IDOR.
+- "The tool role makes injected text harmless" -> roles are not a security boundary.
+- Auto-rendering markdown images from model output -> zero-click data exfiltration.
+- Few-shot examples grouped by label -> recency bias toward the last label.
+- Self-consistency at temperature 0 -> all samples identical, the vote means nothing.
+- Prompt caching on traffic sparser than the TTL -> every call pays the write premium.
+- 90% judge-human agreement on a 90%-pass set -> kappa can be 0.
+- Tuning against the same golden set for weeks -> overfit; keep a held-out set.
+- `$5` in a `string.Template` -> ValueError; formatting a string that contains user text twice -> variable leakage.
+- Calling a `latest` model alias -> behaviour changes without a code change.
 
 ## Interview angle
 1. **"Walk me through a tool-calling loop."** The app sends messages + tool schemas. The model replies with a tool call (name + JSON args) instead of text. The app validates the args, runs the function, appends the result as a tool message with the call id, and calls the model again. Repeat until the model returns a final text answer, with a step limit. SDE analogy: the model is a client that can only *request* RPCs; your server decides whether to execute them.
@@ -65,6 +91,8 @@
 3. **"How do you know a prompt change is an improvement?"** A golden set of real inputs with expected outputs, run as a regression suite on every change; exact-match/code checks where possible, rubric-based LLM judging (with order swapping) where not; track cost and latency too.
 4. **"How do you get reliable JSON?"** Use the provider's structured-output / schema mode, keep the schema small, put reasoning fields before the answer field, parse with `json.loads`, validate with a schema (e.g. Pydantic), retry with the error message on failure, and handle truncation (`finish_reason == "length"`).
 5. **"How do you cut cost and latency?"** Shorter prompts, smaller model where evals allow, prompt caching with a stable prefix, cap `max_tokens`, avoid unnecessary chain-of-thought, batch offline work.
+6. **"How do you ship a prompt change safely?"** Version the prompt and log the version with each response; run assertion checks and the golden set (with a held-out split) in CI; pin the model version; canary to a few percent of traffic watching success, parse failures, cost and latency; roll back automatically. Same as a risky backend deploy.
+7. **"A tool can read any customer's invoice. How do you stop the agent leaking them?"** Authorise inside the tool from the session identity (not model arguments), least privilege, human approval for side effects, idempotency keys on retries, and sanitise rendered output so it can't exfiltrate data.
 
 ## Source material
 To be added.
