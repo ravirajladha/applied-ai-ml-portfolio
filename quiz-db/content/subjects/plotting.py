@@ -12,6 +12,10 @@ TOPICS = [
     ("heatmaps", "imshow and confusion-matrix heatmaps"),
     ("choosing", "Choosing a chart and log scales"),
     ("pitfalls", "pyplot vs OO API, show/close/savefig"),
+    ("scales-ticks", "Twin axes, log/symlog scales, ticks and formatters"),
+    ("color-images", "Colormaps, norms and image arrays"),
+    ("ml-plots", "ML evaluation plots: ROC/PR, confusion, calibration, residuals, embeddings"),
+    ("reading-charts", "Reading and critiquing charts"),
 ]
 
 QUESTIONS = [
@@ -916,4 +920,501 @@ print(len(fig.axes), len(plt.get_fignums()))""",
         "A Figure created directly is not registered with pyplot.",
         "matplotlib.figure.Figure() builds a figure outside pyplot's global manager, so plt.get_fignums() doesn't see it and there's nothing to close. This is the recommended pattern for web servers.",
         topic="pitfalls", level=4),
+    # ================================================================== round 2
+    out("""import matplotlib.pyplot as plt
+fig, axs = plt.subplots(1, 1, squeeze=False)
+print(axs.shape, type(axs[0, 0]).__name__)""",
+        ["(1, 1) Axes", "() Axes", "(1,) Axes", "(1, 1) ndarray"], 0,
+        "squeeze=False turns off the shape-shrinking.",
+        "With squeeze=False, subplots always returns a 2-D array, even for a 1x1 grid. Use it in helper functions that take nrows/ncols as arguments, so the same axs[r, c] indexing works for every grid size. With the default squeeze=True, a 1x1 grid returns a bare Axes, not an array.",
+        topic="subplots", level=2),
+    out("""import matplotlib.pyplot as plt
+fig, axs = plt.subplots(2, 3)
+print(axs.flat[4] is axs[1, 1], axs.T.shape, len(axs))""",
+        ["True (3, 2) 2", "False (3, 2) 6", "True (2, 3) 6", "False (2, 3) 2"], 0,
+        "axs is an ordinary NumPy object array in row-major order.",
+        "flat walks the grid row by row, so index 4 is row 1, column 1. axs.T is the transposed view (3, 2), handy when you want to loop over columns. len() of a 2-D array counts rows (2), not Axes. That is why a `for ax in axs` loop over a 2-D grid gives you rows of Axes, and calling ax.plot on one fails.",
+        topic="subplots", level=3),
+    out("""import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+line, = ax.plot([1, 2])
+print(line.axes is ax, line.figure is fig, ax.figure is fig, plt.gca() is ax)""",
+        ["True True True True", "True False True True", "False False True True", "True True True False"], 0,
+        "Every Artist keeps a reference to its parents.",
+        "The Artist tree links both ways: a Figure holds Axes and an Axes holds lines, and each child points back with .axes and .figure. So a helper that only receives a Line2D can still reach its Axes and Figure. plt.subplots also makes the new Axes current, so gca() returns it.",
+        analogy="Like DOM nodes: a child element knows its parentNode, so you can walk up from any element to the document.",
+        topic="fig-axes", level=3),
+    out("""import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax.set_xlim(0, 5)
+ax.plot([0, 10], [0, 1])
+print(tuple(float(v) for v in ax.get_xlim()))""",
+        ["(0.0, 5.0)", "(-0.5, 10.5)", "(0.0, 10.0)", "(0.0, 5.0, 10.0)"], 0,
+        "Setting limits by hand changes the Axes' autoscale setting.",
+        "set_xlim turns x autoscaling off, so data you plot afterwards does NOT widen the view. Half of this line is clipped off the chart. Real-world case: a plotting helper sets limits for the first run, and later runs that go further are silently cut off. Call ax.autoscale() (or set the limits last) if you want the view to fit all the data.",
+        topic="fig-axes", level=4),
+    out("""import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+line, = ax.plot([0, 1, 2], [0, 1, 2])
+line.set_ydata([0, 10, 20])
+a = tuple(round(float(v), 1) for v in ax.get_ylim())
+ax.relim(); ax.autoscale_view()
+b = tuple(round(float(v), 1) for v in ax.get_ylim())
+print(a, b)""",
+        ["(-0.1, 2.1) (-1.0, 21.0)", "(-1.0, 21.0) (-1.0, 21.0)", "(-0.1, 2.1) (-0.1, 2.1)", "(0.0, 20.0) (-1.0, 21.0)"], 0,
+        "Changing a line's data does not recompute the data limits.",
+        "set_ydata only swaps the numbers inside the Line2D. The Axes keeps its cached data limits until you call relim() and then autoscale_view(). A live training-loss plot that updates a line in place will draw the new points off-screen until you do this. Calling plot() again on every step does rescale, but it piles up a new artist each time.",
+        analogy="Like mutating an object in place in React state: the data changed, but nothing re-ran the layout until you tell it to.",
+        topic="fig-axes", level=4),
+    out("""import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax2 = ax.twinx()
+plt.ylabel("lr")
+print(repr(ax.get_ylabel()), repr(ax2.get_ylabel()))""",
+        ["'' 'lr'", "'lr' ''", "'lr' 'lr'", "'' ''"], 0,
+        "Which Axes did twinx leave as the 'current' one?",
+        "twinx creates a new Axes and makes it current, so the pyplot call plt.ylabel labels the right-hand (twin) axis, not the original. This is a classic mixed-style bug: the OO code builds the axes, and a later plt.* call goes to whichever Axes was touched last. Call ax.set_ylabel / ax2.set_ylabel explicitly.",
+        topic="fig-axes", level=4),
+    out("""import matplotlib.pyplot as plt
+for i in range(3):
+    plt.figure()
+plt.close()
+print(plt.get_fignums())""",
+        ["[1, 2]", "[]", "[2, 3]", "[1, 2, 3]"], 0,
+        "With no argument, plt.close closes only one figure.",
+        "plt.close() closes the CURRENT figure, which is the most recently created one (number 3). Figures 1 and 2 stay open. In loops, call plt.close(fig) on the exact figure you made, or plt.close('all') at the end.",
+        topic="pitfalls", level=3),
+    out("""import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax.plot([1, 2])
+fig.clf()
+print(len(fig.axes), len(plt.get_fignums()))""",
+        ["0 1", "0 0", "1 1", "1 0"], 0,
+        "Clearing a figure is not the same as closing it.",
+        "fig.clf() removes all Axes and artists, but the figure is still registered with pyplot. A loop that calls clf() instead of plt.close(fig) still adds one figure per iteration to pyplot's list. Use clf() to reuse one figure on purpose, and close() to free it.",
+        topic="pitfalls", level=3),
+    mcq("A plotting script works on your laptop but crashes on a Linux CI runner (no screen) with a 'no display' or Tcl error as soon as `plt.subplots()` runs. What's the fix?",
+        ["Use the non-GUI Agg backend: set MPLBACKEND=Agg in the environment, or call matplotlib.use('Agg') before importing pyplot, and save with fig.savefig",
+         "Install a bigger font cache",
+         "Call plt.show(block=False)",
+         "Replace PNG output with JPEG"], 0,
+        "The script is trying to open a window on a machine that has no screen.",
+        "A GUI backend (TkAgg, QtAgg) needs a display server. Agg renders to an in-memory image, which is all you need for savefig. Setting the environment variable is the cleanest option because the code doesn't change. plt.show() does nothing under Agg, so the script must save its figures.",
+        analogy="Like running a browser test on a CI box: you switch to headless Chrome because there's no screen.",
+        topic="pitfalls", level=3),
+    tf("In a loop that makes 1,000 plots with `fig, ax = plt.subplots()`, calling `fig.clf()` at the end of each iteration keeps pyplot's figure count from growing.", False,
+        "clf empties the figure. Does pyplot forget the figure?",
+        "pyplot keeps a global registry of every figure it created until plt.close is called. clf frees the artists but leaves the Figure, its canvas and its manager registered. After 20 figures you get the 'More than 20 figures have been opened' RuntimeWarning, and memory still grows. Use plt.close(fig), or build matplotlib.figure.Figure objects directly so pyplot never tracks them.",
+        topic="pitfalls", level=4),
+    # ------------------------------------------------------------------ scales-ticks
+    out("""import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax2 = ax.twinx()
+ax.plot([1, 2], [1, 2], label="loss")
+ax2.plot([1, 2], [100, 200], label="lr")
+print(ax.get_xlim() == ax2.get_xlim(), ax.get_ylim() == ax2.get_ylim())
+print(len(ax.legend().get_texts()))""",
+        ["True False\n1", "True True\n2", "False False\n1", "True False\n2"], 0,
+        "A twin shares one axis and nothing else, including the legend.",
+        "twinx shares the x axis and gives the new Axes its own y scale (here 1-2 on the left, 100-200 on the right). Each Axes has its own legend, so ax.legend() only sees 'loss'. To get one legend, collect handles from both: h1, l1 = ax.get_legend_handles_labels(); h2, l2 = ax2.get_legend_handles_labels(); ax.legend(h1 + h2, l1 + l2).",
+        diagram="""
+ loss                          lr
+ 2 |              ___/ ...  | 200
+   |        ___/  ...       |
+ 1 |__/ ...                 | 100
+   +------------------------+
+          shared x (step)""",
+        topic="scales-ticks", level=3),
+    out("""import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax.plot([-1000, -1, 0, 1, 1000])
+ax.set_yscale("symlog", linthresh=1)
+fig.canvas.draw()
+print(ax.get_yscale(), ax.get_ylim()[0] < 0)""",
+        ["symlog True", "log False", "symlog False", "ValueError"], 0,
+        "symlog = symmetric log: linear near zero, logarithmic further out.",
+        "A plain log axis cannot show zero or negative values. symlog is linear inside (-linthresh, linthresh) and logarithmic outside, on both sides. That suits signed data that spans orders of magnitude, like gradient values, profit/loss or reward. The cost is a kink at the threshold, so say so in the caption.",
+        topic="scales-ticks", level=3),
+    fill("`ax.set_yscale('symlog', ____=1e-3)` sets the size of the linear region around zero.",
+        "linthresh",
+        "linear + threshold.",
+        "linthresh is the half-width of the linear band around 0. Pick it close to the smallest magnitude you care about. If it is too large, everything sits in the linear band and you lose the log view. If it is too small, the band around zero gets squeezed into a sliver.",
+        topic="scales-ticks", level=3),
+    out("""import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax.plot([1, 1000])
+ax.set_yscale("log")
+y = ax.transData.transform([(0, 1), (0, 10), (0, 100)])[:, 1]
+print(round(float(y[1] - y[0]), 3) == round(float(y[2] - y[1]), 3))""",
+        ["True", "False", "ValueError", "None"], 0,
+        "transData maps data coordinates to pixels. Compare the 1->10 and 10->100 gaps.",
+        "On a log axis every factor of 10 (a decade) gets the same number of pixels, so going from 1 to 10 looks as big as going from 10 to 100. That is why a loss falling from 1.0 to 0.1 and from 0.01 to 0.001 look like equally large improvements on a log plot.",
+        topic="scales-ticks", level=3),
+    tf("On a log y axis, the vertical gap between loss 0.02 and 0.01 is the same as the gap between 2.0 and 1.0.", True,
+        "Log axes show ratios.",
+        "Both pairs differ by a factor of 2, so both gaps are log10(2) decades. That is great for seeing late-training progress, but it can mislead: an absolute change of 0.01 looks as big as a change of 1.0. When you report 'run B is much better' from a log plot, check the absolute numbers too.",
+        topic="scales-ticks", level=4),
+    out("""from matplotlib.ticker import FuncFormatter
+f = FuncFormatter(lambda x, pos: f"{x / 1000:.0f}k")
+print(f(2500), f(3500), f(1000))""",
+        ["2k 4k 1k", "3k 4k 1k", "2k 3k 1k", "2.5k 3.5k 1k"], 0,
+        "Python's format rounds halves to the nearest even digit.",
+        "':.0f' uses round-half-to-even: 2.5 -> '2' and 3.5 -> '4'. A tick formatter that drops decimals can label two different ticks with the same text, or label 2,500 as '2k'. Formatters run on every tick value, so use '.1f' or a smarter rule when the ticks are not whole thousands.",
+        topic="scales-ticks", level=4),
+    out("""import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax.plot([0.9, 0.5, 0.3])
+fig.canvas.draw()
+print(ax.get_xticks().tolist())""",
+        ["[-0.25, 0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25]", "[0, 1, 2]", "[0.0, 1.0, 2.0]", "[-0.1, 0.0, 1.0, 2.0, 2.1]"], 0,
+        "The default locator picks 'nice' numbers, not your data points.",
+        "The automatic tick locator divides the view (-0.1 to 2.1) into round steps of 0.25, so a 3-epoch plot shows 'epoch 0.75'. The list also includes ticks just outside the view (-0.25, 2.25), which are not drawn. Fix it with ax.xaxis.set_major_locator(MaxNLocator(integer=True)) or ax.set_xticks(range(n)).",
+        topic="scales-ticks", level=3),
+    fill("To force whole-number ticks for epochs: `ax.xaxis.set_major_locator(____(integer=True))`.",
+        "MaxNLocator",
+        "It's a locator from matplotlib.ticker that caps the number of ticks.",
+        "MaxNLocator(integer=True) picks at most a handful of nice ticks and only integer ones, so short training runs don't get fractional epoch labels. Locators decide WHERE ticks go; formatters decide what TEXT they show.",
+        topic="scales-ticks", level=3),
+    out("""import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax.plot([5, 9])
+ax.set_ylim(bottom=0)
+print(tuple(round(float(v), 1) for v in ax.get_ylim()))""",
+        ["(0.0, 9.2)", "(0.0, 9.0)", "(4.8, 9.2)", "(0.0, 1.0)"], 0,
+        "Only one end is fixed; the other keeps its automatic value.",
+        "set_ylim(bottom=0) pins the bottom and leaves the top at its autoscaled value (9 plus the 5% margin). This is the quick way to make an accuracy or throughput chart start at zero without guessing the maximum.",
+        topic="scales-ticks", level=2),
+    mcq("Your dashboard shows a 'locator' and a 'formatter' on the y axis of a latency chart. Which statement is right?",
+        ["The locator decides where the ticks go; the formatter turns each tick value into its label text",
+         "The locator sets the axis limits; the formatter sets the colour",
+         "They are two names for the same object",
+         "The formatter decides where the ticks go; the locator picks the font"], 0,
+        "One answers 'where', the other answers 'what text'.",
+        "Each axis has a major and a minor locator (e.g. MaxNLocator, LogLocator, FixedLocator) and a formatter (ScalarFormatter, PercentFormatter, FuncFormatter). Swapping the formatter to show '12 ms' or '25%' never moves the ticks. Calling set_xticks replaces the locator with a FixedLocator.",
+        analogy="Like a chart library's tickValues vs tickFormat options: one picks the positions, the other renders the strings.",
+        topic="scales-ticks", level=2),
+    # ------------------------------------------------------------------ color-images
+    out("""import matplotlib.pyplot as plt
+import numpy as np
+cmap = plt.get_cmap("viridis")
+print(cmap.N, np.round(cmap(0.0), 3).tolist())""",
+        ["256 [0.267, 0.005, 0.329, 1.0]", "256 [0.0, 0.0, 0.0, 1.0]", "100 [0.267, 0.005, 0.329]", "256 [0.993, 0.906, 0.144, 1.0]"], 0,
+        "A colormap is a lookup table; calling it with a number in [0, 1] returns RGBA.",
+        "viridis has 256 entries. cmap(0.0) is its dark purple end as an (R, G, B, A) tuple of floats in [0, 1], and cmap(1.0) is the yellow end. The plotting pipeline is always data -> norm (scales values to 0..1) -> cmap (0..1 -> RGBA).",
+        diagram="""
+data value --norm--> 0..1 --cmap--> RGBA
+   -3.2      vmin/vmax   0.42     (0.13, 0.57, 0.55, 1.0)""",
+        topic="color-images", level=3),
+    out("""import matplotlib.pyplot as plt
+cmap = plt.get_cmap("viridis")
+print(cmap(1) == cmap(1.0), cmap(255) == cmap(1.0))""",
+        ["False True", "True False", "True True", "False False"], 0,
+        "Integers and floats mean different things to a colormap.",
+        "A float is a position in [0, 1]. An int is an INDEX into the 256-entry lookup table. So cmap(1) is the second-darkest colour, not the top one, and cmap(255) is the top. A bug in hand-rolled class colours: cmap(label) with integer labels 0, 1, 2 gives three nearly identical dark purples. Use cmap(label / (n - 1)), or a qualitative map like 'tab10'.",
+        topic="color-images", level=4),
+    out("""import matplotlib.pyplot as plt
+import numpy as np
+cmap = plt.get_cmap("viridis")
+print(tuple(float(v) for v in cmap(np.nan)), cmap(2.0) == cmap(1.0))""",
+        ["(0.0, 0.0, 0.0, 0.0) True", "(0.267, 0.005, 0.329, 1.0) True", "(0.0, 0.0, 0.0, 1.0) False", "ValueError"], 0,
+        "Colormaps have special 'bad' and 'over' colours.",
+        "NaN maps to the 'bad' colour, fully transparent by default, so missing cells in a heatmap show the background, not a colour. Values above 1 use the 'over' colour, which defaults to the top colour, so out-of-range data blends in silently. cmap.with_extremes(bad='grey', over='red') makes both visible, and colorbar(extend='max') shows that values were clipped.",
+        topic="color-images", level=4),
+    out("""from matplotlib.colors import Normalize, TwoSlopeNorm
+n = Normalize(vmin=0, vmax=10)
+t = TwoSlopeNorm(vcenter=0, vmin=-1, vmax=4)
+print(float(n(5)), float(t(-1)), float(t(0)), float(t(2)))""",
+        ["0.5 0.0 0.5 0.75", "0.5 0.0 0.2 0.6", "0.5 0.0 0.5 1.0", "5.0 -1.0 0.0 2.0"], 0,
+        "TwoSlopeNorm maps vcenter to 0.5 and scales each side separately.",
+        "Normalize is linear: 5 is halfway between 0 and 10. TwoSlopeNorm puts 0 at the colormap middle (the neutral white of 'RdBu' or 'coolwarm'), maps [-1, 0] to [0, 0.5] and [0, 4] to [0.5, 1]. So 2 -> 0.75. With plain Normalize(-1, 4), zero would land at 0.2 and look clearly blue, which suggests a negative value that isn't there.",
+        topic="color-images", level=4),
+    out("""from matplotlib.colors import LogNorm
+n = LogNorm(vmin=1, vmax=1000)
+print(round(float(n(10)), 3), round(float(n(100)), 3))""",
+        ["0.333 0.667", "0.01 0.1", "0.009 0.099", "0.5 0.75"], 0,
+        "Each decade gets an equal share of the colour range.",
+        "LogNorm maps log10(value) linearly: 1, 10, 100, 1000 land at 0, 1/3, 2/3, 1. Use it when a heatmap's counts span orders of magnitude (hist2d of a million points, attention scores, word-pair counts). Otherwise one hot cell turns everything else the darkest colour.",
+        topic="color-images", level=3),
+    out("""import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.colors import CenteredNorm
+fig, ax = plt.subplots()
+im = ax.imshow(np.array([[-0.2, 0.9], [0.1, 0.4]]), cmap="coolwarm", norm=CenteredNorm())
+fig.canvas.draw()
+print(tuple(round(float(v), 2) for v in im.get_clim()))""",
+        ["(-0.9, 0.9)", "(-0.2, 0.9)", "(-1.0, 1.0)", "(0.0, 0.9)"], 0,
+        "CenteredNorm keeps the centre (0 by default) in the middle of the colour range.",
+        "CenteredNorm makes the range symmetric around 0 using the largest absolute value (0.9), so it becomes [-0.9, 0.9]. Positive and negative values of the same size get colours of the same strength. Without it, autoscaling to [-0.2, 0.9] puts 0 off-centre in a diverging map. That is the usual bug in correlation and weight-difference heatmaps.",
+        topic="color-images", level=3),
+    mcq("Why do plotting libraries now default to 'viridis' instead of the old rainbow 'jet' colormap?",
+        ["viridis is perceptually uniform (equal steps in value look like equal steps in colour) and still readable in greyscale and for colour-blind viewers; jet creates false bands and hides detail in its bright cyan/yellow regions",
+         "jet is slower to render",
+         "viridis has more colours (jet has only 64)",
+         "jet cannot be saved to PNG"], 0,
+        "Think about what the eye sees as a 'big change' in each map.",
+        "In jet, lightness goes up and down, so the eye sees sharp edges where the data is smooth and misses real changes in the green band. Perceptually uniform maps (viridis, magma, cividis) increase steadily in lightness. For heatmaps of loss landscapes, attention or activations this decides whether the 'structure' you see is real.",
+        topic="color-images", level=3),
+    fill("Append ____ to a colormap name to reverse it, e.g. `cmap='viridis____'` (same text both times).",
+        "_r",
+        "Underscore plus one letter.",
+        "Every built-in colormap has a reversed twin named with '_r' ('Blues_r', 'RdBu_r'). Use it when the natural reading is flipped. For example, with an error heatmap you may want low = dark and high = light. cmap.reversed() does the same in code.",
+        topic="color-images", level=2),
+    out("""import matplotlib.pyplot as plt
+import numpy as np
+fig, ax = plt.subplots()
+im = ax.imshow(np.zeros((4, 6, 3), dtype=np.uint8))
+print(im.get_array().shape, tuple(float(v) for v in ax.get_xlim()), ax.get_aspect())""",
+        ["(4, 6, 3) (-0.5, 5.5) 1.0", "(6, 4, 3) (-0.5, 3.5) 1.0", "(4, 6, 3) (0.0, 6.0) auto", "(3, 4, 6) (-0.5, 5.5) 1.0"], 0,
+        "Images are (height, width, channels); width is the x axis.",
+        "An RGB image is an H x W x 3 array (rows first). It has 6 columns, so x runs from -0.5 to 5.5 with each pixel centred on an integer. imshow uses aspect='equal' by default (reported as 1.0), so pixels stay square. A uint8 image is read as 0-255, and a float image as 0-1.",
+        topic="color-images", level=3),
+    out("""import matplotlib.pyplot as plt
+import numpy as np
+img = np.zeros((3, 32, 32), dtype=np.float32)
+fig, ax = plt.subplots()
+ax.imshow(img)""",
+        ["TypeError", "ValueError", "IndexError", "(nothing is printed)"], 0,
+        "PyTorch stores images as C x H x W. What does imshow expect?",
+        "imshow accepts (H, W), (H, W, 3) or (H, W, 4). A channels-first (3, 32, 32) tensor raises TypeError 'Invalid shape (3, 32, 32) for image data'. Convert with img.transpose(1, 2, 0) in NumPy or tensor.permute(1, 2, 0).cpu().numpy() before plotting a batch of training images.",
+        diagram="""
+PyTorch:     (C, H, W) = (3, 32, 32)
+imshow:      (H, W, C) = (32, 32, 3)
+fix:         img.transpose(1, 2, 0)""",
+        topic="color-images", level=3),
+    mcq("You plot a training image straight from the DataLoader after `Normalize(mean, std)`. It shows up as strange, high-contrast colours, and the log says 'Clipping input data to the valid range for imshow with RGB data'. What is going on?",
+        ["The normalised floats range roughly from -2 to +2; imshow clips RGB floats to [0, 1], so you must undo the normalisation (x * std + mean) before plotting",
+         "imshow needs uint8 images and cannot show floats",
+         "The model has corrupted the image",
+         "The colormap is wrong; pass cmap='gray'"], 0,
+        "What value range does imshow expect for a float RGB image?",
+        "For RGB(A) arrays there is no colormap or norm. Floats must lie in [0, 1] (ints in [0, 255]). Anything outside is clipped, so negatives become black and values above 1 become full colour. Denormalise, then clip to [0, 1]. Passing cmap or vmin does nothing for 3-channel data. This is the usual 'my augmentations look broken' false alarm.",
+        topic="color-images", level=4),
+    tf("For an H x W x 3 RGB array, `imshow` ignores the `cmap` argument.", True,
+        "A colormap turns ONE number per pixel into a colour.",
+        "A colormap only applies to 2-D (single-channel) data, where each value is mapped through norm and cmap. An RGB array already holds colours, so cmap is ignored. To see one channel (or a grayscale MNIST digit) as grey, pass the 2-D array with cmap='gray'. Otherwise you get viridis purple-yellow digits.",
+        topic="color-images", level=3),
+    mcq("You `imshow` a spectrogram of shape (64, 2000) and get a thin, unreadable strip. What's the fix?",
+        ["Pass aspect='auto' so the pixels stretch to fill the Axes instead of staying square",
+         "Transpose it to (2000, 64)",
+         "Increase dpi to 600",
+         "Use origin='lower'"], 0,
+        "By default imshow keeps every pixel square.",
+        "imshow defaults to aspect='equal', so 2000 columns by 64 rows becomes a 31:1 strip. aspect='auto' fills the Axes. Add extent=(t0, t1, f0, f1) to label the axes in seconds and Hz instead of pixel indices, and origin='lower' so low frequencies sit at the bottom.",
+        topic="color-images", level=2),
+    out("""import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+a = ax.scatter([1, 2, 3], [1, 2, 3], c=[0, 5, 10])
+b = ax.scatter([1, 2, 3], [1, 2, 3], color="red")
+print(a.get_array().tolist(), b.get_array())""",
+        ["[0.0, 5.0, 10.0] None", "[0, 5, 10] [1, 0, 0]", "None None", "[0.0, 0.5, 1.0] None"], 0,
+        "c= is DATA to colour-map; color= is a fixed colour.",
+        "With c= the values are stored on the collection and sent through norm + cmap at draw time, so you can add a colorbar. color='red' sets the face colour directly, so there is no array to map. Use c for 'colour by predicted probability' and color for 'all class-0 points are blue'.",
+        topic="plot-types", level=3),
+    out("""import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+sc = ax.scatter([1, 2, 3], [4, 5, 6], c=(1, 0, 0))
+fig.canvas.draw()
+print(sc.get_array().tolist(), len({tuple(r) for r in sc.get_facecolors().round(3).tolist()}))""",
+        ["[1.0, 0.0, 0.0] 2", "None 1", "[1.0, 0.0, 0.0] 1", "ValueError"], 0,
+        "There are exactly 3 points, and the tuple also has 3 numbers.",
+        "When len(c) equals the number of points, matplotlib reads c as three data values, not one RGB colour. The points come out yellow, purple, purple (2 distinct colours), not red. With 4 points the same tuple would mean 'red'. This shape-dependent behaviour is why the docs say: for a single colour, always use color=.",
+        topic="plot-types", level=4),
+    tf("In `ax.scatter(x, y, s=...)`, `s` is the marker AREA in points squared, so doubling `s` makes each dot about 1.41x wider, not 2x.", True,
+        "Is s a radius or an area?",
+        "s is in points^2, so the diameter grows with sqrt(s). If you map a quantity (e.g. sample count) to s, the dot AREA is proportional to it, which is the honest choice for bubble charts. Mapping it to radius would make large values look much bigger than they are.",
+        topic="plot-types", level=3),
+    out("""import matplotlib.pyplot as plt
+import numpy as np
+rng = np.random.default_rng(0)
+x, y = rng.normal(size=(2, 1000))
+fig, ax = plt.subplots()
+counts, xe, ye, im = ax.hist2d(x, y, bins=(4, 5))
+print(counts.shape, len(xe), int(counts.sum()))""",
+        ["(4, 5) 5 1000", "(5, 4) 5 1000", "(4, 5) 4 1000", "(4, 5) 5 20"], 0,
+        "Same rule as a 1-D histogram: k bins have k+1 edges, along each axis.",
+        "hist2d returns counts indexed [x_bin, y_bin] (4 x 5), 5 x-edges, 6 y-edges and the image. Every point lands in exactly one cell, so the counts add up to 1000. Note the order: counts[i, j] is x-bin i, which is TRANSPOSED compared with how imshow draws a matrix (rows = y). Pass counts.T if you re-plot it yourself.",
+        topic="plot-types", level=3),
+    out("""import matplotlib.pyplot as plt
+import numpy as np
+rng = np.random.default_rng(0)
+data = rng.normal(0, 0.1, size=500)
+fig, ax = plt.subplots()
+n, edges, _ = ax.hist(data, bins=20, density=True)
+print(round(float((n * np.diff(edges)).sum()), 3), bool(n.max() > 1))""",
+        ["1.0 True", "1.0 False", "500.0 True", "20.0 False"], 0,
+        "density=True makes the AREA equal 1, not the heights.",
+        "With density=True each bar's height is count / (N * bin width), so height x width sums to 1. The bins here are only about 0.03 wide, so heights go well above 1. That is fine for a probability density but surprising if you expected fractions. For 'percent of samples per bin', use weights=np.ones(N) / N instead.",
+        topic="plot-types", level=3),
+    out("""import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+n, edges, _ = ax.hist([0, 1, 2, 3] * 5, bins=10)
+print([int(c) for c in n])""",
+        ["[5, 0, 0, 5, 0, 0, 5, 0, 0, 5]", "[5, 5, 5, 5, 0, 0, 0, 0, 0, 0]", "[2, 2, 2, 2, 2, 2, 2, 2, 2, 2]", "[5, 5, 5, 5]"], 0,
+        "10 equal-width bins between 0 and 3 are each 0.3 wide. Where do the integers fall?",
+        "Integer data (star ratings, counts, class ids) with more bins than distinct values gives a 'comb' with empty bins in between. It can look like a strange multi-modal distribution. Use one bin per integer (bins=np.arange(-0.5, 4)) or a bar chart of value_counts().",
+        diagram="""
+count
+ 5 |#        #        #        #
+   |#        #        #        #
+ 0 +#--+--+--#--+--+--#--+--+--#
+   0                           3""",
+        topic="plot-types", level=3),
+    out("""import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+n, edges, _ = ax.hist([0, 1, 2, 3], bins=3)
+print([int(c) for c in n], edges.tolist())""",
+        ["[1, 1, 2] [0.0, 1.0, 2.0, 3.0]", "[1, 1, 1] [0.0, 1.0, 2.0, 3.0]", "[2, 1, 1] [0.0, 1.0, 2.0, 3.0]", "[1, 1, 1, 1] [0.0, 1.0, 2.0, 3.0]"], 0,
+        "Bins are half-open [a, b) except one.",
+        "Every bin is [left, right) EXCEPT the last, which is closed [2, 3], so the maximum value is counted. The bins hold {0}, {1} and {2, 3}. On integer data with edges that land on integers, the last bar is often taller than it should be. This trips up hand-rolled bucketing code that assumes half-open bins everywhere.",
+        topic="plot-types", level=4),
+    # ------------------------------------------------------------------ ml-plots
+    out("""from sklearn.metrics import roc_curve
+y = [0, 0, 1, 1]
+s = [0.1, 0.4, 0.35, 0.8]
+fpr, tpr, thr = roc_curve(y, s)
+print(fpr.tolist(), tpr.tolist())
+print(thr[0])""",
+        ["[0.0, 0.0, 0.5, 0.5, 1.0] [0.0, 0.5, 0.5, 1.0, 1.0]\ninf", "[0.0, 0.5, 1.0] [0.5, 1.0, 1.0]\n0.8", "[0.0, 0.0, 0.5, 0.5, 1.0] [0.0, 0.5, 0.5, 1.0, 1.0]\n1.0", "[0.0, 0.5, 0.5, 1.0] [0.5, 0.5, 1.0, 1.0]\ninf"], 0,
+        "roc_curve adds a starting point where nothing is predicted positive.",
+        "roc_curve returns arrays ready for ax.plot(fpr, tpr). x = false positive rate and y = true positive rate, one point per threshold, starting at (0, 0). In sklearn 1.6 the first threshold is inf, meaning 'predict nothing positive'. So if you colour points by threshold or put thresholds in a table, drop or special-case thr[0]. Add ax.plot([0, 1], [0, 1], '--') as the random-guess line.",
+        topic="ml-plots", level=3),
+    mcq("You plot a precision-recall curve for a fraud model where 2% of transactions are fraud. Where is the 'random classifier' reference line?",
+        ["A horizontal line at precision = 0.02 (the positive rate), not the diagonal used for ROC",
+         "The diagonal from (0, 1) to (1, 0)",
+         "A horizontal line at precision = 0.5",
+         "There is no baseline for PR curves"], 0,
+        "A random scorer flags a random subset. What fraction of any random subset is fraud?",
+        "A classifier that ignores the input has precision equal to the base rate at every recall, so the PR baseline is y = prevalence. Drawing a diagonal or 0.5 line makes a weak model look far worse or better than chance. It also explains why ROC-AUC can be 0.95 while average precision is 0.3 on imbalanced data: the PR view shows how many false alarms each catch costs.",
+        diagram="""
+precision
+ 1 |\\___
+   |    \\___  model
+   |        \\____
+.02|------------------- random = prevalence
+   +-------------------> recall""",
+        topic="ml-plots", level=4),
+    out("""from sklearn.metrics import confusion_matrix
+y_true = [0, 0, 0, 0, 1, 1]
+y_pred = [0, 0, 0, 1, 1, 0]
+print(confusion_matrix(y_true, y_pred, normalize="true").round(2).tolist())
+print(confusion_matrix(y_true, y_pred, normalize="pred").round(2).tolist())""",
+        ["[[0.75, 0.25], [0.5, 0.5]]\n[[0.75, 0.5], [0.25, 0.5]]", "[[0.75, 0.25], [0.5, 0.5]]\n[[0.75, 0.25], [0.5, 0.5]]", "[[0.75, 0.5], [0.25, 0.5]]\n[[0.75, 0.25], [0.5, 0.5]]", "[[3, 1], [1, 1]]\n[[3, 1], [1, 1]]"], 0,
+        "normalize='true' divides by rows (actual); 'pred' divides by columns (predicted).",
+        "Raw counts are [[3, 1], [1, 1]]. 'true' makes each ROW sum to 1, so the diagonal is per-class RECALL (0.75, 0.5). 'pred' makes each COLUMN sum to 1, so the diagonal is per-class PRECISION (0.75, 0.5 here). The two heatmaps look alike but answer different questions. Always say in the title which one you plotted.",
+        topic="ml-plots", level=4),
+    out("""from sklearn.metrics import confusion_matrix
+y_true = ["cat", "dog", "dog", "dog"]
+y_pred = ["cat", "cat", "dog", "dog"]
+print(confusion_matrix(y_true, y_pred).tolist(), confusion_matrix(y_true, y_pred, labels=["dog", "cat"]).tolist())""",
+        ["[[1, 0], [1, 2]] [[2, 1], [0, 1]]", "[[1, 1], [0, 2]] [[2, 0], [1, 1]]", "[[1, 0], [1, 2]] [[1, 0], [1, 2]]", "[[2, 1], [0, 1]] [[1, 0], [1, 2]]"], 0,
+        "Without labels=, classes come out in sorted order. Rows are the actual class.",
+        "Sorted order is cat, dog. Row 'dog' (actual) has 1 predicted cat and 2 predicted dog. labels=['dog', 'cat'] reorders both rows and columns. Your heatmap tick labels must use the SAME list. A common bug is a matrix built in sorted order with tick labels in the model's class order, so every cell is mislabelled while the plot looks fine.",
+        topic="ml-plots", level=3),
+    mcq("Your plotting script smooths a noisy validation-loss curve with an EMA (exponential moving average, smoothing 0.9, like a training-dashboard slider) and picks the checkpoint at the smoothed curve's minimum. What's the catch?",
+        ["An EMA only looks backwards, so it lags: the smoothed minimum appears several epochs AFTER the real one, and you pick an already-overfitting checkpoint",
+         "An EMA always makes the minimum lower than it really was",
+         "An EMA moves the minimum earlier in time",
+         "There is no catch; smoothing never changes where the minimum is"], 0,
+        "Each smoothed value is mostly made of older values.",
+        "s_t = 0.9 * s_(t-1) + 0.1 * x_t keeps about 10 steps of memory, so turning points show up late. The early start is also biased toward the first value. Smooth to SEE the trend, but choose the checkpoint from the raw (or centred-window) metric. With pandas: val.ewm(alpha=0.3, adjust=False).mean() on [1.0, 0.6, 0.4, 0.35, 0.5, ...] puts the minimum at index 4 instead of 3.",
+        diagram="""
+loss  raw .   smoothed ---
+  |  .
+  |   .--__
+  |      . --___ . .--
+  |        .  ^raw min  ^smoothed min (late)
+  +------------------------> epoch""",
+        topic="ml-plots", level=4),
+    mcq("A reliability (calibration) plot is built with `calibration_curve(y, p, n_bins=2)`, and it returns fraction of positives [0.0, 0.75] at mean predicted probability [0.08, 0.93]. How should you read it?",
+        ["The model is over-confident at the top: when it says about 93%, only 75% are actually positive (the point is below the diagonal)",
+         "The model is perfectly calibrated because both lists increase",
+         "The model is under-confident: it should predict higher probabilities",
+         "Calibration plots only make sense for regression"], 0,
+        "Compare each x value (predicted) with its y value (actual rate). The diagonal y = x is perfect.",
+        "Points below the diagonal mean the predicted probability is higher than the observed frequency, i.e. over-confident. That is typical of boosted trees and of deep nets after long training. Fix it with CalibratedClassifierCV (isotonic or sigmoid) or temperature scaling. A plot with few bins is noisy, so also plot a histogram of p underneath.",
+        code="""import numpy as np
+from sklearn.calibration import calibration_curve
+y = np.array([0, 1, 0, 1, 0, 1, 1, 0, 1, 1])
+p = np.array([0.95, 0.95, 0.9, 0.9, 0.05, 0.95, 0.9, 0.1, 0.92, 0.97])
+frac_pos, mean_pred = calibration_curve(y, p, n_bins=2)
+print(frac_pos.round(2).tolist(), mean_pred.round(2).tolist())""",
+        topic="ml-plots", level=4),
+    mcq("A t-SNE plot of your sentence embeddings shows cluster A as a big, spread-out blob far from a tight cluster B. What can you safely conclude?",
+        ["Very little about size or distance: t-SNE keeps local neighbourhoods but distorts cluster sizes and between-cluster gaps; check with distances in the original space",
+         "A has much higher variance than B in the original space",
+         "A and B are the most dissimilar classes in the data",
+         "The embedding model is broken because the clusters differ in size"], 0,
+        "What does t-SNE try to preserve: neighbours or distances?",
+        "t-SNE only tries to keep each point's nearest neighbours close. Density gets evened out (dense clusters expand, sparse ones shrink) and global gaps depend on perplexity and the random seed. UMAP has similar caveats. Use the plot to spot neighbourhoods and label noise. For size or similarity claims, compute cosine distances in the embedding space or use PCA, whose axes are linear and show the variance they explain.",
+        topic="ml-plots", level=4),
+    mcq("You plot residuals (y - prediction) against predicted values for a linear regression model. Which pattern says 'the model is missing a non-linear term'?",
+        ["A U-shaped (curved) band: positive at both ends and negative in the middle",
+         "A random horizontal cloud around 0",
+         "A cloud whose spread widens to the right (a funnel)",
+         "Exactly zero residuals everywhere"], 0,
+        "A good residual plot looks like noise.",
+        "Curvature means the errors depend on x in a way a straight line can't capture: add polynomial or interaction features, or use a non-linear model. A funnel means heteroscedasticity (error grows with the value), so think log-transforming y or using prediction intervals. A random cloud is what you want.",
+        diagram="""
+resid
+ +  .                     .
+ 0 --- .  .  .  .  .  . ----
+ -        .  .  .  .
+   +-----------------------> predicted
+     U-shape = missing curve""",
+        topic="ml-plots", level=3),
+    tf("If you log training loss every step (300 points) and validation loss every epoch (3 points) and call `ax.plot(train)` and `ax.plot(val)` on the same Axes, the validation curve ends at x = 2 while training ends at x = 299.", True,
+        "With one argument, x is just 0..n-1.",
+        "Each plot() call without x uses its own index, so the 3 val points are crammed into the first 1% of the chart and look like a vertical drop. Plot both against a shared unit: ax.plot(steps, train) and ax.plot(epoch_end_steps, val), or convert steps to fractional epochs. It's the same bug as joining two time series on row number instead of timestamp.",
+        topic="ml-plots", level=4),
+    # ------------------------------------------------------------------ reading-charts
+    mcq("What does this training-loss chart most likely show?",
+        ["The learning rate is too high: loss drops briefly, then bounces and blows up (often to NaN)",
+         "Classic overfitting",
+         "The model is underfitting because it is too small",
+         "Normal training; loss always rises at the end"], 0,
+        "Look at what happens after the first few hundred steps.",
+        "A short dip, growing oscillation and then an explosion is what overshooting updates look like. Lower the LR (often by 3-10x), add warmup, or clip gradients. Overfitting looks different: TRAIN loss keeps falling and only validation rises. Here the training loss itself diverges.",
+        diagram="""
+loss                       NaN ^
+ 3 |                          |
+ 2 |\\        /\\   /\\    /\\   /
+ 1 | \\__/\\__/  \\_/  \\__/  \\_/
+   +-----------------------------> step""",
+        topic="reading-charts", level=2),
+    mcq("A 10-class classifier's training loss sits flat at about 2.30 from the first step to the last. What does the chart tell you?",
+        ["The model outputs a near-uniform distribution: 2.30 = ln(10) is the cross-entropy of guessing 1/10 for every class, so it is learning nothing (dead inputs, LR of 0, labels shuffled, or frozen weights)",
+         "The model has converged to a good solution",
+         "It is overfitting",
+         "The loss is in log scale so 2.30 means 10% error"], 0,
+        "Compute -ln(1/10).",
+        "A flat line at ln(C) is a fingerprint: uniform predictions. The usual causes are no gradient flow (a requires_grad / freeze bug, LR = 0, optimizer built on the wrong parameters), inputs all zero, or labels that don't match the inputs. Knowing the starting loss (ln C for C classes) is a quick sanity check in any training dashboard.",
+        diagram="""
+loss
+2.30 |---------------------------------
+     |
+     +---------------------------------> step""",
+        topic="reading-charts", level=4),
+    mcq("A slide shows revenue (left axis) and model accuracy (right axis) on twin y axes, and the two lines cross in March. The presenter says 'accuracy overtook revenue in March'. What's wrong?",
+        ["Nothing about the crossing is real: each axis has its own arbitrary scale, so moving either axis's limits moves (or removes) the crossing point",
+         "Twin axes always need a log scale",
+         "The lines should be bars",
+         "Accuracy must be plotted on the left axis"], 0,
+        "Change ax2.set_ylim and watch what happens to the crossing.",
+        "With twinx the vertical positions of the two series have no common unit, so crossings, 'gaps' and 'parallel trends' are created by whoever picked the limits. Show the series in two stacked panels with sharex=True, or plot both indexed to 100 at a common start date. Twin axes are fine for reading values off, not for comparing the lines.",
+        analogy="Like two dashboard widgets with independent auto-scaled y axes placed on top of each other: the overlap pattern is an artefact of the layout.",
+        topic="reading-charts", level=4),
+    mcq("A blog post compares two optimizers with one training run each and shows a smoothed validation-accuracy chart where B ends 0.3% above A. Which critique is most important?",
+        ["One seed per method gives no idea of run-to-run noise, which is often larger than 0.3%; show the mean and a band (min/max or std) over several seeds, and the raw curve alongside the smoothed one",
+         "The chart should use a pie chart",
+         "Validation accuracy should be plotted on a log scale",
+         "The y axis must start at 0% for line charts"], 0,
+        "Would a rerun of A with a different seed land in the same place?",
+        "Seed noise (data order, init, dropout) easily moves final accuracy by a few tenths of a percent, so a single-run gap of 0.3% proves nothing. Heavy smoothing can also hide instability, like a spike or divergence that one optimizer has. Plot mean +- std with fill_between over 3-5 seeds and keep the raw curve visible. A line chart may zoom its y axis (unlike bars), so that is not the issue.",
+        diagram="""
+acc
+ |        ____----- B (seed 0)
+ |   ___--  ~~~~~~ A seeds 0..4 band
+ |  /  ~~~~~~
+ +---------------------------> epoch""",
+        topic="reading-charts", level=4),
 ]
