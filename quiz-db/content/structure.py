@@ -36,6 +36,8 @@ SECTIONS = [
      "Course modules 1-12: foundations to safety, in the course's own terms and exam style."),
     ("nlpapps", "courses", "NLP Applications (AIMLCZG519)",
      "Spell/grammar checking, RAG, QA and chatbots, sentiment, MT, information extraction, efficient NLP."),
+    ("mledge", "courses", "Machine Learning on the Edge (AIMLCZG535)",
+     "Edge AI foundations, hardware, IoT data, deployment, edge MLOps, optimization, security, benchmarking."),
 ]
 
 SUBJECTS = [
@@ -101,4 +103,13 @@ SUBJECTS = [
     ("nlpa-mt", "nlpapps", "Machine Translation (S10-S12)", "Statistical and neural MT, evaluation, Indic-language translation.", "ready"),
     ("nlpa-ie", "nlpapps", "Information Extraction (S13-S14)", "NER, relation extraction, events and time.", "ready"),
     ("nlpa-efficient", "nlpapps", "Scalable & Efficient NLP (S15)", "Model compression, efficient architectures, inference and deployment.", "ready"),
+
+    ("edge-foundations", "mledge", "Edge AI Foundations (M1, S1-S2)", "Cloud vs edge vs fog, the edge-cloud continuum, the Edge AI pipeline and the deployment decision framework.", "ready"),
+    ("edge-hardware", "mledge", "Edge Hardware & Systems (M2, S3-S4)", "Hardware tiers, accelerators, edge platforms, co-design, RTOS and hardware economics.", "ready"),
+    ("edge-data-iot", "mledge", "Edge Data & IoT Integration (M3, S5-S6)", "Ingestion, streaming windows, feature extraction, data fusion, MQTT and edge analytics.", "ready"),
+    ("edge-deployment", "mledge", "Model Lifecycle & Deployment (M4, S7-S8)", "Edge ML pipeline, TFLite/ONNX Runtime/OpenVINO/TensorRT, containers and orchestration.", "ready"),
+    ("edge-mlops", "mledge", "Edge MLOps & Management (M5, S9-S10)", "CI/CD and registries, drift detection and PSI, OTA updates, shadow and A/B deployment.", "ready"),
+    ("edge-optimization", "mledge", "Model Optimization for the Edge (M6, S11-S12)", "Quantization, pruning, distillation, NAS, lightweight architectures, SLMs and compilers.", "ready"),
+    ("edge-security", "mledge", "Edge Security & Trust (M7, S13-S14)", "Federated learning, differential privacy, model extraction, TEEs, secure boot and secure channels.", "ready"),
+    ("edge-benchmarking", "mledge", "Benchmarking & Future Directions (M8, S15-S16)", "Latency/throughput/power metrics, MLPerf Tiny, Pareto selection, TinyML and edge GenAI trends.", "ready"),
 ]
