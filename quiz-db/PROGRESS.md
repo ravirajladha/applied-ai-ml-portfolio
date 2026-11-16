@@ -2,7 +2,7 @@
 
 Read this first in every quiz-creation session. Update it at the end.
 
-## Round 2: deepen every subject (started 15-Nov-2026)
+## Round 2: deepen every subject (started 15-Nov-2026, finished 16-Nov-2026)
 
 Target: 120-160 questions per subject, with more L3/L4, informative explanations and a real ML-code topic per subject.
 
@@ -21,7 +21,7 @@ Target: 120-160 questions per subject, with more L3/L4, informative explanations
 | Foundations | py-classes | 108 | 192 | done, pushed |
 | Foundations | np-arrays, np-operations | 139, 153 | 203, 215 | done, pushed |
 | Foundations | pd-dataframes, pd-cleaning | 151, 163 | 194, 208 | done, pushed |
-| Foundations | **plotting** | 99 | — | **next** (L4 only 13: add L3/L4) |
+| Foundations | plotting | 99 | 152 | done, pushed |
 | L1 | ml-what | 69 | 126 | done, pushed |
 | L1 | ml-types | 65 | 122 | done, pushed |
 | L1 | ml-data | 72 | 159 | done, pushed |
@@ -37,11 +37,13 @@ Target: 120-160 questions per subject, with more L3/L4, informative explanations
 | L4 | llm-finetuning | 63 | 131 | done, pushed |
 | L5 | ops-serving, ops-monitoring | 91, 80 | 134, 137 | done, pushed |
 
-Pushed: commit `71dcb2e` on branch `quiz-db` (5,373 questions). The `aiml_quiz` database is loaded from that commit (16-Nov-2026).
+Pushed: commit `59b790a` on branch `quiz-db` (5,426 questions). The `aiml_quiz` database is loaded from that commit (16-Nov-2026).
+
+**Round 2 is complete for all 35 ladder subjects.** Next: new subjects from the course material (llm-engineering, nlp-applications, machine-learning-on-the-edge, api-driven-cloud-native-solutions). Each needs a structure.py entry and a spec built from its materials folder.
 
 ## Known follow-ups
 - Writers stall if they write a whole question block in one edit. Tell them to append at most 10 questions per edit.
-- New questions in dl-neuron and dl-loss-gd are about 42-45% `out` (target 35%).
+- New questions in dl-neuron and dl-loss-gd are about 42-45% `out`, and in plotting about 57% `out` (targets 35% / 30%). A later pass can turn some into code mcqs.
 - The Python core banks are 55-79% `out` questions (STANDARD.md wants about 35%). Add conceptual mcq/tf questions in a later pass instead of converting existing ones.
 - Python 3.12+ `sum()` of floats is compensated: `sum([0.1]*10) == 1.0` is True. Explanations must contrast it with a `+=` loop.
 - Course material (llm-engineering, nlp-applications, edge ML, cloud-native) is not in the bank yet. These would be new subjects once the ladder round is done.
@@ -53,3 +55,4 @@ Pushed: commit `71dcb2e` on branch `quiz-db` (5,373 questions). The `aiml_quiz` 
 | 15-Nov-2026 | Round 2: Python core and six ML fundamentals subjects deepened, 4,450 questions, pushed `f941be6`. Stopped early to save tokens. ml-models is half-reviewed on disk. |
 | 16-Nov-2026 | Round 2: ml-models committed, and all L2-L5 subjects deepened to 128-144 each (5,159 questions). Vendor names removed from tf-generation and nlp-embeddings. Pushed `779e5dd`, DB reloaded. |
 | 16-Nov-2026 | NumPy and Pandas subjects deepened with L3/L4 and ML topics (`ml-arrays`, `ml-numpy`, `ml-features`, `windows`). 5,373 questions, pushed `71dcb2e`, DB reloaded. Plotting is next; then course-material subjects. |
+| 16-Nov-2026 | plotting deepened to 152 (new topics scales-ticks, color-images, ml-plots, reading-charts). Round 2 done: 5,426 questions, pushed `59b790a`, DB reloaded. |
