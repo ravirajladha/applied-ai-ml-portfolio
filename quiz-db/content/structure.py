@@ -17,6 +17,8 @@ CATEGORIES = [
      "Prompting, RAG and fine-tuning: where most AI engineer work happens."),
     ("shipping", "L5 · Shipping It", 5,
      "Serving, monitoring and running models in production."),
+    ("courses", "Courses: BITS WILP Electives", 6,
+     "Exam-focused banks built from Ravi's course material (slides, notes, past papers)."),
 ]
 
 SECTIONS = [
@@ -30,6 +32,8 @@ SECTIONS = [
     ("transformers", "text-to-llms", "Transformers", "Attention and how an LLM generates text."),
     ("llm-apps", "llm-engineering", "Building with LLMs", "Prompting, RAG and fine-tuning."),
     ("mlops", "shipping", "Production ML", "Serving and monitoring."),
+    ("llm4genai", "courses", "LLMs for Generative AI (AIMLCZG536)",
+     "Course modules 1-12: foundations to safety, in the course's own terms and exam style."),
 ]
 
 SUBJECTS = [
@@ -75,4 +79,15 @@ SUBJECTS = [
 
     ("ops-serving", "mlops", "Serving Models", "APIs, latency, batch vs real-time.", "ready"),
     ("ops-monitoring", "mlops", "Monitoring & Drift", "Watching a model after launch.", "ready"),
+    ("llmc-foundations", "llm4genai", "LLM Foundations (M1)", "Language models, tokenization, embeddings, positional encoding.", "ready"),
+    ("llmc-pretraining", "llm4genai", "Pre-training & Scaling (M2)", "CLM objectives, data pipeline, scaling laws, CPT.", "ready"),
+    ("llmc-architecture", "llm4genai", "Architecture & MoE (M3)", "Transformer review, attention variants, Mixture of Experts.", "ready"),
+    ("llmc-inference", "llm4genai", "Inference & Optimisation (M4-M5)", "Decoding, prefill/decode, KV cache, PagedAttention, FlashAttention, quantization, speculative decoding.", "ready"),
+    ("llmc-finetuning", "llm4genai", "Fine-tuning & PEFT (M6)", "IFT, Self-Instruct, adapters, LoRA, QLoRA, merging.", "ready"),
+    ("llmc-alignment", "llm4genai", "Preference Alignment (M6)", "RLHF, reward models, PPO, GRPO, DPO.", "ready"),
+    ("llmc-prompting", "llm4genai", "Prompting, Reasoning & Structured Data (M7)", "Prompt design, ICL, CoT, ToT, self-consistency, ReAct, function calling, tables.", "ready"),
+    ("llmc-rag", "llm4genai", "Retrieval-Augmented LMs (M8)", "RAG pipeline, retrievers, context compression, Self-RAG, CRAG.", "ready"),
+    ("llmc-agents", "llm4genai", "LLMs as Agents (M9)", "Agent anatomy, memory types, multi-agent patterns, text-to-SQL.", "ready"),
+    ("llmc-eval", "llm4genai", "Evaluation (M10)", "Model vs system evaluation, BLEU/ROUGE/BERTScore, LLM-as-judge.", "ready"),
+    ("llmc-safety", "llm4genai", "Safety, Security & Privacy (M11)", "Jailbreaks, prompt injection, guardrails, privacy.", "ready"),
 ]
