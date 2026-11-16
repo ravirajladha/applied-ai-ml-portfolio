@@ -34,6 +34,8 @@ SECTIONS = [
     ("mlops", "shipping", "Production ML", "Serving and monitoring."),
     ("llm4genai", "courses", "LLMs for Generative AI (AIMLCZG536)",
      "Course modules 1-12: foundations to safety, in the course's own terms and exam style."),
+    ("nlpapps", "courses", "NLP Applications (AIMLCZG519)",
+     "Spell/grammar checking, RAG, QA and chatbots, sentiment, MT, information extraction, efficient NLP."),
 ]
 
 SUBJECTS = [
@@ -90,4 +92,13 @@ SUBJECTS = [
     ("llmc-agents", "llm4genai", "LLMs as Agents (M9)", "Agent anatomy, memory types, multi-agent patterns, text-to-SQL.", "ready"),
     ("llmc-eval", "llm4genai", "Evaluation (M10)", "Model vs system evaluation, BLEU/ROUGE/BERTScore, LLM-as-judge.", "ready"),
     ("llmc-safety", "llm4genai", "Safety, Security & Privacy (M11)", "Jailbreaks, prompt injection, guardrails, privacy.", "ready"),
+    ("nlpa-overview", "nlpapps", "NLP Apps Overview & Tools (S1)", "NLP application landscape, NLTK/spaCy pipelines, preprocessing.", "ready"),
+    ("nlpa-spellgrammar", "nlpapps", "Spell & Grammar Checking (S2)", "Edit distance, noisy channel, n-gram LMs, grammar checkers.", "ready"),
+    ("nlpa-rag", "nlpapps", "RAG Applications (S3-S4)", "Naive RAG, Graph RAG, Agentic RAG, real-world case studies.", "ready"),
+    ("nlpa-qa-conv", "nlpapps", "Question Answering & Conversational AI (S5-S6)", "QA systems, chatbots and dialogue, GenAI/agentic implementations.", "ready"),
+    ("nlpa-sentiment", "nlpapps", "Sentiment Analysis (S7)", "Lexicon, ML, neural and GenAI/agentic sentiment methods.", "ready"),
+    ("nlpa-ethics", "nlpapps", "Privacy & Ethics in NLP (S8)", "Data, model and deployment issues: bias, privacy, misuse.", "ready"),
+    ("nlpa-mt", "nlpapps", "Machine Translation (S10-S12)", "Statistical and neural MT, evaluation, Indic-language translation.", "ready"),
+    ("nlpa-ie", "nlpapps", "Information Extraction (S13-S14)", "NER, relation extraction, events and time.", "ready"),
+    ("nlpa-efficient", "nlpapps", "Scalable & Efficient NLP (S15)", "Model compression, efficient architectures, inference and deployment.", "ready"),
 ]
