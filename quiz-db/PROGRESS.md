@@ -37,16 +37,46 @@ Target: 120-160 questions per subject, with more L3/L4, informative explanations
 | L4 | llm-finetuning | 63 | 131 | done, pushed |
 | L5 | ops-serving, ops-monitoring | 91, 80 | 134, 137 | done, pushed |
 
-Pushed: commit `59b790a` on branch `quiz-db` (5,426 questions). The `aiml_quiz` database is loaded from that commit (16-Nov-2026).
+Pushed: commit `4a44ea7` on branch `quiz-db` (6,487 questions). The `aiml_quiz` database is loaded from that commit (16-Nov-2026).
 
 **Round 2 is complete for all 35 ladder subjects.** Next: new subjects from the course material (llm-engineering, nlp-applications, machine-learning-on-the-edge, api-driven-cloud-native-solutions). Each needs a structure.py entry and a spec built from its materials folder.
+
+## Course banks: LLMs for Generative AI (AIMLCZG536), started 16-Nov-2026
+
+Category `courses` (ladder_level 6), section `llm4genai`, 11 subjects in structure.py. Sources: session notes 0-3, current decks, complete old-batch slides and 8 past papers. Text extracts live in `C:/dev/quizdb-tools/llm-src/`, outside the repo; the writer brief is `C:/dev/quizdb-tools/llm-course-brief.md`. Target is 80-100 questions each.
+
+| Module | Subject | Count | Status |
+|--------|---------|-------|--------|
+| M1 | llmc-foundations | 96 | done, pushed |
+| M2 | llmc-pretraining | 98 | done, pushed |
+| M3 | llmc-architecture | 92 | done, pushed |
+| M4-5 | llmc-inference | 99 | done, pushed |
+| M6 | llmc-finetuning | 96 | done, pushed |
+| M6 | llmc-alignment | 91 | done, pushed |
+| M7 | llmc-prompting | 100 | done, pushed |
+| M8 | llmc-rag | 100 | done, pushed |
+| M9 | llmc-agents | 105 | done, pushed |
+| M10 | llmc-eval | 92 | done, pushed |
+| M11 | llmc-safety | 92 | done, pushed |
+
+All 11 were pushed together in `4a44ea7` (1,061 questions).
+
+Course-material quirks the explanations point out:
+- The BM25 slide drops the (k+1) factor and states the wrong final ranking.
+- The slides round the MLA saving of about 57x to 55x.
+- The KV-cache table says GB where it means GiB.
+- The ShopSmart answer key calls an adversarial suffix "prompt injection".
+
+Topics the slides barely cover use standard practice, flagged in each spec: differential privacy, Self-RAG token names, text-to-SQL safety.
+
+**Next course:** nlp-applications, then machine-learning-on-the-edge and api-driven-cloud-native-solutions (same approach: extract the material to llm-src-style text, write a brief, add a `courses` section). When the LLM course teaches sessions 4+, top up the subjects from the new notes.
 
 ## Known follow-ups
 - Writers stall if they write a whole question block in one edit. Tell them to append at most 10 questions per edit.
 - New questions in dl-neuron and dl-loss-gd are about 42-45% `out`, and in plotting about 57% `out` (targets 35% / 30%). A later pass can turn some into code mcqs.
 - The Python core banks are 55-79% `out` questions (STANDARD.md wants about 35%). Add conceptual mcq/tf questions in a later pass instead of converting existing ones.
 - Python 3.12+ `sum()` of floats is compensated: `sum([0.1]*10) == 1.0` is True. Explanations must contrast it with a `+=` loop.
-- Course material (llm-engineering, nlp-applications, edge ML, cloud-native) is not in the bank yet. These would be new subjects once the ladder round is done.
+- Course material for nlp-applications, edge ML and cloud-native is not in the bank yet; llm-engineering is.
 
 ## Log
 | Date | What happened |
@@ -56,3 +86,4 @@ Pushed: commit `59b790a` on branch `quiz-db` (5,426 questions). The `aiml_quiz` 
 | 16-Nov-2026 | Round 2: ml-models committed, and all L2-L5 subjects deepened to 128-144 each (5,159 questions). Vendor names removed from tf-generation and nlp-embeddings. Pushed `779e5dd`, DB reloaded. |
 | 16-Nov-2026 | NumPy and Pandas subjects deepened with L3/L4 and ML topics (`ml-arrays`, `ml-numpy`, `ml-features`, `windows`). 5,373 questions, pushed `71dcb2e`, DB reloaded. Plotting is next; then course-material subjects. |
 | 16-Nov-2026 | plotting deepened to 152 (new topics scales-ticks, color-images, ml-plots, reading-charts). Round 2 done: 5,426 questions, pushed `59b790a`, DB reloaded. |
+| 16-Nov-2026 | Added the `courses` category and 11 llmc-* subjects from the LLMs for GenAI course (notes, decks, old-batch slides, 8 past papers): 1,061 questions, 6,487 total. Pushed `4a44ea7`, DB reloaded. |
