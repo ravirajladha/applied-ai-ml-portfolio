@@ -10,10 +10,10 @@ Target: 120-160 questions per subject, with more L3/L4, informative explanations
 |------|---------|---------|---------|--------|
 | Foundations | py-basics | 73 | 148 | done, pushed |
 | Foundations | py-variables | 78 | 155 | done, pushed |
-| Foundations | py-strings | 87 | 153 | done, pushed |
-| Foundations | py-lists | 80 | 158 | done, pushed |
-| Foundations | py-dicts | 70 | 146 | done, pushed |
-| Foundations | py-conditions | 71 | 151 | done, pushed |
+| Foundations | py-strings | 87 | 153 → 193 (round 3) | done, pushed |
+| Foundations | py-lists | 80 | 158 → 198 (round 3) | done, pushed |
+| Foundations | py-dicts | 70 | 146 → 186 (round 3) | done, pushed |
+| Foundations | py-conditions | 71 | 151 → 191 (round 3) | done, pushed |
 | Foundations | py-loops | 73 | 149 | done, pushed |
 | Foundations | py-functions | 67 | 150 | done, pushed |
 | Foundations | py-comprehensions | 61 | 136 | done, pushed |
@@ -69,7 +69,7 @@ Course-material quirks the explanations point out:
 
 Topics the slides barely cover use standard practice, flagged in each spec: differential privacy, Self-RAG token names, text-to-SQL safety.
 
-**Next:** all four course folders now have banks. Remaining: top up course banks when new material arrives (LLM sessions 4+, current-batch cloud-native slides/papers), and the Known follow-ups below. The edge Module 1 top-up is done; **next** is the Module 2+ edge slides when they arrive.
+**Next (course banks):** all four course folders now have banks. Remaining: top up course banks when new material arrives (LLM sessions 4+, current-batch cloud-native slides/papers), and the Known follow-ups below. The edge Module 1 top-up is done; **next** is the Module 2+ edge slides when they arrive.
 
 ## Course banks: NLP Applications (AIMLCZG519), started 16-Nov-2026
 
@@ -141,8 +141,8 @@ Section `cloudnative` under `courses`, with 9 subjects in structure.py, all `rea
 | S1 | cnas-apis | 90 | done, pushed |
 | S1 | cnas-api-styles | 88 | done, pushed |
 | S2-3 | cnas-cloudnative | 85 | done, pushed |
-| S4-5 | cnas-data-pipelines | - | writer running |
-| S6-7 | cnas-ml-pipelines | - | writer running |
+| S4-5 | cnas-data-pipelines | 100 | done, pushed |
+| S6-7 | cnas-ml-pipelines | 92 | done, pushed |
 | S8 | cnas-ai-services | 98 | done, pushed |
 | S9-11 | cnas-llm-rag | 96 | done, pushed |
 | S12 | cnas-containers-k8s | 85 | done, pushed |
@@ -160,7 +160,7 @@ Image-only slides (technologies pyramid, DevOps dimensions, DataOps architecture
 ## Known follow-ups
 - Writers stall if they write a whole question block in one edit. Tell them to append at most 10 questions per edit.
 - New questions in dl-neuron and dl-loss-gd are about 42-45% `out`, and in plotting about 57% `out` (targets 35% / 30%). A later pass can turn some into code mcqs.
-- The Python core banks are 55-79% `out` questions (STANDARD.md wants about 35%). Add conceptual mcq/tf questions in a later pass instead of converting existing ones.
+- The Python core banks are too `out`-heavy (STANDARD.md wants about 35%). Round 3 (18-Nov-2026, `f1056e8`) appended 40 conceptual mcq/tf/fill each to py-conditions (now 62% out), py-dicts (56%), py-strings (54%), py-lists (52%). **Next:** the same pass for py-classes (61%), py-variables (60%), py-functions (58%), py-loops (55%), py-basics, py-comprehensions, py-errors, then np-*/pd-* (57-62%). Append, never convert.
 - Python 3.12+ `sum()` of floats is compensated: `sum([0.1]*10) == 1.0` is True. Explanations must contrast it with a `+=` loop.
 - Cloud-native banks use old-batch slides only (no papers). When current slides or papers arrive, top up the `cnas-*` subjects. Edge Module 1 slides are in (17-Nov); top up the other `edge-*` subjects as the Module 2+ slides arrive.
 
@@ -177,3 +177,4 @@ Image-only slides (technologies pyramid, DevOps dimensions, DataOps architecture
 | 17-Nov-2026 | Added the Machine Learning on the Edge course: 8 edge-* subjects (handout + 4 past papers, no slides), 753 questions, 8,088 total. Pushed `14015da`, DB reloaded (student row kept). |
 | 17-Nov-2026 | Added the API-driven Cloud Native Solutions course: 9 cnas-* subjects (old-batch handout + 430-slide deck, no papers), 834 questions, 8,922 total. Pushed `ba42aa3`, DB reloaded (student row kept). |
 | 17-Nov-2026 | Edge top-up from the CS1 slides, S1-3 transcripts and notes: edge-foundations 145, edge-hardware 102, BLERP replaces the reconstructed framework. 8,989 total. Pushed `50aea96`, DB reloaded (student row kept). |
+| 18-Nov-2026 | Round 3 (type mix): +40 conceptual mcq/tf/fill each to py-conditions, py-dicts, py-strings, py-lists. 9,149 total. Pushed `f1056e8`, DB reloaded (student row kept). Fixed stale cnas pipeline rows. |
