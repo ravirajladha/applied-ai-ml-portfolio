@@ -69,7 +69,7 @@ Course-material quirks the explanations point out:
 
 Topics the slides barely cover use standard practice, flagged in each spec: differential privacy, Self-RAG token names, text-to-SQL safety.
 
-**Next:** **next** all four course folders now have banks. Remaining: top up course banks when new material arrives (LLM sessions 4+, edge slides, current-batch cloud-native slides/papers), and the Known follow-ups below. When the LLM course teaches sessions 4+, top up the llmc-* subjects from the new notes.
+**Next:** all four course folders now have banks. Remaining: top up course banks when new material arrives (LLM sessions 4+, current-batch cloud-native slides/papers), and the Known follow-ups below. The edge Module 1 top-up is done; **next** is the Module 2+ edge slides when they arrive.
 
 ## Course banks: NLP Applications (AIMLCZG519), started 16-Nov-2026
 
@@ -101,14 +101,20 @@ Section `mledge` under `courses`, 8 subjects (one per handout module) in structu
 
 | Module | Subject | Count | Status |
 |--------|---------|-------|--------|
-| M1 | edge-foundations | 90 | done, pushed |
-| M2 | edge-hardware | 90 | done, pushed |
+| M1 | edge-foundations | 145 | done, pushed (top-up 17-Nov) |
+| M2 | edge-hardware | 102 | done, pushed (top-up 17-Nov) |
 | M3 | edge-data-iot | 95 | done, pushed |
 | M4 | edge-deployment | 94 | done, pushed |
 | M5 | edge-mlops | 95 | done, pushed |
 | M6 | edge-optimization | 95 | done, pushed |
 | M7 | edge-security | 94 | done, pushed |
 | M8 | edge-benchmarking | 100 | done, pushed |
+
+**Top-up, 17-Nov-2026, pushed `50aea96`.** New material: the CS1 slides (Module 1, 39 slides), transcripts for S1-3 and the learner's S1-3 notes (extracts in `C:/dev/quizdb-tools/edge-src/new/`). edge-foundations went 90 → 145 (+55, 21 edited), edge-hardware 90 → 102 (+12).
+- **Framework resolved:** the paper's "five-question deployment framework" is BLERP (bandwidth, latency, economics, reliability, privacy) applied letter by letter; connectivity sits under Reliability. The decision questions now use BLERP.
+- **Still unconfirmed:** the five pipeline stages (acquisition → preprocessing → inference → post-processing → action) appear in no slide or transcript. The course teaches sensing → inference → actuation plus a five-step development lifecycle. The bank keeps the five stages as a refinement because the papers ask for five.
+- **Material slips:** the S2 recording is dated 31-Oct-2026 (notes say ~8-Nov). The professor said "activation" for actuation, "transmitting signal" for transforming signals, and "LoRa, low range". Optimisation was announced for S13-14 (the handout says S11-12). The slide framework list includes the retired Google Cloud IoT Core, and Azure Data Box Edge is now Azure Stack Edge.
+- When the Module 2+ slides arrive, top up the other `edge-*` subjects the same way.
 
 All 8 were pushed together in `14015da` (753 questions, 8,088 total). The DB is reloaded from that commit. Issues in the course material that the explanations point out:
 - **No slides.** Both frameworks below were rebuilt from the papers, and the questions test the reasoning, not one exact wording. Replace them when the slides arrive.
@@ -156,7 +162,7 @@ Image-only slides (technologies pyramid, DevOps dimensions, DataOps architecture
 - New questions in dl-neuron and dl-loss-gd are about 42-45% `out`, and in plotting about 57% `out` (targets 35% / 30%). A later pass can turn some into code mcqs.
 - The Python core banks are 55-79% `out` questions (STANDARD.md wants about 35%). Add conceptual mcq/tf questions in a later pass instead of converting existing ones.
 - Python 3.12+ `sum()` of floats is compensated: `sum([0.1]*10) == 1.0` is True. Explanations must contrast it with a `+=` loop.
-- Cloud-native banks use old-batch slides only (no papers). When current slides or papers arrive, top up the `cnas-*` subjects. When edge-ML slides arrive, top up the `edge-*` subjects and replace the reconstructed frameworks.
+- Cloud-native banks use old-batch slides only (no papers). When current slides or papers arrive, top up the `cnas-*` subjects. Edge Module 1 slides are in (17-Nov); top up the other `edge-*` subjects as the Module 2+ slides arrive.
 
 ## Log
 | Date | What happened |
@@ -170,3 +176,4 @@ Image-only slides (technologies pyramid, DevOps dimensions, DataOps architecture
 | 16-Nov-2026 | Added the NLP Applications course: 9 nlpa-* subjects, 848 questions, 7,335 total. Pushed `64243d4`, DB reloaded. |
 | 17-Nov-2026 | Added the Machine Learning on the Edge course: 8 edge-* subjects (handout + 4 past papers, no slides), 753 questions, 8,088 total. Pushed `14015da`, DB reloaded (student row kept). |
 | 17-Nov-2026 | Added the API-driven Cloud Native Solutions course: 9 cnas-* subjects (old-batch handout + 430-slide deck, no papers), 834 questions, 8,922 total. Pushed `ba42aa3`, DB reloaded (student row kept). |
+| 17-Nov-2026 | Edge top-up from the CS1 slides, S1-3 transcripts and notes: edge-foundations 145, edge-hardware 102, BLERP replaces the reconstructed framework. 8,989 total. Pushed `50aea96`, DB reloaded (student row kept). |
