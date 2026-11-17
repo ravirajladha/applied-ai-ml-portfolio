@@ -69,7 +69,7 @@ Course-material quirks the explanations point out:
 
 Topics the slides barely cover use standard practice, flagged in each spec: differential privacy, Self-RAG token names, text-to-SQL safety.
 
-**Next course:** api-driven-cloud-native-solutions is in progress (see its section below). After it, only llm-engineering's own folder is left without a bank. When the LLM course teaches sessions 4+, top up the llmc-* subjects from the new notes.
+**Next:** **next** all four course folders now have banks. Remaining: top up course banks when new material arrives (LLM sessions 4+, edge slides, current-batch cloud-native slides/papers), and the Known follow-ups below. When the LLM course teaches sessions 4+, top up the llmc-* subjects from the new notes.
 
 ## Course banks: NLP Applications (AIMLCZG519), started 16-Nov-2026
 
@@ -132,22 +132,31 @@ Section `cloudnative` under `courses`, with 9 subjects in structure.py, all `rea
 
 | Sessions | Subject | Count | Status |
 |----------|---------|-------|--------|
-| S1 | cnas-apis | 90 | done, on disk only (checked) |
-| S1 | cnas-api-styles | 88 | done, on disk only (checked) |
-| S2-3 | cnas-cloudnative | 85 | done, on disk only (checked) |
+| S1 | cnas-apis | 90 | done, pushed |
+| S1 | cnas-api-styles | 88 | done, pushed |
+| S2-3 | cnas-cloudnative | 85 | done, pushed |
 | S4-5 | cnas-data-pipelines | - | writer running |
 | S6-7 | cnas-ml-pipelines | - | writer running |
-| S8 | cnas-ai-services | 98 | done, on disk only (checked) |
-| S9-11 | cnas-llm-rag | 96 | done, on disk only (checked) |
-| S12 | cnas-containers-k8s | 85 | done, on disk only (checked) |
-| S13-15 | cnas-iot-analytics | 100 | done, on disk only (checked) |
+| S8 | cnas-ai-services | 98 | done, pushed |
+| S9-11 | cnas-llm-rag | 96 | done, pushed |
+| S12 | cnas-containers-k8s | 85 | done, pushed |
+| S13-15 | cnas-iot-analytics | 100 | done, pushed |
+
+All 9 were pushed together in `ba42aa3` (834 questions, 8,922 total; the commit message says 830 by mistake). The DB is reloaded from that commit (student row kept). The writers found these slide errors; each explanation states the correct fact:
+- **APIs:** "synchronous" is defined as waiting for the previous request (it means the caller blocks on its own reply). PUT is described as update only (it replaces; partial is PATCH). Semver PATCH is said to add features (it is fixes only). The movies example puts full versions in URIs (MAJOR only). gRPC uses HTTP/2 "instead of HTTP" (instead of HTTP/1.1).
+- **Cloud-native/K8s:** blue = staging, green = production clashes with the usual convention, so questions test the mechanism. The Deployment YAML lacks the required `spec.selector`. The app and MySQL share one container.
+- **Data/ML pipelines:** the Covid SEMMA slide puts feature engineering under Model (it belongs in Modify). The Covid MLflow summary's metrics don't add up (accuracy 194/243 = 0.798; positive-class recall 0.04) and it reads whole-machine system metrics as the model's. "768 hidden layers" means hidden size 768. GitHub-hosted jobs run on a VM, not a container. `--workspace-key` is not a Prefect CLI option. MLflow stages are deprecated in favour of aliases (both taught).
+- **AI services/LLM-RAG:** the SLM size range is outdated (the course's own demo SLM is ~3.8B). Temperature 0.5 "for grounding" confuses randomness with grounding. The QA stage uses a summarize chain. Fine-tuning is said to improve interpretability.
+- **IoT/analytics:** prescriptive analytics is captioned "what might happen?" (it is "what should we do?"). The box-plot whisker slides contradict each other (Tukey convention used). Woebot is listed as prescriptive (it is cognitive).
+
+Image-only slides (technologies pyramid, DevOps dimensions, DataOps architectures, Bedrock, IoT stacks) and handout-only topics (MMLU, RAG metrics, speech APIs, device APIs) were written from standard practice; each spec says which.
 
 ## Known follow-ups
 - Writers stall if they write a whole question block in one edit. Tell them to append at most 10 questions per edit.
 - New questions in dl-neuron and dl-loss-gd are about 42-45% `out`, and in plotting about 57% `out` (targets 35% / 30%). A later pass can turn some into code mcqs.
 - The Python core banks are 55-79% `out` questions (STANDARD.md wants about 35%). Add conceptual mcq/tf questions in a later pass instead of converting existing ones.
 - Python 3.12+ `sum()` of floats is compensated: `sum([0.1]*10) == 1.0` is True. Explanations must contrast it with a `+=` loop.
-- Course material for cloud-native is not in the bank yet. When edge-ML slides arrive, top up the `edge-*` subjects and replace the reconstructed frameworks.
+- Cloud-native banks use old-batch slides only (no papers). When current slides or papers arrive, top up the `cnas-*` subjects. When edge-ML slides arrive, top up the `edge-*` subjects and replace the reconstructed frameworks.
 
 ## Log
 | Date | What happened |
@@ -160,3 +169,4 @@ Section `cloudnative` under `courses`, with 9 subjects in structure.py, all `rea
 | 16-Nov-2026 | Added the `courses` category and 11 llmc-* subjects from the LLMs for GenAI course (notes, decks, old-batch slides, 8 past papers): 1,061 questions, 6,487 total. Pushed `4a44ea7`, DB reloaded. |
 | 16-Nov-2026 | Added the NLP Applications course: 9 nlpa-* subjects, 848 questions, 7,335 total. Pushed `64243d4`, DB reloaded. |
 | 17-Nov-2026 | Added the Machine Learning on the Edge course: 8 edge-* subjects (handout + 4 past papers, no slides), 753 questions, 8,088 total. Pushed `14015da`, DB reloaded (student row kept). |
+| 17-Nov-2026 | Added the API-driven Cloud Native Solutions course: 9 cnas-* subjects (old-batch handout + 430-slide deck, no papers), 834 questions, 8,922 total. Pushed `ba42aa3`, DB reloaded (student row kept). |
