@@ -953,4 +953,363 @@ QUESTIONS = [
        "What does items() return in Python 3?",
        "items() returns a view, a lightweight window over the dict, with no copy. That's why it's cheap, and also why changing the dict's size during the loop is an error.",
        topic="iteration", level=4),
+
+    # ---- round 3: conceptual mcq/tf/fill
+    # ---------------------------------------------------------------- level 1
+    mcq('What happens when you read `d["missing"]` and that key isn\'t in the dict?',
+        ["It raises KeyError", "It returns None", "It returns an empty string", "It raises IndexError"], 0,
+        "Square brackets insist that the key exists.",
+        "d[k] raises KeyError for a missing key (IndexError is the list version). d.get(k) returns None instead. "
+        "In a web backend an unhandled KeyError on a request field becomes a 500 error, so validate required fields and use get for optional ones.",
+        topic="crud", level=1),
+    tf('Two different keys in one dict can hold the same value, e.g. `{"amy": 90, "bob": 90}`.', True,
+       "Which side must be unique: keys or values?",
+       "Keys are unique; values can repeat freely. That's why there's no built-in lookup by value, "
+       "and why flipping a dict (value -> key) can lose entries when values repeat.",
+       topic="crud", level=1),
+    mcq('Why store hyperparameters as `{"lr": 0.001, "batch_size": 32}` rather than as the list `[0.001, 32]`?',
+        ["Each value has a name, so code reads cfg['lr'] instead of remembering that position 0 means learning rate",
+         "Lists can't hold floats",
+         "Dicts use less memory than lists",
+         "A list can't be saved to a file"], 0,
+        "Which one is easier to read six months later?",
+        "Named keys make a config self-describing and order-independent: adding a new setting doesn't shift the others. "
+        "That's why YAML/JSON configs, Hugging Face model configs and experiment trackers all use key -> value mappings.",
+        topic="ml-patterns", level=1,
+        analogy="Like named query parameters ?lr=0.001&batch_size=32 instead of a positional URL like /0.001/32."),
+    fill("To get all the keys of `d` as a list, write `list(d.____())`.", "keys",
+         "The plural of the thing you look values up by.",
+         "d.keys() returns a view of the keys and list() turns it into a list. list(d) gives the same result, because iterating a dict yields its keys.",
+         topic="crud", level=1),
+    tf("A set can hold the same value twice.", False,
+       "What is a set's main job?",
+       "A set keeps at most one copy of each value; adding a duplicate does nothing. "
+       "That's why len(set(user_ids)) is the quick way to count unique users.",
+       topic="sets", level=1),
+    mcq("After `json.loads`, what Python type does a JSON array such as `[1, 2, 3]` become?",
+        ["list", "tuple", "dict", "set"], 0,
+        "JSON arrays are ordered and allow duplicates.",
+        "JSON objects become dicts and JSON arrays become lists. JSON has no tuples or sets, so even a tuple you dumped comes back as a list.",
+        topic="json-nested", level=1),
+
+    # ---------------------------------------------------------------- level 2
+    fill("Count words without a KeyError: `counts[w] = counts.____(w, 0) + 1`.", "get",
+         "The method that takes a fallback value.",
+         "counts.get(w, 0) gives the current count, or 0 the first time a word appears, then the +1 result is stored. "
+         "For big jobs Counter(words) does the same in one call and adds most_common().",
+         topic="get-setdefault", level=2),
+    tf("`for k in d.keys():` and `for k in d:` loop over exactly the same things.", True,
+       "What does iterating a dict give you?",
+       "Iterating a dict yields its keys, so .keys() is redundant in a plain loop (linters flag it). "
+       ".keys() earns its place when you want the view object itself, e.g. for set operations like d.keys() & other.keys().",
+       topic="iteration", level=2),
+    mcq("You merge default settings with a user's overrides. Which expression lets the user's values win?",
+        ["{**defaults, **user}", "{**user, **defaults}", "user | defaults", "dict(zip(defaults, user))"], 0,
+        "On a clash, the dict unpacked later wins.",
+        "Later entries overwrite earlier ones, so the defaults go first and the overrides last. defaults | user is the 3.9+ spelling of the same thing; "
+        "user | defaults lets the defaults win and silently ignores what the user chose. zip pairs up keys with keys.",
+        topic="merging", level=2,
+        analogy="Like CSS: a later rule for the same property overrides an earlier one."),
+    mcq("When is `Counter` a better fit than `defaultdict(int)`?",
+        ["When you're counting and want most_common(), counter arithmetic, and 0 for missing keys without inserting them",
+         "When the values must be lists",
+         "When you need the keys kept sorted",
+         "Never; Counter is just an older name for defaultdict(int)"], 0,
+        "One of them was built specifically for tallies.",
+        "Both start missing counts at 0, but Counter adds counting tools: most_common(n), + and - between counters, total(), and reads of missing keys that don't insert them. "
+        "defaultdict(int) is the general tool when the counts are just one part of a bigger structure.",
+        topic="collections", level=2),
+    fill("`list(dict.____(items))` removes duplicates from a list while keeping the first-seen order.", "fromkeys",
+         "It builds a dict from an iterable of keys.",
+         "dict.fromkeys(items) makes each item a key (with value None); duplicates collapse and the dict keeps insertion order. "
+         "list(set(items)) also de-duplicates but loses the order, which matters for things like a list of class names.",
+         topic="sets", level=2),
+    tf("Checking `key in d` takes about the same time whether `d` has 10 keys or 10 million.", True,
+       "Does a hash lookup scan the keys?",
+       "On average a dict membership test is O(1): hash the key, jump to its slot, confirm with ==. A list `in` is O(n), so over that range it gets about a million times slower. "
+       "That's the reason to keep lookup tables (vocabularies, caches, blocklists) in dicts or sets.",
+       topic="complexity", level=2),
+    mcq("Why can a tuple be a dict key while a list can't?",
+        ["A key's hash must never change; a tuple is immutable, but a list could change after insertion and be lost",
+         "Tuples are faster to compare than lists",
+         "Lists are too large to be keys",
+         "Dicts only accept keys of a fixed length"], 0,
+        "What would happen if a key changed after it was stored?",
+        "The dict files each key under its hash. If a list key were mutated, its hash would change and lookups would go to the wrong slot, so Python refuses lists outright "
+        "(TypeError: unhashable type). A tuple of hashable items can't change, so its hash is stable.",
+        topic="hashability", level=2,
+        analogy="Like a primary key in a database table: rows aren't allowed to change it after insert.",
+        diagram="""
+ d[(1, 2)] = "x"
+ hash((1, 2)) -> slot 5 -> stored
+ tuple can't change -> always slot 5 -> found
+ a list could change -> new hash -> wrong slot
+"""),
+    mcq("An API should keep only the allowed fields from a client's JSON body. Which line does that?",
+        ["{k: v for k, v in payload.items() if k in ALLOWED}",
+         "{k for k in payload if k in ALLOWED}",
+         "[v for k, v in payload.items() if k in ALLOWED]",
+         "{k: v for k in ALLOWED for v in payload}"], 0,
+        "You want a dict back, filtered by key.",
+        "A dict comprehension with an if filters pairs by key. The second option builds a set of names, the third a list of values. "
+        "Allow-listing fields like this stops a client sneaking in keys such as is_admin (a 'mass assignment' bug). Make ALLOWED a set so each check is O(1).",
+        topic="comprehensions", level=2),
+    tf("`json.dumps` sorts the keys alphabetically by default.", False,
+       "Dicts remember insertion order. Does dumps keep it?",
+       "dumps writes keys in the dict's insertion order. Pass sort_keys=True when you need a stable, canonical text, "
+       "e.g. to hash a config or to keep diffs of committed JSON files small.",
+       topic="json-nested", level=2),
+    mcq("A tokenizer meets a word that isn't in `vocab`. Which lookup maps it to the unknown-token id without changing the vocab?",
+        ["vocab.get(tok, UNK_ID)",
+         "vocab[tok] or UNK_ID",
+         "vocab.setdefault(tok, UNK_ID)",
+         "UNK_ID if tok in vocab.values() else vocab[tok]"], 0,
+        "One option raises, and one quietly writes to the vocab.",
+        "get returns the fallback without inserting anything. vocab[tok] raises KeyError before `or` ever runs. setdefault stores the word, so the vocab grows with every typo seen at inference. "
+        "The last option searches the ids instead of the tokens and then indexes a missing key.",
+        topic="ml-patterns", level=2),
+
+    # ---------------------------------------------------------------- level 3
+    mcq("When can't you build a dict with the keyword form, as in `dict(lr=0.1)`?",
+        ["When a key isn't a valid Python name, such as 'learning-rate', 'class' or the int 1; use a {...} literal instead",
+         "When the values are floats",
+         "When there are more than 255 keys",
+         "When the dict will later be passed to json.dumps"], 0,
+        "Keyword arguments have naming rules.",
+        "dict(a=1) turns keyword argument names into string keys, so each key must be a legal identifier: no dashes, no keywords like class, no ints. "
+        "A literal {'learning-rate': 0.1, 1: 'dog'} has no such limit. Related: dict(**cfg) and f(**cfg) raise TypeError ('keywords must be strings') when cfg has non-string keys.",
+        topic="crud", level=3),
+    mcq("This memoisation attempt calls `compute` on every pass (calls ends at 3). Why, and what's the fix?",
+        ["The default argument is evaluated before setdefault runs, even when the key exists; check `if k not in cache:` first",
+         "setdefault clears the dict on every call",
+         "Strings can't be used as cache keys",
+         "setdefault only works on a defaultdict"], 0,
+        "When are a function's arguments evaluated?",
+        "Python evaluates compute('a') first and only then calls setdefault, which throws the value away when 'a' already exists. The expensive work repeats every time and the cache does nothing. "
+        "Check membership first (if k not in cache: cache[k] = compute(k)), or use functools.lru_cache for pure functions.",
+        topic="get-setdefault", level=3,
+        code='calls = 0\n\ndef compute(k):\n    global calls\n    calls += 1\n    return k * 2\n\ncache = {}\nfor _ in range(3):\n    cache.setdefault("a", compute("a"))\nprint(calls)',
+        analogy="Like cooking a meal and only then checking the fridge, where yesterday's portion was waiting.",
+        diagram="""
+ cache.setdefault("a", compute("a"))
+                       ^ runs FIRST, every time
+ then: "a" in cache? yes -> new value thrown away
+"""),
+    tf('`("lr", 0.1) in cfg.items()` is a fast hash lookup, not a scan over every pair.', True,
+       "The view can find the key first, then compare the value.",
+       "An items view checks membership by looking the key up in the hash table and then comparing the stored value with ==, so it's O(1) on average "
+       "and works even when the values are unhashable. By contrast `0.1 in cfg.values()` has no index and scans every value.",
+       topic="iteration", level=3),
+    mcq("A frontend team's code depends on the key order of the JSON your Python API returns. Is that safe?",
+        ["Python keeps insertion order and json.dumps preserves it, but JSON objects are unordered by spec, so clients shouldn't rely on it; send an array when order matters",
+         "Yes: the JSON spec guarantees object key order",
+         "No: json.dumps writes keys in a random order",
+         "Only when every key is an int"], 0,
+        "There are two layers: what Python does, and what JSON promises.",
+        "Your side is stable: dicts keep insertion order and dumps writes keys in that order. But the JSON standard (RFC 8259) treats objects as unordered, "
+        "and other serialisers, gateways or languages may reorder them. If the order means something (a ranking, pipeline steps), send a list.",
+        topic="ordering", level=3,
+        analogy="Like relying on SQL rows coming back in insertion order without an ORDER BY: it usually works, until it doesn't."),
+    tf("Dict insertion order is a language guarantee from Python 3.7; CPython 3.6 already kept the order, but only as an implementation detail.", True,
+       "One version changed the code, the next changed the docs.",
+       "3.6 introduced the compact dict layout, which kept order as a side effect; 3.7 made it part of the language spec, so every Python implementation must do it. "
+       "Code for 3.5 and older couldn't rely on it, which is why OrderedDict is so common in older ML code.",
+       topic="ordering", level=3),
+    mcq("A label map built from user-entered data ends up with the keys 'Cat', 'cat' and 'cat '. What's the robust fix?",
+        ["Normalise every key in one helper (e.g. key.strip().lower()) and use it for both inserts and lookups",
+         "Use a list instead of a dict",
+         "Sort the keys",
+         "Use a frozenset of the variants as the key"], 0,
+        "To a dict these are three different strings.",
+        "String keys match exactly, so case and whitespace variants become separate classes and split your training data. "
+        "Normalising in one place, used at write time and read time, keeps training, serving and analytics in agreement. The same applies to email addresses as user ids in a backend.",
+        topic="hashability", level=3),
+    mcq("You want to invert `role_of` without losing anyone. Which approach works?",
+        ["The defaultdict(list) loop in the snippet, which groups names per role",
+         "{role: name for name, role in role_of.items()}",
+         "dict(zip(role_of.values(), role_of.keys()))",
+         "{v: k for k, v in sorted(role_of.items())}"], 0,
+        "Several people can share one role.",
+        "With repeated values, a one-to-one inversion keeps only the last name per role; zip and sorting don't change that. "
+        "Grouping into lists keeps everyone: {'admin': ['amy'], 'user': ['bob', 'cat']}. Pick based on whether the mapping is really one-to-one (label2id) or many-to-one (user -> role).",
+        topic="comprehensions", level=3,
+        code='from collections import defaultdict\nrole_of = {"amy": "admin", "bob": "user", "cat": "user"}\nby_role = defaultdict(list)\nfor name, role in role_of.items():\n    by_role[role].append(name)\nprint(dict(by_role))'),
+    mcq("Config layers: built-in defaults, then a config file, then environment variables, then command-line flags, with later layers winning. Which expression builds the final config?",
+        ["defaults | file_cfg | env_cfg | cli_cfg",
+         "cli_cfg | env_cfg | file_cfg | defaults",
+         "{**cli_cfg, **defaults}",
+         "defaults & file_cfg & env_cfg & cli_cfg"], 0,
+        "With |, the right-hand side wins.",
+        "| works left to right and the right side wins, so the most important layer goes last. Remember it's shallow: a nested 'optimizer' dict in cli_cfg replaces "
+        "the whole nested dict from the lower layers, which is why config tools like Hydra and OmegaConf deep-merge. & isn't defined for dicts at all.",
+        topic="merging", level=3,
+        diagram="""
+ defaults  {lr: 0.1,  bs: 32, epochs: 10}
+ file_cfg  {bs: 64}
+ env_cfg   {epochs: 3}
+ cli_cfg   {lr: 0.01}
+ result    {lr: 0.01, bs: 64, epochs: 3}
+"""),
+    tf("`json.dumps(defaultdict(list, a=[1]))` works, because defaultdict is a subclass of dict.", True,
+       "Does json check for exactly dict, or for any dict subclass?",
+       "json serialises any dict subclass, so defaultdict, Counter and OrderedDict all dump as plain JSON objects. The default factory isn't saved, though: "
+       "json.loads gives back a plain dict, so code that relied on auto-created keys hits KeyError after a reload.",
+       topic="collections", level=3),
+    mcq("`set(rows)` on a list of dict rows raises TypeError. How does the snippet de-duplicate them?",
+        ["It turns each row into a hashable fingerprint, tuple(sorted(r.items())), and keeps the rows whose fingerprint is new",
+         "It calls set() twice",
+         "It uses frozenset(rows)",
+         "It sorts the list first, which makes set() work"], 0,
+        "Dicts are unhashable, but what about a tuple of their items?",
+        "Dicts can't go in a set, so each row gets a hashable fingerprint. Sorting the items makes rows with the same fields in a different order count as duplicates (2 unique rows here). "
+        "If rows have a real id, de-duplicate on that instead. Nested dict values need a deeper fingerprint, such as json.dumps(r, sort_keys=True).",
+        topic="sets", level=3,
+        code='rows = [{"id": 1, "x": 5}, {"x": 5, "id": 1}, {"id": 2, "x": 7}]\nseen, unique = set(), []\nfor r in rows:\n    key = tuple(sorted(r.items()))\n    if key not in seen:\n        seen.add(key)\n        unique.append(r)\nprint(len(unique))'),
+    mcq("Why is `x in d.keys()` as fast as `x in d`, while `x in list(d.keys())` is slow?",
+        ["The keys view looks x up in the hash table; list() copies every key into a list that `in` then scans, O(n)",
+         "keys() caches its answer between calls",
+         "list() sorts the keys",
+         "It isn't; all three are O(1)"], 0,
+        "What does list() build?",
+        "A keys view is a thin window onto the dict, so membership is a hash lookup. Wrapping it in list() costs O(n) to copy and O(n) per search. "
+        "The habit comes from Python 2, where keys() returned a list, and it can make a hot loop quadratic.",
+        topic="complexity", level=3,
+        diagram="""
+ x in d.keys()        -> hash(x) -> slot -> done   O(1)
+ x in list(d.keys())  -> copy n keys, then
+                         compare one by one        O(n)
+"""),
+    fill("The built-in function a dict calls on a key to decide which slot to look in is ____().", "hash",
+         "It's the function that fails with 'unhashable type'.",
+         "hash(key) returns an integer; the dict uses some of its bits to pick a slot, then == confirms the match. "
+         "Objects whose __hash__ is None (lists, dicts, sets) can't be keys for exactly this reason.",
+         topic="internals", level=3),
+    mcq('An endpoint returns `{"created": datetime.now()}` and `json.dumps` raises TypeError. What\'s the usual fix?',
+        ["Convert the datetime to an ISO-8601 string with dt.isoformat(), or pass a default= hook such as default=str",
+         "Wrap the datetime in a list",
+         "Use pickle instead of JSON for API responses",
+         "Call json.dumps twice"], 0,
+        "JSON has no date type.",
+        "JSON only has strings, numbers, booleans, null, arrays and objects, so dates travel as strings. isoformat() gives '2026-01-01T00:00:00', which every client can parse. "
+        "default=str is a quick catch-all for logs; for an API be explicit so the format stays stable. Frameworks such as FastAPI do this conversion for you. Never send pickle to clients.",
+        topic="json-nested", level=3,
+        analogy="The same as JS, where JSON.stringify(new Date()) turns the date into an ISO string."),
+    mcq("Training builds `label2id = {lab: i for i, lab in enumerate(set(labels))}`, and the serving process rebuilds it the same way. Served predictions come out as the wrong classes. Why?",
+        ["The order of a set of strings can change between processes (hash randomisation), so the ids differ; use sorted(set(labels)) and save the map with the model",
+         "enumerate starts counting at 1 in the serving process",
+         "set() drops the last label",
+         "Dict comprehensions build keys in a random order"], 0,
+        "Will a new Python process list the same set of strings in the same order?",
+        "String hashes are salted per process, so the set's iteration order, and therefore every id, can differ between training and serving. "
+        "sorted() gives a deterministic order, and saving label2id / id2label next to the weights (as Hugging Face configs do) removes the guesswork.",
+        topic="ml-patterns", level=3,
+        diagram="""
+ training: set -> ['dog', 'cat'] -> dog=0, cat=1
+ serving:  set -> ['cat', 'dog'] -> cat=0, dog=1
+ model says 0 (meant dog) -> served as "cat"
+"""),
+
+    # ---------------------------------------------------------------- level 4
+    mcq("Why do both lookups find the float key?",
+        ["Equal numbers of the built-in numeric types are guaranteed equal hashes, and 0.5 == Fraction(1, 2) == Decimal('0.5')",
+         "Python converts every numeric key to float before storing it",
+         "Fraction and Decimal are subclasses of float",
+         "Dict lookups compare str(key)"], 0,
+        "What must == and hash() agree on?",
+        "Python defines numeric hashing so that x == y implies hash(x) == hash(y) across int, float, Fraction and Decimal. The lookup lands in the right slot and == confirms it. "
+        "It's the same rule that collapses 1, 1.0 and True into one key, where the first key object inserted is the one kept.",
+        topic="hashability", level=4,
+        code='from fractions import Fraction\nfrom decimal import Decimal\nd = {0.5: "half"}\nprint(d[Fraction(1, 2)], d[Decimal("0.5")])'),
+    mcq("Two equal users end up as two separate keys. Which rule does this class break?",
+        ["Objects that compare equal must have equal hashes; here the hash is identity-based while __eq__ is value-based",
+         "__eq__ must return a bool",
+         "__hash__ must be defined before __eq__ in the class body",
+         "Dict keys must be built-in immutable types"], 0,
+        "Equal values, but where does each one get filed?",
+        "object.__hash__ is based on identity, so the two equal users land in different slots and == never gets a chance to compare them. "
+        "Fix it with def __hash__(self): return hash(self.uid), or a frozen dataclass. Python disables hashing when you define only __eq__ precisely to prevent this; re-attaching object.__hash__ brings the bug back.",
+        topic="internals", level=4,
+        code='class User:\n    def __init__(self, uid):\n        self.uid = uid\n    def __eq__(self, other):\n        return self.uid == other.uid\n    __hash__ = object.__hash__\n\nseen = {User(1): "a", User(1): "b"}\nprint(len(seen))',
+        diagram="""
+ User(1) #A -> hash(identity A) -> slot 3
+ User(1) #B -> hash(identity B) -> slot 6
+               (== is never asked)
+ result: 2 "equal" keys
+"""),
+    tf("CPython stores each key's hash inside the dict entry, so when the table grows it re-slots the keys without calling `__hash__` again.", True,
+       "Re-hashing every long string on each resize would be wasteful.",
+       "Each entry holds (hash, key, value). A resize rebuilds the index table from the stored hashes, so a key's __hash__ runs once on insert (and once per lookup), never during growth. "
+       "It's also why a key whose hash changes after insertion is lost: the dict trusts the stored value.",
+       topic="internals", level=4),
+    tf("`d.items() & other` only works if all the values in `d` are hashable, even though `(k, v) in d.items()` works with unhashable values.", True,
+       "A set operation builds a real set of the pairs.",
+       "& on an items view creates a set of (key, value) tuples, so a list value raises TypeError: unhashable type. Membership is different: it looks the key up and compares the value with ==, "
+       "so the value is never hashed. keys() views never have this problem, because keys are always hashable.",
+       topic="iteration", level=4),
+    mcq("A plain dict (not an OrderedDict) serves as a small LRU cache. How do you mark key `k` as most recently used?",
+        ["d[k] = d.pop(k), which removes it and re-inserts it at the end",
+         "d[k] = d[k], which re-assigns it",
+         "d.move_to_end(k)",
+         "d.update({k: d[k]})"], 0,
+        "Overwriting a key keeps its position. What actually moves it?",
+        "Assigning to an existing key (directly or via update) keeps its old position, and plain dicts have no move_to_end (AttributeError). Popping and re-inserting puts it at the end, "
+        "and next(iter(d)) is then the least recently used key to evict. OrderedDict.move_to_end does the same, and functools.lru_cache already does all of it for function results.",
+        topic="ordering", level=4,
+        diagram="""
+ d: [a, b, c]
+ d["a"] = d["a"]       -> [a, b, c]   (no move)
+ d["a"] = d.pop("a")   -> [b, c, a]   (a = newest)
+ evict next(iter(d))   -> "b"
+"""),
+    mcq("What does `|` mean between two Counters, e.g. `Counter(a=3, b=1) | Counter(a=1, b=2)`?",
+        ["Element-wise maximum: Counter({'a': 3, 'b': 2})",
+         "Right side wins, like dict |: Counter({'a': 1, 'b': 2})",
+         "Sum of the counts: Counter({'a': 4, 'b': 3})",
+         "Keys in both, count 1 each: Counter({'a': 1, 'b': 1})"], 0,
+        "Counter treats | and & as multiset union and intersection.",
+        "Counter overrides | to take the larger count per key and & to take the smaller one, while + adds counts. So the dict intuition 'right side wins' is wrong for Counters. "
+        "Merging token counts from two corpora needs +; | gives the highest count seen in either.",
+        topic="collections", level=4),
+    mcq('Your API returns `{"id": 12345678901234567890}` from a Python int. Python reads it back exactly, but the JavaScript frontend shows a different id. Why, and what\'s the usual fix?',
+        ["JS numbers are 64-bit floats that lose integer precision above 2**53; send large ids as strings",
+         "json.dumps rounds big ints to 15 digits",
+         "JSON forbids integers larger than 2**31",
+         "The frontend re-sorts the keys"], 0,
+        "Python ints have unlimited precision. Do JavaScript numbers?",
+        "json.dumps writes the exact digits and Python's json.loads reads them back exactly. JSON.parse, however, turns every number into a double, which holds integers exactly only up to 2**53 "
+        "(about 9e15), so the last digits change. Big public APIs ship an extra string id field for exactly this. Snowflake and bigint ids are the usual victims.",
+        topic="json-nested", level=4,
+        analogy="Like pasting a 20-digit card number into a spreadsheet cell formatted as a number: the last digits silently turn into zeros."),
+    mcq("This immutable-update style is common in React reducers. In Python, what does the loop cost for n keys?",
+        ["O(n^2) overall: each step copies the whole dict to add one key; assign in place when nobody else holds a reference",
+         "O(n): dict unpacking is free",
+         "O(n log n): the keys are re-sorted each time",
+         "O(1) per step, because only the new key is hashed"], 0,
+        "What does {**state, ...} build on every pass?",
+        "Each iteration builds a brand-new dict holding all previous keys, so step i costs O(i) and the loop costs O(n^2), with lots of garbage for the allocator. "
+        "In-place state[k] = v is O(1) on average. Keep copy-on-write for boundaries where sharing matters, such as handing a config to callers, not inside hot loops.",
+        topic="complexity", level=4,
+        code='state = {}\nfor i in range(5):\n    state = {**state, f"k{i}": i}\nprint(len(state))',
+        analogy="Like recopying a whole notebook by hand every time you want to add one line.",
+        diagram="""
+ step 1: copy 0 keys  + add 1
+ step 2: copy 1 key   + add 1
+ step n: copy n-1     + add 1
+ total ~ n^2 / 2 key copies
+"""),
+    mcq('`@functools.lru_cache` on `def build_model(cfg: dict)` raises TypeError. Which cache key works for nested configs like `{"opt": {"lr": 0.1}}`?',
+        ["json.dumps(cfg, sort_keys=True)",
+         "tuple(sorted(cfg.items()))",
+         "id(cfg)",
+         "frozenset(cfg)"], 0,
+        "The key must be hashable, independent of key order, and cover nested values.",
+        "lru_cache hashes its arguments, and dicts are unhashable. tuple(sorted(cfg.items())) works for flat configs, but the tuple contains the inner dict, so hashing it raises TypeError. "
+        "id(cfg) differs for equal copies and can be reused after an object is freed (wrong hits). frozenset(cfg) ignores the values. A sort_keys JSON string is canonical and nested-safe "
+        "(as long as the values are JSON-serialisable), and doubles as an experiment id.",
+        topic="ml-patterns", level=4),
+    fill("If a class defines `__eq__` but not `__hash__`, Python sets its `__hash__` attribute to ____.", "None",
+         "The value that means 'nothing here'.",
+         "__hash__ = None marks instances as unhashable, so using one as a key raises TypeError instead of silently breaking the 'equal objects have equal hashes' rule. "
+         "Define __hash__ from the same fields as __eq__, or use @dataclass(frozen=True).",
+         topic="hashability", level=4),
 ]

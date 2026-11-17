@@ -61,6 +61,14 @@
 - `class M: layers = []` -> one list shared by every instance.
 - `sorted(["b", "A", "a"])` -> uppercase sorts before lowercase.
 - `a[::2] = [1]` when the slice has 3 items -> ValueError.
+- `base.copy()` of a nested config -> inner lists are shared between experiments; use `copy.deepcopy`.
+- `[{}] * n` -> n references to one dict.
+- A helper calling `xs.sort()` on its argument -> reorders the caller's data; use `sorted`.
+- `max([])` -> ValueError; pass `default=`.
+- `xs, ys = zip(*batch)` on an empty batch -> ValueError (not enough values to unpack).
+- `from mod import LIST` then `LIST = new` inside mod -> importers keep the old list; use `LIST[:] = new`.
+- `for bad in bad_ids: ids.remove(bad)` -> O(n·k); filter with a set.
+- Millions of small Python objects in a forked DataLoader dataset -> refcount writes defeat copy-on-write.
 
 ## Interview angle
 - **"What's the difference between a list and a tuple?"** List is mutable, tuple is immutable and hashable (if its items are), so tuples can be dict keys and signal "fixed record". SDE analogy: tuple is a `final` value object.

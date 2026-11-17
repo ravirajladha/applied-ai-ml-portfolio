@@ -973,4 +973,375 @@ QUESTIONS = [
        "== on arrays compares each element.",
        "arr == None compares every element with None and returns an array, which `if` then refuses. `is None` checks whether the variable holds no array at all.",
        topic="identity", level=4),
+
+    # ---- round 3: conceptual mcq/tf/fill
+    # ---------------------------------------------------------------- level 1
+    mcq("A function receives `config`. Which value makes `if config:` skip its block?",
+        ["{}", '{"lr": 0}', "[None]", '"{}"'], 0,
+        "Empty containers are falsy.",
+        "An empty dict is falsy, so the block is skipped. {'lr': 0} has one key, [None] has one item and '{}' is a two-character string: all truthy. "
+        "Truthiness asks whether the container is empty, not what's inside it. In an API handler, `if not payload:` is the quick 'empty body' check.",
+        topic="truthiness", level=1),
+    tf("`x = 5` stores 5 in x, while `x == 5` asks whether x is equal to 5.", True,
+       "One equals sign or two?",
+       "= is assignment, == is a comparison that gives True or False. Writing `if x = 5:` is a SyntaxError in Python, "
+       "which protects you from the classic C/JS bug of assigning by accident inside a condition.",
+       topic="comparisons", level=1),
+    mcq("In one `if / elif / elif / else` chain, how many of the branches run?",
+        ["Exactly one", "Every branch whose condition is True", "Always the if and the else", "As many as there are elifs"], 0,
+        "Python stops looking once something matches.",
+        "Python checks the conditions top to bottom, runs the first True branch and skips the rest; if none is True, else runs. "
+        "With an else exactly one branch runs (without else, at most one). If several checks should all fire, use separate ifs.",
+        topic="if-structure", level=1,
+        diagram="""
+ if c1:    --True--> run A ---+
+   | False                    |
+ elif c2:  --True--> run B ---+--> carry on
+   | False                    |
+ else:     --------> run C ---+
+"""),
+    mcq("A spam model outputs a probability `p` between 0 and 1. Which line flags an email as spam using a 0.5 threshold?",
+        ["if p >= 0.5:", "if p = 0.5:", "if p => 0.5:", "if 0.5:"], 0,
+        "'Greater than or equal' is written with the > first.",
+        "p >= 0.5 is True for 0.5 and above. `=` assigns (a SyntaxError in an if), `=>` isn't a Python operator, and `if 0.5:` is always True because 0.5 is non-zero. "
+        "Choosing the threshold is a product decision: a higher one means fewer false alarms but more missed spam.",
+        topic="ml-patterns", level=1),
+    fill("The keyword that turns True into False (and False into True) is ____.", "not",
+         "JS and Java write it as !.",
+         "`not x` gives the opposite truth value, always as a real bool: not 0 is True, not 'hi' is False. "
+         "Python spells all three logic operators as words: and, or, not.",
+         topic="logic-ops", level=1),
+    tf("`if not x:` runs its block both when `x` is None and when `x` is 0.", True,
+       "Both values are falsy.",
+       "None, 0, '' and [] are all falsy, so `not x` is True for each of them. That's handy when you mean 'missing or empty', "
+       "and a bug when 0 is a real value (a 0% discount, a dropout of 0). Then write `if x is None:`.",
+       topic="truthiness", level=1),
+
+    # ---------------------------------------------------------------- level 2
+    mcq("`user` may be None. Which condition can never raise AttributeError?",
+        ["user is not None and user.is_active",
+         "user.is_active and user is not None",
+         "user.is_active or user is None",
+         "(user is not None) & user.is_active"], 0,
+        "`and` stops as soon as its left side is falsy.",
+        "With the None check on the left, `and` short-circuits and never reads user.is_active when user is None. Swapping the order reads the attribute first and crashes. "
+        "`&` is a bitwise operator, so both sides are always evaluated. Put the protective check first.",
+        topic="logic-ops", level=2,
+        analogy="The same guard as JS `user && user.isActive`, or `user?.isActive`.",
+        diagram="""
+ user = None
+ user is not None  -> False -> stop: result False
+ user.is_active    -> never evaluated
+"""),
+    mcq("A reviewer flags the second line. What's the best change?",
+        ["Rewrite it as an if/elif/else block (or a small function) with one threshold per line",
+         "Add brackets around every comparison; that's the only problem",
+         "Replace it with `p > 0.7 and 'pos' or 'neg'`",
+         "Nothing; chained conditional expressions are what PEP 8 recommends"], 0,
+        "Code is read far more often than it's written.",
+        "It works (nested conditional expressions group to the right), but three outcomes squeezed into one line are hard to scan and easy to break when a fourth band is added. "
+        "One condition per line is clearer. The and/or trick is the old idiom that breaks when the middle value is falsy.",
+        topic="ternary", level=2,
+        code='p = 0.42\nlabel = "pos" if p > 0.7 else "neg" if p < 0.3 else "unsure"\nprint(label)'),
+    fill("Structural pattern matching (`match` / `case`) was added in Python 3.____.", "10",
+         "It was released in October 2021.",
+         "Python 3.10 (PEP 634). On older interpreters a match statement is a SyntaxError, so check the Python version of your servers or notebook image. "
+         "`match` and `case` are soft keywords, so old code that uses them as variable names still runs.",
+         topic="match-case", level=2),
+    mcq("`if is_admin or is_owner and not is_locked:` is valid Python. Why do reviewers still ask for brackets?",
+        ["Readers must remember that `and` binds tighter than `or`; brackets make the intended grouping obvious",
+         "Without brackets Python evaluates strictly left to right, so the result is wrong",
+         "Brackets make the condition run faster",
+         "`not` can't be combined with `and` without brackets"], 0,
+        "Is it (admin or owner) and not locked, or admin or (owner and not locked)?",
+        "Python reads it as is_admin or (is_owner and not is_locked), so a locked admin still gets in. If the author meant the other grouping, "
+        "that's a permissions bug that looks correct in review. Brackets cost nothing and document the intent.",
+        topic="precedence", level=2),
+    tf("`any()` stops as soon as it finds a truthy item, without looking at the rest.", True,
+       "Once one item passes, is the answer still in doubt?",
+       "any() short-circuits on the first truthy item and all() on the first falsy one. With a generator, the remaining items aren't even computed, "
+       "so `any(is_spam(m) for m in inbox)` can skip most of the work. A list comprehension inside the call would build everything first.",
+       topic="any-all", level=2),
+    mcq("An order gets a discount if the user is a member, AND free shipping if the total is over 500. Why should these be two separate `if`s rather than `if / elif`?",
+        ["The rules are independent; with elif the second check is skipped whenever the first one is True",
+         "elif is slower than if",
+         "elif can only compare numbers",
+         "Two ifs are required whenever there is no else"], 0,
+        "Can both perks apply to the same order?",
+        "elif means 'only if every earlier check failed'. A member with a 600 total should get both perks, but `if member: ... elif total > 500: ...` gives only the discount. "
+        "Use elif for mutually exclusive cases (grade bands, status codes) and separate ifs for independent rules.",
+        topic="if-structure", level=2,
+        analogy="elif is a menu where you pick one dish; separate ifs are a checklist where every ticked box applies."),
+    tf("After `b = a` where `a` is a list, `a is b` is True, and `a.append(1)` also shows up in `b`.", True,
+       "Assignment copies the reference, not the list.",
+       "b = a gives the same object a second name, so `is` says True and a change through either name is visible through both. "
+       "For an independent list use a.copy() or list(a): then a == b is True but a is b is False.",
+       topic="identity", level=2),
+    mcq("A JSON field `qty` may arrive as `\"42\"`, `42` or `\"-3\"`. Which approach accepts all three as ints and rejects `\"abc\"`?",
+        ["Try int(v) and catch TypeError/ValueError, as in the snippet",
+         "`if v.isdigit(): v = int(v)`",
+         "`if isinstance(v, int):`",
+         "`if type(v) == str and v.isnumeric():`"], 0,
+        "What does '-3'.isdigit() return?",
+        "isdigit() is False for '-3' (the minus isn't a digit) and raises AttributeError on the int 42. isinstance(v, int) rejects '42'. "
+        "Trying the conversion and catching the failure handles every case, and it's what validation libraries such as pydantic do for you. Note int(4.9) gives 4, so reject floats separately if that matters.",
+        topic="type-checks", level=2,
+        code='def parse_qty(v):\n    try:\n        return int(v)\n    except (TypeError, ValueError):\n        return None\n\nprint(parse_qty("-3"), parse_qty(42), parse_qty("abc"))',
+        analogy="Like server-side form validation: try to parse the field, and return a 400 if it doesn't parse."),
+    fill('For `if val_loss < best_loss:` to count the very first epoch as an improvement, start with `best_loss = float("____")`.', "inf",
+         "Every real loss must be smaller than it.",
+         "float('inf') is bigger than any finite loss, so the first comparison is always True. Starting at 0 means nothing ever improves; "
+         "starting at None makes < raise TypeError. For a metric you maximise, such as accuracy, start at float('-inf').",
+         topic="ml-patterns", level=2),
+    tf("For built-in types such as int and str, `a != b` always gives the same result as `not (a == b)`.", True,
+       "!= asks the opposite question.",
+       "For built-ins, != is exactly the negation of ==; even NaN agrees (nan != nan is True, nan == nan is False). "
+       "A custom class can define __ne__ separately (by default it inverts __eq__), one more reason to keep __eq__ simple.",
+       topic="comparisons", level=2),
+
+    # ---------------------------------------------------------------- level 3
+    mcq("`search(q)` returns `[]` when it ran and found nothing, and `None` when the search service failed. Which check alerts only on failure?",
+        ["if results is None:", "if not results:", "if results == []:", "if len(results) == 0:"], 0,
+        "Two empty-looking values mean two different things.",
+        "`not results` is True for both [] and None, so every empty search would page someone. `is None` separates 'failed' from 'found nothing'. "
+        "== [] and len() miss the failure (len(None) even raises TypeError). When a function's empty result and its error result are both falsy, test for the one you mean.",
+        topic="truthiness", level=3,
+        diagram="""
+ value   not value   value is None
+ []      True        False   <- ran, found nothing
+ None    True        True    <- service failed
+"""),
+    mcq("This 'boolean' helper feeds a JSON API response. What's wrong with it?",
+        ["It returns None or '' instead of False for bad input, so the API sends null or \"\" where clients expect false",
+         "It raises KeyError when 'name' is missing",
+         "It always returns True",
+         "`and` can't be used in a return statement"], 0,
+        "What does `and` return when its left side is falsy?",
+        "`and` returns the first falsy operand itself, so the function hands back None (missing key) or '' (empty name), not False. "
+        "json.dumps writes those as null and \"\", and a typed client breaks. Wrap the first part in bool(...) or write an explicit if. There's no KeyError: len() is never reached when the name is missing.",
+        topic="logic-ops", level=3,
+        code='def has_name(cfg):\n    return cfg.get("name") and len(cfg["name"]) > 2\n\nprint(repr(has_name({})), repr(has_name({"name": ""})))'),
+    fill('`sorted(runs)` on a list of result dicts raises TypeError (\'<\' not supported). Fix it with `sorted(runs, ____=lambda r: r["acc"])`.', "key",
+         "The keyword argument that tells sorted what to compare.",
+         "Dicts have no ordering, so sorting them directly fails. key= turns each dict into something comparable, here its accuracy. "
+         "Add reverse=True for best-first, or use max(runs, key=...) if you only need the winner.",
+         topic="comparisons", level=3),
+    tf("`float('inf') > 10**400` is True, even though 10**400 is too big to convert to a float.", True,
+       "Python compares an int with a float exactly, without converting the int first.",
+       "Mixed int/float comparisons are exact: the int isn't squeezed into a float (float(10**400) would raise OverflowError). Infinity is bigger than every finite number. "
+       "That's why float('inf') is a safe 'nothing seen yet' starting value when you search for a minimum.",
+       topic="comparisons", level=3),
+    tf("`x is not None` uses the single two-word operator `is not`; it does not mean `x is (not None)`.", True,
+       "What would `not None` on its own evaluate to?",
+       "`is not` and `not in` are operators in their own right. If it meant x is (not None), it would compare x with True, a completely different test. "
+       "That's why `x is not None` is both correct and the PEP 8 style.",
+       topic="identity", level=3),
+    mcq("Which of these is valid Python?",
+        ['key = lambda r: r["acc"] if r["acc"] is not None else 0.0',
+         'key = lambda r: if r["acc"]: r["acc"] else: 0.0',
+         'key = lambda r: return r["acc"] or 0.0',
+         'key = lambda r: {if r["acc"] r["acc"] else 0.0}'], 0,
+        "A lambda body must be a single expression.",
+        "if blocks and return are statements, which a lambda can't contain. `a if c else b` IS an expression, so it fits in lambdas, comprehensions, default arguments and f-strings. "
+        "That's the main reason the conditional expression exists.",
+        topic="ternary", level=3),
+    mcq("Tool calls that include a query never reach the second case. Why, and what's the fix?",
+        ["Mapping patterns match a subset of keys, so the first case also matches messages that have a query; put the more specific case first",
+         "The second case needs `**rest` before it can match",
+         "Mapping patterns compare the whole dict with ==, so the second case is broken",
+         "match only ever tries the first case that mentions a given key"], 0,
+        "Does {'tool': 'search'} require the dict to have ONLY that key?",
+        "A mapping pattern succeeds when the listed keys are present; extra keys are ignored. So the general pattern swallows the specific one, and Python gives no warning "
+        "(it only rejects an unreachable case after a bare-name capture). Order cases from most specific to most general.",
+        topic="match-case", level=3,
+        code='def route(msg):\n    match msg:\n        case {"tool": "search"}:\n            return "generic search"\n        case {"tool": "search", "query": q}:\n            return f"search {q}"\n    return "unknown"\n\nprint(route({"tool": "search", "query": "gpu"}))',
+        analogy="Like registering a catch-all /users/* route before /users/:id/settings in a web router: the catch-all wins first.",
+        diagram="""
+ msg: {"tool": "search", "query": "gpu"}
+ case {"tool": "search"}              -> match (extra key ok)
+ case {"tool": "search", "query": q}  -> never tried
+"""),
+    mcq("A payment webhook does `match event[\"type\"]:` with cases for 'paid' and 'refunded' and no `case _:`. A new type 'disputed' starts arriving. What happens?",
+        ["No case matches, no error is raised, and the event is silently ignored; add a final `case _:` that logs or raises",
+         "Python raises a MatchError",
+         "The last case runs as a fallback",
+         "SyntaxError, because every match must end with case _"], 0,
+        "Python's match has no built-in 'nothing matched' error.",
+        "Unlike exhaustive matches in Rust or Scala, a Python match with no matching case simply does nothing. In a payment webhook that's silent data loss. "
+        "A final `case _: raise ValueError(f'unknown event {t}')` (or a logged warning) turns the surprise into a visible error.",
+        topic="match-case", level=3,
+        analogy="Like an API router with no 404 handler that quietly returns an empty 200 for unknown paths."),
+    fill("Of `not`, `and` and `or`, the one that binds most tightly (is applied first) is ____.", "not",
+         "It's the one that takes a single operand.",
+         "The order is not, then and, then or (like unary minus, then *, then +). So `not a and b or c` means ((not a) and b) or c. "
+         "All three bind looser than comparisons, which is why `not x == y` means not (x == y).",
+         topic="precedence", level=3),
+    mcq("You want to reject a batch of losses if it contains any NaN. Which check is right?",
+        ["any(math.isnan(x) for x in batch)",
+         "not all(batch)",
+         'float("nan") in batch',
+         'any(x == float("nan") for x in batch)'], 0,
+        "NaN is truthy, 0.0 is falsy, and NaN is equal to nothing.",
+        "all(batch) is False here only because of the 0.0; NaN itself is truthy, so that check flags valid zero losses and misses NaN. "
+        "`float('nan') in batch` builds a new NaN object, and NaN == NaN is False, so it's never found; == float('nan') fails the same way. "
+        "math.isnan (or torch.isnan(t).any() for tensors) is the reliable test.",
+        topic="any-all", level=3,
+        code='import math\nbatch = [0.4, float("nan"), 0.0]\nprint(any(math.isnan(x) for x in batch), all(batch))'),
+    mcq("How would most reviewers restructure this handler?",
+        ["Invert each check and return early (guard clauses), leaving the happy path un-nested at the end",
+         "Wrap the whole body in try/except",
+         "Turn every else into an elif",
+         "Squeeze everything into one long conditional expression"], 0,
+        "Deal with the failure cases first.",
+        "With guard clauses it becomes: if req is None: return 'no request'; if not req.get('user'): return 'no user'; ... then return 'process'. "
+        "Each rule sits next to its error result, and adding a new check doesn't push the main logic further right. It's the same early-return validation you'd write in an Express or FastAPI handler.",
+        topic="if-structure", level=3,
+        code='def handle(req):\n    if req is not None:\n        if req.get("user"):\n            if req.get("items"):\n                return "process"\n            else:\n                return "no items"\n        else:\n            return "no user"\n    else:\n        return "no request"\n\nprint(handle({"user": "a", "items": [1]}))',
+        diagram="""
+ nested ("arrow code"):     guard clauses:
+ if a:                      if not a: return E1
+     if b:                  if not b: return E2
+         if c:              if not c: return E3
+             work()         work()
+"""),
+    mcq("`add_tags(tags)` should accept one tag string or a list of tags. Why can't `isinstance(tags, Iterable)` tell the two apart?",
+        ["A str is itself an iterable of characters; check isinstance(tags, str) first and wrap it in a list",
+         "Iterable only recognises lists",
+         "isinstance doesn't work with abstract base classes",
+         "Strings were iterable only in Python 2"], 0,
+        "What does looping over 'gpu' give you?",
+        "Strings are iterable, so 'gpu' passes the Iterable check and would be stored as three tags: 'g', 'p', 'u'. "
+        "The standard pattern is `if isinstance(tags, str): tags = [tags]` before treating it as a collection. Pattern matching builds the same rule in: sequence patterns refuse str.",
+        topic="type-checks", level=3,
+        code='from collections.abc import Iterable\nprint(isinstance("gpu", Iterable), list("gpu"))'),
+    mcq("Epochs are numbered from 0. You want to validate after every 5th epoch (the 5th, 10th, 15th...). Which condition is right?",
+        ["(epoch + 1) % 5 == 0", "epoch % 5 == 0", "epoch % 5 == 1", "epoch // 5 == 0"], 0,
+        "In a 0-based loop, what is the number of the 5th epoch?",
+        "The 5th epoch is epoch 4, so add 1 before the modulo. epoch % 5 == 0 also fires at epoch 0, validating an untrained model, and then always one epoch early. "
+        "The same off-by-one shifts when checkpoints get saved.",
+        topic="ml-patterns", level=3,
+        diagram="""
+ epoch:           0  1  2  3  4  5  6  7  8  9
+ (epoch+1)%5==0:              Y              Y
+ epoch%5==0:      Y              Y
+"""),
+    mcq("Early-stopping code written for loss (`if metric < best: best = metric; save()`) is reused to monitor validation accuracy. What happens?",
+        ["Every drop in accuracy counts as an improvement, so it keeps the worst checkpoint; flip the comparison (or use mode='max')",
+         "It raises TypeError because accuracy is a float",
+         "It works the same, because both are just numbers",
+         "Training always stops after the first epoch"], 0,
+        "Is a smaller accuracy better?",
+        "The comparison direction encodes what 'better' means. For loss lower is better; for accuracy, F1 or AUC higher is better. "
+        "Keras and PyTorch Lightning callbacks take mode='min' / 'max' for exactly this reason, and best must then start at float('-inf') instead of float('inf').",
+        topic="ml-patterns", level=3),
+
+    # ---------------------------------------------------------------- level 4
+    mcq("Why is this 'sorted' list not sorted at all, with no error raised?",
+        ["Every comparison with NaN is False, which breaks the total order the sort relies on, so it silently returns a garbled order",
+         "sorted() skips NaN and sorts the remaining numbers around it",
+         "NaN is treated as 0, so it is placed among the smallest values",
+         "sorted() only checks ordering for strings, never for floats"], 0,
+        "Is nan < 1? Is 1 < nan?",
+        "Sorting assumes that for any a and b, either a < b, b < a, or they're equivalent. NaN looks 'equivalent' to everything, yet 1 < 3, so the algorithm makes inconsistent decisions: "
+        "here the output is [3, nan, 1, 2]. A NaN metric can scramble a leaderboard without a crash. Filter with math.isnan first, or sort with key=lambda x: (math.isnan(x), x) to push NaNs to the end.",
+        topic="comparisons", level=4,
+        code='vals = [3, float("nan"), 1, 2]\nprint(sorted(vals))',
+        diagram="""
+ 3 < nan? False   nan < 3? False   -> "equivalent"
+ 1 < nan? False   nan < 1? False   -> "equivalent"
+ but 1 < 3 is True -> no consistent order exists
+"""),
+    tf("If a class defines only `__lt__`, then `b > a` still works for two instances, because Python falls back to the reflected `a.__lt__(b)`.", True,
+       "> and < are each other's mirror image.",
+       "For b > a Python first tries b.__gt__(a); the inherited default returns NotImplemented, so it tries the reflection a.__lt__(b). That's why __lt__ alone is enough for sorted() and max(). "
+       "It does NOT give you <= or >= (those raise TypeError): use functools.total_ordering to fill in the rest.",
+       topic="comparisons", level=4),
+    mcq("Why does this print True even though `b.__bool__` returns False?",
+        ["Special methods are looked up on the class, not the instance, so the instance attribute is ignored",
+         "A lambda can't return False",
+         "bool() caches the result of its first call",
+         "__bool__ only takes effect if __len__ is also defined"], 0,
+        "Where does bool() look for __bool__: on b, or on type(b)?",
+        "Implicit calls such as bool(x), len(x), x + y and hash(x) look the dunder up on type(x) and skip the instance dict. That's faster and keeps every instance of a class consistent. "
+        "To change truthiness, define __bool__ (or __len__) in the class body. The same rule is why monkey-patching obj.__len__ on one object does nothing.",
+        topic="truthiness", level=4,
+        code='class Batch:\n    pass\n\nb = Batch()\nb.__bool__ = lambda: False\nprint(bool(b))',
+        diagram="""
+ bool(b)
+   -> type(b).__bool__ ?   not on Batch
+   -> type(b).__len__  ?   not on Batch
+   -> True (default)
+ b.__dict__["__bool__"]    never consulted
+"""),
+    mcq("A helper checks `if ok is True:` and silently skips every result computed with NumPy. Why?",
+        ["`scores[0] > 0.5` is a NumPy bool scalar, a different object from Python's True; use `if ok:` or bool(ok)",
+         "NumPy comparisons return the strings 'True' and 'False'",
+         "`is True` always returns False on Windows",
+         "NumPy scalars are always falsy"], 0,
+        "`is` checks for the exact same object.",
+        "np.True_ prints as True (and in NumPy 2 its class is even named 'bool'), but it isn't the Python singleton True, so `is True` is False. "
+        "Plain truthiness and == True both work. The same goes for values from pandas and PyTorch: `is` is only safe for None and your own sentinels.",
+        topic="identity", level=4,
+        code='import numpy as np\nscores = np.array([0.9, 0.4])\nok = scores[0] > 0.5\nprint(ok, type(ok).__name__, ok is True)',
+        analogy="Like two passports with the same name and photo issued by different countries: equal for most purposes, but not the same document."),
+    mcq("This works, but changing the case to `case Point(0, y):` raises TypeError when the match runs. What makes positional sub-patterns work?",
+        ["A `__match_args__` tuple saying which attributes the positions map to; dataclasses and namedtuples generate it",
+         "Defining __eq__ on Point",
+         "Making Point a subclass of tuple",
+         "Adding __slots__ = ('x', 'y')"], 0,
+        "How would Python know that position 0 means .x?",
+        "Keyword sub-patterns just read attributes. Positional ones need the class to declare an order: `__match_args__ = ('x', 'y')`. Without it you get "
+        "'Point() accepts 0 positional sub-patterns (2 given)'. @dataclass and namedtuple set __match_args__ from their fields, which is why they work out of the box.",
+        topic="match-case", level=4,
+        code='class Point:\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n\ndef where(p):\n    match p:\n        case Point(x=0, y=y):\n            return f"y-axis {y}"\n    return "other"\n\nprint(where(Point(0, 5)))'),
+    tf("The pattern `case {}:` matches only an empty dict.", False,
+       "A mapping pattern checks that the keys it lists are present.",
+       "With no keys listed there's nothing to check, so `case {}:` matches every mapping, empty or not. To match only an empty dict add a guard, "
+       "e.g. `case {} if len(event) == 0:`. Easy to miss when routing JSON payloads, because the 'empty' case quietly catches everything below it.",
+       topic="match-case", level=4),
+    mcq("How does Python group the last assignment?",
+        ["(cached or compute()) if use_cache else None",
+         "cached or (compute() if use_cache else None)",
+         "(cached or compute() if use_cache) else None",
+         "It's a SyntaxError without brackets"], 0,
+        "The conditional expression binds more loosely than `or`.",
+        "`a if c else b` is the loosest operator apart from lambda and :=, so the whole `or` on its left becomes the 'true' branch. "
+        "use_cache is False, so value is None even though cached holds 'hit'; the second grouping would give 'hit'. Add brackets whenever a conditional expression meets and/or.",
+        topic="precedence", level=4,
+        code='cached, use_cache = "hit", False\n\ndef compute():\n    return 5\n\nvalue = cached or compute() if use_cache else None\nprint(value)',
+        diagram="""
+ cached or compute() if use_cache else None
+ '-- true branch --'    '- test -'    '-else-'
+ = (cached or compute()) if use_cache else None
+"""),
+    tf("For a 2-D NumPy array `m`, the built-in `any(m)` checks every element, just like `m.any()`.", False,
+       "What does iterating over a 2-D array give you?",
+       "Built-in any() iterates the first axis, so it receives whole rows and calls bool(row), which raises ValueError for rows with more than one element. "
+       "m.any() (or np.any(m)) reduces over every element in C. On arrays, prefer the array method over Python's any/all: correct for any shape and much faster.",
+       topic="any-all", level=4),
+    mcq("A validator runs `isinstance(value, list[int])` to check a list of ids. What happens?",
+        ["TypeError: isinstance doesn't accept parameterized generics; check isinstance(value, list), then each item",
+         "It checks that every item in the list is an int",
+         "It returns True for any list",
+         "It returns False for any list"], 0,
+        "Type hints and runtime checks live in different worlds.",
+        "list[int] is a hint for static type checkers; at runtime isinstance raises 'argument 2 cannot be a parameterized generic'. "
+        "Write isinstance(value, list) and all(isinstance(i, int) and not isinstance(i, bool) for i in value), or let pydantic validate against the annotation.",
+        topic="type-checks", level=4,
+        analogy="Like TypeScript types: they guide the compiler but vanish at runtime, so the server still has to validate the JSON it receives."),
+    mcq("A model-serving endpoint must reject invalid probabilities. Which guard also rejects NaN?",
+        ["if not 0 <= p <= 1: raise ValueError(...)",
+         "if p < 0 or p > 1: raise ValueError(...)",
+         "if p is None: raise ValueError(...)",
+         "if not p: raise ValueError(...)"], 0,
+        "One guard asks 'is it invalid?', the other asks 'is it valid?'. Which question does NaN answer 'no' to?",
+        "Every comparison with NaN is False. 'p < 0 or p > 1' asks 'is it invalid?', NaN answers no, and it gets through. 'not (0 <= p <= 1)' asks 'is it valid?', NaN answers no, and it's rejected. "
+        "Describe the valid range (an allow-list) and add math.isnan when you want a clearer error. `not p` misses NaN because NaN is truthy.",
+        topic="ml-patterns", level=4,
+        code='p = float("nan")\nprint(p < 0 or p > 1, not 0 <= p <= 1)',
+        diagram="""
+ p = nan
+ p < 0 or p > 1     -> False or False -> passes  (bad)
+ not (0 <= p <= 1)  -> not False      -> rejected (good)
+"""),
 ]

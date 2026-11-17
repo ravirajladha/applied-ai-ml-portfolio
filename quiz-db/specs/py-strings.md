@@ -66,6 +66,14 @@
 - `f"{-0.0001:.2f}"` -> `-0.00`.
 - `logger.debug(f"...{big}")` -> formats even when DEBUG is off; pass `%s` arguments.
 - Recursion on `s[1:-1]` -> O(n²) copying; pass indexes.
+- `if s.find("x"):` -> wrong for a match at index 0 and for a miss (-1 is truthy); use `in`.
+- `line.split(",")` on real CSV -> breaks on quoted fields with commas; use the `csv` module.
+- Size limits checked with `len(s)` -> wrong for non-ASCII; measure `len(s.encode("utf-8"))`.
+- `lower()` for caseless matching -> misses ß / ligatures; `casefold()` (after normalising) is the comparison tool.
+- `bio[:50]` for a UI preview -> can split a flag or toned emoji (grapheme cluster).
+- Lone surrogates in a str -> `encode("utf-8")` raises UnicodeEncodeError.
+- User-supplied `template.format(obj)` -> attribute lookups can leak globals; use `string.Template`.
+- Cleaning at training but not at serving -> silent train/serve skew.
 
 ## Interview angle
 - **"Why are Python strings immutable?"** So they can be hashed (dict keys, set members), safely shared between names and threads, and interned. Same as Java's `String`.
