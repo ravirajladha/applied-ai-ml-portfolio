@@ -69,7 +69,7 @@ Course-material quirks the explanations point out:
 
 Topics the slides barely cover use standard practice, flagged in each spec: differential privacy, Self-RAG token names, text-to-SQL safety.
 
-**Next course:** **next** api-driven-cloud-native-solutions (machine-learning-on-the-edge is done) (same approach: extract the material to llm-src-style text, write a brief, add a `courses` section). When the LLM course teaches sessions 4+, top up the subjects from the new notes.
+**Next course:** api-driven-cloud-native-solutions is in progress (see its section below). After it, only llm-engineering's own folder is left without a bank. When the LLM course teaches sessions 4+, top up the llmc-* subjects from the new notes.
 
 ## Course banks: NLP Applications (AIMLCZG519), started 16-Nov-2026
 
@@ -125,6 +125,22 @@ All 8 were pushed together in `14015da` (753 questions, 8,088 total). The DB is 
   - PSI uses the natural log, with bands at 0.1 and 0.25.
   - 1 MB = 10^6 bytes.
   - The Krum guarantee needs n > 2f + 2, which no attacker count meets with only 4 banks. One question covers this.
+
+## Course banks: API-driven Cloud Native Solutions (AIMLCZG549), started 17-Nov-2026
+
+Section `cloudnative` under `courses`, with 9 subjects in structure.py, all `ready`. Sources: the older-batch handout (S2-25) and the complete old-batch deck (430 slides). **No past papers and no current-batch slides.** Text extracts are in `C:/dev/quizdb-tools/cloud-src/` (one file per subject, split by slide page); the writer brief is `C:/dev/quizdb-tools/cloud-course-brief.md`.
+
+| Sessions | Subject | Count | Status |
+|----------|---------|-------|--------|
+| S1 | cnas-apis | 90 | done, on disk only (checked) |
+| S1 | cnas-api-styles | 88 | done, on disk only (checked) |
+| S2-3 | cnas-cloudnative | 85 | done, on disk only (checked) |
+| S4-5 | cnas-data-pipelines | - | writer running |
+| S6-7 | cnas-ml-pipelines | - | writer running |
+| S8 | cnas-ai-services | 98 | done, on disk only (checked) |
+| S9-11 | cnas-llm-rag | 96 | done, on disk only (checked) |
+| S12 | cnas-containers-k8s | 85 | done, on disk only (checked) |
+| S13-15 | cnas-iot-analytics | 100 | done, on disk only (checked) |
 
 ## Known follow-ups
 - Writers stall if they write a whole question block in one edit. Tell them to append at most 10 questions per edit.

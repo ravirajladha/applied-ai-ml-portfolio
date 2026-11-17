@@ -38,6 +38,8 @@ SECTIONS = [
      "Spell/grammar checking, RAG, QA and chatbots, sentiment, MT, information extraction, efficient NLP."),
     ("mledge", "courses", "Machine Learning on the Edge (AIMLCZG535)",
      "Edge AI foundations, hardware, IoT data, deployment, edge MLOps, optimization, security, benchmarking."),
+    ("cloudnative", "courses", "API-driven Cloud Native Solutions (AIMLCZG549)",
+     "APIs (REST, OpenAPI, GraphQL, gRPC), cloud-native, data and ML pipelines, AI APIs, RAG, Kubernetes, IoT analytics."),
 ]
 
 SUBJECTS = [
@@ -112,4 +114,13 @@ SUBJECTS = [
     ("edge-optimization", "mledge", "Model Optimization for the Edge (M6, S11-S12)", "Quantization, pruning, distillation, NAS, lightweight architectures, SLMs and compilers.", "ready"),
     ("edge-security", "mledge", "Edge Security & Trust (M7, S13-S14)", "Federated learning, differential privacy, model extraction, TEEs, secure boot and secure channels.", "ready"),
     ("edge-benchmarking", "mledge", "Benchmarking & Future Directions (M8, S15-S16)", "Latency/throughput/power metrics, MLPerf Tiny, Pareto selection, TinyML and edge GenAI trends.", "ready"),
+    ("cnas-apis", "cloudnative", "API Basics: HTTP, REST & OpenAPI (S1)", "Sync vs async APIs, HTTP request/response, REST constraints, OpenAPI and the API lifecycle.", "ready"),
+    ("cnas-api-styles", "cloudnative", "GraphQL, gRPC & API Versioning (S1)", "GraphQL queries, RPC and gRPC with protobuf, REST vs GraphQL vs gRPC, semantic versioning.", "ready"),
+    ("cnas-cloudnative", "cloudnative", "Cloud-Native Applications (S2-S3)", "Cloud-enabled vs cloud-based vs cloud-native, microservices, serverless, DevOps, CI/CD and GitOps.", "ready"),
+    ("cnas-data-pipelines", "cloudnative", "Data Science & DataOps Pipelines (S4-S5)", "Big data Vs, the data science process, SEMMA, DataOps, Prefect flows and GitHub Actions.", "ready"),
+    ("cnas-ml-pipelines", "cloudnative", "ML Pipelines & MLOps (S6-S7)", "ML generations, the ML lifecycle, MLOps, MLflow tracking and registry, SageMaker.", "ready"),
+    ("cnas-ai-services", "cloudnative", "AI & Cognitive Service APIs (S8)", "Pre-trained vs fine-tuned models, cognitive services, Hugging Face, NLP and CV APIs, Bedrock.", "ready"),
+    ("cnas-llm-rag", "cloudnative", "Language Models, LLMOps & RAG (S9-S11)", "LLMs vs SLMs, tokens and cost, LLMOps, LLM APIs, fine-tuning vs RAG, LangChain RAG stages.", "ready"),
+    ("cnas-containers-k8s", "cloudnative", "Docker, Kubernetes & Deployment Strategies (S12)", "Containers vs VMs, Dockerfiles, Kubernetes architecture, YAML, basic/ramped/blue-green/canary.", "ready"),
+    ("cnas-iot-analytics", "cloudnative", "IoT & Data Analytics (S13-S15)", "Analytics types, IoT layers, edge and gateways, IoT platforms, IoT data quality, imputation and EDA.", "ready"),
 ]
