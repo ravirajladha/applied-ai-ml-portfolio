@@ -1233,4 +1233,336 @@ QUESTIONS = [
          "__deepcopy__(self, memo) returns the copy. memo is a dict of already-copied objects, which handles cycles. "
          "__copy__ does the same for shallow copies.",
          topic="copying", level=4),
+
+    # ---- round 3: conceptual mcq/tf/fill
+    # ---------------------------------------------------------------- level 1
+    mcq("Which method definition correctly returns the object's name?",
+        ["def show(self): return self.name",
+         "def show(): return self.name",
+         "def show(self): return name",
+         "function show() { return this.name }"], 0,
+        "The object has to arrive as a parameter, and you reach its data through it.",
+        "Python passes the object as the first parameter (self), and you read its data as self.name. Without self in the parameter list the call fails with TypeError; "
+        "a bare `name` is looked up as a local or global variable and raises NameError. The last option is JavaScript: Python has no implicit `this`.",
+        topic="class-instance", level=1,
+        analogy="self is Java's `this`, except Python makes you write it in the parameter list and in every attribute access."),
+    tf("By convention, Python class names use CamelCase (`TrainingConfig`) while functions and variables use snake_case (`load_config`).", True,
+       "Look at names like `DataLoader` and `train_test_split`.",
+       "PEP 8 says CapWords for classes and lower_case_with_underscores for functions, methods and variables. It's only a convention, but it lets readers tell "
+       "`Model(...)` (creating an object) from `model(...)` (calling something) at a glance, exactly as in Java or TypeScript.",
+       topic="class-instance", level=1),
+    mcq("A class body contains `MAX_RETRIES = 3`. Inside one of its methods, how do you read that value?",
+        ["self.MAX_RETRIES (or Fetcher.MAX_RETRIES)",
+         "MAX_RETRIES on its own, like a local variable",
+         "this.MAX_RETRIES",
+         "Fetcher->MAX_RETRIES"], 0,
+        "A method's body can't see the class body's names directly.",
+        "Class attributes are reached through the instance (self.MAX_RETRIES) or the class (Fetcher.MAX_RETRIES). A bare MAX_RETRIES inside a method raises NameError, "
+        "because the class body is not an enclosing scope for its methods. Java lets you skip `this.`; Python never does.",
+        topic="attributes", level=1,
+        code='class Fetcher:\n    MAX_RETRIES = 3\n\n    def limit(self):\n        return self.MAX_RETRIES\n\nprint(Fetcher().limit(), Fetcher.MAX_RETRIES)'),
+    mcq("What is the difference between a function and a method?",
+        ["A method is a function defined inside a class and called on an object, e.g. cart.add(item)",
+         "A method can't take parameters; a function can",
+         "Methods are faster because they are compiled",
+         "There is no difference; Python uses the two words for different file types"], 0,
+        "Where is it defined, and how do you call it?",
+        "A method is just a function that lives in a class; calling it on an object (cart.add(item)) passes that object in as self. "
+        "len(x) is a function; x.append(1) is a method. Same idea as methods on a JS class versus standalone functions.",
+        topic="methods", level=1),
+    fill("The decorator that lets callers read a method like a plain attribute, `c.area` with no parentheses, is `@_____`.", "property",
+         "It turns a getter method into something that looks like a field.",
+         "@property runs the method each time the attribute is read, so `c.area` is always computed from the current radius. "
+         "It's Python's version of a TypeScript `get area()` accessor; calling it with brackets (`c.area()`) is a common mistake.",
+         topic="property-encapsulation", level=1),
+    mcq("`Dog(Animal)` defines its own `speak()` method, and so does `Animal`. What is this called?",
+        ["Overriding: Dog's version replaces Animal's for Dog objects",
+         "Overloading: Python picks the version by argument types",
+         "Shadowing: both versions run, Dog's first",
+         "A name clash: Python raises an error when the class is defined"], 0,
+        "Which version does a Dog object get?",
+        "When a subclass defines a method with the same name, its version is found first for its own objects. Animal objects still use Animal's speak(). "
+        "Python has no overloading by argument types (the later def simply replaces the earlier one), and only one speak() runs unless Dog calls super().speak().",
+        topic="inheritance", level=1),
+    tf("You normally call dunder methods yourself, writing `batch.__len__()` rather than `len(batch)`.", False,
+       "Who is supposed to call them?",
+       "Dunder methods are hooks for Python's own syntax and built-ins: len(batch) calls __len__, print(x) calls __str__, a + b calls __add__. "
+       "You write them; Python calls them. Calling them directly works but reads oddly and can skip extra logic the built-in adds.",
+       topic="dunder", level=1),
+    mcq("Which line inside a `@dataclass` body declares a field that becomes an `__init__` parameter?",
+        ["lr: float = 0.01", "lr = 0.01", "self.lr = 0.01", "var lr: float = 0.01"], 0,
+        "The decorator looks for type annotations.",
+        "@dataclass builds __init__ from annotated class variables (name: type = default). `lr = 0.01` without an annotation is an ordinary class attribute, "
+        "not a field, so it silently stays out of __init__ and __repr__. `self` doesn't exist in the class body, and `var` is not Python.",
+        topic="dataclasses", level=1,
+        code='from dataclasses import dataclass\n\n@dataclass\nclass Config:\n    lr: float = 0.01\n\nprint(Config(lr=0.1))'),
+    mcq("`def load(src): return src.read()`. Which objects can you pass as `src`?",
+        ["Any object with a read() method: an open file, io.StringIO, or your own class",
+         "Only objects created with open()",
+         "Only subclasses of a File base class",
+         "Only strings that contain a file path"], 0,
+        "Python checks what the object can do, not what it is.",
+        "That's duck typing: the function only needs .read() to exist. A real file, an in-memory io.StringIO and a fake object in a unit test all work. "
+        "In TypeScript terms it's structural typing, checked at runtime instead of at compile time.",
+        topic="duck-typing", level=1,
+        analogy="If it walks like a duck and quacks like a duck, the function treats it as a duck."),
+    fill("The standard-library module that provides the `copy()` and `deepcopy()` functions is `_____`.", "copy",
+         "Same name as the functions.",
+         "import copy, then copy.copy(x) for a shallow copy (inner objects shared) or copy.deepcopy(x) for a full copy. "
+         "Plain assignment (b = a) never copies; it only adds a second name for the same object.",
+         topic="copying", level=1),
+    tf("A PyTorch model class usually inherits from `nn.Module`, as in `class Net(nn.Module):`.", True,
+       "Every layer you've used, such as nn.Linear, is built the same way.",
+       "Subclassing nn.Module gives your model parameter tracking, .to(device), .train()/.eval() and state_dict() saving for free. "
+       "You add the layers in __init__ and the computation in forward. Think of it as extending a framework base class, like a React component extending Component.",
+       topic="nn-module", level=1),
+    tf("A `Trainer` that stores `self.optimizer = optimizer` in `__init__` is using composition: it has an optimizer rather than being one.", True,
+       "Has-a or is-a?",
+       "Holding another object in an attribute is composition. The Trainer uses the optimizer through self.optimizer.step() and can be handed SGD, Adam or a fake in tests. "
+       "Inheriting (class Trainer(Adam)) would claim a Trainer IS an optimizer, which makes no sense and locks you to one choice.",
+       topic="composition", level=1,
+       analogy="Dependency injection in Spring or NestJS: the service receives its repository instead of extending it."),
+
+    # ---------------------------------------------------------------- level 2
+    mcq("`TypeError: Point.__init__() missing 1 required positional argument: 'y'`. What happened?",
+        ["Point was created with one argument, but __init__ expects both x and y",
+         "__init__ forgot to list self as its first parameter",
+         "y should have been a class attribute",
+         "The class name Point is misspelled somewhere"], 0,
+        "The message names the parameter that never got a value.",
+        "Point(2) fills x with 2 and leaves y empty, so Python stops before __init__ runs. self is filled in automatically, which is why it never appears in this message. "
+        "Give y a default (`y=0`) if callers may leave it out. Forgetting self gives a different message: 'takes 2 positional arguments but 3 were given'.",
+        topic="class-instance", level=2),
+    tf("On an ordinary class, `obj.anything = 1` works even if `__init__` never mentioned `anything`.", True,
+       "Does Python check attribute names against a declared list?",
+       "Instances store attributes in a dict, so any new name can be added at any time. That's flexible, and it's also why a typo such as "
+       "`self.leraning_rate = 0.1` silently creates a second attribute instead of failing. __slots__, frozen dataclasses or a linter catch this; TypeScript would flag it at compile time.",
+       topic="attributes", level=2),
+    mcq("`class Model:` has `def predict(self, x): return x`. What does `Model.predict([1])` do, called on the class instead of an object?",
+        ["Raises TypeError: missing 1 required positional argument: 'x', because [1] was taken as self",
+         "Returns [1]; Python creates a temporary Model for you",
+         "Returns None, because there's no instance",
+         "Raises AttributeError: class has no attribute predict"], 0,
+        "On the class, predict is a plain function with two parameters.",
+        "Through the class, nothing is bound automatically, so the first argument becomes self and x is missing. `Model().predict([1])` or `Model.predict(m, [1])` works. "
+        "This error is common after forgetting the brackets when creating an object: `m = Model` instead of `m = Model()`.",
+        topic="methods", level=2),
+    fill("To add a setter to the property `lr`, you decorate the second `def lr(self, value)` with `@lr._____`.", "setter",
+         "The property object itself provides the decorator.",
+         "@property makes `lr` a property; @lr.setter attaches the method that runs on `obj.lr = value`, which is the place to validate (raise ValueError for a negative lr). "
+         "Both methods must have the same name. Without a setter, the property is read-only and assignment raises AttributeError.",
+         topic="property-encapsulation", level=2),
+    mcq("What is the difference between `issubclass(Dog, Animal)` and `isinstance(rex, Animal)`?",
+        ["issubclass compares two classes; isinstance asks whether an object is an instance of a class (or a subclass of it)",
+         "They are the same function with different names",
+         "issubclass also works on objects; isinstance only on classes",
+         "isinstance ignores inheritance; issubclass follows it"], 0,
+        "Look at what each one takes as its first argument.",
+        "issubclass(Dog, Animal) is about the class tree; isinstance(rex, Animal) is about one object. Both follow inheritance, so a Dog is an Animal for both. "
+        "Passing an object to issubclass raises TypeError: issubclass() arg 1 must be a class.",
+        topic="inheritance", level=2),
+    tf("If a class defines `__repr__` but not `__str__`, `print(obj)` uses `__repr__`.", True,
+       "What does the default __str__ do?",
+       "object.__str__ simply calls __repr__, so one good __repr__ covers print, f-strings, logs and the REPL. The reverse is not true: "
+       "defining only __str__ leaves containers and the debugger showing <Point object at 0x...>.",
+       topic="dunder", level=2),
+    mcq("You want `Point(1, 2) == Point(1, 2)` to be True. Which method do you implement?",
+        ["__eq__", "__equals__", "__is__", "__cmp__"], 0,
+        "Java calls it equals(); Python uses a dunder.",
+        "`==` calls __eq__. Without it, Python falls back to identity, so two separate objects with equal fields compare False. "
+        "__cmp__ was removed in Python 3, and __equals__ / __is__ are not hooks at all (`is` can't be overridden). A @dataclass writes __eq__ for you.",
+        topic="dunder", level=2),
+    tf("`@dataclass` checks field types at runtime, so `Config(lr=\"fast\")` raises TypeError when `lr: float`.", False,
+       "Are type hints enforced anywhere in plain Python?",
+       "Dataclasses use annotations only to find the fields; the values are stored as given, so lr is happily the string 'fast'. "
+       "Use a static checker (mypy, Pyright) for your own code, and pydantic or a __post_init__ check for untrusted input such as config files.",
+       topic="dataclasses", level=2),
+    mcq("`for x in batch:` fails with `TypeError: 'Batch' object is not iterable`. What is the class missing?",
+        ["An __iter__ method (or a __getitem__ that accepts 0, 1, 2, ...)",
+         "A __len__ method",
+         "Inheritance from list",
+         "A __next__ method on the class that holds the data"], 0,
+        "What does a for loop ask the object for first?",
+        "for calls iter(batch), which needs __iter__ (or falls back to __getitem__ with 0, 1, 2 ... until IndexError). __len__ alone isn't enough, "
+        "and you don't need to inherit from list: any class with the right method works, which is duck typing.",
+        topic="duck-typing", level=2),
+    mcq("A teammate writes `class Logger(list)` so the logger can `.append()` messages. What is the main problem?",
+        ["Every list method (sort, pop, clear, +) becomes part of Logger's public API; store a list in self._lines instead",
+         "Built-in types can't be subclassed",
+         "append won't work on a subclass of list",
+         "Nothing; inheriting from list is the recommended way to store data"], 0,
+        "Should `logger.sort()` or `logger.clear()` be something callers can do?",
+        "Inheriting exposes everything the parent can do, so callers can reorder or wipe the log, and you can never change the storage later. "
+        "Composition (self._lines = []) with a small log() method keeps the API to what you mean. It's the classic 'prefer composition' case.",
+        topic="composition", level=2),
+    fill("To count a model's trainable weights you loop over `model._____()` and add up `p.numel()`.", "parameters",
+         "It's the same method you pass to the optimizer.",
+         "model.parameters() yields every nn.Parameter registered by the module and its submodules. `sum(p.numel() for p in model.parameters() if p.requires_grad)` "
+         "is the usual one-liner, and the same call feeds `torch.optim.Adam(model.parameters())`.",
+         topic="nn-module", level=2),
+    tf("Calling `iter()` on something that is already an iterator, such as a generator, returns that same object.", True,
+       "An iterator's __iter__ usually returns self.",
+       "Iterators implement __iter__ as `return self`, so iter(gen) is gen. That's why a generator is consumed once: a second for loop asks for an iterator, gets the same "
+       "exhausted object back, and loops zero times. Lists are iterables, not iterators: iter(list) gives a fresh iterator each time.",
+       topic="iteration", level=2,
+       diagram="""
+ list   --iter()--> new list_iterator (fresh each time)
+ gen    --iter()--> gen itself (same object, one pass only)
+"""),
+
+    # ---------------------------------------------------------------- level 3
+    mcq("Each epoch updates one `metrics` dict in place and appends it to `history`. After training, every entry in `history` shows the last epoch. Why?",
+        ["The same dict object was appended every time, so all entries are one object; append metrics.copy() or build a new dict per epoch",
+         "list.append copies the dict, but only the last copy is kept",
+         "Dicts can't be stored in lists reliably",
+         "The training loop overwrote history on each epoch"], 0,
+        "How many distinct dict objects exist at the end?",
+        "append stores a reference, not a snapshot. Three appends of one dict give a list holding the same object three times, and updating it shows everywhere. "
+        "The same bug appears with `best = model.state_dict()`. Create a fresh dict per epoch, or copy before storing.",
+        topic="copying", level=3,
+        code='metrics = {}\nhistory = []\nfor epoch in range(3):\n    metrics["loss"] = 1.0 / (epoch + 1)\n    history.append(metrics)\nprint(history[0] is history[2], history[0]["loss"])',
+        diagram="""
+ history: [ ref, ref, ref ]
+             \\    |    /
+              { "loss": 0.33 }   <- one dict
+"""),
+    mcq("What does `type(Point)` return for a class `Point`?",
+        ["type: classes are themselves objects, instances of type",
+         "Point",
+         "object",
+         "class"], 0,
+        "If a class is an object, what is its class?",
+        "In Python, classes are runtime objects: you can pass them to functions, store them in a dict registry ({'resnet': ResNet}) and create instances later. "
+        "Their class is `type` (the metaclass). object is the base class of Point, not its type. That's why `cls()` inside a classmethod works.",
+        topic="class-instance", level=3),
+    tf("`vars(obj)` returns the very same dict object as `obj.__dict__`.", True,
+       "Does vars() build a copy?",
+       "vars(obj) is just a readable way to get obj.__dict__, and changing it changes the object's attributes. It fails with TypeError for objects "
+       "that have no __dict__ (built-ins like int, or classes using __slots__). Handy for logging a config object's settings.",
+       topic="attributes", level=3),
+    mcq("`Config` has `@classmethod def load(cls, path)`. Which calls work?",
+        ["Both Config.load(p) and Config().load(p); cls is the class in both cases",
+         "Only Config.load(p); calling through an instance raises TypeError",
+         "Only Config().load(p); classmethods need an object",
+         "Both, but through an instance cls is the instance"], 0,
+        "What does the classmethod decorator bind the first argument to?",
+        "A classmethod always receives the class, whether you call it on the class or on an instance (it uses type(instance)). "
+        "So `run_cfg.load(p)` on a subclass instance gives a subclass object. The usual style is still to call it on the class, like a Java static factory.",
+        topic="methods", level=3),
+    mcq("`A` and `B` both inherit from `Base`, and `class C(A, B)`. What does Python's C3 method resolution order guarantee?",
+        ["Every class comes before its parents and the left-to-right order of bases is kept: C, A, B, Base, object",
+         "Plain depth-first search: C, A, Base, B, object",
+         "Base comes first because it was defined first: Base, A, B, C, object",
+         "Nothing fixed; the order depends on which methods are called first"], 0,
+        "Base is shared. Should it be checked before B has had its say?",
+        "C3 linearisation merges the parents' orders so a shared base appears once, after all its children. Depth-first would reach Base before B and skip B's override. "
+        "This is what makes cooperative super() in mixins work. Check any class with Cls.__mro__.",
+        topic="inheritance", level=3,
+        diagram="""
+        Base
+       /    \\
+      A      B
+       \\    /
+         C      MRO: C -> A -> B -> Base -> object
+"""),
+    tf("When `a` and `b` are of unrelated types, `a + b` first tries `a.__add__(b)`; if that is missing or returns NotImplemented, Python tries `b.__radd__(a)`.", True,
+       "How does `2 * vector` work when int knows nothing about vectors?",
+       "Returning NotImplemented means 'I can't handle this type, ask the other side'. That's how `0 + Vec(1)` (and so sum()) can work if Vec defines __radd__. "
+       "Returning False or raising TypeError yourself would block the fallback. NumPy arrays and tensors use the same protocol with scalars.",
+       topic="dunder", level=3),
+    fill("To validate or derive values right after the generated `__init__` of a dataclass runs, define the method `_____`.", "__post_init__",
+         "It runs 'after init'.",
+         "The generated __init__ calls self.__post_init__() at the end if it exists, so you can raise ValueError for a bad lr or compute a field marked field(init=False). "
+         "In a frozen dataclass you have to use object.__setattr__ there, since normal assignment is blocked.",
+         topic="dataclasses", level=3),
+    mcq("A class inherits from `collections.abc.Sequence` and defines only `__getitem__` and `__len__`. What else does it get?",
+        ["Working `in`, iteration, reversed(), .index() and .count(), supplied by the ABC as mixin methods",
+         "Nothing; an ABC only checks that methods exist",
+         "Slicing support for free, even if __getitem__ ignores slices",
+         "Automatic __eq__ and __hash__ based on the items"], 0,
+        "ABCs in collections.abc can provide default methods, not just requirements.",
+        "Sequence implements __contains__, __iter__, __reversed__, index and count on top of your two abstract methods. It also makes isinstance(x, Sequence) True. "
+        "That's the trade-off versus pure duck typing: inherit a little, get a lot of consistent behaviour.",
+        topic="duck-typing", level=3,
+        code='from collections.abc import Sequence\n\nclass Tokens(Sequence):\n    def __init__(self, items):\n        self.items = items\n    def __getitem__(self, i):\n        return self.items[i]\n    def __len__(self):\n        return len(self.items)\n\nt = Tokens(["a", "b", "a"])\nprint("b" in t, t.count("a"), list(reversed(t)))'),
+    mcq("How does `functools.cached_property` differ from `@property`?",
+        ["It runs the method once and stores the result in the instance's __dict__; later reads skip the method, and `del obj.attr` forces a recompute",
+         "It recomputes on every access, exactly like @property",
+         "It caches the value on the class, so all instances share it",
+         "It's read-only: assigning obj.attr = 1 raises AttributeError"], 0,
+        "Where could a value be stored so that normal attribute lookup finds it next time?",
+        "cached_property is a non-data descriptor: after the first call the value sits in obj.__dict__, which takes priority, so the method never runs again. "
+        "Good for expensive stats on an immutable dataset; wrong when the inputs change, because the value goes stale. It needs a __dict__, so it fails on __slots__ classes.",
+        topic="internals", level=3),
+    mcq("A model keeps blocks in `self.blocks = [nn.Linear(8, 8) for _ in range(3)]`. After `model.to(\"cuda\")`, the forward pass fails with a device mismatch. Why?",
+        ["nn.Module only registers modules assigned directly or held in nn.ModuleList/ModuleDict; the plain list is invisible, so .to() never moves those layers",
+         ".to() only moves the first layer of a list",
+         "Linear layers created in a list comprehension are always on the CPU",
+         "The list must be converted to a tuple first"], 0,
+        "Would those layers show up in model.parameters()?",
+        "nn.Module's __setattr__ registers Modules and Parameters it sees directly; a Python list is just an ordinary attribute. So the layers miss .to(), .parameters() "
+        "(the optimizer never trains them) and state_dict() (never saved). Wrap them: self.blocks = nn.ModuleList([...]).",
+        topic="nn-module", level=3),
+
+    # ---------------------------------------------------------------- level 4
+    mcq("Why does Python rename `self.__count` to `self._Counter__count` (name mangling)?",
+        ["To stop subclasses from clashing with the base class's internal names by accident; it is not a security feature",
+         "To make the attribute truly private, as in Java",
+         "To speed up attribute access",
+         "So the attribute isn't saved by pickle"], 0,
+        "Think about a subclass that also uses `self.__count` for something else.",
+        "Mangling prefixes the class name, so Base's __count and Child's __count become two different attributes. Anyone can still read obj._Counter__count. "
+        "Use a single underscore for 'internal'; reserve double underscores for base classes meant to be subclassed by strangers.",
+        topic="property-encapsulation", level=4),
+    tf("An instance attribute can hide a plain method of the same name (a non-data descriptor), but it cannot hide a property (a data descriptor).", True,
+       "Does the descriptor define __set__?",
+       "Lookup order is: data descriptors on the class (property, which has __set__), then the instance __dict__, then non-data descriptors (functions, cached_property). "
+       "So `obj.f = lambda: 1` shadows a method, while writing to obj.__dict__['area'] leaves a property in charge. That ordering is how cached_property can cache at all.",
+       topic="internals", level=4,
+       diagram="""
+ obj.name lookup:
+ 1. data descriptor on type(obj)   (property)
+ 2. obj.__dict__['name']
+ 3. non-data descriptor / class attr (method)
+ 4. __getattr__, else AttributeError
+"""),
+    mcq("After `self.fc = nn.Linear(4, 2)` in a module's `__init__`, `'fc' in model.__dict__` is False, yet `model.fc` works. How?",
+        ["nn.Module.__setattr__ stores submodules in model._modules, and nn.Module.__getattr__ (called only when normal lookup fails) finds them there",
+         "fc is a class attribute created by the Linear constructor",
+         "PyTorch compiles the module, which removes __dict__",
+         "fc is stored in __dict__ under the mangled name _Module__fc"], 0,
+        "Normal lookup fails, so which fallback hook runs?",
+        "nn.Module routes Parameters into _parameters, Modules into _modules and buffers into _buffers, which is how parameters() and state_dict() can walk them. "
+        "Reads fall through to __getattr__, which checks those dicts. It's also why assigning layers before super().__init__() fails: those dicts don't exist yet.",
+        topic="nn-module", level=4,
+        code='import torch.nn as nn\n\nclass Net(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.fc = nn.Linear(4, 2)\n\nm = Net()\nprint("fc" in m.__dict__, "fc" in m._modules)'),
+    mcq("A `@dataclass Run` has `created_at: datetime`. Two runs with the same hyperparameters compare unequal. What's the cleanest fix?",
+        ["Declare `created_at: datetime = field(default_factory=datetime.now, compare=False)`",
+         "Write a custom __eq__ that copies every other field by hand",
+         "Make the dataclass frozen=True",
+         "Use `eq=False` on the decorator"], 0,
+        "field() has options that control which fields take part in generated methods.",
+        "compare=False keeps the field in __init__ and __repr__ but leaves it out of __eq__ (and the ordering methods). Hand-written __eq__ drifts when fields are added; "
+        "frozen doesn't change equality; eq=False falls back to identity, so no two runs are ever equal. The same flag is useful for caches or a large tensor field.",
+        topic="dataclasses", level=4),
+    tf("In `class C(A, B)`, if `A.save()` does not call `super().save()`, then `B.save()` never runs for C objects, even though B is a parent of C.", True,
+       "super() passes control along the MRO, one link at a time.",
+       "The MRO is C, A, B, object. C().save() finds A.save first; only A's own super().save() would hand over to B. Cooperative multiple inheritance works only if every "
+       "class in the chain calls super(). A mixin that forgets it silently disables everything after it, and nothing raises.",
+       topic="inheritance", level=4),
+    fill("The hook that Python calls on a parent class every time a subclass is defined, often used for plugin registries, is `_____`.", "__init_subclass__",
+         "It's like __init__, but for subclasses being created.",
+         "Define `def __init_subclass__(cls, **kwargs)` on the base; it runs once per subclass at class-definition time, so `class ResNet(Model)` can register itself in "
+         "Model.registry without a decorator or metaclass. Remember to call super().__init_subclass__(**kwargs).",
+         topic="methods", level=4),
+    mcq("`Wrapper` delegates with `__getattr__` to the list it wraps. `w.__len__()` works, but `len(w)` raises `TypeError: object of type 'Wrapper' has no len()`. Why?",
+        ["Built-ins look special methods up on the type, not the instance, so __getattr__ never runs for len(); delegate dunders explicitly",
+         "__getattr__ only works for attributes that start with a letter",
+         "len() requires the class to inherit from list",
+         "__getattr__ only runs inside the class body"], 0,
+        "w.__len__ is an ordinary attribute lookup. What does len(w) look up?",
+        "Implicit dunder calls (len, +, iter, with) use type(w).__len__ and skip the instance and __getattr__. Explicit w.__len__ goes through normal lookup, misses, and "
+        "falls back to __getattr__. Proxies and model wrappers must define __len__, __iter__, __getitem__ by hand. It's also faster.",
+        topic="composition", level=4,
+        code='class Wrapper:\n    def __init__(self, inner):\n        self._inner = inner\n    def __getattr__(self, name):\n        return getattr(self._inner, name)\n\nw = Wrapper([1, 2, 3])\nprint(w.__len__(), hasattr(type(w), "__len__"))'),
 ]

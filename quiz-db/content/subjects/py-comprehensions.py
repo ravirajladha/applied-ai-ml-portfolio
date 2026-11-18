@@ -976,4 +976,360 @@ QUESTIONS += [
         "The list version needs memory for the whole result. A generator processes one line at a time, so memory stays constant, which is how streaming datasets work. Opening inside a with block also guarantees the file gets closed.",
         analogy='Like streaming a large HTTP response instead of buffering the whole body in memory.',
         topic="ml-patterns", level=4),
+
+    # ---- round 3: conceptual mcq/tf/fill
+    # ---------------------------------------------------------------- level 1
+    mcq("Which list comprehension gives `[1, 4, 9]` from `[1, 2, 3]`?",
+        ["[n * n for n in [1, 2, 3]]",
+         "[for n in [1, 2, 3]: n * n]",
+         "[n * n if n in [1, 2, 3]]",
+         "(n * n in [1, 2, 3])"], 0,
+        "The shape is [what to produce  for name in where].",
+        "A list comprehension puts the result expression first, then `for name in iterable`, all inside square brackets. "
+        "There's no colon and no indented body. It reads almost like English: 'n times n, for each n in the list'.",
+        topic="list-comp", level=1,
+        diagram="""
+ [ n * n   for n   in [1, 2, 3] ]
+   -----   -----   -----------
+   result  name    source
+"""),
+    tf("`doubled = [x * 2 for x in nums]` leaves `nums` unchanged and gives back a brand-new list.", True,
+       "Where does the result go?",
+       "A comprehension builds a new list from the values it reads; the source list is only read, not modified. "
+       "That's like JavaScript's nums.map(x => x * 2), which also returns a new array. To replace the original, assign back: nums = [x * 2 for x in nums].",
+       topic="list-comp", level=1),
+    fill("In `[w.upper() for w in words]`, the name `w` is the loop ____: it holds one item of `words` at a time.", "variable",
+         "Same role as the name after `for` in a normal for loop.",
+         "The name after `for` is the loop variable: it takes each item of the source in turn, and the expression on the left uses it. "
+         "You can pick any name; short ones like w, x or row are common, and `_` means 'I don't need the value'.",
+         topic="list-comp", level=1),
+    tf("In `[0 for _ in range(3)]`, the underscore is an ordinary variable name, used by convention to say 'I don't need this value'.", True,
+       "Is `_` a keyword or just a name?",
+       "`_` is a normal name. Writing it tells readers the loop only counts repetitions, and linters stop warning about an unused variable. "
+       "The comprehension gives [0, 0, 0]. You'll see `for _ in range(n_epochs)` in training scripts for the same reason.",
+       topic="list-comp", level=1),
+    mcq("Which comprehension keeps only the words longer than 3 letters?",
+        ["[w for w in words if len(w) > 3]",
+         "[len(w) > 3 for w in words]",
+         "[w if len(w) > 3 for w in words]",
+         "[w for len(w) > 3 in words]"], 0,
+        "The filter goes at the end, after the for part.",
+        "A trailing `if` decides which items are kept. Putting the condition in front ([len(w) > 3 for w in words]) keeps every item but turns each into True or False. "
+        "`w if cond` with no else in front is a SyntaxError.",
+        topic="filters", level=1),
+    tf("The `if` part of a list comprehension is optional: `[x * 2 for x in nums]` is complete without one.", True,
+       "Do you always need to drop something?",
+       "The filter is only there when you want to skip items. Without it, every item goes through the expression, so the result has the same length as the input.",
+       topic="filters", level=1),
+    mcq("What does a dict comprehension have that a list comprehension doesn't?",
+        ["Curly braces and a `key: value` pair in front, like {w: len(w) for w in words}",
+         "A second for clause",
+         "The word `dict` before the brackets",
+         "A mandatory if clause"], 0,
+        "A dict needs two things for every entry.",
+        "Swap the square brackets for curly ones and produce key: value. Without the colon, {len(w) for w in words} is a set comprehension instead. "
+        "It's the comprehension form of building an object in JS with Object.fromEntries(words.map(w => [w, w.length])).",
+        topic="dict-set", level=1),
+    tf("A set comprehension such as `{len(w) for w in words}` automatically removes duplicate values.", True,
+       "What does a set never contain twice?",
+       "A set keeps each value once, so if three words have length 3 the result contains 3 only once. "
+       "Handy for 'which labels appear in this dataset?'. Sets have no guaranteed order, so sort them before you print or compare.",
+       topic="dict-set", level=1),
+    mcq("What is the visible difference between a list comprehension and a generator expression?",
+        ["Round brackets instead of square ones: (x * 2 for x in nums)",
+         "A generator expression must contain the word `yield`",
+         "A generator expression must have an if at the end",
+         "A generator expression uses `in` twice"], 0,
+        "Look at the brackets.",
+        "Same inside, different brackets. Square brackets build the whole list right away; round brackets make a generator that produces items one at a time when asked. "
+        "It's not a 'tuple comprehension': for a tuple you'd write tuple(x * 2 for x in nums).",
+        topic="genexp", level=1,
+        diagram="""
+ [x * 2 for x in nums]  -> [2, 4, 6]   all built now
+ (x * 2 for x in nums)  -> <generator> nothing yet
+        next() -> 2, next() -> 4, next() -> 6
+"""),
+    mcq("`labels = [\"cat\", \"dog\", \"bird\"]`. Which builds `{\"cat\": 0, \"dog\": 1, \"bird\": 2}`?",
+        ["{lab: i for i, lab in enumerate(labels)}",
+         "{i: lab for i, lab in enumerate(labels)}",
+         "{lab: i for lab, i in enumerate(labels)}",
+         "[lab: i for i, lab in enumerate(labels)]"], 0,
+        "enumerate gives (position, item) pairs, in that order.",
+        "enumerate yields (0, 'cat'), (1, 'dog'), ..., so unpack as i, lab and put the label first as the key. Option 2 builds the reverse id -> label map (also useful, for decoding predictions). "
+        "Option 3 unpacks in the wrong order, and square brackets can't hold key: value.",
+        topic="ml-patterns", level=1),
+    fill("To get each word's position as well as the word, write `[f\"{i}:{w}\" for i, w in ____(words)]`.", "enumerate",
+         "The built-in that pairs a counter with each item.",
+         "enumerate(words) yields (0, words[0]), (1, words[1]), ..., which the comprehension unpacks into i and w. "
+         "It replaces the error-prone `for i in range(len(words))` pattern and is how token-to-index vocabularies are usually built.",
+         topic="ml-patterns", level=1),
+    mcq("Before building a vocabulary you want to drop empty strings from `tokens`. Which comprehension does it?",
+        ["[t for t in tokens if t]",
+         "[t for t in tokens if t is None]",
+         "[t if t for t in tokens]",
+         "[t for t in tokens if len(t) == 0]"], 0,
+        "An empty string counts as False in an if.",
+        "`if t` keeps every non-empty string, because '' is falsy. `is None` tests for a different value entirely, `len(t) == 0` keeps ONLY the empty ones, "
+        "and an if without else in front of the for is a SyntaxError. Add .strip() (`if t.strip()`) if whitespace-only tokens should go too.",
+        topic="ml-patterns", level=1),
+
+    # ---------------------------------------------------------------- level 2
+    mcq("You want the total number of characters in all of `words`. Which line gives the WRONG answer?",
+        ["sum({len(w) for w in words})",
+         "sum(len(w) for w in words)",
+         "sum([len(w) for w in words])",
+         "sum(map(len, words))"], 0,
+        "One of these brackets quietly throws values away.",
+        "Curly braces make a set, so two words of the same length count once: for ['ab', 'cd'] it gives 2 instead of 4. The other three give the right total. "
+        "The bare generator version is the idiomatic one: no list is built, and a generator that's the only argument needs no extra brackets.",
+        topic="genexp", level=2,
+        code='words = ["ab", "cd", "efg"]\nprint(sum({len(w) for w in words}), sum(len(w) for w in words))'),
+    tf("`[x if x > 0 else 0 for x in xs]` always returns a list with the same length as `xs`.", True,
+       "Does this if-else drop anything?",
+       "An if-else in front of the for is a conditional expression: it picks a value for every item, so nothing is removed. "
+       "Only a trailing `if` (with no else) filters. Same-length output is what you want when values must stay aligned with labels or row ids.",
+       topic="conditional-expr", level=2),
+    fill("`\"pos\" if p > 0.5 else \"neg\"` is called a conditional ____; inside a comprehension it goes before the `for`.", "expression",
+         "It's an expression, not an if statement.",
+         "The conditional expression (Python's ternary, like JS's `p > 0.5 ? 'pos' : 'neg'`) produces a value, so it can sit where the comprehension's result expression goes. "
+         "An if statement can't appear inside a comprehension at all; the trailing `if` is a separate filter clause.",
+         topic="conditional-expr", level=2),
+    mcq("You want to drop the settings that are `None` from `cfg` and keep everything else. Which comprehension is right?",
+        ["{k: v for k, v in cfg.items() if v is not None}",
+         "{k: v for k, v in cfg.items() if v}",
+         "{k: v for k, v in cfg if v is not None}",
+         "{k for k, v in cfg.items() if v is not None}"], 0,
+        "dropout = 0.0 is a real setting, not a missing one.",
+        "`if v` also throws away 0.0, False and empty strings, so a dropout of 0 disappears. Looping over cfg directly gives keys only, so `k, v` tries to unpack each key string. "
+        "Without the colon you build a set of keys, not a dict. Test for the exact value you mean to remove.",
+        topic="dict-set", level=2,
+        code='cfg = {"lr": 0.01, "dropout": 0.0, "seed": None}\nprint({k: v for k, v in cfg.items() if v is not None})'),
+    mcq("How do you read `[x for row in grid for x in row]`?",
+        ["Like nested loops written top to bottom: for row in grid, then for x in row, then produce x",
+         "Right to left: the last for runs first",
+         "Both fors run side by side, like zip",
+         "The inner loop must come first or it's a NameError"], 0,
+        "Write it out as two ordinary for loops.",
+        "The for clauses appear in the same order you'd nest the loops; only the result expression moves to the front. "
+        "That's why `[x for x in row for row in grid]` fails: row is used before the clause that defines it.",
+        topic="nested", level=2,
+        diagram="""
+ [x  for row in grid  for x in row]
+      |                |
+ for row in grid:      |
+     for x in row:  <--+
+         result.append(x)
+"""),
+    mcq("When should you use a generator expression instead of a list comprehension?",
+        ["When the values are consumed once, in order (sum, max, any, writing lines out), and you don't need to index or reuse them",
+         "Whenever you need to call len() on the result",
+         "When you'll loop over the result several times",
+         "Only when the input is a generator itself"], 0,
+        "What can a list do that a generator can't?",
+        "A generator holds one item at a time, so memory stays tiny even for millions of items, but it can be read only once and has no len() or indexing. "
+        "If you need the results twice or need result[3], build a list. SDE analogy: a stream versus an array.",
+        topic="genexp", level=2,
+        analogy="Like reading a file line by line versus loading the whole file into memory first."),
+    mcq("What does the `:=` operator do?",
+        ["Assigns a value to a name and also returns it, so the assignment can happen inside an expression",
+         "Compares two values for equality",
+         "Declares a constant that can't be changed",
+         "Assigns only if the name doesn't exist yet"], 0,
+        "It's called the walrus operator (look at it sideways).",
+        "`(y := f(x))` stores f(x) in y and evaluates to that same value. In a comprehension it lets you compute something once and use it in both the filter and the result: "
+        "[y for x in rows if (y := parse(x)) is not None]. Added in Python 3.8.",
+        topic="walrus", level=2),
+    fill("`[f(x) for x in xs]` can also be written with a built-in as `list(____(f, xs))`.", "map",
+         "The functional-programming cousin of a comprehension.",
+         "map applies a function to every item and returns a lazy iterator, hence the list(...) around it. With a ready-made function (map(str, nums)) it's short and quick; "
+         "with a lambda, the comprehension is usually clearer and just as fast.",
+         topic="readability-perf", level=2),
+    tf("`[[0] * 3 for _ in range(2)]` gives two independent rows even though it uses `*`, because `*` only repeats the int 0 inside each freshly built row.", True,
+       "Which object does * repeat here, and which object does the comprehension build?",
+       "The comprehension runs `[0] * 3` once per row, creating a new list each time. Inside a row, * repeats references to 0, which is harmless because ints can't be changed in place. "
+       "The bug only appears when * repeats a mutable object, as in [[0] * 3] * 2, where both rows are the same list.",
+       topic="grid-aliasing", level=2,
+       diagram="""
+ [[0]*3 for _ in range(2)]     [[0]*3] * 2
+ row0 -> [0, 0, 0]             row0 --+
+ row1 -> [0, 0, 0]             row1 --+--> [0, 0, 0]
+ two lists                     one list, two references
+"""),
+    mcq("Which comprehension lowercases tokens AND removes stopwords, so that 'The' is dropped too?",
+        ["[w.lower() for w in tokens if w.lower() not in STOP]",
+         "[w.lower() for w in tokens if w not in STOP]",
+         "[w for w in tokens if w.lower() not in STOP]",
+         "[w.lower() for w in tokens] if w not in STOP"], 0,
+        "The filter sees the original item, not the transformed one.",
+        "The trailing if runs on w as it is in the input, before the expression on the left. 'The' isn't in {'the', 'a'}, so option 2 keeps it as 'the'. "
+        "Option 3 filters correctly but keeps the original case. When filter and transform must agree, apply the same normalisation in both places (or normalise first in a separate step).",
+        topic="ml-patterns", level=2,
+        code='STOP = {"the", "a"}\ntokens = ["The", "cat", "a", "mat"]\nprint([w.lower() for w in tokens if w.lower() not in STOP])'),
+    mcq("`[x for x in xs if x > 0 if x % 2 == 0]` has two `if` clauses. What does it mean?",
+        ["The same as `if x > 0 and x % 2 == 0`: an item must pass both",
+         "The same as `if x > 0 or x % 2 == 0`",
+         "Only the last if counts",
+         "It's a SyntaxError: a comprehension can have only one if"], 0,
+        "Picture each if as a nested if inside the loop.",
+        "Each extra if is nested inside the previous one, so both must be True and they're checked left to right (the second runs only when the first passes). "
+        "Most people find a single `if a and b` easier to read; the stacked form shows up mainly in generated or older code.",
+        topic="filters", level=2,
+        analogy="Like two security checks in a row at an airport: you only reach the second if you pass the first."),
+    mcq("`preds` and `labels` are equal-length lists of class ids. Which line computes accuracy?",
+        ["sum(p == y for p, y in zip(preds, labels)) / len(labels)",
+         "sum(p == y for p in preds for y in labels) / len(labels)",
+         "sum(preds == labels) / len(labels)",
+         "len([p for p in preds if p in labels]) / len(labels)"], 0,
+        "You want to compare item i with item i, not every item with every item.",
+        "zip pairs items at the same position, and True counts as 1 in sum. Two for clauses compare every prediction with every label (a cross product of n * n pairs). "
+        "preds == labels compares the whole lists and gives one bool, so sum() fails. `p in labels` only asks whether that class appears anywhere. In NumPy this is (preds == labels).mean().",
+        topic="ml-patterns", level=2,
+        analogy="zip is a SQL join on row position; two for clauses are a CROSS JOIN.",
+        code='preds = [1, 0, 1, 1]\nlabels = [1, 1, 1, 0]\nprint(sum(p == y for p, y in zip(preds, labels)) / len(labels))'),
+
+    # ---------------------------------------------------------------- level 3
+    mcq("Both lines transpose `m`. What's the difference?",
+        ["zip(*m) yields tuples, so the first line gives a list of tuples; the comprehension turns each column into a list",
+         "zip(*m) drops the last column",
+         "They're identical: zip returns lists",
+         "zip(*m) transposes only square matrices"], 0,
+        "What type does zip produce for each group?",
+        "*m unpacks the rows into zip, which groups the i-th items of each row into a tuple: the columns. Wrap each in list() if you need to mutate them. "
+        "Careful with ragged rows: zip silently stops at the shortest row (pass strict=True in 3.10+ to get an error instead).",
+        topic="nested", level=3,
+        code='m = [[1, 2, 3], [4, 5, 6]]\nprint(list(zip(*m)))\nprint([list(col) for col in zip(*m)])'),
+    mcq("You can't put try/except inside a comprehension. What's the clean way to convert strings to floats and skip the ones that fail?",
+        ["Move the try/except into a small helper that returns None on failure, then filter: [v for s in raw if (v := safe_float(s)) is not None]",
+         "Wrap the whole comprehension in try/except so bad items are skipped",
+         "Use `[float(s) for s in raw if float(s)]`",
+         "Use `[float(s) for s in raw if s.isnumeric()]`"], 0,
+        "A comprehension can call a function, and a function can contain a try.",
+        "A try around the whole comprehension aborts on the first bad item and you get nothing. isnumeric() rejects '1.5' and '-2'. "
+        "A helper keeps the error handling in one tested place, and the walrus avoids parsing each string twice.",
+        topic="readability-perf", level=3,
+        code='def safe_float(s):\n    try:\n        return float(s)\n    except ValueError:\n        return None\n\nraw = ["1.5", "n/a", "2"]\nprint([v for s in raw if (v := safe_float(s)) is not None])'),
+    fill("To take just the first 5 items from a generator without consuming the rest, use `itertools.____(gen, 5)`.", "islice",
+         "Slicing, but for iterators.",
+         "Generators don't support gen[:5]. itertools.islice(gen, 5) pulls exactly five items lazily and leaves the remainder for later, "
+         "which is how you peek at the first few examples of a streaming dataset without loading it all.",
+         topic="genexp", level=3),
+    mcq("`probs` maps each label to its predicted probability. Which line gives the 2 most likely labels?",
+        ["sorted(probs, key=probs.get, reverse=True)[:2]",
+         "sorted(probs.values(), reverse=True)[:2]",
+         "sorted(probs, reverse=True)[:2]",
+         "[k for k in probs if probs[k] > 0.5][:2]"], 0,
+        "Sort the keys, but by their values.",
+        "Iterating a dict gives its keys; key=probs.get ranks each key by its probability. Option 2 returns the numbers, not the labels; option 3 sorts labels alphabetically; "
+        "option 4 depends on a threshold and dict order. For a big dict, heapq.nlargest(2, probs, key=probs.get) avoids the full sort.",
+        topic="ml-patterns", level=3,
+        diagram="""
+ keys:      cat   dog   fox
+ probs.get: 0.1   0.7   0.2
+ sort by value, high first: dog fox cat
+ [:2] -> ['dog', 'fox']
+""",
+        code='probs = {"cat": 0.1, "dog": 0.7, "fox": 0.2}\nprint(sorted(probs, key=probs.get, reverse=True)[:2])'),
+    tf("`copy = [row[:] for row in grid]` gives a grid of numbers whose cells can be changed without affecting the original.", True,
+       "row[:] is a new list for each row.",
+       "The comprehension copies every row, and the cells are ints, which can't be mutated, so the two grids are fully independent. "
+       "If cells were themselves lists (a grid of token lists) you'd need another level of copying or copy.deepcopy. [r for r in grid] would copy only the outer list.",
+       topic="grid-aliasing", level=3),
+    mcq("You need to clip every value into the range 0..1 while keeping the list's length. Which works?",
+        ["[min(max(x, 0.0), 1.0) for x in xs]",
+         "[x for x in xs if 0 <= x <= 1]",
+         "[max(min(x, 0.0), 1.0) for x in xs]",
+         "[x if 0 <= x <= 1 for x in xs]"], 0,
+        "Raise anything below 0 up to 0, then pull anything above 1 down to 1.",
+        "max(x, 0.0) lifts negatives to 0 and min(..., 1.0) caps at 1. Option 2 filters, so out-of-range values vanish and the list gets shorter. "
+        "Option 3 has min and max swapped and returns 1.0 for everything; option 4 has no else (SyntaxError). With arrays, np.clip(arr, 0, 1) does it vectorised.",
+        topic="conditional-expr", level=3,
+        code='xs = [-0.5, 0.3, 1.7]\nprint([min(max(x, 0.0), 1.0) for x in xs])'),
+    mcq("Why does swapping the order of the two `if` clauses raise TypeError?",
+        ["The clauses run left to right and stop at the first failure, so the None check must come before x > 0 can see a None",
+         "Python sorts if clauses alphabetically",
+         "Only the first if clause is ever evaluated",
+         "`is not None` can't be used in a comprehension filter"], 0,
+        "What does `None > 0` do in Python 3?",
+        "Stacked ifs behave like `and`: the second test only runs for items that passed the first. With the guard first, None never reaches the comparison; "
+        "swapped, `None > 0` raises TypeError. Same rule as `user is not None and user.active` in any condition: put the protective check first.",
+        topic="filters", level=3,
+        diagram="""
+ x = None
+ if x is not None  -> False -> skipped, next item
+ if x > 0          -> never reached
+ swapped: None > 0 -> TypeError
+""",
+        code='xs = [3, None, -1, 5]\nprint([x for x in xs if x is not None if x > 0])\ntry:\n    print([x for x in xs if x > 0 if x is not None])\nexcept TypeError:\n    print("TypeError")'),
+    tf("`{frozenset(p) for p in pairs}` can deduplicate unordered pairs like ('a', 'b') and ('b', 'a'), while `{set(p) for p in pairs}` raises TypeError.", True,
+       "Set items must be hashable.",
+       "A set is mutable and therefore unhashable, so it can't be an item of another set or a dict key. A frozenset is the immutable version, hashable and order-free, "
+       "so both pairs become the same frozenset and the snippet counts 2 unique pairs. Useful for deduplicating co-occurrence pairs or undirected graph edges.",
+       topic="dict-set", level=3,
+       code='pairs = [("a", "b"), ("b", "a"), ("a", "c")]\nprint(len({frozenset(p) for p in pairs}))'),
+    tf("`sorted(score(x) for x in huge_dataset)` keeps memory constant because it receives a generator.", False,
+       "Can you sort values you haven't all seen yet?",
+       "The generator avoids an extra list, but sorted() must hold every value to order them, so it builds a full list anyway. "
+       "Genexps save memory only for consumers that need one item at a time: sum, max, min, any, all, or writing to a file. For 'top 10 of a huge stream', use heapq.nlargest(10, gen), which keeps just 10 items.",
+       topic="genexp", level=3,
+       analogy="Streaming an HTTP response saves memory only if the client processes chunks as they arrive; a client that buffers the whole body to sort it gains nothing."),
+
+    # ---------------------------------------------------------------- level 4
+    mcq("Why is the variance 0.0 when a generator is passed in?",
+        ["The first sum() used up the generator, so the second sum() sees no items and adds up nothing",
+         "Generators convert floats to ints",
+         "The mean is computed wrongly for generators",
+         "Generator expressions can't be passed to functions"], 0,
+        "How many times is `xs` iterated inside the function?",
+        "The function reads xs twice. A list can be read any number of times; a generator is exhausted after the first pass, and the second pass silently yields nothing, so the variance is 0.0 with no error. "
+        "Functions that iterate more than once should call list(xs) first or document that they need a sequence (typing.Sequence rather than Iterable).",
+        topic="genexp", level=4,
+        code='def mean_and_var(xs, n):\n    m = sum(xs) / n\n    v = sum((x - m) ** 2 for x in xs) / n\n    return m, v\n\ndata = [1.0, 2.0, 3.0]\nprint(mean_and_var((x for x in data), 3))\nprint(mean_and_var([x for x in data], 3))',
+        diagram="""
+ gen:  1.0 2.0 3.0 | (empty)
+       ^ sum #1    ^ sum #2 sees nothing -> 0.0
+ list: [1.0, 2.0, 3.0]  re-read freely
+"""),
+    mcq("A training script builds `w2i = {w: i for i, w in enumerate(set(tokens))}` and saves the model. At inference, a fresh process rebuilds w2i the same way and predictions are garbage. Why?",
+        ["Iterating a set of strings follows hash order, and string hashes are randomised per process, so words get different ids each run; build from sorted(set(tokens)) or save the vocab",
+         "enumerate starts at 1 in a new process",
+         "set() removes words that appeared only once",
+         "Dict comprehensions are not deterministic in Python 3.7+"], 0,
+        "What decides the order you get when you loop over a set?",
+        "A set's iteration order depends on its elements' hashes, and Python randomises str hashes for every new process (PYTHONHASHSEED), so the same tokens can come out in a different order. "
+        "The model's embedding rows then no longer match the words. Make the order explicit (sorted, or dict.fromkeys for first-seen order) and save the vocab file next to the checkpoint.",
+        topic="ml-patterns", level=4,
+        analogy="Like generating database primary keys from the iteration order of a HashMap: the next deploy reshuffles every foreign key."),
+    mcq("Why does the generator version raise RuntimeError instead of quietly returning [1, 2]?",
+        ["Since Python 3.7 (PEP 479), a StopIteration that escapes a generator's body is turned into RuntimeError, so a stray next() can't silently end it early",
+         "Generator expressions can't call next()",
+         "range(3) is longer than the iterator, which always raises RuntimeError",
+         "list() raises RuntimeError for any generator that hasn't been started"], 0,
+        "What would happen if StopIteration from inside the generator were allowed out?",
+        "list() stops when the generator raises StopIteration. If a next() inside the body could leak one, the generator would just look shorter and hide the bug. "
+        "PEP 479 converts it into RuntimeError('generator raised StopIteration'). The list comprehension version isn't a generator, so it raises the StopIteration itself. Pass a default (next(it, None)) or use zip/islice instead.",
+        topic="genexp", level=4,
+        code='it = iter([1, 2])\ntry:\n    list(next(it) for _ in range(3))\nexcept RuntimeError as e:\n    print("RuntimeError:", e)'),
+    tf("Since PEP 709 inlined comprehensions (Python 3.12), a comprehension in a class body can read class-level names in its expression.", False,
+       "Inlining was meant to be an invisible speed-up.",
+       "PEP 709 changed how comprehensions are compiled, not what they can see: the class body still isn't an enclosing scope for them, so `[n for _ in range(2)]` raises NameError when n is a class attribute. "
+       "Only the outermost iterable is evaluated in the class scope. Work around it with a module-level constant or by computing the value in a method or classmethod.",
+       topic="scope", level=4,
+       code='try:\n    class C:\n        n = 3\n        xs = [n for _ in range(2)]\nexcept NameError as e:\n    print("NameError:", e)'),
+    tf("If computing one value in a dict comprehension raises, the target variable keeps its old value: no half-built dict is ever assigned.", True,
+       "When does the assignment `d = ...` happen?",
+       "The comprehension builds a temporary dict and the assignment runs only after it finishes. An exception skips the assignment, so d is still 'old' in the snippet. "
+       "That's atomic from the caller's view, but the work done so far is lost: on a long-running job, a loop that records failures (or a helper returning None) can be more useful.",
+       topic="dict-set", level=4,
+       analogy="Like a database transaction that rolls back: either the whole dict is committed to d, or nothing is.",
+       code='d = "old"\ntry:\n    d = {k: 1 / k for k in [1, 0]}\nexcept ZeroDivisionError:\n    pass\nprint(d)'),
+    fill("To make set and dict-key order of strings reproducible across Python runs, set the environment variable ____ to a fixed value.", "PYTHONHASHSEED",
+         "It controls the random salt used when hashing str and bytes.",
+         "By default Python salts str hashes per process (a defence against hash-flooding attacks), so set iteration order can change between runs. "
+         "PYTHONHASHSEED=0 fixes it, which also helps make experiments reproducible. Don't rely on it for correctness, though: sorting explicitly is the robust fix.",
+         topic="ml-patterns", level=4),
+    fill("In `(f(x) for x in data if g(x))`, only `data` is evaluated when the generator is created; it is called the ____ iterable.", "outermost",
+         "It belongs to the first for clause.",
+         "The first for clause's iterable is evaluated immediately (and an error there shows up at creation); f, g and any later for clauses run only when items are pulled. "
+         "That's why a typo in a later clause hides until the generator is consumed, and why rebinding a name used by f changes results produced after the rebind.",
+         topic="genexp", level=4),
 ]

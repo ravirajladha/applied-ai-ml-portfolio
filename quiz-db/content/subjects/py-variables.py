@@ -948,4 +948,335 @@ int32 range:  -2147483648 ............ 2147483647
 """,
         analogy="Like Java's int, which silently wraps from Integer.MAX_VALUE to Integer.MIN_VALUE.",
         topic='ml-precision', level=4),
+
+    # ---- round 3: conceptual mcq/tf/fill
+    # ---------------------------------------------------------------- level 1
+    mcq("What does the line `score = 90` do?",
+        ["Makes the name score refer to the value 90",
+         "Checks whether score is equal to 90",
+         "Creates a constant that can never be changed",
+         "Prints 90 on the screen"], 0,
+        "One equals sign, not two.",
+        "A single = is assignment: Python creates the value 90 and attaches the name score to it. Asking 'is it equal?' needs ==. "
+        "Nothing is printed and nothing is locked: you can write score = 95 on the next line. Python has no `const` keyword like JavaScript.",
+        topic="binding", level=1,
+        analogy="Like sticking a name label on a box: the label points at the box, and you can peel it off and stick it on another one."),
+    fill("In `epochs = 10`, the single `=` sign is called the ____ operator.", "assignment",
+         "It assigns a value to a name.",
+         "= is the assignment operator: it binds the name on the left to the value on the right. It's different from ==, the equality comparison. "
+         "Python reads it right to left: work out the value first, then attach the name.",
+         topic="binding", level=1),
+    tf("`None` is Python's way of saying 'no value here', much like `null` in JavaScript or Java.", True,
+       "It's a value that means 'nothing'.",
+       "None is a real value of type NoneType. Functions that don't return anything give back None, and it's the usual default for 'not set yet', "
+       "e.g. `best_model = None` before training starts. Note the capital N: `none` or `null` would be a NameError.",
+       topic="core-types", level=1),
+    mcq("Which of these values is a float (a number with a decimal point)?",
+        ["3.0", "3", "'3.0'", "True"], 0,
+        "Look for the decimal point, and watch out for quotes.",
+        "3.0 is a float even though its fractional part is zero. 3 is an int, '3.0' is a string (the quotes make it text) and True is a bool. "
+        "type(3.0) shows <class 'float'>. A config value like lr = 0.001 is a float for the same reason.",
+        topic="core-types", level=1),
+    mcq("A form gives you the text `'2.5'`. Which call turns it into a number you can do maths with?",
+        ["float('2.5')", "int('2.5')", "str('2.5')", "num('2.5')"], 0,
+        "The number has a decimal part.",
+        "float('2.5') gives the number 2.5. int('2.5') raises ValueError because int() only accepts whole-number text, str() leaves it as text, "
+        "and Python has no num() function. In JavaScript you'd write parseFloat('2.5').",
+        topic="conversion", level=1),
+    fill("To turn the number 7 into the text '7' you write ____(7).", "str",
+         "Short for 'string'.",
+         "str(7) gives '7'. You need it when gluing a number into text with +, because 'epoch ' + 7 raises TypeError while 'epoch ' + str(7) works. "
+         "f-strings (f'epoch {7}') do the conversion for you.",
+         topic="conversion", level=1),
+    mcq("In Python, where does the type of a value live?",
+        ["On the value itself; the same name can later point to a value of another type",
+         "On the variable name, fixed the first time you assign it",
+         "In a declaration line such as `int x` that you write first",
+         "Nowhere; Python values have no types"], 0,
+        "Try `x = 5` and then `x = 'five'`. Does Python complain?",
+        "Every object knows its type (type(x) asks the object). Names are just labels, so x can point at an int now and a str later. "
+        "That's what 'dynamically typed' means. Java and TypeScript attach the type to the variable instead.",
+        topic="dynamic-typing", level=1,
+        diagram="""
+ name        object
+ x  ------>  5        (type: int)
+ x = "five"
+ x  ------>  "five"   (type: str)
+"""),
+    tf("`5 == 5.0` is True in Python.", True,
+       "== compares values, not types.",
+       "An int and a float with the same numeric value compare equal, even though type(5) is int and type(5.0) is float. "
+       "So `if epochs == 10:` works whether epochs came in as 10 or 10.0. Unlike JS, there is no separate === operator.",
+       topic="identity", level=1),
+    mcq("Which single line swaps the values of `a` and `b`?",
+        ["a, b = b, a", "a = b; b = a", "a = b = a", "swap(a, b)"], 0,
+        "Python can assign two names at once.",
+        "The right side b, a is built first, then unpacked into a and b, so no temporary variable is needed. "
+        "`a = b; b = a` makes both equal to the old b, `a = b = a` changes nothing, and Python has no built-in swap().",
+        topic="unpacking", level=1),
+    tf("A variable name can start with an underscore, as in `_total = 0`.", True,
+       "Names can start with a letter or one other character.",
+       "Names may start with a letter or _ and then contain letters, digits and _. A leading underscore is a hint that the name is 'internal'. "
+       "What a name can't do is start with a digit (2nd_place) or contain a dash or space.",
+       topic="naming", level=1),
+    mcq("Why shouldn't you use `==` to check whether a computed float such as `0.1 + 0.2` equals 0.3?",
+        ["Most decimal fractions can't be stored exactly in binary, so tiny rounding errors creep in",
+         "== doesn't work on floats at all",
+         "Python rounds every float to 2 decimal places",
+         "Python stores floats as text"], 0,
+        "Try writing one third as a decimal. Does it ever end?",
+        "Just as 1/3 never ends in decimal, 0.1 never ends in binary, so the computer stores the nearest value it can. 0.1 + 0.2 comes out as 0.30000000000000004. "
+        "== works, it's just too strict: compare with a small tolerance, e.g. math.isclose. The same is true in JavaScript and Java, which use the same float format.",
+        topic="floats", level=1),
+    mcq("A variable `total` is created at the top of a script, outside any function. What kind of variable is it?",
+        ["A global variable", "A local variable", "A constant", "A parameter"], 0,
+        "It lives at the outermost level of the file.",
+        "Names created at the top level of a script (or a notebook cell) are globals: any function in that file can read them. "
+        "Names created inside a function are locals and vanish when it returns. A parameter is a name in a function's brackets, and Python has no enforced constants.",
+        topic="scope", level=1,
+        analogy="Like a variable declared at the top of a JS module: every function in that file can read it."),
+
+    # ---------------------------------------------------------------- level 2
+    mcq("Training keeps appending to the list `losses`. You want a snapshot at epoch 5 that won't change later. Which line?",
+        ["snapshot = list(losses)", "snapshot = losses", "snapshot == losses", "snapshot = losses or []"], 0,
+        "Do you want a second name, or a second list?",
+        "list(losses) (or losses.copy(), or losses[:]) builds a new list with the same items. snapshot = losses only adds a second name for the SAME list, "
+        "so later appends show up in the 'snapshot' too. `losses or []` returns losses itself when it's non-empty.",
+        topic="binding", level=2,
+        diagram="""
+ snapshot = losses        snapshot = list(losses)
+ losses   --+              losses   --> [0.9, 0.7]
+            +--> [0.9, 0.7]
+ snapshot --+              snapshot --> [0.9, 0.7]  (new)
+"""),
+    mcq("A CSV column `is_test` holds the strings 'True' and 'False'. Why is `bool(value)` the wrong way to read it?",
+        ["Any non-empty string is truthy, so bool('False') is True; compare value == 'True' instead",
+         "bool() raises ValueError on strings",
+         "bool('False') returns None",
+         "bool() only accepts 0 and 1"], 0,
+        "What does bool() check about a string?",
+        "bool() on a string only asks 'is it empty?'. 'False' has five characters, so it's True, and every row would be marked as test data. "
+        "Compare the text (value.strip().lower() == 'true'), or let pandas parse the column. JavaScript's Boolean('false') has the same trap.",
+        topic="conversion", level=2),
+    mcq("What is 'duck typing'?",
+        ["Code works with any object that has the methods it needs, whatever the object's class",
+         "Python guesses a variable's type from its name",
+         "Types are checked before the program runs",
+         "Every class must inherit from a common base to be used together"], 0,
+        "'If it walks like a duck and quacks like a duck...'",
+        "A function that calls obj.read() works on a file, an io.StringIO or a network stream: Python only checks that read exists when the call happens. "
+        "That's why many libraries accept 'any file-like object' or 'any iterable'. The cost: a missing method fails at runtime, not earlier.",
+        topic="dynamic-typing", level=2,
+        analogy="Close to TypeScript's structural typing (any object with the right shape fits an interface), except Python checks the shape at runtime."),
+    fill("The built-in that checks whether a value belongs to a class (or any subclass of it) is ____(value, cls).", "isinstance",
+         "'Is it an instance of...?'",
+         "isinstance(x, int) is True for ints and for subclasses such as bool. type(x) == int is stricter and ignores subclasses, which is usually not what you want. "
+         "It also accepts a tuple: isinstance(x, (int, float)).",
+         topic="dynamic-typing", level=2),
+    tf("Calling `name.upper()` on a string `name` changes `name` in place.", False,
+       "Can a string be changed after it's created?",
+       "Strings are immutable, so upper() returns a NEW string and name is unchanged. Write name = name.upper() to keep the result. "
+       "Lists are the opposite: lst.sort() changes the list and returns None, a classic mix-up when switching between the two.",
+       topic="identity", level=2),
+    fill("`name, _ = row` fails because row has 5 items. To keep the first item and ignore all the rest, write `name, ____ = row`.", "*_",
+         "A star collects 'everything else'.",
+         "name, *_ = row puts row[0] in name and the remaining items in a list called _, which by convention means 'ignored'. "
+         "The same works in the middle (first, *_, last = row). Plain _ only absorbs exactly one value.",
+         topic="unpacking", level=2),
+    tf("In a notebook, after `input = 5`, calling `input('Name: ')` in a later cell fails until you `del input` or restart the kernel.", True,
+       "Your name now hides the built-in one.",
+       "Python finds your global input (the int 5) before the built-in function, so the call raises TypeError: 'int' object is not callable. "
+       "The kernel remembers the name even after you edit the cell. Avoid list, str, input, sum, id and type as variable names.",
+       topic="naming", level=2),
+    mcq("A dashboard shows a metric as 0.30000000000000004. What's the right fix for how it is displayed?",
+        ["Format it when printing, e.g. f'{acc:.2f}'; the stored value stays as it is",
+         "Switch every calculation to Decimal",
+         "Call round() after every arithmetic step",
+         "Convert the metric to an int"], 0,
+        "Is the problem the number, or how it's shown?",
+        "The value is as accurate as a float can be; only the text is ugly. Formatting (f'{acc:.2f}' gives '0.30') fixes the display without changing the data. "
+        "Rounding at every step can add error, Decimal is for exact money maths, and int() throws the value away.",
+        topic="floats", level=2),
+    mcq("A helper function reads `threshold` without defining it or taking it as a parameter. In a notebook, what's the risk?",
+        ["It reads whatever global threshold exists when it's called, so results change silently when another cell changes it",
+         "It raises SyntaxError when the function is defined",
+         "It copies threshold's value at the moment the function is defined",
+         "Functions can't read global variables"], 0,
+        "When does Python look the name up: at def time or at call time?",
+        "Global names are looked up each time the function runs. Rerun a cell that sets threshold = 0.9 and every later call uses 0.9, with no warning. "
+        "Pass it in as a parameter (def predict(x, threshold=0.5)) so each call states what it depends on.",
+        topic="scope", level=2,
+        analogy="Like a Node handler that reads a shared mutable config object: change the config elsewhere and the handler behaves differently."),
+    mcq("Why do Python programmers write names like `class_` or `lambda_`?",
+        ["A trailing underscore avoids clashing with a keyword (a PEP 8 convention)",
+         "The underscore makes the variable private",
+         "It marks the variable as a constant",
+         "Python requires it for names used inside classes"], 0,
+        "Try `class = 'cat'`.",
+        "class and lambda are keywords, so they can't be names. PEP 8 suggests adding one trailing underscore: class_ = 'cat'. "
+        "A LEADING underscore means 'internal' instead. You'll see this in ML code too, e.g. `lambda_` for a regularisation strength.",
+        topic="naming", level=2),
+    tf("Converting a model's weights from float32 to float16 halves the memory they need.", True,
+       "Count the bits: 32 vs 16.",
+       "float32 takes 4 bytes per number and float16 takes 2, so the same weights need half the memory. "
+       "That's why inference often runs in half precision. The cost is precision and range: float16 can't go above 65504.",
+       topic="ml-precision", level=2),
+    fill("`torch.tensor(0.5)` is created with the default dtype torch.____.", "float32",
+         "PyTorch picks a smaller dtype than Python's own float.",
+         "PyTorch's default float dtype is float32 (4 bytes), while a Python float and NumPy's default are float64 (8 bytes). "
+         "torch.from_numpy(np.array([0.5])) keeps float64, so mixing the two can raise a dtype mismatch in matmul or a loss function.",
+         topic="ml-precision", level=2),
+
+    # ---------------------------------------------------------------- level 3
+    mcq("A test says `assert response.status is 200` and passes on your machine. Why is it still a bug?",
+        ["`is` checks for the same object; it only passes because CPython caches small ints, and Python warns about `is` with a literal",
+         "`is` is slower than == but otherwise identical",
+         "assert statements are ignored in tests",
+         "200 is a str in HTTP responses"], 0,
+        "What does `is` compare, and why would two 200s be the same object?",
+        "CPython pre-creates the ints -5..256, so two 200s happen to be the same object. Use a code like 1000, or a value computed from a parsed string, and `is` may be False. "
+        "Since 3.8 the compiler emits SyntaxWarning: \"is\" with 'int' literal. Use == for values; keep `is` for None, True, False and sentinels.",
+        topic="caching", level=3,
+        analogy="Like comparing Java Integer objects with ==: it works for -128..127 thanks to the Integer cache, then fails for bigger values."),
+    tf("`sys.getrefcount(x)` reports one more reference than you might expect, because passing x to the function creates a temporary reference.", True,
+       "The argument itself has to point at the object while the function runs.",
+       "While getrefcount runs, its parameter refers to the object too, so a list held by one name shows 2. "
+       "The docs mention this. Use the number to compare before and after, not as an absolute count.",
+       topic="lifetime", level=3,
+       code="import sys\nx = []\nprint(sys.getrefcount(x))"),
+    mcq("You build a 3x3 grid with `grid = [[0] * 3] * 3`, then set `grid[0][0] = 1`. Why does every row change?",
+        ["The outer * 3 repeats a reference to ONE inner list, so all three rows are the same list",
+         "Assigning to grid[0][0] is broadcast to every row, like NumPy",
+         "[0] * 3 makes a tuple that Python copies on every write",
+         "It's a bug in the list type"], 0,
+        "Multiplying a list copies references, not objects.",
+        "[0] * 3 is fine because ints are immutable. But [row] * 3 puts the same row object in three slots. "
+        "Build independent rows with [[0] * 3 for _ in range(3)], or use np.zeros((3, 3)) for numeric data.",
+        topic="binding", level=3,
+        code="grid = [[0] * 3] * 3\ngrid[0][0] = 1\nprint(grid)",
+        diagram="""
+ grid[0] --+
+ grid[1] --+--> [0, 0, 0]   one list, three references
+ grid[2] --+
+"""),
+    tf("`float('inf') - float('inf')` gives nan rather than 0.", True,
+       "Two infinities of unknown size: what's their difference?",
+       "inf - inf, inf * 0 and inf / inf have no sensible value, so IEEE 754 defines them as nan. Python follows the standard and doesn't raise. "
+       "In training, one overflow to inf followed by a subtraction or multiply-by-zero is a common route to a nan loss.",
+       topic="floats", level=3),
+    fill("Python doesn't enforce `def f(x: int) -> int`, but it stores the hints in a dict on the function called f.____.", "__annotations__",
+         "A dunder attribute named after 'annotations'.",
+         "f.__annotations__ is {'x': int, 'return': int}. Python itself never checks it; tools such as mypy, pydantic and FastAPI read it to validate or generate code. "
+         "That's how FastAPI turns `def read(item_id: int)` into automatic request validation.",
+         topic="dynamic-typing", level=3,
+         code="def f(x: int) -> int:\n    return x\n\nprint(f.__annotations__)"),
+    mcq("Why can `(lr, batch_size)` be a dict key but `[lr, batch_size]` can't?",
+        ["Dict keys must be hashable; a list can change after it's stored, which would break the hash lookup",
+         "Dicts only accept tuples and strings as keys",
+         "Lists are too slow to compare",
+         "Square brackets inside {} are a SyntaxError"], 0,
+        "What happens to a key's hash if the key can be modified?",
+        "A dict files each key under its hash. If you could append to a list key after storing it, its hash would change and the entry could never be found again. "
+        "So list has no __hash__ and d[[1, 2]] raises TypeError. Tuples of immutable items are hashable, which makes them handy keys for a hyperparameter-search results cache.",
+        topic="identity", level=3,
+        analogy="Like using a mutable object as a key in a Java HashMap: if its hashCode changes after insertion, the entry is lost. Python simply forbids it for lists."),
+    mcq("A function reads a module-level counter and then does `calls += 1`, raising UnboundLocalError. Which fix do most reviewers prefer?",
+        ["Pass the value in and return the new one (or keep it on an object); `global calls` works but hides the dependency",
+         "Wrap the line in try/except UnboundLocalError",
+         "Rename the variable inside the function",
+         "Move the function above the variable's definition"], 0,
+        "Two fixes work. Which one keeps the function easy to test?",
+        "The += makes calls local for the whole function, so reading it first fails. `global calls` fixes the error, but now the function depends on hidden module state, "
+        "which is awkward to test and unsafe across threads. Returning the new value, or a small class / a dict passed in, keeps the data flow visible. Renaming would just count from a different, undefined local.",
+        topic="scope", level=3),
+    tf("`for i, (x, y) in enumerate(pairs):` is valid: unpacking targets can be nested to match the shape of each item.", True,
+       "enumerate gives (index, item), and each item here is a pair.",
+       "Each step yields (i, (x, y)), and the brackets on the left mirror that shape. Nested unpacking is common when looping over (input, label) batches: "
+       "`for step, (xb, yb) in enumerate(loader):`. If an item has the wrong length you get the usual ValueError.",
+       topic="unpacking", level=3,
+       code='pairs = [(1, 2), (3, 4)]\nfor i, (x, y) in enumerate(pairs):\n    print(i, x + y)'),
+    mcq("Roughly how much memory do the weights of a 7-billion-parameter model need in float16?",
+        ["About 14 GB", "About 7 GB", "About 28 GB", "About 3.5 GB"], 0,
+        "float16 takes 2 bytes per number.",
+        "7e9 parameters x 2 bytes = 14e9 bytes, about 14 GB (13 GiB). float32 would be 28 GB, 8-bit about 7 GB and 4-bit about 3.5 GB. "
+        "This is only the weights: training also needs gradients and optimizer state, often 3-4x more.",
+        topic="ml-precision", level=3,
+        diagram="""
+ dtype     bytes   7B params
+ float32   4       28 GB
+ float16   2       14 GB
+ int8      1        7 GB
+ int4      0.5      3.5 GB
+"""),
+
+    # ---------------------------------------------------------------- level 4
+    tf("Since Python 3.4, the cycle collector can free objects in a reference cycle even if they define `__del__`.", True,
+       "Look up PEP 442, 'safe object finalization'.",
+       "Before 3.4, cycles containing __del__ were put in gc.garbage and leaked, because Python couldn't decide which finalizer to run first. "
+       "PEP 442 made it safe to call them in an unspecified order and then free the cycle. Finalizer order is still not guaranteed, so don't rely on __del__ for cleanup; use with blocks.",
+       topic="lifetime", level=4),
+    fill("Two equal strings built at runtime are usually different objects. You can force them to share one object by passing each through sys.____().", "intern",
+         "The same word is used for strings Python shares automatically.",
+         "sys.intern(s) returns a single canonical copy of each distinct string, so `is` then works and dict lookups save memory. CPython already interns identifier-like literals, "
+         "which is why 'abc' is 'abc' often looks True. It's an optimisation detail, like the small-int cache: compare strings with ==.",
+         topic="caching", level=4,
+         code='import sys\na = "".join(["lay", "er_1"])\nb = "".join(["lay", "er_1"])\nprint(a == b, a is b, sys.intern(a) is sys.intern(b))'),
+    tf("`a += b` on a list calls `list.__iadd__`, which changes the list in place; tuples have no `__iadd__`, so on a tuple Python falls back to `a = a + b` and builds a new tuple.", True,
+       "Check hasattr(tuple, '__iadd__').",
+       "+= first tries __iadd__ (in-place add). Lists have it, so every name pointing at the list sees the change. Tuples don't, so Python computes a + b and rebinds the name, "
+       "leaving other names on the old tuple. That difference is behind both the 'aliased list changed' bug and the t[1] += [3] puzzle.",
+       topic="identity", level=4,
+       code="print(hasattr(list, '__iadd__'), hasattr(tuple, '__iadd__'))"),
+    mcq("Why does every function here return 2 instead of 0, 1 and 2?",
+        ["Each lambda looks up i when it's called, and by then the loop has finished with i = 2; bind it early with `lambda i=i: i`",
+         "Lambdas copy the value of i, but the list stores them in reverse",
+         "range(3) is evaluated lazily, so it only produces its last value",
+         "A comprehension can create only one function object"], 0,
+        "Does the lambda store i's value, or the name i?",
+        "Closures capture variables, not values (late binding). All three lambdas share the comprehension's single i, which ends at 2. "
+        "A default argument is evaluated at definition time, so `lambda i=i: i` freezes the current value; functools.partial also works. "
+        "Same trap as `var` in a JavaScript for loop with setTimeout, which `let` fixed.",
+        topic="scope", level=4,
+        code="fns = [lambda: i for i in range(3)]\nprint([f() for f in fns])"),
+    mcq("Two runs of the same training job on a GPU, with the same seed, show losses that differ in the 7th decimal place. What is the usual root cause?",
+        ["Float addition isn't associative, and parallel reductions may add the same numbers in a different order on each run",
+         "The GPU uses a different random seed for each thread",
+         "Python floats lose precision when copied to the GPU",
+         "Losses are stored as strings between epochs"], 0,
+        "Is (a + b) + c always exactly equal to a + (b + c) for floats?",
+        "Every float addition rounds, so the result depends on the order. GPU kernels split sums across thousands of threads and atomics finish in varying order, "
+        "giving tiny run-to-run differences that can grow over many steps. PyTorch's torch.use_deterministic_algorithms(True) trades speed for a fixed order.",
+        topic="floats", level=4,
+        code="print((0.1 + 0.2) + 0.3 == 0.1 + (0.2 + 0.3))",
+        diagram="""
+ run 1: ((a + b) + c) + d   -> 0.30000001
+ run 2: (a + (c + d)) + b   -> 0.29999998
+ (illustrative) same numbers, other order, other rounding
+"""),
+    mcq("With NumPy 2 (NEP 50), what dtype does `np.float32(3) + 3.0` have?",
+        ["float32: a plain Python float is a 'weak' scalar and adopts the NumPy dtype",
+         "float64, because Python floats are 64-bit",
+         "A plain Python float",
+         "float16, because 3.0 fits in half precision"], 0,
+        "Under NEP 50, a Python number doesn't get to decide the result dtype.",
+        "NEP 50 treats Python int/float/complex as 'weak': they take on the dtype of the NumPy value they meet, so float32 stays float32. "
+        "NumPy 1.x sometimes inspected the value and could upcast. The upside is fewer surprise float64 copies of float32 data; the catch is that np.uint8(250) + 10 now overflows instead of upcasting.",
+        topic="ml-precision", level=4,
+        code="import numpy as np\nprint((np.float32(3) + 3.0).dtype)"),
+    mcq("Why must two objects that compare equal (`a == b`) also have equal hashes?",
+        ["Dicts and sets find a key by its hash first, then check ==; equal keys with different hashes would land in different slots and be stored twice",
+         "Python raises TypeError at class creation if they don't",
+         "== is implemented by comparing hashes",
+         "It's only a style rule with no effect on dicts"], 0,
+        "How does a dict narrow down where to look before it calls ==?",
+        "A lookup hashes the key to pick a slot, then compares candidates with ==. That's why 1, 1.0 and True share a hash and collapse into ONE dict key. "
+        "If you override __eq__ in a class, Python sets __hash__ to None unless you define it too, so instances become unhashable instead of silently broken.",
+        topic="core-types", level=4,
+        diagram="""
+ d[key]
+   hash(key) -> slot
+   slot holds k with hash(k) == hash(key)?
+     and k == key?  -> found
+ equal but different hash -> wrong slot -> 'missing'
+"""),
 ]

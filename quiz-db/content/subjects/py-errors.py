@@ -1135,4 +1135,326 @@ QUESTIONS = [
         "CUDA_LAUNCH_BLOCKING=1 makes every launch synchronous, so the traceback lands on the operation that failed.",
         diagram="CPU: launch A -> launch B (bad) -> launch C -> loss.item()\nGPU:    A ok      B fails ......................^\n                       error reported here, at the sync",
         topic="ml-patterns", level=4),
+
+    # ---- round 3: conceptual mcq/tf/fill
+    # ---------------------------------------------------------------- level 1
+    mcq("`print(\"epochs: \" + 30)` crashes. Which error is it?",
+        ["TypeError", "ValueError", "SyntaxError", "NameError"], 0,
+        "A str and an int meet at the + sign.",
+        "Python won't add a string and a number, so it raises TypeError: can only concatenate str (not \"int\") to str. JavaScript would quietly give 'epochs: 30'. "
+        "Fix it with an f-string: f\"epochs: {30}\", or str(30). ValueError is for a right type with a bad value, like int('abc').",
+        topic="builtin-errors", level=1),
+    tf("`10 / 0` raises ZeroDivisionError, but `10 / 0.0` quietly returns infinity.", False,
+       "JavaScript returns Infinity. Does Python?",
+       "Both raise ZeroDivisionError in plain Python, ints and floats alike. NumPy and PyTorch behave differently: dividing an array by 0.0 gives inf with only a warning, "
+       "which is one way a NaN or inf loss sneaks into training without any exception.",
+       topic="builtin-errors", level=1),
+    mcq("An error inside `try:` is caught by a matching `except` block. What happens after the except block finishes?",
+        ["The program carries on with the code after the whole try statement",
+         "The program stops, but without printing a traceback",
+         "Python goes back and re-runs the rest of the try block",
+         "The same error is raised again automatically"], 0,
+        "Catching an error means you've dealt with it.",
+        "Once an except block handles the error, it's over: execution continues below the try statement. The rest of the try block (after the failing line) is skipped for good. "
+        "If you want the error to keep going up, write a bare `raise` inside the except.",
+        topic="try-except", level=1),
+    fill("A Python traceback starts with the line `Traceback (most recent call _____):`.", "last",
+         "Which end of the printout holds the line that failed?",
+         "'most recent call last' means the calls are listed oldest first, so the frame that actually raised is at the bottom, just above the error line. "
+         "Java stack traces put the failing method at the top; Python is the other way round.",
+         topic="tracebacks", level=1),
+    mcq("The last line of a traceback reads `KeyError: 'lable'`. What is the most likely fix?",
+        ["Correct the typo in the key name (probably 'label')",
+         "Wrap the line in try/except KeyError: pass",
+         "Convert the dict to a list",
+         "Reinstall the library that raised it"], 0,
+        "Read the message: it tells you which key was missing.",
+        "KeyError shows the exact key you asked for. 'lable' looks like a typo for 'label', so fix the spelling (print(row.keys()) to check). "
+        "Silencing it with except: pass would hide the bug and your labels would just be missing.",
+        topic="tracebacks", level=1),
+    tf("Wrapping a whole script in `try: ... except: pass` makes it more reliable.", False,
+       "What happens to the information about what went wrong?",
+       "It hides every error, including typos and Ctrl+C, so the script 'succeeds' while producing nothing or garbage. Reliable code catches specific errors it can actually "
+       "handle and lets the rest crash loudly with a traceback. A crash you can see is much cheaper than a wrong result you can't.",
+       topic="catching", level=1),
+    mcq("When should a function raise an error instead of returning `None`?",
+        ["When it can't do its job and the caller must not carry on as if it worked, e.g. the config file has no 'model' key",
+         "Never; returning None is always safer",
+         "Only when the error comes from a library",
+         "Whenever any input is unusual, even if it can be handled"], 0,
+        "What does the caller do with a None it didn't expect?",
+        "A None result is easy to ignore and crashes later with a confusing AttributeError far from the cause. Raising ValueError('config has no model key') "
+        "stops at the real problem with a clear message. It's the same reason REST APIs return 400 instead of 200 with an empty body.",
+        topic="raising", level=1),
+    mcq("Why define `class LabelMissingError(Exception): pass` instead of always raising `Exception(\"label missing\")`?",
+        ["Callers can catch exactly that error by name without also catching unrelated bugs",
+         "Custom errors print in a different colour",
+         "Exception can't be raised directly",
+         "Custom errors are faster to raise"], 0,
+        "How would a caller catch only this one problem?",
+        "`except LabelMissingError:` handles that case and lets real bugs pass through. With a plain Exception the caller has to catch everything and compare message strings, "
+        "which breaks as soon as someone rewords the message. Like defining a NotFoundException in Java instead of throwing RuntimeException.",
+        topic="custom-exceptions", level=1),
+    fill("To open a file so that it is closed automatically when the block ends, you write `_____ open(\"data.csv\") as f:`.", "with",
+         "It starts a block that manages a resource.",
+         "The with statement makes sure the file is closed when the block ends, even if an error happens inside it. You'll see it with files, locks, "
+         "database sessions and torch.no_grad(). Java's try-with-resources does the same job.",
+         topic="context-managers", level=1),
+    tf("`assert x > 0` raises AssertionError when the condition is False and does nothing when it is True.", True,
+       "It's a quick self-check.",
+       "assert is a sanity check: if the condition holds, the line has no effect; if not, it raises AssertionError (with your message, if you add one after a comma). "
+       "Use it for 'this should never happen' checks in your own code, not for validating user input.",
+       topic="assert-warnings", level=1),
+    mcq("A loop over 10,000 rows crashes somewhere in the middle. What is the most useful thing to print first?",
+        ["The row index and the row itself, just before the line that fails (or inside an except that re-raises)",
+         "The word 'here' at the top of the script",
+         "The length of the whole dataset",
+         "Nothing; reading the code carefully is always faster"], 0,
+        "You need to know WHICH row breaks it.",
+        "The traceback tells you which line failed but not which data caused it. Printing (or logging) the index and the row shows the bad input, so you can reproduce it "
+        "with one row instead of 10,000. A `breakpoint()` inside the except lets you inspect it directly.",
+        topic="debugging", level=1,
+        code='rows = ["1", "2", "x"]\nfor i, s in enumerate(rows):\n    try:\n        int(s)\n    except ValueError:\n        print("bad row", i, repr(s))'),
+    mcq("A notebook that worked yesterday now fails with `FileNotFoundError: [Errno 2] No such file or directory: 'data/train.csv'`. What is the most likely cause?",
+        ["The relative path is resolved from the current working directory, and the notebook is now running from a different folder (or the file moved)",
+         "The CSV file is corrupted",
+         "pandas needs to be reinstalled",
+         "The file is too large to open"], 0,
+        "A relative path is relative to what?",
+        "'data/train.csv' is looked up from os.getcwd(), not from the notebook's location. Starting Jupyter from another folder, or running the code as a script elsewhere, breaks it. "
+        "Print os.getcwd(), or build paths from a known root with pathlib.Path(__file__).parent. A corrupted file would raise a parse error, not FileNotFoundError.",
+        topic="ml-patterns", level=1),
+
+    # ---------------------------------------------------------------- level 2
+    tf("Every `try` statement must have at least one `except` clause.", False,
+       "Think of code that only needs cleanup.",
+       "try/finally with no except is valid and common: the finally runs, and the error keeps going up to the caller. It's how you guarantee cleanup (release a lock, "
+       "close a connection) without deciding how to handle the error. A try with neither except nor finally is a SyntaxError.",
+       topic="try-except", level=2),
+    mcq("Which error does `x, y = [1, 2, 3]` raise?",
+        ["ValueError", "TypeError", "IndexError", "SyntaxError"], 0,
+        "The type is fine (a list can be unpacked); the number of items isn't.",
+        "Unpacking checks the count: 'too many values to unpack (expected 2)', a ValueError. Too few gives 'not enough values to unpack'. "
+        "You hit it with `for k, v in d:` (iterating a dict gives keys, not pairs) or when a function starts returning three values instead of two.",
+        topic="builtin-errors", level=2),
+    tf("`[1, 2, 3][10:20]` raises IndexError because the slice is out of range.", False,
+       "Indexing and slicing treat bounds differently.",
+       "A slice clips to the list's length and returns [] here, with no error. Only a single index (lst[10]) raises IndexError. "
+       "This can hide bugs: a batch slice past the end quietly returns an empty or short batch, so check len() when the size matters.",
+       topic="builtin-errors", level=2),
+    mcq("Which `except` clause catches both FileNotFoundError and PermissionError?",
+        ["except (FileNotFoundError, PermissionError):",
+         "except FileNotFoundError or PermissionError:",
+         "except FileNotFoundError and PermissionError:",
+         "except [FileNotFoundError, PermissionError]:"], 0,
+        "What does `A or B` evaluate to when A is a class?",
+        "Multiple types go in a tuple. `FileNotFoundError or PermissionError` evaluates to just FileNotFoundError (a class is truthy), so PermissionError slips through, "
+        "and `and` gives just PermissionError. Both run without complaint, which is why the bug survives review. A list raises TypeError when an error arrives.",
+        topic="catching", level=2,
+        code='print(FileNotFoundError or PermissionError)\nprint(FileNotFoundError and PermissionError)'),
+    fill("For `e = ValueError(\"bad lr\")`, the message is available as `str(e)` and also as `e._____[0]`.", "args",
+         "It's the tuple of arguments the exception was created with.",
+         "e.args holds whatever you passed to the constructor, here ('bad lr',). str(e) shows the single arg, or the whole tuple if there were several. "
+         "copy and pickle rebuild exceptions from args, so custom exceptions should pass all their values to super().__init__.",
+         topic="raising", level=2),
+    tf("A custom exception that subclasses ValueError is also caught by `except ValueError:`.", True,
+       "except matches the class and all its subclasses.",
+       "Matching uses isinstance, so `class BadLabel(ValueError)` is caught by except ValueError and except Exception too. "
+       "Libraries use this on purpose: callers who only know the built-in still handle it, and callers who care can catch BadLabel specifically.",
+       topic="custom-exceptions", level=2),
+    mcq("After `with open(\"a.txt\") as f:` ends, what is true about `f`?",
+        ["The name f still exists, but the file is closed; f.read() raises ValueError: I/O operation on closed file",
+         "f is deleted, so using it raises NameError",
+         "f is still open until the program ends",
+         "f becomes None"], 0,
+        "A with block doesn't create a new scope.",
+        "with closes the file in __exit__ but doesn't remove the variable, so f is a closed file object. Reading after the block is a common bug when code is "
+        "moved out of the indented block. Contrast with `except ... as e`, which does delete e.",
+        topic="context-managers", level=2),
+    tf("Calling `warnings.warn(\"slow path\")` stops the program the way an uncaught exception does.", False,
+       "Warnings are for things that are worth knowing but not fatal.",
+       "warn prints a message to stderr (by default once per location) and execution continues. It's how libraries flag deprecated arguments or lossy conversions. "
+       "You can turn warnings into real exceptions with warnings.simplefilter('error') or python -W error, which is useful in tests.",
+       topic="assert-warnings", level=2),
+    mcq("What is the recommended way to get a logger at the top of a module such as `data/loader.py`?",
+        ["logger = logging.getLogger(__name__)",
+         "logger = logging.Logger(\"log\")",
+         "logger = print",
+         "logger = logging.basicConfig()"], 0,
+        "The logger's name should say where the message came from.",
+        "getLogger(__name__) gives a logger named 'data.loader', so every line shows its source module and you can raise or lower the level per package. "
+        "Creating Logger() directly skips the shared hierarchy; basicConfig() configures output once in the entry script and returns None.",
+        topic="debugging", level=2),
+    mcq("Your loss sometimes turns into NaN. Which check stops training at the first bad step?",
+        ["if not math.isfinite(loss): raise RuntimeError(f\"loss is {loss} at step {step}\")",
+         "if loss == float(\"nan\"): raise RuntimeError(...)",
+         "Wrap the step in try/except ValueError",
+         "Nothing extra; Python raises an error when a value becomes NaN"], 0,
+        "What does nan == nan return?",
+        "NaN is never equal to anything, itself included, so `loss == float('nan')` is always False. math.isfinite (or torch.isfinite) catches both NaN and inf. "
+        "No exception ever fires on its own, which is why the check must be explicit; stopping early saves hours of training on garbage.",
+        topic="ml-patterns", level=2,
+        code='import math\n\nloss = float("nan")\nprint(loss == float("nan"), math.isfinite(loss))'),
+    mcq("A Jupyter traceback shows `Cell In[12], line 4`. What does that point to?",
+        ["Line 4 of the code in the cell that ran as execution number 12",
+         "Line 12 of the notebook file, column 4",
+         "The 12th cell from the top of the notebook, at line 4 of the whole notebook",
+         "Line 4 of a library file called In"], 0,
+        "The number in brackets is the one shown next to the cell after it runs.",
+        "In[12] is the execution count, not the cell's position, and the line number is within that cell. Re-running cells changes the count, so match it with the "
+        "number next to the cell. Scripts show File \"train.py\", line 4 instead.",
+        topic="tracebacks", level=2),
+    fill("Instead of a bare `except:`, catch `except _____:`, the base class of the ordinary errors, which still lets Ctrl+C through.", "Exception",
+         "Its name is the general word for an error in Python.",
+         "Almost every built-in and custom error inherits from Exception, while KeyboardInterrupt and SystemExit sit beside it under BaseException. "
+         "So except Exception catches programming and data errors but doesn't swallow Ctrl+C or sys.exit(). Even better: catch the narrowest type you can handle.",
+         topic="catching", level=2,
+         diagram="""
+ BaseException
+  |-- KeyboardInterrupt   (Ctrl+C)
+  |-- SystemExit          (sys.exit)
+  |-- Exception           <- catch this, or narrower
+        |-- ValueError, KeyError, OSError, ...
+"""),
+
+    # ---------------------------------------------------------------- level 3
+    mcq("Why put `save_results(df)` in the `else:` block rather than at the end of the `try:` that loads the data?",
+        ["So errors raised by save_results aren't caught by the except meant for loading, and are not mislabelled as 'load failed'",
+         "else runs faster than try",
+         "Code in else runs even when loading failed",
+         "Code in try can't call functions"], 0,
+        "Which errors should `except FileNotFoundError:` be responsible for?",
+        "else runs only when the try finished without raising, and its own errors are not handled by that try's except clauses. That keeps the try block to the one "
+        "operation you expect to fail. If saving raises FileNotFoundError (wrong output folder) inside the try, you'd log 'input missing' and chase the wrong bug.",
+        topic="try-except", level=3,
+        code='def load():\n    return [1, 2]\n\ntry:\n    rows = load()\nexcept FileNotFoundError:\n    print("input missing")\nelse:\n    print("saving", len(rows))'),
+    tf("Inside an except block, both `raise New() from e` and a plain `raise New()` keep the original exception reachable from the new one.", True,
+       "There are two attributes: __cause__ and __context__.",
+       "A plain raise inside except stores the original in __context__ ('During handling of the above exception...'). `from e` sets __cause__ as well "
+       "('The above exception was the direct cause...'), stating that the wrap is intentional. Only `from None` hides the original from the printed traceback.",
+       topic="raising", level=3),
+    mcq("`if os.path.exists(p): data = open(p).read()` still crashes now and then with FileNotFoundError. Why?",
+        ["The file can be deleted or moved between the check and the open (a race); try the open and catch the error instead (EAFP)",
+         "os.path.exists is only accurate for folders",
+         "open() needs an absolute path",
+         "exists() caches its answer for a few seconds"], 0,
+        "What can happen in the gap between two lines?",
+        "Look-before-you-leap checks a state that can change before you act on it (a 'time of check to time of use' bug). Another process, a cleanup job or a sync tool "
+        "can remove the file in between. Opening directly inside try/except FileNotFoundError has no gap, and the same reasoning applies to dict keys and network resources.",
+        topic="catching", level=3,
+        analogy="Checking that a seat is free on the website, then finding it taken at checkout: only the booking itself is the real check."),
+    fill("When a `with` body finishes without an error, `__exit__(self, exc_type, exc, tb)` is called with `exc_type` equal to `_____`.", "None",
+         "There's no exception type to report.",
+         "On a clean exit all three arguments are None; on an error they hold the class, the instance and the traceback. That's how one __exit__ can commit "
+         "a transaction on success and roll back on failure (SQLAlchemy sessions work this way).",
+         topic="context-managers", level=3),
+    mcq("RecursionError and NotImplementedError both inherit from which built-in exception?",
+        ["RuntimeError", "ValueError", "SystemError", "ArithmeticError"], 0,
+        "It's also the class PyTorch uses for most of its errors.",
+        "Both are subclasses of RuntimeError (check RecursionError.__mro__). So a broad `except RuntimeError:` around a PyTorch call also catches "
+        "recursion and not-implemented errors, and shape mismatches, CUDA errors and OOM too, which is why catching RuntimeError around training code is risky.",
+        topic="builtin-errors", level=3),
+    tf("`warnings.warn(\"message\")` with no category argument issues a UserWarning.", True,
+       "The default category is the one meant for application code.",
+       "UserWarning is the default. Libraries should pass a specific category, such as DeprecationWarning, FutureWarning or RuntimeWarning, so users can filter them: "
+       "warnings.filterwarnings('ignore', category=FutureWarning) silences only those.",
+       topic="assert-warnings", level=3),
+    mcq("What does `breakpoint()` offer over the older `import pdb; pdb.set_trace()`?",
+        ["It reads the PYTHONBREAKPOINT environment variable, so PYTHONBREAKPOINT=0 disables every breakpoint and another value switches debuggers",
+         "It is the only one that works inside functions",
+         "It automatically fixes the error at that line",
+         "It runs faster because it skips the debugger"], 0,
+        "Think about a breakpoint accidentally left in code that runs in CI.",
+        "breakpoint() (Python 3.7+) calls sys.breakpointhook, which honours PYTHONBREAKPOINT: '0' makes it a no-op, and 'ipdb.set_trace' picks a different debugger, "
+        "all without editing code. pdb.set_trace() always opens pdb. Either way, a stray one hangs a job waiting for input, so a lint rule against them is worth having.",
+        topic="debugging", level=3),
+    mcq("You validate 30 fields of a training config and want to report every bad field in one go, not just the first. Which approach fits?",
+        ["Collect each ValueError in a list and, if the list isn't empty, raise ExceptionGroup(\"invalid config\", errors)",
+         "Raise the first ValueError; the user can rerun 30 times",
+         "Print the errors and return the config anyway",
+         "Use assert for each field"], 0,
+        "Python 3.11 added a way to raise several unrelated errors at once.",
+        "ExceptionGroup carries a list of exceptions and prints all of them in one traceback; callers can handle parts with except*. Raising only the first makes users "
+        "fix-and-rerun one field at a time. Pydantic does the same thing in its own way, with one ValidationError listing every failing field.",
+        topic="exception-groups", level=3,
+        code='errors = []\ncfg = {"lr": -1, "epochs": 0}\nif cfg["lr"] <= 0:\n    errors.append(ValueError("lr must be > 0"))\nif cfg["epochs"] < 1:\n    errors.append(ValueError("epochs must be >= 1"))\ntry:\n    if errors:\n        raise ExceptionGroup("invalid config", errors)\nexcept* ValueError as eg:\n    print(len(eg.exceptions), "problems")'),
+    mcq("An eval loop wraps each batch in `try: ... except RuntimeError: continue` to skip batches that run out of GPU memory. What is the hidden risk?",
+        ["Shape mismatches, dtype and CUDA errors are also RuntimeErrors, so real bugs are skipped silently; catch torch.cuda.OutOfMemoryError and count the skips",
+         "RuntimeError never comes from PyTorch, so nothing is caught",
+         "continue inside except is a SyntaxError",
+         "Catching OOM always crashes the GPU driver"], 0,
+        "How specific is RuntimeError in PyTorch?",
+        "PyTorch reports most failures as RuntimeError, and OutOfMemoryError is just one subclass. A broad catch could skip every batch after a code change and still "
+        "report a (meaningless) score. Catch the specific class, log what you skipped, and fail if the skip count gets large.",
+        topic="ml-patterns", level=3),
+
+    # ---------------------------------------------------------------- level 4
+    mcq("Why does Python delete `e` at the end of `except ValueError as e:`?",
+        ["To break a reference cycle: e.__traceback__ references the frame, which holds e, keeping every local in that frame alive",
+         "To save the few bytes the name uses",
+         "Because exceptions can only be used once",
+         "So the same name can't be caught twice in one function"], 0,
+        "What does a traceback hold on to?",
+        "The traceback keeps whole frames alive, and the frame's locals include e itself, so without the delete everything in the frame (big arrays, GPU tensors) "
+        "would wait for the cycle collector. If you need the error later, store it under another name and accept that cost, or keep only str(e).",
+        topic="try-except", level=4,
+        diagram="""
+ e --> e.__traceback__ --> frame --> f_locals
+ ^                                     |
+ +------------------- 'e' -------------+
+"""),
+    tf("Defining `class TimeoutError(Exception)` in your module means `except TimeoutError:` in that module no longer catches the built-in TimeoutError from sockets or asyncio.", True,
+       "Which object does the name TimeoutError refer to inside the module now?",
+       "Your class shadows the built-in name in that module, and it's unrelated to the real one, so built-in timeouts (socket.timeout is TimeoutError since 3.10) slip past. "
+       "Pick a distinct name (FetchTimeout) and, if it fits, subclass the built-in: class FetchTimeout(TimeoutError).",
+       topic="custom-exceptions", level=4),
+    mcq("`with open(\"in.csv\") as src, open(\"out.csv\", \"w\") as dst:`. In what order are the files closed?",
+        ["dst first, then src: context managers exit in reverse order of entry",
+         "src first, then dst, in the order written",
+         "Both at the same time on separate threads",
+         "Only dst; src stays open until garbage collection"], 0,
+        "Think of a stack.",
+        "Multiple managers in one with behave like nested with blocks, so they unwind last-in, first-out, like ExitStack. Later resources often depend on earlier ones "
+        "(a cursor on a connection), so they must close first. If dst's __exit__ raises, src is still closed.",
+        topic="context-managers", level=4,
+        diagram="""
+ enter src -> enter dst -> body
+ exit  dst <- exit  src   (reverse)
+"""),
+    tf("`eg.subgroup(TypeError)` returns None when no exception in the group matches, rather than an empty ExceptionGroup.", True,
+       "An ExceptionGroup can't be built from an empty list.",
+       "subgroup() and split() return None for the empty side, because ExceptionGroup('msg', []) raises ValueError. So check `if sub is not None:` before using it. "
+       "split() returns a (match, rest) pair where either side may be None.",
+       topic="exception-groups", level=4,
+       code='eg = ExceptionGroup("batch", [ValueError("a")])\nprint(eg.subgroup(TypeError), len(eg.subgroup(ValueError).exceptions))'),
+    mcq("A worker logs failures with `except Exception as e: logger.error(e)`. For a missing key the log line is just `'label'`. What's the best fix?",
+        ["Use logger.exception(\"failed on sample %s\", idx), which records the type, message and traceback",
+         "Use print(e) instead of logging",
+         "Catch KeyError first and log e.args",
+         "Raise the log level to CRITICAL"], 0,
+        "str() of a KeyError is only the repr of the key.",
+        "logger.error(e) logs str(e), which drops the exception type and the traceback; for KeyError that's just the key in quotes. logger.exception adds both automatically "
+        "(it's logger.error with exc_info=True), and the format arguments give the sample context. Lines like 'label' are what make 3 a.m. debugging slow.",
+        topic="debugging", level=4,
+        code='try:\n    {}["label"]\nexcept Exception as e:\n    print(str(e), repr(e))'),
+    fill("Run `python -W _____ train.py` to turn every warning into an exception, so it fails with a traceback at the line that warned.", "error",
+         "The same word you pass to warnings.simplefilter to do this from code.",
+         "-W error installs a filter that raises warnings as exceptions, which shows exactly which line caused a DeprecationWarning or a pandas SettingWithCopyWarning. "
+         "pytest has the same switch (-W error or filterwarnings = error) to keep a test suite warning-free before a library upgrade.",
+         topic="assert-warnings", level=4),
+    mcq("A `try` has `except ValueError:` and an `else:` block. The else block raises ValueError. What happens?",
+        ["The error is not handled by that try's except clause; finally (if any) runs, and the ValueError propagates to the caller",
+         "The except ValueError clause catches it",
+         "Python runs the else block again",
+         "It becomes a SyntaxError"], 0,
+        "The except clauses guard only the try block.",
+        "else is outside the protected region: an error there skips this try's except clauses, but finally still runs. That's the point of else: success-only code "
+        "whose failures shouldn't be confused with the expected one. To handle both, wrap the else code in its own try.",
+        topic="try-except", level=4,
+        code='def f():\n    try:\n        x = 1\n    except ValueError:\n        return "caught"\n    else:\n        raise ValueError("in else")\n    finally:\n        print("finally")\n\ntry:\n    f()\nexcept ValueError as e:\n    print("propagated:", e)'),
+    tf("`OSError(2, \"No such file\")` actually creates a FileNotFoundError, because OSError picks a subclass based on the errno.", True,
+       "Check type(OSError(2, 'x')).__name__.",
+       "OSError's constructor maps errno values to subclasses: ENOENT (2) gives FileNotFoundError, EACCES (13) PermissionError, ETIMEDOUT TimeoutError. "
+       "So code that rebuilds OS errors from C libraries or subprocesses still works with `except FileNotFoundError:`. The errno is kept on e.errno.",
+       topic="builtin-errors", level=4),
 ]

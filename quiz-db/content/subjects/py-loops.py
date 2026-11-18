@@ -1031,4 +1031,331 @@ QUESTIONS += [
  x = 1: b gives 'x', 'y', then is empty
  x = 2: b is empty -> inner loop runs 0 times
 """),
+
+    # ---- round 3: conceptual mcq/tf/fill
+    # ---------------------------------------------------------------- level 1
+    mcq("Which line correctly starts a loop over the list `names`?",
+        ["for name in names:", "for name in names", "for (name in names):", "foreach name in names:"], 0,
+        "Python block headers end with a special character.",
+        "A for header is `for <name> in <iterable>:` and the colon is required; leaving it out is a SyntaxError. "
+        "Python has no brackets around the header (unlike JS `for (const n of names)`) and no foreach keyword (unlike C# or PHP).",
+        topic="for-basics", level=1),
+    tf("`range(3)` and `range(0, 3)` give exactly the same numbers.", True,
+       "What is the default start value?",
+       "With one argument, range starts at 0, so both give 0, 1, 2. You only need the two-argument form when you want to start somewhere else, "
+       "such as range(1, 4) for 1, 2, 3.",
+       topic="range", level=1),
+    mcq("Which call gives exactly 2, 4, 6, 8?",
+        ["range(2, 10, 2)", "range(2, 8, 2)", "range(2, 9)", "range(0, 8, 2)"], 0,
+        "The stop value is never included, so it must be past 8.",
+        "range(2, 10, 2) starts at 2, steps by 2 and stops before 10. range(2, 8, 2) stops before 8 and gives only 2, 4, 6, the off-by-one people write when they "
+        "think of stop as 'the last number'. range(2, 9) steps by 1, and range(0, 8, 2) starts at 0.",
+        topic="range", level=1,
+        diagram="""
+ range(2, 10, 2)
+ 2 . 4 . 6 . 8 . | 10   <- stop, excluded
+ range(2, 8, 2)
+ 2 . 4 . 6 . | 8        <- 8 is the stop, so it's lost
+"""),
+    fill("A loop that keeps repeating as long as a condition stays True starts with the keyword ____.", "while",
+         "It's not `for`: there is no collection to walk through.",
+         "`while condition:` checks the condition before every pass and stops once it is False. "
+         "Use it when you don't know the number of passes in advance, such as 'keep asking until the input is valid'.",
+         topic="while", level=1),
+    tf("Writing `break` or `continue` outside any loop is a SyntaxError.", True,
+       "What would they break out of, or continue to?",
+       "Both only make sense inside a for or while loop, and Python rejects them anywhere else before the code even runs. "
+       "To leave a function early use return; to leave a script use sys.exit().",
+       topic="break-continue", level=1),
+    mcq("`n = 3` then `while n > 0: print(n)` prints 3 forever. Which change makes it print 3, 2, 1 and stop?",
+        ["Add `n -= 1` inside the loop body", "Add `break` right after the print", "Change `while` to `for`", "Add `else:` after the loop"], 0,
+        "What would have to change for `n > 0` to become False?",
+        "The condition depends on n, but nothing in the body changes n, so it stays True forever. n -= 1 counts down until n > 0 is False. "
+        "A break after print would stop it, but after printing only 3. Forgetting to update the loop variable is the classic infinite loop.",
+        topic="while", level=1),
+    mcq("You want to print `1. Ana` and `2. Bo` from `names = [\"Ana\", \"Bo\"]`. Which loop header fits?",
+        ["for i, name in enumerate(names, start=1):", "for i, name in enumerate(names):",
+         "for i, name in names:", "for name, i in enumerate(names, start=1):"], 0,
+        "You need a counter that begins at 1, and the counter comes first.",
+        "enumerate yields (counter, item) pairs and start=1 makes the counter begin at 1. Without start the list would read 0. Ana. "
+        "`for i, name in names` tries to unpack each string, and swapping the names puts the item in i.",
+        topic="enumerate-zip", level=1),
+    tf("In a nested loop, the inner loop runs all the way through for every single pass of the outer loop.", True,
+       "Picture reading a table row by row.",
+       "For each outer value, the inner loop starts again from the beginning and runs to the end. That's why 3 outer passes times 4 inner passes "
+       "gives 12 runs of the inner body, and why nested loops get slow quickly as the inputs grow.",
+       topic="nested", level=1,
+       diagram="""
+ outer 1: inner a -> b -> c
+ outer 2: inner a -> b -> c
+ outer 3: inner a -> b -> c   (3 x 3 = 9 inner runs)
+"""),
+    mcq("In a training loop, what is a 'batch'?",
+        ["A small group of samples the model processes in one step",
+         "The whole training set",
+         "Another word for one epoch",
+         "A single sample"], 0,
+        "It's smaller than the dataset but bigger than one example.",
+        "A batch is a slice of the data, say 32 samples, that goes through the model together before the weights are updated once. "
+        "An epoch is a full pass over every batch. Batching keeps memory bounded and lets the GPU work on many samples in parallel.",
+        topic="ml-loops", level=1,
+        analogy="Like a paginated API: you fetch page by page instead of the whole table at once."),
+    fill("To loop over a dict's (key, value) pairs, write `for k, v in d.____():`", "items",
+         "Looping over d alone gives only the keys.",
+         "d.items() hands out (key, value) tuples, and `k, v` unpacks each one. d.keys() gives keys and d.values() gives values. "
+         "It's the Python version of JS `Object.entries(obj)`.",
+         topic="for-basics", level=1),
+    tf("Training for 3 epochs on the full training set means each training example is used 3 times, once per epoch.", True,
+       "What is one epoch?",
+       "One epoch is one complete pass over the data, so 3 epochs means 3 passes and each example is seen 3 times (in a new shuffled order each time). "
+       "Too few epochs and the model underfits; too many and it starts memorising the training set.",
+       topic="ml-loops", level=1),
+    mcq("You scan a list of numbers and want to stop as soon as you find the first negative one. Which keyword ends the loop?",
+        ["break", "continue", "pass", "else"], 0,
+        "You don't want the rest of the list at all.",
+        "break leaves the loop at once, so no time is wasted on the remaining items. continue would only skip the current item and keep scanning, "
+        "pass does nothing, and else is not a statement you can use inside the body.",
+        topic="break-continue", level=1),
+
+    # ---------------------------------------------------------------- level 2
+    mcq("You want a NEW list with every number in `nums` doubled. Which is the clean Pythonic way?",
+        ["[x * 2 for x in nums]", "for x in nums: x *= 2", "nums * 2", "map(nums, lambda x: x * 2)"], 0,
+        "One of these repeats the list instead of doubling the numbers.",
+        "A list comprehension builds the new list in one readable line. `x *= 2` only rebinds the loop variable and leaves nums untouched. "
+        "nums * 2 repeats the list ([1, 2, 1, 2]), and map takes the function first and returns a lazy iterator, not a list.",
+        topic="for-basics", level=2,
+        analogy="The comprehension is JS `nums.map(x => x * 2)`."),
+    mcq("Which call counts down 5, 4, 3, 2, 1?",
+        ["range(5, 0, -1)", "range(5, 1, -1)", "reversed(range(5))", "range(5, 0)"], 0,
+        "Counting down still stops BEFORE the stop value.",
+        "With step -1 the stop must be one below the last number you want, so 0. range(5, 1, -1) stops at 2. reversed(range(5)) gives 4, 3, 2, 1, 0 "
+        "because range(5) itself is 0 to 4. range(5, 0) uses step +1 and is empty.",
+        topic="range", level=2,
+        diagram="""
+ range(5, 0, -1):  5 4 3 2 1 | 0  <- stop, excluded
+ reversed(range(5)): 4 3 2 1 0    <- range(5) never had 5
+"""),
+    mcq("When is a `while` loop a better fit than a `for` loop?",
+        ["When you can't know the number of passes up front, such as retrying until a call succeeds or draining a queue",
+         "When you loop over a list of known items",
+         "Whenever speed matters, because while is faster",
+         "When you need the index of each item"], 0,
+        "for walks through things; while waits for a condition to change.",
+        "Use for when there is a collection or a fixed count to go through, and while when the stopping point depends on something that happens "
+        "during the loop. A while loop over a list with a manual index is slower and easier to get wrong, and enumerate is the tool for indexes.",
+        topic="while", level=2,
+        analogy="A retry loop around a flaky HTTP call: you don't know if it takes 1 attempt or 4."),
+    tf("Inside a loop, `pass` and `continue` do the same thing.", False,
+       "Does anything after the statement still run?",
+       "pass does nothing and the rest of the body still runs. continue jumps straight to the next pass and skips the rest of the body. "
+       "They only look the same when they are the last line of the body.",
+       code='for x in [1, 2]:\n    if x == 1:\n        pass\n    print("pass ->", x)\nfor x in [1, 2]:\n    if x == 1:\n        continue\n    print("continue ->", x)',
+       topic="break-continue", level=2),
+    mcq("When does the `else` block attached to a `for` loop run?",
+        ["When the loop finishes without hitting break",
+         "Only when the loop body ran zero times",
+         "Only when a break happened",
+         "After every single pass of the loop"], 0,
+        "Think of it as the 'no break' block.",
+        "The loop's else runs after the loop has used up its iterable normally, including when it was empty. A break skips it. "
+        "Reading it as 'if empty' is the common mistake. Many people mentally rename it `nobreak:`.",
+        topic="loop-else", level=2,
+        analogy="A search party's report: else is the 'searched everywhere, found nothing' line, written only if nobody shouted 'found it'."),
+    fill("`enumerate(items, ____=1)` makes the counter start at 1 instead of 0.", "start",
+         "It's a keyword argument whose name says where counting begins.",
+         "enumerate(items, start=1) is handy for human-friendly numbering such as 'Epoch 1/10'. It only shifts the counter: "
+         "every item is still produced, starting from the first.",
+         topic="enumerate-zip", level=2),
+    fill("How many times does print run in `for i in range(4):` with an inner `for j in range(5): print(i, j)`? Type a number.", "20",
+         "The inner loop runs fully for each outer value.",
+         "4 outer passes x 5 inner passes = 20. Nested loop work multiplies, which is why two nested loops over n items cost n x n.",
+         topic="nested", level=2),
+    mcq("You need to drop every empty string from `words`. Which approach is safe and correct?",
+        ["words = [w for w in words if w]",
+         "for w in words: if not w: words.remove(w)",
+         "for i in range(len(words)): if not words[i]: del words[i]",
+         "for w in words: if not w: del w"], 0,
+        "Building a new list never fights with the loop.",
+        "The comprehension keeps the non-empty strings and builds a new list. Removing inside the loop skips the item after each removal, "
+        "deleting by index skips items too and can run past the end of the shrunk list (IndexError), and `del w` only deletes the name w.",
+        topic="mutating", level=2),
+    tf("Wrapping a `map` object in `list()` once gives you something you can loop over again and again.", True,
+       "Which one is single-use: the map or the list?",
+       "map is a one-pass iterator, but list(m) copies its items into a real list that can be looped any number of times. "
+       "After that, m itself is empty. If you need the data twice (say, for two metrics), materialise it once and keep the list.",
+       code='m = map(str, [1, 2])\nsaved = list(m)\nprint(saved, saved, list(m))',
+       topic="iterators", level=2),
+    mcq("What is the difference between `[x * x for x in data]` and `(x * x for x in data)`?",
+        ["The brackets build the whole list right away; the parentheses make a lazy generator that computes each value when asked",
+         "The parentheses make a tuple",
+         "There is no difference, only style",
+         "The generator version sorts the results"], 0,
+        "Python has no tuple comprehension.",
+        "Square brackets give a list comprehension: every value is computed and stored now. Parentheses give a generator expression: nothing runs until you "
+        "iterate, values are produced one at a time and it can be used only once. For a tuple, write tuple(x * x for x in data).",
+        topic="generators", level=2,
+        analogy="Downloading a whole video file vs streaming it."),
+    tf("`itertools.count()` stops by itself after a default limit.", False,
+       "Read the name: count to what?",
+       "count() counts 0, 1, 2, ... forever. Looping over it needs a break, or a cap such as islice(count(), 10) or zip with a finite iterable. "
+       "It's useful for step counters in loops that end on a condition, like 'train until the loss is good enough'.",
+       topic="itertools", level=2),
+    fill("In PyTorch, `DataLoader(ds, batch_size=64, drop_last=____)` throws away the smaller final batch.", "True",
+         "The default keeps the partial batch.",
+         "drop_last=True skips the last batch when the dataset size isn't a multiple of the batch size. People use it when every batch must be the same size, "
+         "for example with batch norm on a tiny last batch. The default (False) keeps it, so every sample is used each epoch.",
+         topic="ml-loops", level=2,
+         diagram="""
+ 1000 samples, batch_size=64
+ |64|64| ... |64|40|
+ drop_last=False -> 16 batches (40 kept)
+ drop_last=True  -> 15 batches (40 dropped)
+"""),
+
+    # ---------------------------------------------------------------- level 3
+    tf("`range(5) == [0, 1, 2, 3, 4]` is True.", False,
+       "Are a range and a list the same type?",
+       "Equality between a range and a list is always False, even when they hold the same numbers. Ranges compare equal only to other ranges with the same values. "
+       "Compare list(range(5)) == [0, 1, 2, 3, 4] instead. It's similar to how [1] == (1,) is False.",
+       topic="range", level=3),
+    mcq("A gradient-descent loop should stop once the loss stops changing. Which loop condition is the robust one?",
+        ["while abs(prev - loss) > 1e-6 and step < max_steps:",
+         "while loss != prev:",
+         "while loss > 0:",
+         "while True: with no break"], 0,
+        "Floats rarely match exactly, and some runs never converge.",
+        "Comparing the change against a small tolerance handles float noise, and the max_steps cap guarantees the loop ends even if the loss oscillates. "
+        "loss != prev may never become False, and loss > 0 can't end for a loss that only approaches 0. Production training loops always keep a step budget.",
+        topic="while", level=3,
+        diagram="""
+ loss: 0.90 0.50 0.31 0.3001 0.30009
+ |change|:  0.4  0.19 0.0099 0.00001 ... < tol -> stop
+ step cap: stop anyway at max_steps
+"""),
+    tf("If `break` leaves a loop from inside a `with` block, the context manager still runs its cleanup.", True,
+       "A with block is a try/finally underneath.",
+       "Leaving a with block by any route (normal end, break, continue, return or an exception) calls the manager's __exit__, "
+       "so files are closed and locks released. The snippet prints closed before after.",
+       code='from contextlib import contextmanager\n\n@contextmanager\ndef resource():\n    try:\n        yield\n    finally:\n        print("closed")\n\nfor i in range(3):\n    with resource():\n        break\nprint("after")',
+       topic="break-continue", level=3),
+    mcq("In a search loop, what pattern does for-else replace?",
+        ["A `found = False` flag set to True before break and checked after the loop",
+         "A try/except wrapped around the loop",
+         "An if/else inside the loop body",
+         "A second loop that runs only when the list is empty"], 0,
+        "What would you write in Java or JS to know whether the loop found something?",
+        "Without for-else you set a flag inside the loop and test it afterwards. With for-else the break itself is the signal: "
+        "the else runs only when no break happened, meaning nothing was found. It is not an if/else on the body, and it also runs for an empty list.",
+        topic="loop-else", level=3,
+        diagram="""
+ found = False                for x in xs:
+ for x in xs:                     if match(x):
+     if match(x):                     break
+         found = True; break  else:
+ if not found: not_found()        not_found()
+"""),
+    mcq("Features `X` and labels `y` come from two files, and one file may have lost a row. Which loop turns that into an immediate error instead of silent misalignment?",
+        ["for x, label in zip(X, y, strict=True):",
+         "for x, label in zip(X, y):",
+         "for x, label in itertools.zip_longest(X, y):",
+         "for i in range(len(y)): x, label = X[i], y[i]"], 0,
+        "Plain zip stops at the shortest input without a word.",
+        "strict=True raises ValueError when one input runs out before the other. Plain zip silently drops the extra rows, zip_longest pads with None "
+        "and fails somewhere far away, and indexing by len(y) quietly ignores extra rows in X. Silent truncation means training on fewer, possibly shifted, pairs.",
+        topic="enumerate-zip", level=3),
+    fill("A for loop knows an iterator is finished when next() raises the ____ exception.", "StopIteration",
+         "Its name says 'stop iterating'.",
+         "Under the hood the for loop calls next() each pass and quietly catches StopIteration to end. You only see it when you call next() yourself "
+         "with no default. JS iterators signal the end with { done: true } instead of an exception.",
+         topic="iterators", level=3),
+    mcq("You stream a 50 GB CSV with `def rows(path):` that opens the file and does `for line in f: yield parse(line)`. Roughly how much memory do the rows take while you loop?",
+        ["About one line at a time, whatever the file size",
+         "About 50 GB, because yield keeps every row",
+         "About 25 GB, because generators store half the data",
+         "It depends on how many times yield has run so far"], 0,
+        "A generator pauses after each yield; what does it keep?",
+        "The file object reads in buffered chunks and the generator holds only the current line and its local state, so memory stays flat as the file grows. "
+        "Nothing is stored unless the caller collects it, for example with list(rows(path)), which brings back the 50 GB problem. Open the file with a with block inside the generator so it closes.",
+        topic="generators", level=3,
+        analogy="Like reading a database cursor row by row instead of SELECT * into an array."),
+    mcq("You want to try every combination of `lrs = [0.1, 0.01]` and `batch_sizes = [32, 64, 128]`. Which itertools call gives all 6 pairs?",
+        ["itertools.product(lrs, batch_sizes)", "zip(lrs, batch_sizes)",
+         "itertools.combinations(lrs + batch_sizes, 2)", "itertools.chain(lrs, batch_sizes)"], 0,
+        "A grid search needs every lr with every batch size.",
+        "product is the nested loop `for lr in lrs: for bs in batch_sizes:` in one call, giving 2 x 3 = 6 pairs. zip pairs by position and stops after 2. "
+        "combinations mixes learning rates with batch sizes and even pairs two lrs together, and chain just glues the lists end to end.",
+        topic="itertools", level=3),
+    mcq("Why does this print `[2, 2, 2]` instead of `[0, 1, 2]`?",
+        ["Each lambda looks up i when it is called, and by then the loop has left i at 2",
+         "lambda copies i when it is created, but append stores the last copy three times",
+         "range(3) is evaluated again inside each lambda",
+         "Lambdas can't see loop variables, so they read a default of 2"], 0,
+        "Does the lambda store a value or the name i?",
+        "Closures capture the variable, not its value at the time. All three lambdas share the one i, which the loop leaves at 2. "
+        "Fix it with a default argument, `lambda i=i: i`, which copies the current value. This is the same bug as JS closures in a `var` loop; JS fixed it with `let`.",
+        code='fns = []\nfor i in range(3):\n    fns.append(lambda: i)\nprint([f() for f in fns])',
+        topic="scope-perf", level=3,
+        diagram="""
+ fns[0] --\\
+ fns[1] ----> name i  --> 2 (after the loop)
+ fns[2] --/
+"""),
+
+    # ---------------------------------------------------------------- level 4
+    tf("In a generator, `return 5` makes `list(gen())` end with the value 5.", False,
+       "Where does a generator's return value go?",
+       "A generator's return value is attached to the StopIteration that ends it (as e.value). for loops and list() swallow that exception, so the 5 is lost "
+       "and the snippet prints [1] and then 5. Only `yield from` or catching StopIteration yourself gets the value.",
+       code='def g():\n    yield 1\n    return 5\n\nprint(list(g()))\nit = g()\nnext(it)\ntry:\n    next(it)\nexcept StopIteration as e:\n    print(e.value)',
+       topic="generators", level=4),
+    mcq("What does the two-argument form `iter(func, sentinel)` do in this loop?",
+        ["Calls func() again and again, yielding each result, and stops as soon as a result equals the sentinel b''",
+         "Calls func once and loops over its result",
+         "Loops forever, because a lambda is always truthy",
+         "Raises TypeError, because iter() takes only one argument"], 0,
+        "The second argument is the 'I'm done' value.",
+        "iter(callable, sentinel) builds an iterator that calls the function each pass and stops when it returns the sentinel, which here is the empty bytes "
+        "read() gives at end of file. It turns 'read fixed-size chunks until EOF' into a plain for loop, the way you'd read a large model file in blocks for hashing.",
+        code='import io\nf = io.BytesIO(b"abcdefg")\nfor chunk in iter(lambda: f.read(3), b""):\n    print(chunk)',
+        topic="iterators", level=4,
+        diagram="""
+ f.read(3) -> b'abc'  yield
+ f.read(3) -> b'def'  yield
+ f.read(3) -> b'g'    yield
+ f.read(3) -> b''     == sentinel -> stop
+"""),
+    tf("After running `[x for x in range(3)]` at the top of a script, the name `x` is bound to 2, just as after a for loop.", False,
+       "Do comprehensions share the loop variable with the surrounding code?",
+       "In Python 3 a comprehension's variable stays inside the comprehension, so x is undefined afterwards (NameError if nothing else set it). "
+       "Python 3.12 inlined comprehensions for speed (PEP 709) but kept this isolation. A plain for loop does leak its variable, and Python 2 comprehensions did too.",
+       topic="scope-perf", level=4),
+    mcq("An early-stopping loop does `if val_loss < best: best_state = model.state_dict()` and loads best_state after the loop breaks. Why do the restored weights end up being the LAST epoch's?",
+        ["state_dict() returns references to the live parameter tensors, which later training steps update in place; store copy.deepcopy(model.state_dict()) instead",
+         "load_state_dict always loads the most recent checkpoint from disk",
+         "break throws away any variables set inside the loop",
+         "state_dict() only works after training has finished"], 0,
+        "Is best_state a snapshot or a view of the model?",
+        "The dict holds tensors that share storage with the model's parameters, so every optimizer.step() changes 'best_state' too. "
+        "Deep-copy it (or save it to disk) at each new best. It's the same trap as keeping a reference to a mutable object in JS and expecting it to stay frozen.",
+        topic="ml-loops", level=4,
+        analogy="Bookmarking a live document instead of downloading a copy: the bookmark always shows the latest edit."),
+    tf("Calling `model.eval()` before a PyTorch validation loop is enough to stop autograd from building computation graphs.", False,
+       "eval() changes how some layers behave. Does it touch gradient tracking?",
+       "model.eval() only switches layers like dropout and batch norm into inference mode. Graphs are still recorded unless you wrap the loop in torch.no_grad() "
+       "or torch.inference_mode(), so validation silently uses more memory and time. Use both: eval() for layer behaviour, no_grad() for gradients.",
+       topic="ml-loops", level=4),
+    fill("The special method a for loop calls on an iterator to get each next item is ____.", "__next__",
+         "It's what the built-in next() calls.",
+         "for calls iter(obj), which uses obj.__iter__(), once, then __next__() on the returned iterator every pass until it raises StopIteration. "
+         "A class needs both methods to be an iterator; an iterable only needs __iter__ (or the legacy __getitem__).",
+         topic="iterators", level=4),
+    mcq("`while (line := next(it, None)):` can stop early at an empty string. Is `while (chunk := f.read(4096)):` on a binary file safe with plain truthiness?",
+        ["Yes: read() returns b'' only at end of file, and every chunk before that has at least one byte",
+         "No: a chunk of zero bytes can show up in the middle of a file",
+         "No: the walrus operator can't be used in a while condition",
+         "Yes, because := always compares its value against None"], 0,
+        "When can read(n) return an empty result on a regular file?",
+        "For a regular file, read(n) returns empty bytes only at EOF, so 'falsy means done' is exactly right. The next(it, None) case is different because a real "
+        "item can be falsy ('' or 0), so you must compare with `is not None`. Pick the test from what the producer can legitimately return.",
+        topic="while", level=4),
 ]

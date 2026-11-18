@@ -947,4 +947,324 @@ SyntaxError
          "Three words run together: do not write bytecode.",
          "PYTHONDONTWRITEBYTECODE=1 (or python -B) skips the bytecode cache. Docker images often set it to keep containers small and clean.",
          topic="execution", level=4),
+
+    # ---- round 3: conceptual mcq/tf/fill
+    # ---------------------------------------------------------------- level 1
+    mcq("What is the main job of `print()`?",
+        ["Show values as text in the output (the terminal or the notebook)",
+         "Give the value back as a string for later use",
+         "Save the values to a file automatically",
+         "Ask the user to type something"], 0,
+        "It's the Python version of console.log.",
+        "print() writes its arguments as text to standard output, which is your terminal or the area under a notebook cell. It returns None, so it doesn't hand anything back. "
+        "Asking the user for text is input()'s job, and writing to a file needs open() or print(..., file=f).",
+        topic="print", level=1,
+        analogy="Like console.log in JavaScript or System.out.println in Java."),
+    tf("In `print('#1 model')`, the `#` starts a comment, so only `print('` runs.", False,
+       "Is the # inside or outside the quotes?",
+       "A # inside a string is just a character, so this prints #1 model. Only a # outside any string starts a comment that runs to the end of the line. "
+       "Editors colour the two differently, which is a quick way to tell.",
+       topic="comments", level=1),
+    mcq("What tells Python which lines belong inside an `if` block?",
+        ["How far the lines are indented", "Curly braces { }", "The keyword `end`", "A semicolon after the block"], 0,
+        "Python has no braces for blocks.",
+        "Every line indented under the `if ...:` line belongs to it; the first line back at the outer level ends the block. "
+        "In JavaScript or Java braces mark the block and indentation is only for readers. In Python the indentation IS the structure, so it has to be consistent.",
+        topic="indentation", level=1,
+        diagram="""
+ if score > 50:
+     print("pass")    <- inside the if
+     grade = "B"      <- inside the if
+ print("done")        <- outside: always runs
+"""),
+    mcq("Which operator gives the remainder after division, such as the 1 left over from 7 divided by 3?",
+        ["%", "/", "//", "**"], 0,
+        "It's called the modulo operator.",
+        "7 % 3 is 1. / gives the exact quotient (2.333...), // gives the whole-number quotient (2), and ** is power. "
+        "A common use is `if step % 100 == 0:` to log every 100th training step.",
+        topic="arithmetic", level=1),
+    fill("In Python, '2 to the power 3' (which is 8) is written 2 ____ 3.", "**",
+         "Two of the multiplication symbol.",
+         "** is the power operator, so 2 ** 3 == 8 and 10 ** -3 == 0.001. The ^ symbol that some calculators use for power means bitwise XOR in Python: 2 ^ 3 is 1.",
+         topic="arithmetic", level=1),
+    mcq("You want the average of two losses `a` and `b`. Which expression is right?",
+        ["(a + b) / 2", "a + b / 2", "a + (b / 2)", "a + b // 2"], 0,
+        "Division happens before addition unless you use brackets.",
+        "Without brackets Python does b / 2 first and then adds a, as in school maths. Brackets force the sum first. "
+        "The // version also floors the result. When in doubt, add brackets: they cost nothing and make your intent clear.",
+        topic="precedence", level=1),
+    mcq("What does a program do while it's running `input()`?",
+        ["It waits until the user types something and presses Enter",
+         "It carries on and fills in the answer later",
+         "It reads the next line of the source file",
+         "It stops the program for good"], 0,
+        "Think of a prompt in a terminal.",
+        "input() pauses the program, shows the prompt if you gave one, and waits. When the user presses Enter, it returns what they typed as a string and the program continues. "
+        "That waiting is why input() doesn't fit scripts that run without a person, such as scheduled training jobs; they read files or command-line arguments instead.",
+        topic="input", level=1),
+    tf("You have to compile a .py file into an .exe or another build output before you can run it.", False,
+       "What happens when you type `python hello.py`?",
+       "There's no separate build step: `python hello.py` runs the file directly. Behind the scenes Python translates it into bytecode in memory, but you never run a compiler yourself. "
+       "That quick edit-and-run loop is one reason Python is popular for experiments.",
+       topic="execution", level=1),
+    mcq("In Jupyter, what is the 'kernel'?",
+        ["The Python process behind the notebook that runs your cells and remembers their variables",
+         "The notebook file saved on disk",
+         "The first cell of every notebook",
+         "A library you must import before using Python"], 0,
+        "It's what you restart when things get stuck.",
+        "The notebook page is only the interface; the kernel is a live Python process. A variable made in one cell stays in the kernel until you restart it, "
+        "which is why cells can share data, and also why running cells out of order can confuse you.",
+        topic="running", level=1,
+        analogy="Like a browser tab (the notebook) talking to a running backend server (the kernel)."),
+    tf("`help(len)` shows a short description of what `len` does and how to call it.", True,
+       "help is built in and works on any object.",
+       "help(len) prints len's documentation: its signature and a one-line description. It works on functions, modules and your own code (it shows the docstring). "
+       "Press q to leave the help pager in a terminal.",
+       topic="introspection", level=1),
+    tf("In Python, each statement normally goes on its own line, and no semicolon is needed at the end.", True,
+       "Compare with Java or C.",
+       "The end of the line ends the statement. A semicolon is allowed (to put two statements on one line, or even at the end), but style guides discourage it. "
+       "Coming from Java, leaving out the semicolons is one of the first habits to drop.",
+       topic="line-structure", level=1),
+    mcq("Why pass settings such as `--epochs 5` on the command line instead of editing the number inside the script?",
+        ["You can rerun the same code with different settings without changing the file",
+         "Python ignores numbers written inside a .py file",
+         "Command-line values run faster",
+         "The script can't be run any other way"], 0,
+        "Think of trying ten different settings.",
+        "Command-line arguments let you launch `python train.py --epochs 5` and `python train.py --epochs 20` from the same untouched file, which also makes runs easy to script and log. "
+        "Editing the file each time is slow and easy to forget, so you lose track of which setting produced which result.",
+        topic="cli-args", level=1,
+        analogy="Like query parameters in a URL: the same page, shown with different settings."),
+
+    # ---------------------------------------------------------------- level 2
+    mcq("`e = 3` and `l = 0.25`. Which line prints exactly `epoch=3 loss=0.25`?",
+        ['print(f"epoch={e} loss={l}")',
+         'print("epoch=" + e + " loss=" + l)',
+         'print("epoch=", e, "loss=", l)',
+         'print("epoch={e} loss={l}")'], 0,
+        "Watch for a TypeError, extra spaces, and a missing letter.",
+        "The f-string fills in each {} with the value. Joining with + fails with TypeError because e and l aren't strings. Separate arguments get a space between them, giving 'epoch= 3 loss= 0.25'. "
+        "Without the f prefix the braces print literally.",
+        topic="print", level=2),
+    fill("The keyword argument that replaces the newline print() adds at the end is ____.", "end",
+         "Its default value is '\\n'.",
+         "print('loading', end='') keeps the cursor on the same line, and end='\\r' returns to the start of the line, which is how simple progress counters overwrite themselves. "
+         "sep is the other one: it goes between arguments.",
+         topic="print", level=2),
+    mcq("Why put the training loop of train.py under `if __name__ == \"__main__\":`?",
+        ["So that importing train.py (for example to reuse one helper function) doesn't start training",
+         "It makes the training loop run faster",
+         "Python refuses to run a file without it",
+         "It turns on the GPU"], 0,
+        "What is __name__ when the file is imported rather than run?",
+        "When you run the file, __name__ is '__main__' and the block runs. When another file does `import train`, __name__ is 'train' and the block is skipped, "
+        "so only the functions get defined. Without the guard, a test that imports one helper would kick off a full training run.",
+        topic="running", level=2,
+        analogy="Like a Node module that only starts the server when `require.main === module`."),
+    tf("An `else:` must be indented to the same level as the `if:` it belongs to.", True,
+       "Indentation is how Python pairs them.",
+       "Python matches else to the if at the same indentation. Indent it differently and you get a SyntaxError or IndentationError, or, with nested ifs, it quietly pairs with a different if."
+       "This is also why Python has no 'dangling else' ambiguity.",
+       topic="indentation", level=2),
+    mcq("Which comment is the most useful?",
+        ["# skip the header row: the first line holds column names",
+         "# add 1 to i",
+         "# loop",
+         "# this is a variable"], 0,
+        "A good comment says something the code can't.",
+        "The code already shows WHAT happens (i += 1). Comments are most valuable for WHY: a reason, an assumption or a warning a reader couldn't guess. "
+        "Comments that just repeat the code go stale and add noise, and reviewers will ask you to delete them.",
+        topic="comments", level=2),
+    mcq("A dataset has 100 samples and a batch size of 32. Which expression gives the number of batches, counting the smaller last batch?",
+        ["(100 + 32 - 1) // 32", "100 // 32", "100 / 32", "100 % 32"], 0,
+        "100 // 32 is 3, but 3 * 32 is only 96.",
+        "Adding batch_size - 1 before the floor division rounds UP: (100 + 31) // 32 is 4. 100 // 32 drops the last 4 samples, 100 / 32 gives 3.125, "
+        "and 100 % 32 is the size of the last batch (4), not the count. math.ceil(100 / 32) also works; this is what len(DataLoader) gives with drop_last=False.",
+        topic="arithmetic", level=2,
+        diagram="""
+ samples: 100, batch: 32
+ [32][32][32][4]   -> 4 batches
+ 100 // 32         -> 3  (drops the last 4)
+ (100 + 31) // 32  -> 4
+"""),
+    tf("`-7 // 2` and `int(-7 / 2)` give the same result.", False,
+       "One floors, the other truncates.",
+       "-7 // 2 floors toward minus infinity and gives -4. -7 / 2 is -3.5, and int() truncates toward zero, giving -3. "
+       "For positive numbers they agree, which is why the difference shows up only in edge cases, such as negative offsets or time deltas.",
+       topic="arithmetic", level=2),
+    mcq("In what order does Python evaluate the operators in `a + b * c ** 2`?",
+        ["c ** 2 first, then b * that, then a + the result",
+         "Left to right: a + b, then * c, then ** 2",
+         "b * c first, then ** 2, then a +",
+         "a + b first, then c ** 2, then multiply"], 0,
+        "Power binds tightest, then multiplication, then addition.",
+        "The order is ** then * / // % then + -. So with a = 1, b = 2, c = 3 the result is 1 + 2 * 9 = 19. "
+        "This is the same order as in maths class; brackets override it.",
+        topic="precedence", level=2,
+        diagram="""
+ a + b * c ** 2
+         '----'  1. c ** 2
+     '--------'  2. b * (...)
+ '------------'  3. a + (...)
+"""),
+    fill("`age = int(input())` crashes when the user types 'ten'. The exception raised is ____.", "ValueError",
+         "The type is fine (a str); the content isn't.",
+         "int('ten') raises ValueError: invalid literal for int() with base 10. A TypeError would mean the wrong type was passed (e.g. int(None)). "
+         "Wrap the conversion in try/except ValueError and ask again, the same way a form shows 'please enter a number'.",
+         topic="input", level=2),
+    mcq("Why does `dir('')` list names like `__len__` and `__add__`?",
+        ["They're special methods Python calls for you, e.g. len(s) calls s.__len__()",
+         "They're private methods you must never use",
+         "They're deprecated methods kept for Python 2",
+         "They're bugs in dir()"], 0,
+        "What happens behind the scenes when you write len(s) or s + t?",
+        "Double-underscore ('dunder') methods are hooks for built-in syntax: len() calls __len__, + calls __add__, print() calls __str__. "
+        "To see only the everyday methods, filter them out: [n for n in dir('') if not n.startswith('_')].",
+        topic="introspection", level=2),
+    tf("A semicolon at the end of a line, as in `x = 1;`, is a SyntaxError in Python.", False,
+       "It's allowed, but is it good style?",
+       "A trailing semicolon is legal (it just ends the statement), so pasted Java/JS habits still run. PEP 8 and linters flag it as unnecessary. "
+       "In Jupyter it has one real use: ending a cell's last line with ; hides its displayed value, e.g. plt.plot(x);",
+       topic="line-structure", level=2,
+       code="x = 1;\nprint(x)"),
+    fill("The standard-library module that parses named command-line options such as `--lr 0.01` is ____.", "argparse",
+         "'argument' + 'parse'.",
+         "argparse turns sys.argv into an object with typed attributes, generates --help automatically, and reports errors for bad values. "
+         "Reading sys.argv by hand works for one argument but gets fragile fast. Larger ML projects often add a config tool on top (Hydra, a YAML file).",
+         topic="cli-args", level=2),
+
+    # ---------------------------------------------------------------- level 3
+    mcq("`print(model)` shows `<__main__.Model object at 0x7f...>`. Why?",
+        ["The class defines neither __str__ nor __repr__, so print falls back to the default repr: class name and memory address",
+         "print can't display objects, only strings",
+         "The object has been deleted",
+         "The address means the model is on the GPU"], 0,
+        "What does print() call on an object to get its text?",
+        "print calls str(obj), which uses __str__, falling back to __repr__, falling back to object's default. Define __repr__ to return something like Model(layers=3). "
+        "PyTorch modules do this, which is why print(model) lists the layers. Like overriding toString() in Java.",
+        topic="print", level=3),
+    fill("`m, s = ____(3725, 60)` gives the minutes and the leftover seconds in one call.", "divmod",
+         "It does // and % together.",
+         "divmod(3725, 60) returns (62, 5): 62 minutes and 5 seconds. Call it again on the minutes for hours. "
+         "It's handy for formatting training ETAs, and it's one operation instead of two.",
+         topic="arithmetic", level=3),
+    tf("`a == (a // b) * b + a % b` holds for every pair of ints with `b != 0`, including negative ones.", True,
+       "This identity is what decides how // and % behave together.",
+       "Python defines // as floor division and then picks % so this identity always holds; that's why % takes the sign of the divisor. "
+       "With a = -7 and b = 2: -4 * 2 + 1 == -7. C and Java truncate instead, and the identity holds with a negative remainder there.",
+       topic="arithmetic", level=3,
+       code="a, b = -7, 2\nprint(a // b, a % b, (a // b) * b + a % b == a)"),
+    mcq("How does Python read `a < b == c`?",
+        ["As a < b and b == c (a chained comparison)",
+         "As (a < b) == c",
+         "As a < (b == c)",
+         "It's a SyntaxError"], 0,
+        "All comparison operators, including ==, can chain.",
+        "Comparisons chain like in maths: a < b == c means a < b and b == c, with b evaluated once. So 1 < 2 == 2 is True. "
+        "Reading it as (a < b) == c would compare a bool with c, which is how C and JavaScript treat it. Add brackets if you really mean that.",
+        topic="precedence", level=3,
+        code="print(1 < 2 == 2, (1 < 2) == 2)"),
+    mcq("A typo `loger.error(...)` sits in an except branch that rarely runs, and it shipped to production. Why didn't Python catch it when the file loaded?",
+        ["Python compiles only the syntax up front; names are looked up when the line actually runs. Linters and tests catch this kind of bug",
+         "Python skips except blocks when compiling",
+         "Misspelled names are ignored",
+         "Production servers turn off error checking"], 0,
+        "Is `loger.error(...)` valid syntax?",
+        "The line is syntactically fine, so compiling succeeds; NameError fires only if that branch executes, often at the worst possible moment. "
+        "A static checker (pyflakes/ruff, mypy) reports undefined names without running anything, like a TypeScript compiler would. Tests that force the error path also help.",
+        topic="execution", level=3,
+        analogy="Like plain JavaScript, where a misspelled variable in a rarely-clicked handler only fails when someone clicks it."),
+    fill("You edited utils.py, but running `import utils` again in the same notebook kernel still uses the old code. Call importlib.____(utils) to load the changes.", "reload",
+         "Re-load.",
+         "import checks sys.modules first and returns the cached module, so a second import does nothing. importlib.reload(utils) re-runs the file. "
+         "Objects created before the reload keep the old code, though, so many people use the %autoreload 2 extension or simply restart the kernel.",
+         topic="running", level=3),
+    mcq("With `p.add_argument('--layers', type=int, nargs='+')`, what is `args.layers` after `--layers 64 32`?",
+        ["[64, 32]", "'64 32'", "64", "['64', '32']"], 0,
+        "nargs='+' means 'one or more values'; type= is applied to each.",
+        "nargs='+' collects every value after the option into a list, and type=int converts each one. Without nargs you'd get an error for the extra value; without type you'd get strings. "
+        "It's a clean way to pass a list of hidden-layer sizes to a training script.",
+        topic="cli-args", level=3,
+        code="import argparse\np = argparse.ArgumentParser()\np.add_argument('--layers', type=int, nargs='+')\nprint(p.parse_args(['--layers', '64', '32']).layers)"),
+    tf("`input().split()` with no argument splits on any run of whitespace, so extra spaces don't create empty strings.", True,
+       "Compare split() with split(' ').",
+       "split() with no argument treats any run of spaces, tabs or newlines as one separator and drops leading and trailing whitespace. "
+       "split(' ') splits on every single space, so 'a  b' gives ['a', '', 'b'] and int('') then fails.",
+       topic="input", level=3,
+       code="print('a  b '.split(), 'a  b '.split(' '))"),
+    mcq("Why does this function return None instead of the sum?",
+        ["The line ends after `return`, so it returns None; the next line is a separate, unreachable statement. Put the expression in brackets on the return line",
+         "Indented continuation lines are ignored",
+         "return can only return names, not expressions",
+         "The + at the start of a line is a SyntaxError"], 0,
+        "Is any bracket open at the end of the `return` line?",
+        "Python only joins lines inside open brackets (or after a backslash). A bare `return` is a complete statement, and the next line is just an expression that never runs. "
+        "Open a bracket on the return line, return (a + b), and break the line inside it.JavaScript has the same trap through automatic semicolon insertion.",
+        topic="line-structure", level=3,
+        code="def total(a, b):\n    return\n    a + b\n\nprint(total(1, 2))"),
+
+    # ---------------------------------------------------------------- level 4
+    mcq("How does Python know that a cached .pyc file is out of date after you edit the source?",
+        ["By default each .pyc records the source file's modification time and size; if they don't match, Python recompiles",
+         "It recompiles every file on every run",
+         "It compares the bytecode line by line with the source",
+         "It never notices; you must delete __pycache__ by hand"], 0,
+        "The .pyc header stores some facts about the source file.",
+        "The header holds a magic number (the Python version), then the source's mtime and size (or, with PEP 552, a hash of the source). On import Python compares them and rewrites a stale .pyc. "
+        "Hash-based .pyc files exist for reproducible builds, where timestamps aren't reliable.",
+        topic="execution", level=4,
+        analogy="Like make or an incremental TypeScript build: rebuild an output only when its source has changed."),
+    tf("When a file mixes tabs and spaces in a way where the meaning would depend on how wide a tab is, Python 3 raises TabError rather than guessing.", True,
+       "Python 2 guessed. Python 3 is stricter.",
+       "The tokenizer compares indentation both with tabs to 8 columns and with tabs to 1 column; if the two disagree about the block structure, it raises TabError. "
+       "Consistent tabs-only files are still legal. In practice, set your editor to insert 4 spaces.",
+       topic="indentation", level=4),
+    mcq("In an interview you write a binary search with `mid = (lo + hi) // 2`. Why is this fine in Python but a famous bug in Java?",
+        ["Python ints have unlimited size, so lo + hi can't overflow; Java's int can wrap negative, hence lo + (hi - lo) / 2",
+         "Python's // checks for overflow and raises an error",
+         "Java has no integer division",
+         "It's a bug in both languages"], 0,
+        "What happens in Java when lo + hi passes 2**31 - 1?",
+        "In Java (and C) lo + hi can exceed the int range for huge arrays and wrap to a negative index; this bug sat in the JDK's binary search for years. "
+        "Python ints grow as needed, so the plain form is correct. The overflow trap comes back with NumPy int32 arrays, and the safe form costs nothing, so mentioning it scores points.",
+        topic="arithmetic", level=4),
+    fill("`inspect.____(fn)` returns the source code of a Python function as a string.", "getsource",
+         "get + the word for where code comes from.",
+         "inspect.getsource reads the function's file using fn.__code__.co_filename and line numbers, so it fails for built-ins written in C and for code typed straight into the REPL. "
+         "Jupyter's fn?? uses it. Other helpers: inspect.signature, inspect.getdoc, inspect.getfile.",
+         topic="introspection", level=4),
+    tf("`print(a, b)` builds the whole line as one string and writes it to the file in a single call.", False,
+       "Give print a file object that counts its write() calls.",
+       "CPython's print writes each piece separately: str(a), the separator, str(b), then end, so this snippet counts 4 writes. "
+       "That's why prints from several threads can interleave mid-line. Build the line first (an f-string) or use logging, which formats each record before writing it.",
+       topic="print", level=4,
+       code="class Counter:\n    calls = 0\n    def write(self, s):\n        Counter.calls += 1\n\nprint('a', 'b', file=Counter())\nprint(Counter.calls)"),
+    mcq("Why is `ok = flag == not other` a SyntaxError?",
+        ["`not` binds more loosely than `==`, so it can't be the right-hand operand of == without brackets: write flag == (not other)",
+         "`not` can only be used inside an if",
+         "== can't compare booleans",
+         "Python needs `!` for negation inside expressions"], 0,
+        "Where does `not` sit in the precedence table compared with comparisons?",
+        "In the grammar, comparisons take arithmetic expressions as operands, and `not x` sits one level looser than comparisons. So `not a == b` parses as not (a == b), "
+        "but `a == not b` has nothing valid after ==. Brackets fix it. Coming from JS, where !b binds tightly, this one surprises people.",
+        topic="precedence", level=4,
+        code='try:\n    compile("ok = flag == not other", "<t>", "exec")\nexcept SyntaxError:\n    print("SyntaxError")'),
+    mcq("A script wraps its main code in `try: ... except: print('error')`. Calling `sys.exit(2)` inside it doesn't stop the script. Why?",
+        ["sys.exit raises SystemExit, and a bare except catches it like any other exception; catch Exception instead",
+         "sys.exit only works outside functions",
+         "Exit codes above 1 are ignored",
+         "print() resets the exit status"], 0,
+        "sys.exit doesn't stop the process directly.",
+        "sys.exit raises SystemExit, which normally travels up and ends the program. A bare except (or except BaseException) swallows it, so the script keeps going and exits with 0. "
+        "SystemExit and KeyboardInterrupt inherit from BaseException, not Exception, precisely so that `except Exception:` lets them through. Same for Ctrl+C during training.",
+        topic="cli-args", level=4,
+        code='import sys\ntry:\n    sys.exit(2)\nexcept:\n    print("swallowed")\nprint("still running")',
+        diagram="""
+ BaseException
+  +-- SystemExit         <- sys.exit()
+  +-- KeyboardInterrupt  <- Ctrl+C
+  +-- Exception          <- ValueError, TypeError, ...
+"""),
 ]

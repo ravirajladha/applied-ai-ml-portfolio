@@ -1096,4 +1096,365 @@ QUESTIONS += [
       (2,)          {'c': 3}
 """,
         topic="param-kinds", level=4),
+
+    # ---- round 3: conceptual mcq/tf/fill
+    # ---------------------------------------------------------------- level 1
+    mcq("You defined `def train():`. Which line actually runs it?",
+        ["train()", "train", "call train", "def train()"], 0,
+        "Running a function needs something after its name.",
+        "The brackets are what call a function. A bare `train` just refers to the function object (useful when you hand it to other code), "
+        "`call train` isn't Python, and `def train()` starts a new definition. Same as JavaScript: `train` vs `train()`.",
+        topic="def-return", level=1),
+    mcq("What does a `return` statement do?",
+        ["Ends the function and hands a value back to whoever called it",
+         "Prints the value on the screen",
+         "Starts the function again from the top",
+         "Saves the value in a global variable for later"], 0,
+        "Think about `result = f(3)`: where does the value come from?",
+        "return stops the function right there and the call expression becomes that value, so `result = f(3)` stores it. Printing only shows text to a human; "
+        "the caller gets nothing it can compute with. Lines after a return that has run are never reached.",
+        topic="def-return", level=1,
+        diagram="""
+ caller:  result = f(3)
+                    |  goes in
+ f(x):    ...  return x * 2
+                    |  comes back
+ caller:  result = 6
+"""),
+    tf("You must run a function's `def` before you call it; calling it on a line above its def raises NameError.", True,
+       "Python runs a file from top to bottom.",
+       "def is a statement that creates the function when it runs. Until then the name doesn't exist, so an earlier call raises NameError. "
+       "Calls inside other functions are fine as long as the def has run by the time they're called, which is why helper functions can live further down a module.",
+       topic="def-return", level=1,
+       code='try:\n    train()\nexcept NameError as e:\n    print("NameError:", e)\n\ndef train():\n    return "done"\n\nprint(train())'),
+    tf("In `def greet(name):` the word `name` is a parameter; in `greet(\"Ana\")` the value \"Ana\" is an argument.", True,
+       "One is the placeholder, the other is what fills it.",
+       "Parameters are the names in the def line; arguments are the actual values passed in a call. Error messages use both words "
+       "(\"missing 1 required positional argument\"), so knowing which is which makes them easier to read.",
+       topic="arguments", level=1),
+    fill("`area(width=5, height=2)` passes ____ arguments: they are matched by name, so their order doesn't matter.", "keyword",
+         "The opposite of positional.",
+         "name=value arguments are keyword arguments. Python matches them to parameters by name, so area(height=2, width=5) gives the same result. "
+         "They make calls with many options readable, e.g. fit(X, y, epochs=10, lr=0.01).",
+         topic="arguments", level=1),
+    mcq("Why would you write `def log(*messages):` instead of `def log(message):`?",
+        ["So callers can pass any number of positional values: log('a'), log('a', 'b', 'c')",
+         "To make messages a required argument",
+         "To make the function run faster",
+         "So messages can only be passed by keyword"], 0,
+        "What does the star collect?",
+        "*messages gathers however many positional arguments arrive into one tuple, including zero. print() works the same way, which is why print('a', 'b', 3) is allowed. "
+        "In JavaScript the same idea is a rest parameter: function log(...messages).",
+        topic="args-kwargs", level=1,
+        analogy="Like a bag at a checkout: one item or ten, they all go into the same bag."),
+    mcq("A variable is created inside a function (a 'local' variable). Where can you use it?",
+        ["Only inside that function, while it is running",
+         "Anywhere in the file, once the function has been defined",
+         "Anywhere in the file, once the function has been called",
+         "In every function defined below it"], 0,
+        "Each call gets its own private workspace.",
+        "Local variables live in the call's own scope and disappear when the function returns. Code outside gets a NameError. "
+        "To get a value out, return it. That's the same as a variable declared with let inside a JavaScript function.",
+        topic="scope", level=1),
+    tf("`lambda x: x * 2` creates a small function with no name that returns `x * 2`.", True,
+       "lambda is a short way to write a one-line function.",
+       "A lambda takes parameters before the colon and has a single expression after it, which it returns automatically. "
+       "It's mostly used inline, e.g. sorted(runs, key=lambda r: r['loss']). It's Python's version of a JS arrow function `x => x * 2`.",
+       topic="first-class", level=1),
+    mcq("Which `def` does the same thing as `square = lambda n: n * n`?",
+        ["def square(n): return n * n",
+         "def square(n): print(n * n)",
+         "def square(): return n * n",
+         "square = n * n"], 0,
+        "A lambda returns its expression; it doesn't print it.",
+        "The lambda takes one parameter n and returns n * n. The print version returns None, the no-parameter version would look for a global n, "
+        "and `square = n * n` just computes a number once (or fails if n isn't defined).",
+        topic="first-class", level=1),
+    fill("In `def area(r: float) -> float:`, the `: float` part is called a type ____.", "hint",
+         "It hints at the type; it doesn't force it.",
+         "Type hints (also called annotations) document what a function expects and returns. Editors and checkers use them for autocomplete and warnings; "
+         "Python itself doesn't check them when the code runs. It looks like TypeScript, but there's no compile step that enforces it.",
+         topic="hints-docs", level=1),
+    tf("A recursive function with no base case keeps calling itself until Python stops it with an error.", True,
+       "What tells a recursive function to stop?",
+       "The base case is the input the function answers directly, without calling itself. Without one, every call makes another call, the call stack fills up, "
+       "and Python raises RecursionError (after about 1000 nested calls by default). It's the recursion version of an infinite loop.",
+       topic="recursion", level=1),
+    mcq("In ML libraries you often hand a function to a trainer, e.g. `trainer.add_callback(save_checkpoint)`. What is a callback?",
+        ["A function you give to other code so that code can call it later, at the right moment",
+         "A function that calls itself",
+         "A function that undoes the previous call",
+         "A function that can only be called once"], 0,
+        "Who calls it, and when?",
+        "You pass the function object, and the trainer calls it at the moment it chooses (end of an epoch, after each batch). "
+        "It's the same idea as button.addEventListener('click', handler) in JavaScript: you supply the code, the framework decides when it runs.",
+        topic="callbacks", level=1,
+        analogy="Leaving your phone number with a shop: they call you back when the order arrives, you don't keep asking."),
+
+    # ---------------------------------------------------------------- level 2
+    mcq("Why doesn't `bump(n)` change `n`?",
+        ["`x = x + 1` points the local name x at a new int; the caller's n still refers to 5",
+         "Python copies every argument before the call",
+         "Integers are passed by value and lists by reference",
+         "bump needs `return` before it can change n"], 0,
+        "Can you change the number 5 itself?",
+        "x and n start as two names for the same int object. Ints can't be changed in place, so x + 1 makes a new int and only the local x moves to it. "
+        "The 'by value vs by reference' story is a guess: Python always passes object references, and the difference is whether you mutate or rebind. To update n, return the new value: n = bump(n).",
+        topic="passing", level=2,
+        code='def bump(x):\n    x = x + 1\n    return x\n\nn = 5\nprint(bump(n), n)',
+        diagram="""
+ n ---> 5 <--- x        (on entry: same object)
+ x = x + 1
+ n ---> 5      x ---> 6 (x rebound, n untouched)
+"""),
+    mcq("Given `def fit(X, y, epochs=10, lr=0.01):`, which call is valid?",
+        ["fit(X, y, lr=0.1)",
+         "fit(X, lr=0.1, y)",
+         "fit(epochs=5, X, y)",
+         "fit(X, y, 5, epochs=20)"], 0,
+        "Positional first, keywords after, and each parameter gets one value.",
+        "Skipping epochs and naming lr is fine: epochs keeps its default. A positional argument after a keyword one is a SyntaxError (options 2 and 3). "
+        "fit(X, y, 5, epochs=20) gives epochs two values (5 by position and 20 by name), a TypeError.",
+        topic="arguments", level=2,
+        diagram="""
+ def fit(X,  y,  epochs=10,  lr=0.01)
+ fit(    X,  y,              lr=0.1 )   epochs -> 10
+ fit(    X,  y,  5,   epochs=20     )   epochs twice -> TypeError
+"""),
+    tf("Inside `def f(**kwargs):`, `kwargs` is a normal dict, so `kwargs.get(\"lr\", 0.01)` works.", True,
+       "What type does ** pack keyword arguments into?",
+       "**kwargs collects the extra keyword arguments into a fresh dict, so every dict method works: get with a default, items(), pop. "
+       "That's how many config-driven functions read optional settings without listing every one in the signature.",
+       topic="args-kwargs", level=2),
+    fill("At a call site, the `*` in `print(*rows)` ____ the list into separate arguments.", "unpacks",
+         "It does the opposite of what *args does in a def.",
+         "In a def, *args packs extra arguments into a tuple. In a call, *rows unpacks a sequence into separate positional arguments (and **cfg unpacks a dict into keyword arguments). "
+         "It's JavaScript's spread operator: console.log(...rows).",
+         topic="args-kwargs", level=2,
+         diagram="""
+ rows = ['a', 'b', 'c']
+ print(*rows)  ==  print('a', 'b', 'c')
+ def f(*args)  :  f('a', 'b', 'c') -> args = ('a', 'b', 'c')
+"""),
+    mcq("What happens when `return` runs inside a `for` loop in a function?",
+        ["The whole function ends immediately with that value; the rest of the loop never runs",
+         "It skips to the next loop iteration, like continue",
+         "It stores the value and returns it when the loop finishes",
+         "It leaves the loop and carries on with the code after it"], 0,
+        "return leaves the function, not just the loop.",
+        "return exits the function at once, which is how 'find the first match' helpers stop early. break would only leave the loop. "
+        "A common bug is an early `return` indented inside the loop when it was meant to come after it, so the function only ever looks at the first item.",
+        topic="def-return", level=2,
+        code='def first_bad(losses):\n    for i, x in enumerate(losses):\n        if x > 10:\n            return i\n    return None\n\nprint(first_bad([0.5, 42.0, 99.0]), first_bad([0.1]))'),
+    mcq("Which default value avoids the shared-state bug?",
+        ["def add(item, items=None)",
+         "def add(item, items=[])",
+         "def add(item, items={})",
+         "def add(item, items=set())"], 0,
+        "Which of these defaults can't be changed in place?",
+        "A default is built once, when def runs, and reused by every call. A list, dict or set default is mutable, so items added in one call show up in the next. "
+        "None can't be mutated: write `if items is None: items = []` inside the body to get a fresh list each call.",
+        topic="mutable-default", level=2,
+        analogy="A mutable default is like a static field in Java: one object shared by every call."),
+    mcq("What is a closure?",
+        ["An inner function that remembers variables from the function that created it, even after that function has returned",
+         "A function that closes files automatically",
+         "A function that can't be called again after it returns",
+         "Another name for a lambda"], 0,
+        "make_multiplier(3) has returned, yet the 3 is still known.",
+        "When an inner function uses a variable of its enclosing function, Python keeps that variable alive with the inner function. "
+        "That lets a factory like make_scaler(k) return small configured functions. JavaScript closures work the same way. A lambda can be a closure, but the terms aren't the same thing.",
+        topic="closures", level=2,
+        diagram="""
+ make_multiplier(3)
+   k = 3  ----------------+
+   def mul(x): x * k      |  mul keeps a link to k
+   return mul             |
+ triple = mul  -----------+   (k lives on)
+"""),
+    mcq("In `sorted(runs, key=lambda r: r[\"loss\"])`, what does the key function receive?",
+        ["One element at a time; sorted then orders the elements by the values key returns",
+         "Two elements, and it must return which one is smaller",
+         "The index of each element",
+         "The whole list, once"], 0,
+        "Python's key is not a JavaScript-style comparator.",
+        "key maps each element to a sort value (here its loss), and sorted compares those values. JS's arr.sort((a, b) => a - b) takes two items; Python dropped that cmp style in Python 3 "
+        "(functools.cmp_to_key converts one if you have it). key is also computed once per element, which is faster.",
+        topic="first-class", level=2),
+    mcq("In one sentence, what is a decorator such as `@timed` above a training function?",
+        ["A function that takes a function and returns a new one (usually a wrapper that adds behaviour before and after the call)",
+         "A comment that tools read but Python ignores",
+         "A special class that every function must inherit from",
+         "A way to run the function in the background"], 0,
+        "What does `@timed` turn `def train` into?",
+        "`@timed` above `def train` means train = timed(train): the name now points at whatever timed returned, typically a wrapper that starts a timer, calls the original and logs the time. "
+        "It's how logging, timing, caching (@lru_cache) and no-grad (@torch.no_grad()) get bolted onto functions without editing them.",
+        topic="decorators", level=2,
+        analogy="Like Express middleware or a Spring AOP aspect: extra behaviour wrapped around a handler without touching its code."),
+    fill("`square = functools.____(pow, exp=2)` makes a new function where `square(5)` gives 25.", "partial",
+         "It pre-fills some arguments of an existing function.",
+         "partial(func, *args, **kwargs) returns a callable with those arguments fixed, so square(5) runs pow(5, exp=2). "
+         "It's a tidy way to configure a function before passing it as a callback, and unlike a lambda, a partial of a module-level function can be pickled.",
+         topic="functools", level=2),
+    tf("Since Python 3.9 you can write hints like `list[int]` and `dict[str, float]` without importing anything from `typing`.", True,
+       "PEP 585 made the built-in types usable as generics.",
+       "From 3.9 the built-in list, dict, tuple and set accept [] in hints, so typing.List and typing.Dict are only needed for older Pythons. "
+       "From 3.10, `int | None` replaces Optional[int]. You'll still see the old spellings in a lot of ML code written for 3.8.",
+       topic="hints-docs", level=2),
+    mcq("A training loop takes an optional `on_epoch_end=None` callback. Which line calls it safely?",
+        ["if on_epoch_end is not None: on_epoch_end(epoch, logs)",
+         "on_epoch_end(epoch, logs)",
+         "if on_epoch_end(): on_epoch_end(epoch, logs)",
+         "on_epoch_end = on_epoch_end(epoch, logs) or None"], 0,
+        "What happens if you call None?",
+        "Calling None raises TypeError: 'NoneType' object is not callable, so check first. Option 3 calls the callback (with the wrong arguments) just to test it. "
+        "Many frameworks avoid the check by defaulting to a list of callbacks and looping over it: `for cb in callbacks: cb(epoch, logs)` works even when the list is empty.",
+        topic="callbacks", level=2),
+
+    # ---------------------------------------------------------------- level 3
+    mcq("`def get(key, default=None)` must tell 'caller passed None on purpose' apart from 'caller passed nothing'. What's the standard fix?",
+        ["Use a private sentinel: `_MISSING = object()` as the default, then check `if default is _MISSING:`",
+         "Use `default=False` instead",
+         "Check `if not default:`",
+         "Use `default=[]` and check if it's empty"], 0,
+        "You need a default value that no caller could ever pass by accident.",
+        "None is the usual sentinel, but when None is a valid value you need another one. A fresh object() is unique and only compared with `is`, so nobody can collide with it. "
+        "dict.pop and getattr-style APIs work this way. `not default` also treats 0 and '' as missing; [] reintroduces the mutable default trap.",
+        topic="mutable-default", level=3,
+        code='_MISSING = object()\n\ndef get(d, key, default=_MISSING):\n    if key in d:\n        return d[key]\n    if default is _MISSING:\n        raise KeyError(key)\n    return default\n\nprint(get({}, "lr", None))'),
+    fill("Inside a nested counter function, `count += 1` raises UnboundLocalError until you declare `____ count`, so it rebinds the outer function's variable.", "nonlocal",
+         "global would point at the module, not the enclosing function.",
+         "Assigning makes a name local to the inner function. nonlocal tells Python the name belongs to the nearest enclosing function, so += updates the variable the closure shares. "
+         "Mutating instead of rebinding (count[0] += 1, or an attribute on an object) also works without it, which is why older code is full of one-element lists.",
+         topic="closures", level=3),
+    mcq("What happens when `train(\"bert\", epochs=3)` runs?",
+        ["TypeError, because wrapper() accepts no arguments; define it as wrapper(*args, **kwargs) and forward them",
+         "It works: the arguments go straight to the original train",
+         "The arguments are silently dropped and train uses its defaults",
+         "SyntaxError when the decorator is applied"], 0,
+        "After decoration, which function does `train` actually name?",
+        "train now refers to wrapper, so the call's arguments go to wrapper, which takes none. The decorator only 'worked' while it was used on zero-argument functions. "
+        "A general-purpose wrapper should be `def wrapper(*args, **kwargs): return func(*args, **kwargs)` (plus @functools.wraps).",
+        topic="decorators", level=3,
+        code='def log_calls(func):\n    def wrapper():\n        print("calling", func.__name__)\n        return func()\n    return wrapper\n\n@log_calls\ndef train(model, epochs=1):\n    return f"{model} x{epochs}"\n\ntry:\n    train("bert", epochs=3)\nexcept TypeError as e:\n    print("TypeError:", e)'),
+    tf("`@functools.cache` (Python 3.9+) behaves like `@functools.lru_cache(maxsize=None)`: an unbounded cache that never evicts.", True,
+       "What does maxsize=None turn off?",
+       "cache is the simple unbounded form. It's ideal for pure functions over a small set of inputs (memoised recursion, loading a tokenizer by name), "
+       "but on a function called with ever-new arguments it grows without limit. Then use lru_cache(maxsize=N) so old entries are dropped.",
+       topic="functools", level=3),
+    tf("`any(map(is_corrupt, files))` stops calling `is_corrupt` at the first True, because `map` produces values lazily.", True,
+       "In Python 3, does map compute everything up front?",
+       "map returns an iterator, so any() pulls one result at a time and stops when it finds a True; the remaining files are never checked. "
+       "`any([is_corrupt(f) for f in files])` would check every file first. Laziness matters when each call is expensive (a disk read, a model call).",
+       topic="first-class", level=3),
+    tf("`cfg = copy.copy(cfg)` at the top of a function means `cfg[\"layers\"].append(64)` can't affect the caller's config.", False,
+       "copy.copy copies the outer dict only.",
+       "A shallow copy makes a new dict whose values are the same objects, so the 'layers' list is still shared and the append shows up in the caller's config. "
+       "Replacing a key (cfg['lr'] = 0.1) would be safe; changing a nested value isn't. Use copy.deepcopy for nested configs, or build new values instead of mutating.",
+       topic="passing", level=3,
+       diagram="""
+ caller cfg  --> {'lr':..., 'layers': --+
+ copy.copy   --> {'lr':..., 'layers': --+--> [32, 64]
+                 two dicts, ONE shared list
+"""),
+    mcq("Why do frameworks usually write early stopping as a class with `__call__` (as here) rather than a plain function?",
+        ["It keeps state (best score, epochs waited) in named attributes you can inspect, reset or save, and the object still works anywhere a function is expected",
+         "Plain functions can't be passed to a training loop",
+         "Classes run faster than functions",
+         "__call__ makes the callback run in a background thread"], 0,
+        "Between calls, where does 'best so far' live?",
+        "A callback that remembers things needs somewhere to keep them. A closure can do it, but a class names the state (stopper.best, stopper.wait), lets you add reset() or a state_dict for checkpointing, "
+        "and reads clearly in a stack trace. Because it defines __call__, the loop simply calls stopper(loss) like any function.",
+        topic="callbacks", level=3,
+        code='class EarlyStopping:\n    def __init__(self, patience=2):\n        self.patience, self.best, self.wait = patience, float("inf"), 0\n    def __call__(self, val_loss):\n        if val_loss < self.best:\n            self.best, self.wait = val_loss, 0\n        else:\n            self.wait += 1\n        return self.wait >= self.patience\n\nstopper = EarlyStopping()\nprint([stopper(l) for l in [0.9, 0.7, 0.8, 0.75]], stopper.best)'),
+    mcq("Why does the naive `fib(n) = fib(n - 1) + fib(n - 2)` become unusably slow around n = 35?",
+        ["It recomputes the same subproblems over and over, so the number of calls grows exponentially with n",
+         "Python's recursion limit slows every call down",
+         "Adding big integers is what takes the time",
+         "Each call copies the whole call stack"], 0,
+        "How many times is fib(2) computed inside fib(6)?",
+        "fib(n) calls fib(n-1) and fib(n-2), and each of those repeats the same work, so the call tree roughly doubles at every level (about 30 million calls for fib(35)). "
+        "The depth is only n, so it's not a recursion-limit problem. Caching results (@lru_cache) or a simple loop makes it linear. This is the textbook route into dynamic programming.",
+        topic="recursion", level=3,
+        diagram="""
+              fib(5)
+          /           \\
+      fib(4)         fib(3)
+      /    \\         /    \\
+  fib(3)  fib(2)  fib(2)  fib(1)
+  /    \\
+ fib(2) fib(1)    fib(3), fib(2) repeated
+"""),
+    mcq("Why does the second call raise TypeError?",
+        ["The wrapper passes verbose=False and **kwargs also contains verbose, so fit gets two values for it; use kwargs.setdefault('verbose', False) instead",
+         "fit doesn't accept a verbose parameter",
+         "**kwargs can't contain booleans",
+         "A wrapper may only forward *args, not **kwargs"], 0,
+        "Count how many times the keyword verbose reaches fit.",
+        "func(*args, verbose=False, **kwargs) is fine until the caller also passes verbose; then the same keyword appears twice and Python refuses: 'got multiple values for keyword argument'. "
+        "Decide the precedence explicitly: setdefault lets the caller win, kwargs['verbose'] = False forces the wrapper's value.",
+        topic="args-kwargs", level=3,
+        analogy="Like a proxy that always adds a header the client may also have sent: the server rejects the duplicate instead of guessing which one wins.",
+        code='def quiet(func):\n    def wrapper(*args, **kwargs):\n        return func(*args, verbose=False, **kwargs)\n    return wrapper\n\n@quiet\ndef fit(X, verbose=True):\n    return verbose\n\nprint(fit("X"))\ntry:\n    fit("X", verbose=True)\nexcept TypeError as e:\n    print("TypeError:", e)'),
+
+    # ---------------------------------------------------------------- level 4
+    mcq("A library maintainer marks a parameter positional-only: `def tokenize(text, /, *, lower=True)`. What does the `/` buy them?",
+        ["Callers can't depend on the name `text`, so it can be renamed later without breaking anyone, and **kwargs-style options can use that name freely",
+         "Faster argument parsing that callers can measure",
+         "text becomes required; without / it would be optional",
+         "It stops callers from passing text as a variable"], 0,
+        "If nobody can write tokenize(text=...), who cares what the parameter is called?",
+        "A parameter that can be passed by keyword makes its name part of the public API; renaming it breaks every text=... call. Positional-only parameters keep the name private, "
+        "which is why many built-ins (len(obj, /), dict.get) use it. It also avoids clashes in functions that accept **kwargs, where a user key could otherwise collide with the parameter name.",
+        topic="param-kinds", level=4,
+        analogy="Like a private field versus a public JSON field in a REST API: you can rename the private one freely, the public one is a contract."),
+    mcq("You want the timing log to record only real computations (cache misses), not cache hits. Which stacking does that?",
+        ["@lru_cache on top and @timer underneath it, as in the snippet: hits are answered by the cache before the timer is reached",
+         "@timer on top and @lru_cache underneath it",
+         "Either order: decorators don't interact",
+         "Neither: lru_cache can't be stacked with other decorators"], 0,
+        "Stacked decorators are applied bottom-up, so the top one is the outermost layer.",
+        "This is embed = lru_cache(timer(embed)): a hit returns from the cache layer and never calls the timer wrapper, so log has 2 entries for 3 calls. "
+        "With @timer on top, every call (hits too) passes through the timer first, which makes cached calls look suspiciously fast in your metrics. Layer order is behaviour, the same as middleware order in a web server.",
+        topic="decorators", level=4,
+        code='from functools import lru_cache\nlog = []\n\ndef timer(func):\n    def wrapper(*args):\n        log.append(args)\n        return func(*args)\n    return wrapper\n\n@lru_cache\n@timer\ndef embed(word):\n    return len(word)\n\nfor w in ["gpu", "gpu", "tpu"]:\n    embed(w)\nprint(len(log))',
+        diagram="""
+ call --> [ lru_cache ] --hit--> return cached
+               | miss
+               v
+          [  timer   ] --> log, then
+               v
+          [ embed()  ]
+"""),
+    fill("With `@functools.wraps(func)` on a wrapper, the original undecorated function stays reachable as `wrapper.____`.", "__wrapped__",
+         "A dunder attribute that wraps sets for you.",
+         "wraps copies __name__, __doc__ and friends and sets __wrapped__ to the inner function. inspect.signature follows it to show the real parameters, "
+         "and tests can call train.__wrapped__(...) to bypass a cache or retry decorator. Without wraps, tools only ever see `wrapper(*args, **kwargs)`.",
+         topic="functools", level=4),
+    fill("`sys.____()` returns the current maximum recursion depth (1000 by default in CPython).", "getrecursionlimit",
+         "Its partner is sys.setrecursionlimit.",
+         "The limit guards the C stack: each Python call also uses native stack space. Raising it with setrecursionlimit can turn a clean RecursionError into a hard interpreter crash, "
+         "so deep tree or graph walks are usually rewritten with an explicit stack instead.",
+         topic="recursion", level=4),
+    tf("Two inner functions created by the same call of an outer function share one cell for a variable they both use, so a `nonlocal` update in one is seen by the other.", True,
+       "A closure captures the variable, not a snapshot of its value.",
+       "Both functions hold a reference to the same cell object (the snippet checks with `is`), so inc's += is visible through get. Each NEW call of make() creates fresh cells, "
+       "which is why two counters from two calls don't interfere. This is also why closures can replace a small class: shared private state with a couple of methods.",
+       topic="closures", level=4,
+       code='def make():\n    n = 0\n    def inc():\n        nonlocal n\n        n += 1\n    def get():\n        return n\n    return inc, get\n\ninc, get = make()\ninc()\ninc()\nprint(get(), inc.__closure__[0] is get.__closure__[0])'),
+    mcq("A notebook calls `layer.register_forward_hook(save_activation)` at the start of every epoch. By epoch 10 each forward pass is slower and logs 10 copies of every activation. Why?",
+        ["Each call adds another hook, and all of them stay registered; keep the handle it returns and call handle.remove() (or register once)",
+         "PyTorch hooks re-run once for every epoch that has passed",
+         "save_activation is being called recursively",
+         "Forward hooks are only cleared when the model is moved to the GPU"], 0,
+        "Registering a callback is not the same as replacing one.",
+        "A hook registry is a list of callbacks, so every registration appends one more. The returned RemovableHandle is the only clean way to take one off. "
+        "The same bug shows up with event listeners in the browser (addEventListener in a re-render) and with logging handlers added on every import: always pair register with remove.",
+        topic="callbacks", level=4,
+        analogy="Like calling addEventListener in a React effect with no cleanup: every re-render stacks another listener."),
+    tf("`def fib(n, _memo={}):` is a known (if debated) idiom: because the default dict is created once and reused, it works as a cache that persists across calls.", True,
+       "The 'bug' is sometimes the feature.",
+       "The once-only evaluation that causes the mutable default trap is exactly what a memo needs. The leading underscore signals 'don't pass this'. "
+       "Its downsides: the cache never shrinks, it's shared by every caller and thread, and a caller can pass their own dict by accident. functools.cache gives the same effect with clearer intent and cache_clear().",
+       topic="mutable-default", level=4),
 ]
