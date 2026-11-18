@@ -19,8 +19,8 @@ Target: 120-160 questions per subject, with more L3/L4, informative explanations
 | Foundations | py-comprehensions | 61 | 136 | done, pushed |
 | Foundations | py-errors | 104 | 167 | done, pushed |
 | Foundations | py-classes | 108 | 192 | done, pushed |
-| Foundations | np-arrays, np-operations | 139, 153 | 203, 215 | done, pushed |
-| Foundations | pd-dataframes, pd-cleaning | 151, 163 | 194, 208 | done, pushed |
+| Foundations | np-arrays, np-operations | 139, 153 | 203 → 243, 215 → 255 (round 3) | done, pushed |
+| Foundations | pd-dataframes, pd-cleaning | 151, 163 | 194 → 234, 208 → 248 (round 3) | done, pushed |
 | Foundations | plotting | 99 | 152 | done, pushed |
 | L1 | ml-what | 69 | 126 | done, pushed |
 | L1 | ml-types | 65 | 122 | done, pushed |
@@ -160,7 +160,7 @@ Image-only slides (technologies pyramid, DevOps dimensions, DataOps architecture
 ## Known follow-ups
 - Writers stall if they write a whole question block in one edit. Tell them to append at most 10 questions per edit.
 - New questions in dl-neuron and dl-loss-gd are about 42-45% `out`, and in plotting about 57% `out` (targets 35% / 30%). A later pass can turn some into code mcqs.
-- The Python core banks are too `out`-heavy (STANDARD.md wants about 35%). Round 3 appends conceptual mcq/tf/fill, never converts. Pass 1 (18-Nov-2026, `f1056e8`): +40 each to py-conditions (now 62% out), py-dicts (56%), py-strings (54%), py-lists (52%). Pass 2 (18-Nov-2026, `fc57c1c`): +40-41 each to py-classes (233, 51% out), py-variables (195, 48%), py-functions (190, 46%), py-loops (189, 44%), py-errors (208, 42%), py-basics (188, 42%), py-comprehensions (176, 41%). **Next:** the same pass for np-arrays, np-operations, pd-dataframes, pd-cleaning (57-62% out), then a second top-up for the banks still above ~45% (py-conditions, py-dicts, py-strings, py-classes). Unrun facts to spot-check: PyTorch `state_dict` aliasing, `model.eval()` vs `no_grad()`, forward-hook `handle.remove()` (py-loops/py-functions L4), TabError and stale .pyc answers (py-basics L4).
+- The Python core banks are too `out`-heavy (STANDARD.md wants about 35%). Round 3 appends conceptual mcq/tf/fill, never converts. Pass 1 (18-Nov-2026, `f1056e8`): +40 each to py-conditions (now 62% out), py-dicts (56%), py-strings (54%), py-lists (52%). Pass 2 (18-Nov-2026, `fc57c1c`): +40-41 each to py-classes (233, 51% out), py-variables (195, 48%), py-functions (190, 46%), py-loops (189, 44%), py-errors (208, 42%), py-basics (188, 42%), py-comprehensions (176, 41%). Pass 3 (18-Nov-2026, `2745db9`): +40 each to np-arrays (243, 37% out), np-operations (255, 35%), pd-dataframes (234, 50%), pd-cleaning (248, 52%). **Next:** a second top-up for the banks still above ~45% (py-conditions, py-dicts, py-strings, py-classes, pd-cleaning, pd-dataframes). Unrun facts to spot-check: PyTorch `state_dict` aliasing, `model.eval()` vs `no_grad()`, forward-hook `handle.remove()` (py-loops/py-functions L4), TabError and stale .pyc answers (py-basics L4).
 - Python 3.12+ `sum()` of floats is compensated: `sum([0.1]*10) == 1.0` is True. Explanations must contrast it with a `+=` loop.
 - Cloud-native banks use old-batch slides only (no papers). When current slides or papers arrive, top up the `cnas-*` subjects. Edge Module 1 slides are in (17-Nov); top up the other `edge-*` subjects as the Module 2+ slides arrive.
 
@@ -179,3 +179,4 @@ Image-only slides (technologies pyramid, DevOps dimensions, DataOps architecture
 | 17-Nov-2026 | Edge top-up from the CS1 slides, S1-3 transcripts and notes: edge-foundations 145, edge-hardware 102, BLERP replaces the reconstructed framework. 8,989 total. Pushed `50aea96`, DB reloaded (student row kept). |
 | 18-Nov-2026 | Round 3 (type mix): +40 conceptual mcq/tf/fill each to py-conditions, py-dicts, py-strings, py-lists. 9,149 total. Pushed `f1056e8`, DB reloaded (student row kept). Fixed stale cnas pipeline rows. |
 | 18-Nov-2026 | Round 3 pass 2: +282 conceptual mcq/tf/fill across py-classes, py-errors, py-variables, py-basics, py-functions, py-comprehensions, py-loops. 9,431 total. Pushed `fc57c1c`, DB reloaded (student row kept). |
+| 18-Nov-2026 | Round 3 pass 3: +160 conceptual mcq/tf/fill across np-arrays, np-operations, pd-dataframes, pd-cleaning. 9,591 total. Pushed `2745db9`, DB reloaded (student row kept). |
