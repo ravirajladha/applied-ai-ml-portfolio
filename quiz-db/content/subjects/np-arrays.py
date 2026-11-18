@@ -2125,4 +2125,441 @@ row 2 ----^
          "np.stack(images) adds axis 0 by default. np.concatenate(images) would join along rows and give (N*H, W), "
          "losing the image boundaries.",
          topic="ml-arrays", level=2),
+
+    # ============================================================ Round 3: conceptual mix
+    # ------------------------------------------------------------------ why-arrays
+    mcq("People say NumPy code should be \"vectorised\". What does that mean?",
+        ["You write one operation on the whole array (like `a * 2`) and NumPy runs the loop in compiled code",
+         "You split the array across CPU cores by hand before doing any maths",
+         "You convert the array into a Python list of vectors first",
+         "You write a `for` loop, but over `range(len(a))` instead of over the items"], 0,
+        "Who writes the loop: you, or NumPy?",
+        "Vectorised means expressing the work as whole-array operations, so the per-element loop runs in C "
+        "instead of the Python interpreter. It is not about multithreading: most element-wise ops run on one "
+        "core and are still 10-100x faster than a Python loop. In interviews, 'replace the loop with array ops' "
+        "is the expected first optimisation.",
+        analogy="Like one SQL `UPDATE prices SET p = p * 2` instead of fetching every row into your app, "
+                "changing it and saving it back one at a time.",
+        topic="why-arrays", level=1),
+    tf("`np.array([1, 2, 3]) + [10, 20, 30]` adds element by element, because NumPy converts the list to an array first.",
+       True,
+       "When one side of + is an ndarray, whose rules apply?",
+       "If either operand is an ndarray, NumPy turns the other into an array and adds element-wise: [11 22 33]. "
+       "Only list + list concatenates. The convenience hides a cost: the list is converted on every call, so "
+       "convert once up front in hot code.",
+       topic="why-arrays", level=2),
+    mcq("A teammate wraps a Python function with `f = np.vectorize(slow_fn)` and expects a big speed-up on a million elements. What actually happens?",
+        ["It is still a Python-level loop calling `slow_fn` per element, so it is roughly as slow as a list comprehension",
+         "NumPy compiles `slow_fn` to C, so it runs as fast as built-in ufuncs",
+         "It runs `slow_fn` on all CPU cores in parallel",
+         "It raises unless `slow_fn` already uses only NumPy operations"], 0,
+        "Read the docs' own warning about np.vectorize.",
+        "np.vectorize is a convenience for broadcasting and output shaping; the docs say it is essentially a for "
+        "loop. Real speed comes from rewriting the body with array ops (np.where, ufuncs, masks) or using numba. "
+        "On a million ints it is typically dozens of times slower than the equivalent `arr * 2`.",
+        analogy="Like wrapping a synchronous function in an `async` signature: the call looks modern, but the "
+                "work underneath is exactly as sequential as before.",
+        topic="why-arrays", level=3),
+    mcq("Why is `[x + 1 for x in arr]` over a NumPy array usually SLOWER than the same comprehension over a Python list?",
+        ["Each element read from the array has to be boxed into a new NumPy scalar object, while a list already holds Python objects",
+         "NumPy arrays are stored on disk and each element read goes to disk",
+         "Iterating a NumPy array copies the whole array once per element",
+         "It isn't: element-wise Python loops are always faster on arrays"], 0,
+        "What object does `for x in arr` hand you on each step?",
+        "An array stores raw machine numbers, so every iteration creates a fresh np.int64 object and the + goes "
+        "through NumPy's scalar machinery. A list just hands back pointers to existing ints. The array only wins "
+        "when you stop looping in Python: `arr + 1`. Mixing the two (arrays with Python loops) gets the worst of both.",
+        diagram=C("""
+            list : [ptr]->int  [ptr]->int   loop reads pointers
+            array: |8B|8B|8B|8B|            loop must box each:
+                    |  -> np.int64 object (new every step)
+            """),
+        topic="why-arrays", level=4),
+
+    # ------------------------------------------------------------------ creating
+    tf("`np.arange(1, 5)` includes the number 5.", False,
+       "Same rule as Python's range().",
+       "arange follows range(): the stop value is excluded, so you get [1 2 3 4]. linspace is the one that "
+       "includes its stop by default. Off-by-one bugs in bin edges and epoch counters often come from mixing "
+       "the two conventions.",
+       topic="creating", level=1),
+    mcq("You need exactly 11 evenly spaced points from 0 to 1 inclusive (0.0, 0.1, ..., 1.0). Which call is the reliable choice?",
+        ["np.linspace(0, 1, 11)",
+         "np.arange(0, 1.1, 0.1)",
+         "np.arange(0, 1, 0.1)",
+         "np.linspace(0, 1, 10)"], 0,
+        "Do you want to fix the step, or the number of points?",
+        "linspace fixes the count and includes the end point, so you always get 11 values. arange with a float "
+        "step can gain or lose a point because 0.1 is not exact in binary; arange(0, 1, 0.1) also stops before 1. "
+        "linspace(0, 1, 10) gives a step of 1/9, the classic fence-post mistake.",
+        topic="creating", level=2),
+    fill("Give each of 4 data-loader workers its own independent random stream: `children = np.random.SeedSequence(42).____(4)`, then `default_rng(child)` per worker.",
+         "spawn",
+         "The word for creating offspring.",
+         "SeedSequence.spawn(n) derives n child seeds that are statistically independent but fully reproducible "
+         "from 42. Seeding workers with 42, 43, 44 is the naive version and gives no independence guarantee. "
+         "Generator.spawn(n) does the same directly from an existing rng.",
+         analogy="Like deriving per-service keys from one master key with a KDF instead of hand-picking "
+                 "key1, key2, key3.",
+         topic="creating", level=4),
+
+    # ------------------------------------------------------------------ attributes
+    fill("Which attribute gives the total number of elements in an array (the product of its shape): `a.____`?",
+         "size",
+         "Not len(): that only counts the first axis.",
+         "a.size multiplies the shape out, so a (3, 4) array has size 12. len(a) would give 3, the length of "
+         "axis 0. Use size when you need element counts, e.g. to compute memory as a.size * a.itemsize.",
+         topic="attributes", level=1),
+    mcq("`big = np.zeros(1_000_000)` and `v = big[:10]`. Why does `sys.getsizeof(v)` report only about 112 bytes?",
+        ["v is a view: getsizeof counts only its header, not the buffer it borrows from big",
+         "NumPy compresses the zeros, so ten of them take almost no space",
+         "getsizeof always ignores the data of NumPy arrays, even for big itself",
+         "The slice is lazy and no memory is reserved until you read it"], 0,
+        "Who owns the data buffer?",
+        "getsizeof includes the data only when the array owns it (big reports about 8 MB), while a view reports "
+        "just its ~112-byte object header. Neither tells you the real story: v keeps all 8 MB alive. For memory "
+        "profiling use a.nbytes for the logical size and check a.base to see what a view is pinning.",
+        topic="attributes", level=3),
+    tf("`b = np.broadcast_to(np.arange(1000.0), (1000, 1000))` reports `b.nbytes == 8_000_000`, even though only 8,000 bytes of data exist.",
+       True,
+       "Is nbytes measured from the buffer, or from shape times itemsize?",
+       "nbytes is just size * itemsize, a logical number. The broadcast view has strides (0, 8), so every row "
+       "re-reads the same 1000 floats. Memory dashboards that sum nbytes over-count such views; the moment you "
+       "call b.copy() or do b + 1, the 8 MB becomes real.",
+       diagram=C("""
+           buffer : [x0 x1 ... x999]          8,000 bytes
+           b      : shape (1000, 1000) strides (0, 8)
+           row 0 --> same buffer
+           row 1 --> same buffer   nbytes says 8,000,000
+           """),
+       topic="attributes", level=4),
+
+    # ------------------------------------------------------------------ dtypes
+    tf("`np.zeros(3)` and `np.ones(3)` give float arrays unless you pass a `dtype`.", True,
+       "Do the values look like 0 or 0.?",
+       "zeros, ones and eye default to float64, so they print as [0. 0. 0.]. If you use one as an index array "
+       "or a counter you need dtype=int (or np.zeros_like on an int array); otherwise indexing with it raises "
+       "IndexError because floats are not valid indices.",
+       topic="dtypes", level=1),
+    fill("`np.array([4, 6]) / 2` gives float64 even for an int array. Which operator keeps the result as integers? `a ____ 2`",
+         "//",
+         "Python 3 has two division operators.",
+         "/ is true division and always returns floats; // is floor division and keeps int64. Note it floors, "
+         "so -7 // 2 is -4, not -3. Mixing them up is a common reason a bucket or index array suddenly "
+         "becomes float and breaks indexing.",
+         topic="dtypes", level=2),
+    mcq("`x` is a float32 batch. Under NumPy 2's promotion rules (NEP 50), which expression silently returns float64 and doubles the memory?",
+        ["x * np.float64(0.5)",
+         "x * 0.5",
+         "x / 255",
+         "x + np.float32(1)"], 0,
+        "Python scalars are 'weak'; are NumPy scalars?",
+        "Plain Python numbers (0.5, 255) adopt the array's dtype, so those stay float32. A NumPy scalar like "
+        "np.float64(0.5), or a 0-d float64 array, is 'strong' and promotes the result to float64. These often "
+        "sneak in from np.mean() or np.sqrt() of a float64 config value, and the model input quietly doubles in size.",
+        code=C("""
+            import numpy as np
+            x = np.ones(3, dtype=np.float32)
+            scale = np.float64(0.5)      # e.g. read from a float64 stats array
+            print(x.dtype)
+            """),
+        topic="dtypes", level=3),
+    mcq("For a uint8 image `u = np.array([200, 100], dtype=np.uint8)`, `u + u` wraps to `[144 200]`, but `u.sum()` correctly gives 300. Why?",
+        ["sum() uses a wider accumulator (uint64 here) for small integer types, while + keeps the uint8 dtype",
+         "sum() converts to float64 first, like mean() does",
+         "sum() detects the overflow and retries in a bigger type",
+         "Python ints are used inside sum(), so it can never overflow"], 0,
+        "Check the dtype of u.sum().",
+        "Reductions like sum and prod upcast small ints to the platform integer (int64, or uint64 for unsigned), "
+        "so u.sum() is a uint64 300. Element-wise + has no such rule, so it wraps mod 256. The trap is "
+        "assuming 'sum is safe' means 'arithmetic is safe': widen before element-wise maths on images.",
+        topic="dtypes", level=3),
+    mcq("What dtype does NumPy produce for `np.result_type(np.int64, np.uint64)`, and why?",
+        ["float64, because no integer type can hold every int64 and every uint64 value",
+         "int64, because signed types always win",
+         "uint64, because the unsigned type is listed second",
+         "int128, the next wider integer"], 0,
+        "What range would a common integer type need?",
+        "Promotion picks the smallest type that can represent both inputs. Covering -2**63 to 2**64-1 needs 65 "
+        "bits and NumPy has no int128, so it falls back to float64, which loses exactness above 2**53. Mixing "
+        "uint64 ids or hashes with int64 offsets can silently corrupt them this way.",
+        topic="dtypes", level=4),
+
+    # ------------------------------------------------------------------ indexing
+    tf("For `a = np.arange(10)`, `a[5:2]` raises an IndexError because the start is after the stop.", False,
+       "Slices are forgiving; single indexes are not.",
+       "A slice whose start is past its stop (with a positive step) is simply empty: shape (0,). Slices never "
+       "raise for out-of-range bounds; only integer indexes like a[10] do. Empty slices are a quiet source of "
+       "bugs: a .mean() on them gives nan with a warning rather than failing loudly.",
+       topic="indexing", level=2),
+    mcq("A helper returns the last k values with `a[-k:]`. What goes wrong when k == 0?",
+        ["-0 is 0, so a[-0:] is a[0:] and it returns the WHOLE array instead of nothing",
+         "It raises IndexError because -0 is not a valid index",
+         "It returns an empty array, which is correct",
+         "It returns only the last element"], 0,
+        "What is -0 as a Python int?",
+        "Python ints have no negative zero, so a[-0:] means 'from index 0 to the end'. The safe form is "
+        "a[len(a) - k:], which gives an empty slice for k = 0. This shows up in 'last k tokens / last k "
+        "checkpoints' code where k is computed and can hit zero.",
+        diagram=C("""
+            a      = [0 1 2 3 4 5 6 7 8 9]
+            k = 3 : a[-3:]       -> [7 8 9]
+            k = 0 : a[-0:]=a[0:] -> [0 1 2 ... 9]   whole array
+            fix   : a[len(a)-k:] -> []              empty
+            """),
+        topic="indexing", level=4),
+
+    # ------------------------------------------------------------------ masks-fancy
+    mcq("You need a NEW array with negatives replaced by 0, leaving `a` untouched. Which is correct?",
+        ["np.where(a < 0, 0, a)",
+         "a[a < 0] = 0",
+         "a[a >= 0]",
+         "np.where(a < 0)"], 0,
+        "One of these mutates, one drops elements, one returns positions.",
+        "np.where(cond, x, y) builds a fresh array choosing x where cond is True and y elsewhere (np.maximum(a, 0) "
+        "or np.clip(a, 0, None) also work). a[a < 0] = 0 edits a in place, a[a >= 0] removes elements and changes "
+        "the length, and np.where with one argument returns index arrays, not values.",
+        topic="masks-fancy", level=2),
+    mcq("`a = np.array([1, 0, 3])` is an int array of flags. A teammate writes `a[~a]` to select the zero entries. Why is that a bug?",
+        ["On integers ~ is bitwise NOT, so ~a is [-2 -1 -4]: an index array, not a mask",
+         "~ only works on float arrays and raises TypeError on ints",
+         "~a gives [False True False], which is exactly the zero entries",
+         "~ flips the array's order, like a[::-1]"], 0,
+        "~ means 'not' only for booleans.",
+        "~x on an int is -x - 1, so a[~a] fancy-indexes positions -2, -1, -4 (the last one raises IndexError on "
+        "a 3-element array). Make it boolean first: a[~a.astype(bool)] or a[a == 0]. Pandas users hit this when "
+        "a 0/1 column is used as a mask.",
+        topic="masks-fancy", level=3),
+    mcq("Why does `a[a > 2 & a < 9]` raise ValueError even though the author used `&` instead of `and`?",
+        ["& binds tighter than >, so it parses as `a > (2 & a) < 9`, a chained comparison that calls bool() on an array",
+         "& cannot combine two boolean arrays; you need np.logical_and",
+         "The mask has a different length than a",
+         "Comparisons inside [] are not allowed; build the mask on its own line first"], 0,
+        "Think about operator precedence in Python.",
+        "In Python, & has higher precedence than comparisons, so 2 & a is computed first and the result is a "
+        "chained comparison a > b < 9, which needs bool() of an array: ambiguous truth value. Always bracket "
+        "each condition: a[(a > 2) & (a < 9)]. Linters will not catch this; only the brackets do.",
+        diagram=C("""
+            written : a > 2 & a < 9
+            parsed  : a > (2 & a) < 9
+                    = (a > b) and (b < 9)   # chained -> bool(array)
+            fix     : (a > 2) & (a < 9)
+            """),
+        topic="masks-fancy", level=3),
+
+    # ------------------------------------------------------------------ views-copies
+    mcq("In Python, `lst[:]` is the idiom for copying a list. What does `s = a[:]` give you for a NumPy array `a`?",
+        ["A view: a new array object over the same data, so `s[0] = 9` also changes `a`",
+         "An independent copy, exactly like the list idiom",
+         "The very same object, so `s is a` is True",
+         "A read-only snapshot of `a`"], 0,
+        "NumPy slicing never copies data.",
+        "a[:] is a basic slice, so it returns a view: s is a different object (s is a is False) but shares the "
+        "buffer. Habits carried over from lists cause 'I copied it, why did the original change?' bugs. When you "
+        "need a real copy, say so: a.copy().",
+        analogy="list[:] is a shallow clone; ndarray[:] is a second reference to the same database row, "
+                "just with its own cursor.",
+        diagram=C("""
+            lst[:] : [1,2,3]  ->  [1,2,3]    new storage
+            a[:]   : a --+
+                         +--> |1|2|3|        one buffer
+                     s --+
+            """),
+        topic="views-copies", level=2),
+    mcq("`a = np.arange(6).reshape(2, 3)`. Both `a[:, [0]]` and `a[:, 0:1]` have shape (2, 1). Which one is a view of `a`?",
+        ["a[:, 0:1]: a slice is basic indexing; the list [0] triggers fancy indexing, which copies",
+         "a[:, [0]]: a list of one index is turned into a slice automatically",
+         "Both, because they select the same elements",
+         "Neither, because selecting a column always copies"], 0,
+        "Same shape does not mean same mechanism.",
+        "Whether you get a view depends on the kind of index, not the result's shape. Any list or integer array "
+        "means fancy indexing and a copy, so writes into a[:, [0]] are lost. If you plan to modify a column in "
+        "place, use the slice form, and confirm with np.shares_memory when in doubt.",
+        topic="views-copies", level=3),
+    mcq("A function returns an internal cached array `self._table`. What is the cheapest way to stop callers from mutating your cache by accident?",
+        ["Return a view with `v.flags.writeable = False`: zero-copy, and writes through it raise ValueError",
+         "Return `self._table.copy()` on every call",
+         "Return `tuple(self._table)` so it is immutable",
+         "Wrap it in `np.asarray(self._table)`"], 0,
+        "You want read-only access, not a duplicate.",
+        "v = self._table.view(); v.flags.writeable = False shares the buffer but any v[...] = x raises "
+        "'assignment destination is read-only'. A copy per call is safe but costs O(n) memory and time; "
+        "np.asarray returns the same writable object. Note the view still sees later updates you make to the cache.",
+        analogy="Like exposing a read-only interface (or a frozen DTO) to callers instead of cloning the whole "
+                "object for each request.",
+        topic="views-copies", level=3),
+    tf("`x.astype(np.float64, copy=False)` returns `x` itself, with no copy, when `x` is already float64.", True,
+       "astype copies by default; what does copy=False change?",
+       "With copy=False, astype skips the copy if the dtype already matches, returning the same object. "
+       "That makes it a cheap 'ensure float64' guard at the top of a function. Without the flag, astype always "
+       "allocates, which adds up when called on every batch.",
+       topic="views-copies", level=3),
+
+    # ------------------------------------------------------------------ reshaping
+    mcq("`M` has shape (3, 4) and `c` holds one value per ROW, shape (3,). `M + c` raises. Which fix adds `c` row-wise?",
+        ["M + c[:, None]  (c becomes a (3, 1) column)",
+         "M + c[None, :]",
+         "M + c.T",
+         "M + c.repeat(4)"], 0,
+        "Broadcasting lines shapes up from the right.",
+        "Broadcasting compares trailing axes: (3, 4) vs (3,) puts 3 against 4 and fails. c[:, None] makes it "
+        "(3, 1), which stretches across the 4 columns. c.T does nothing on a 1D array, (1, 3) still clashes with 4, and "
+        "repeat(4) gives a flat (12,). Per-row normalisation (e.g. dividing by row sums) needs exactly this.",
+        diagram=C("""
+            M        : (3, 4)
+            c        :    (3,)    -> 3 vs 4: error
+            c[:,None]: (3, 1)     -> 1 stretches to 4
+            result   : (3, 4)
+            """),
+        topic="reshaping", level=2),
+    mcq("In multi-head attention, `x` has shape (B, T, H*D). Which gives per-head tensors of shape (B, H, T, D) with the RIGHT values?",
+        ["x.reshape(B, T, H, D).transpose(0, 2, 1, 3)",
+         "x.reshape(B, H, T, D)",
+         "x.reshape(B, T, H, D).reshape(B, H, T, D)",
+         "x.transpose(0, 2, 1).reshape(B, H, T, D)"], 0,
+        "First split the last axis, then move axes.",
+        "The H*D numbers for each token are contiguous, so reshape can only split that last axis into (H, D); "
+        "putting H in front of T needs a transpose. reshape(B, H, T, D) gives the right shape but mixes tokens "
+        "into heads, a bug that trains without errors and just performs worse.",
+        diagram=C("""
+            (B, T, H*D) --reshape--> (B, T, H, D)   split last axis
+                        --transpose(0,2,1,3)--> (B, H, T, D)
+            reshape(B, H, T, D) directly: right shape,
+            but head 1 gets token 0's second half, etc.
+            """),
+        topic="reshaping", level=4),
+    fill("Which method flattens an array to 1D and returns a view whenever the layout allows (copying only when it must): `a.____()`?",
+         "ravel",
+         "flatten always copies; its sibling doesn't.",
+         "ravel() returns a view for contiguous arrays and copies only for awkward layouts like a.T; flatten() "
+         "always copies. Prefer ravel or reshape(-1) for read-only work; prefer flatten when you will modify the "
+         "result and must not touch the original.",
+         topic="reshaping", level=2),
+
+    # ------------------------------------------------------------------ stack-split
+    fill("Which function splits an array into n nearly equal parts without raising when the length doesn't divide evenly: `np.____(a, 3)`?",
+         "array_split",
+         "np.split refuses uneven sections.",
+         "np.array_split(np.arange(10), 3) gives parts of length 4, 3, 3, while np.split raises ValueError. "
+         "Handy for sharding work across processes when the row count isn't a multiple of the worker count.",
+         topic="stack-split", level=2),
+    tf("The pieces returned by `np.split(a, [3, 7])` are views of `a`, so writing into a piece changes `a`.", True,
+       "Can each piece be described as a slice?",
+       "np.split just slices along the axis, so each part is a view sharing a's buffer (np.shares_memory is True). "
+       "If you split a dataset into train/val/test and then normalise one part in place, the original array "
+       "changes too. Copy the part first if it must be independent.",
+       topic="stack-split", level=3),
+    tf("`s = np.stack([a, b])` returns a view that still shares memory with `a` and `b`.", False,
+       "Can two separate buffers become one array without moving bytes?",
+       "An ndarray needs ONE buffer with regular strides, and a and b live in separate allocations, so stack "
+       "(like concatenate, vstack, hstack) always allocates and copies. Stacking inside a training loop therefore "
+       "costs O(batch size) memory traffic each time; preallocate and fill slices if it shows up in a profile.",
+       topic="stack-split", level=4),
+
+    # ------------------------------------------------------------------ memory-layout
+    mcq("An algorithm reads a huge (n, n) float64 matrix one COLUMN at a time, thousands of times. What layout change helps most?",
+        ["Convert once with np.asfortranarray(a) so each column is contiguous in memory",
+         "Call a.T inside the loop so the columns become rows",
+         "Convert to a Python list of lists for faster column access",
+         "Nothing: memory layout never affects NumPy speed"], 0,
+        "In which order do C-ordered elements sit in memory?",
+        "In C order the elements of one column are n * 8 bytes apart, so each read pulls in a cache line mostly "
+        "wasted. One O(n^2) conversion to Fortran order makes every column a contiguous run. a.T inside the loop "
+        "is free but changes nothing physical: its rows are still the same scattered bytes.",
+        diagram=C("""
+            C order : row0 | row1 | row2      column j = every n-th
+                      a0 a1 a2 | b0 b1 b2      a1 . . b1 . . c1
+            F order : col0 | col1 | col2      column j = one run
+                      a0 b0 c0 | a1 b1 c1      a1 b1 c1
+            """),
+        analogy="Like choosing a column store (Parquet) over a row store (CSV) when every query aggregates one column.",
+        topic="memory-layout", level=3),
+    tf("A 1-D contiguous array like `np.arange(5.0)` reports BOTH `C_CONTIGUOUS` and `F_CONTIGUOUS` as True.", True,
+       "With one axis, is there any difference between 'last index fastest' and 'first index fastest'?",
+       "With a single axis both orders describe the same layout, so both flags are True (the same holds for "
+       "shapes like (3, 1) where only one axis has length > 1). Code that branches on 'C or F?' must handle "
+       "'both', and checks like `not a.flags.f_contiguous` to mean 'C order' break on vectors.",
+       topic="memory-layout", level=4),
+
+    # ------------------------------------------------------------------ special-values
+    fill("Which function returns a boolean mask of the NaN entries in `a`: `np.____(a)`?",
+         "isnan",
+         "a == np.nan never works.",
+         "np.isnan(a) is True exactly where a holds NaN, because NaN is not equal to anything, itself included. "
+         "Count missing values with np.isnan(a).sum() and drop them with a[~np.isnan(a)].",
+         topic="special-values", level=1),
+    mcq("A hand-written binary cross-entropy `-(y * np.log(p) + (1 - y) * np.log(1 - p)).mean()` returns nan when one prediction is exactly 0.0 and its label is 0. Why?",
+        ["np.log(0) is -inf, and 0 * -inf is nan, which then poisons the mean",
+         "np.log raises on 0, and NumPy converts the exception to nan",
+         "The mean of any array containing 0 is nan",
+         "y and p have different dtypes, so the product is undefined"], 0,
+        "Evaluate y * log(p) for y = 0, p = 0 step by step.",
+        "log(0) gives -inf (with a warning), and IEEE says 0 * inf is nan; one nan makes the whole mean nan. "
+        "Frameworks avoid this by clipping, e.g. p = np.clip(p, 1e-7, 1 - 1e-7), or by computing from logits. "
+        "A loss that turns nan after hours of training is very often this.",
+        analogy="Like SQL NULL: one NULL in an arithmetic expression makes the whole result NULL.",
+        topic="special-values", level=3),
+    mcq("Two result arrays both contain NaN in the same positions. Which check correctly reports them as equal in a unit test?",
+        ["np.array_equal(a, b, equal_nan=True)",
+         "np.array_equal(a, b)",
+         "(a == b).all()",
+         "np.allclose(a, b)"], 0,
+        "By default, NaN is never equal to NaN.",
+        "The default array_equal, ==, and allclose all treat NaN != NaN, so identical arrays with a NaN compare "
+        "False. Pass equal_nan=True (array_equal or allclose), or use np.testing.assert_array_equal, which treats "
+        "NaNs in the same places as equal and gives a readable diff.",
+        topic="special-values", level=2),
+    tf("In NumPy 2, `np.unique(np.array([np.nan, 1.0, np.nan]))` returns ONE nan, not two.", True,
+       "Check the equal_nan parameter of np.unique.",
+       "Since NumPy 1.21, np.unique has equal_nan=True by default, so all NaNs collapse into a single trailing "
+       "nan: [1. nan]. Pass equal_nan=False for the old behaviour. This matters when you count categories: a "
+       "column with 1,000 missing values contributes just one 'nan' category.",
+       topic="special-values", level=4),
+
+    # ------------------------------------------------------------------ ml-arrays
+    mcq("A batch of 32 grayscale images, each 28 x 28 pixels, is stored in one array. What shape does it have by convention?",
+        ["(32, 28, 28)", "(28, 28, 32)", "(28, 28)", "(32, 784, 1)"], 0,
+        "The batch axis comes first.",
+        "ML code puts the sample (batch) axis first, then the per-sample shape, so 32 images of 28 x 28 are "
+        "(32, 28, 28). With an explicit channel axis it becomes (32, 28, 28, 1) or (32, 1, 28, 28). Putting the "
+        "batch last makes every slicing and reshape step harder.",
+        topic="ml-arrays", level=1),
+    mcq("`X` has shape (n_samples, n_features). Which line computes the per-FEATURE mean for standardising?",
+        ["X.mean(axis=0)  -> shape (n_features,)",
+         "X.mean(axis=1)  -> shape (n_samples,)",
+         "X.mean()        -> one number",
+         "X.mean(axis=-1) -> shape (n_features,)"], 0,
+        "axis=k means 'collapse axis k'.",
+        "axis=0 collapses the rows, giving one mean per column (feature), which then broadcasts in X - mu. "
+        "axis=1 averages each sample's features, which is meaningless for standardisation. Remember: the axis "
+        "you name is the one that disappears.",
+        topic="ml-arrays", level=2),
+    mcq("You must shuffle features `X` and labels `y` while keeping each row matched to its label. Which approach is correct?",
+        ["idx = rng.permutation(len(X)); X, y = X[idx], y[idx]",
+         "rng.shuffle(X); rng.shuffle(y)",
+         "X = rng.permutation(X); y = rng.permutation(y)",
+         "np.random.shuffle(X); y stays in the original order"], 0,
+        "Draw ONE permutation and apply it to both.",
+        "One index permutation applied to both arrays keeps pairs aligned. Two separate shuffles use different "
+        "random orders, so labels get scrambled and the model learns noise (accuracy near chance is the tell). "
+        "The fancy index also returns copies, so the originals are left unshuffled.",
+        analogy="Like sorting two parallel arrays in JavaScript: sort the indices once and reorder both, "
+                "never sort each array on its own.",
+        topic="ml-arrays", level=2),
+    mcq("A regression model outputs `pred` with shape (N, 1); the targets `y` have shape (N,). What does `((pred - y) ** 2).mean()` compute?",
+        ["The mean over an (N, N) matrix of every prediction minus every target, not the MSE",
+         "The correct MSE, because NumPy aligns the two automatically",
+         "A ValueError, because the shapes differ",
+         "An (N, 1) array of squared errors"], 0,
+        "Line the shapes up from the right and stretch the 1s.",
+        "(N, 1) - (N,) broadcasts to (N, N): every prediction is compared with every target. No error is raised "
+        "and the number looks plausible, so training just goes badly. Fix the shapes: pred.reshape(-1) or "
+        "pred[:, 0], or make y a column with y[:, None]. Asserting shapes in the loss function catches it.",
+        diagram=C("""
+            pred : (N, 1)
+            y    :    (N,)  -> treated as (1, N)
+            diff : (N, N)   all pairs, N^2 numbers
+            fix  : pred[:, 0] - y  -> (N,)
+            """),
+        topic="ml-arrays", level=3),
 ]

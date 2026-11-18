@@ -86,6 +86,13 @@
 - `X_train = X[:n]; X_train -= mean` -> normalises X itself.
 - `probs.squeeze().argmax(axis=1)` with a batch of one -> AxisError.
 - `np.array(ragged_lists)` -> ValueError in NumPy 2; pad first.
+- `s = a[:]` used as a copy (list habit) -> it is a view; use `a.copy()`.
+- `a[-k:]` with `k == 0` -> the whole array; use `a[len(a) - k:]`.
+- `a[a > 2 & a < 9]` -> `&` binds first, chained comparison raises ValueError.
+- `~a` on an int 0/1 array -> bitwise NOT (`-a - 1`), not a mask.
+- `float32_x * np.float64(s)` -> float64 result (NumPy scalars are strong under NEP 50).
+- `pred (N, 1) - y (N,)` -> broadcasts to `(N, N)`, a silently wrong loss.
+- `np.vectorize` expected to be fast -> it is a Python loop.
 
 ## Interview angle
 - **"Why use NumPy instead of lists?"** One contiguous typed buffer, so operations run as C loops with no per-element type checks, using far less memory. SDE analogy: a list is an array of pointers to boxed objects; an ndarray is a primitive `double[]` with shape metadata.

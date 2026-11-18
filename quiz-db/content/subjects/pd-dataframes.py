@@ -1602,4 +1602,373 @@ chunk 2: 41003         -> int
 chunk 3: '41001-A'     -> str
 column = object [41001, 41002, 41003, '41001-A']
          41001 != '41001'  -> groupby splits keys"""),
+    # ------------------------------------------------------------------ round 3: conceptual mix
+    mcq("`s` is a Series of ages indexed by name (Ann, Bob). What does `'Ann' in s` check?",
+        ["Whether 'Ann' is one of the index labels",
+         "Whether 'Ann' is one of the values",
+         "Whether 'Ann' appears in either the labels or the values",
+         "Nothing: `in` raises ValueError on a Series"], 0,
+        "A Series behaves a lot like a dict.",
+        "Like a Python dict, `in` on a Series tests the keys (the index), not the values: 'Ann' in s is True but 30 in s is False even if 30 is an age. "
+        "To test values, use `30 in s.values` or `s.isin([30]).any()`. A wrong membership check silently returns False and skips a branch you thought ran.",
+        code="import pandas as pd\ns = pd.Series([30, 25], index=['Ann', 'Bob'])\nprint('Ann' in s, 30 in s, 30 in s.values)",
+        analogy="dict membership: `'Ann' in {'Ann': 30}` is True, `30 in {'Ann': 30}` is False.",
+        topic="series-vs-df", level=2),
+    tf("`df.loc['r1']` on a DataFrame returns a Series whose index is the DataFrame's column names.", True,
+        "One row, turned on its side.",
+        "Selecting one row gives a 1-D Series: the column names become its index and the cells become its values. "
+        "That is why row['age'] works on a row from loc or iterrows. It is the same idea as one record from a JSON array: keys are field names.",
+        topic="series-vs-df", level=1),
+    fill("The pandas function that loads a CSV file into a DataFrame is `pd.____('data.csv')`.",
+        "read_csv",
+        "read_... followed by the file format.",
+        "pd.read_csv parses the file, uses the first line as column names and guesses a dtype for each column. "
+        "Its siblings follow the same pattern: read_json, read_parquet, read_excel, read_sql.",
+        topic="creating", level=1),
+    mcq("You build `pd.DataFrame(records)` from API JSON where some records have no `email` key. What happens?",
+        ["You get an email column with NaN in the rows whose record lacked the key",
+         "pandas raises KeyError because the records have different keys",
+         "The email column is dropped because not every record has it",
+         "The missing emails are filled with empty strings"], 0,
+        "pandas takes the union of all keys.",
+        "From a list of dicts, the columns are the union of the keys; a record missing a key gets NaN in that cell. "
+        "This is like a LEFT JOIN that leaves NULLs, not an error. Check df['email'].isna().sum() before you trust the column, because downstream code that expects strings will meet floats (NaN).",
+        code="import pandas as pd\nrecords = [{'id': 1, 'email': 'a@x.io'}, {'id': 2}]\nprint(pd.DataFrame(records))",
+        topic="creating", level=2),
+    fill("A 3 GB CSV has 200 columns but your model needs 5. To parse only those, pass `pd.read_csv(path, ____=['a', 'b', 'c', 'd', 'e'])`.",
+        "usecols",
+        "Which columns to use.",
+        "usecols skips the other columns during parsing, so they never take up memory or parse time. "
+        "Loading everything and then doing df[cols] still pays the full cost first.",
+        analogy="SELECT a, b FROM t instead of SELECT * FROM t and throwing columns away in the app.",
+        topic="creating", level=2),
+    mcq("pandas 2.2, copy-on-write OFF (the default). You do `df = pd.DataFrame(arr)` with a 2-D float NumPy array, then `arr[0, 0] = 9`. What happens to df?",
+        ["df changes too: the constructor wrapped the array without copying it",
+         "df is unchanged: DataFrame() always copies its input",
+         "NumPy raises because the array is now owned by pandas",
+         "df changes only if you passed copy=True"], 0,
+        "A single-dtype 2-D array can be used as the frame's data block as it is.",
+        "Without CoW, DataFrame(ndarray) defaults to copy=False and the frame shares the array's memory, so writes to arr show up in df (this prints 9.0). "
+        "With pd.options.mode.copy_on_write = True (the pandas 3.0 default) the constructor copies NumPy input by default and df stays 0. "
+        "If you need isolation in 2.2, pass copy=True or build from arr.copy().",
+        code="import numpy as np\nimport pandas as pd\narr = np.zeros((2, 2))\ndf = pd.DataFrame(arr)\narr[0, 0] = 9\nprint(df.iloc[0, 0])",
+        diagram="""no CoW:  arr --+--> [ 9. 0. | 0. 0. ]
+         df  --+     (one shared buffer)
+
+CoW:     arr ----> [ 9. 0. | 0. 0. ]
+         df  ----> [ 0. 0. | 0. 0. ]  (own copy)""",
+        topic="creating", level=4),
+    mcq("You run `df['city'].value_counts()` on a column with 40 missing values. Where are those 40 rows in the result?",
+        ["Not shown: value_counts drops NaN unless you pass dropna=False",
+         "In a row labelled NaN at the top",
+         "Counted under the most common city",
+         "In a row labelled 'None'"], 0,
+        "Many pandas counting methods skip missing values by default.",
+        "value_counts() has dropna=True, so the counts add up to the non-missing rows only. Pass dropna=False to see a NaN row. "
+        "It's easy to report 'Pune is 60% of users' when you actually divided by the non-null count, so check how many rows are missing before you trust the percentages.",
+        topic="inspecting", level=2),
+    tf("For `s = pd.Series(['a', 'b', None, 'a'])`, `s.nunique()` is 2 but `len(s.unique())` is 3.", True,
+        "One of them has a dropna default.",
+        "nunique() defaults to dropna=True and ignores the missing value; unique() returns every distinct value including None. "
+        "Use nunique(dropna=False) when a missing value should count as its own category, for example when sizing a one-hot encoding.",
+        topic="inspecting", level=3),
+    mcq("`df.info()` ends with `memory usage: 164.0+ bytes`. What does the `+` mean?",
+        ["Object columns were counted only as 8-byte pointers, so the real size is larger; use memory_usage='deep'",
+         "The frame is still growing and info() could not finish measuring",
+         "The index is excluded from the total",
+         "pandas rounded the number up to the nearest kilobyte"], 0,
+        "What does a column of Python strings actually store in its array?",
+        "An object column stores pointers to Python objects. By default info() counts only the pointers and marks the total with + to say it is a lower bound. "
+        "df.info(memory_usage='deep') or df.memory_usage(deep=True) also measures the string objects, often several times more. Use the deep number when you size a container or a batch job.",
+        code="import pandas as pd\ndf = pd.DataFrame({'t': ['a', 'bb'], 'n': [1, 2]})\ndf.info()",
+        topic="inspecting", level=3),
+    mcq("A column is named `unit price` (with a space). Which line selects it?",
+        ["df['unit price']",
+         "df.unit price",
+         "df.unit_price",
+         "df.loc['unit price']"], 0,
+        "Dot access only works for names that are valid Python identifiers.",
+        "Square brackets accept any column label. Dot access needs a valid identifier (no spaces, no leading digit, not a method name like count). "
+        "df.unit_price is a different name and raises AttributeError, and df.loc['unit price'] looks for a row label. Use brackets in production code; dot access is a notebook shortcut.",
+        topic="selecting", level=2),
+    fill("To keep every column EXCEPT the numeric ones (e.g. to list the text columns you still have to encode), write `df.select_dtypes(____='number')`.",
+        "exclude",
+        "select_dtypes takes two keyword arguments: one to keep, one to drop.",
+        "select_dtypes(include=...) keeps the matching dtypes and select_dtypes(exclude=...) drops them. "
+        "A quick `df.select_dtypes(exclude='number').columns` before training lists the object/category/bool columns a model can't take raw. "
+        "Remember bool is not 'number' here, so bool columns show up in the exclude list.",
+        topic="selecting", level=3),
+    tf("`df.iloc[0, 'price']` reads the price of the first row.", False,
+        "iloc wants positions on BOTH axes.",
+        "iloc is position-only, so a column name raises ValueError. Write df['price'].iloc[0], df.loc[df.index[0], 'price'], or df.iloc[0, df.columns.get_loc('price')]. "
+        "Mixing a label and a position in one call is a very common first-week bug; pick one system per call.",
+        topic="loc-iloc", level=2),
+    tf("`df.at['r1', 'price']` reads one cell faster than `df.loc['r1', 'price']`, but it cannot take slices or lists.", True,
+        "at and iat exist for exactly one cell.",
+        "at (labels) and iat (positions) skip the general indexing machinery that loc/iloc need for slices, lists and masks, so a single read or write is cheaper. "
+        "Passing a slice to at raises. If you're calling at in a hot loop, though, the real fix is usually to vectorise the loop.",
+        topic="loc-iloc", level=3),
+    mcq("A script builds a frame row by row: `for r in rows: df.loc[len(df)] = r`. With 3,000 rows it takes about 2 seconds; with 100,000 it seems to hang. Why, and what is the fix?",
+        ["Each enlargement reallocates and copies the whole frame, so the loop is O(n^2); collect rows in a list and call pd.DataFrame(rows) once",
+         "len(df) is slow on big frames; keep a counter instead",
+         "loc is slower than iloc; use df.iloc[len(df)] = r",
+         "The index isn't sorted; call sort_index() inside the loop"], 0,
+        "A DataFrame's columns are fixed-size NumPy arrays.",
+        "NumPy arrays can't grow in place, so every new row means new arrays plus a copy of all existing rows: quadratic time. "
+        "Appending dicts to a Python list is O(1) each, and one DataFrame(rows) call builds the arrays once; in a quick test that was about 500x faster for 3,000 rows. "
+        "iloc can't enlarge at all (IndexError).",
+        analogy="Like running one INSERT per row with a full table rewrite each time, instead of a single bulk insert.",
+        topic="loc-iloc", level=3),
+    tf("`df[df['age'] > 30]` removes the younger rows from df.", False,
+        "Did you assign the result anywhere?",
+        "Boolean filtering returns a NEW DataFrame with the matching rows; df itself keeps every row. "
+        "Write adults = df[df['age'] > 30] (or reassign df = ...) to keep the result. Like a SQL SELECT ... WHERE, a filter reads, it doesn't DELETE.",
+        topic="filtering", level=1),
+    mcq("`df[df['name'].str.contains('a')]` raises `ValueError: Cannot mask with non-boolean array containing NA / NaN values`. What's the clean fix?",
+        ["Pass na=False: df[df['name'].str.contains('a', na=False)]",
+         "Wrap the mask in bool(): df[bool(df['name'].str.contains('a'))]",
+         "Use `and` instead of the mask",
+         "Call df.dropna() on the whole frame first"], 0,
+        "What does str.contains return for a missing name?",
+        "On an object column, str.contains gives NaN for missing values, and a mask with NaN in it isn't a valid boolean mask. "
+        "na=False says 'treat missing as not matching'. dropna() on the whole frame would also throw away rows that are missing in other, unrelated columns.",
+        code="import numpy as np\nimport pandas as pd\ndf = pd.DataFrame({'name': ['apple', np.nan, 'kiwi']})\nprint(df['name'].str.contains('a').tolist())\nprint(df[df['name'].str.contains('a', na=False)])",
+        topic="filtering", level=3),
+    mcq("After `f = df[df['v'] > 2]`, the index of f is [0, 2]. Your next line is `f.loc[1]`, meaning 'the second row'. What happens?",
+        ["KeyError: label 1 was filtered out; use f.iloc[1] or f.reset_index(drop=True) first",
+         "It returns the second row (label 2)",
+         "It returns row 1 from the original df",
+         "It returns an empty DataFrame"], 0,
+        "Filtering keeps the original row labels.",
+        "A filter keeps the surviving rows' labels, leaving gaps (0, 2). loc looks up label 1, which is gone, so it raises KeyError. "
+        "For 'the nth row' use iloc; if you want 0..n-1 labels again (for example before concatenating with a NumPy result) call reset_index(drop=True).",
+        diagram="""df            f = df[df.v > 2]
+label  v      label  v
+  0    5        0    5    <- iloc[0]
+  1    1        2    7    <- iloc[1]
+  2    7      (label 1 no longer exists)""",
+        topic="filtering", level=2),
+    mcq("Your API passes a user-supplied city into a filter. Which version should you ship?",
+        ["df.query('city == @city')",
+         "df.query(f\"city == '{city}'\")",
+         "df.query('city == ' + city)",
+         "eval(f\"df[df.city == '{city}']\")"], 0,
+        "What happens when city is \"O'Brien Nagar\"?",
+        "@city passes the Python variable as a value, so quotes or odd characters in it can't break the expression. "
+        "Pasting the value into the string with an f-string fails on an apostrophe (a tokenizer error) and, like SQL built by string concatenation, lets input change the expression itself. "
+        "For a plain equality, df[df['city'] == city] is just as safe.",
+        analogy="@var is a bound parameter in a prepared SQL statement; the f-string is string-concatenated SQL.",
+        code="import pandas as pd\ndf = pd.DataFrame({'city': [\"O'Brien Nagar\", 'Pune']})\ncity = \"O'Brien Nagar\"\nprint(df.query('city == @city').shape)",
+        topic="filtering", level=3),
+    mcq("Which line removes the column `tmp` from df and keeps the result?",
+        ["df = df.drop(columns='tmp')",
+         "df.drop('tmp')",
+         "df = df.drop('tmp')",
+         "del df.tmp"], 0,
+        "Two things to get right: which axis, and keeping the result.",
+        "drop(columns=...) says you mean a column, and the assignment keeps the new frame. "
+        "df.drop('tmp') looks for a ROW labelled 'tmp' (KeyError) and throws the result away anyway; del df.tmp tries to delete an attribute (del df['tmp'] would work).",
+        topic="modifying", level=1),
+    tf("`sort_values` puts NaN at the end both when ascending and when `ascending=False`.", True,
+        "Missing values don't take part in the comparison.",
+        "na_position defaults to 'last' for both directions, so a descending sort does not bring NaN to the top. "
+        "Pass na_position='first' to change it. This matters for 'top 10' reports: missing scores never appear in df.sort_values('score', ascending=False).head(10), so you may not notice how many there are.",
+        topic="modifying", level=2),
+    mcq("Events are already in time order. You run `df.sort_values('user_id')` and expect each user's events to stay in time order. Is that guaranteed?",
+        ["No: the default kind='quicksort' isn't stable, so ties can be reordered; pass kind='stable' (or sort by ['user_id', 'ts'])",
+         "Yes: pandas sorts are always stable",
+         "Yes, but only if the index is a RangeIndex",
+         "No, and there is no way to get a stable sort in pandas"], 0,
+        "What does 'stable' mean for rows with equal keys?",
+        "A stable sort keeps rows with equal keys in their original order. A single-column sort_values uses NumPy quicksort (an introsort), which doesn't promise that: in a 40-row test with two key values, the tied rows came out shuffled. "
+        "kind='stable' (or 'mergesort') fixes it; sorting by both keys says what you mean even more clearly. Multi-column sorts are stable already. "
+        "This bug looks like 'events out of order' in session features, and it only shows up on larger data.",
+        diagram="""before:  (u1,t1) (u2,t1) (u1,t2) (u1,t3)
+stable:  (u1,t1) (u1,t2) (u1,t3) (u2,t1)
+quick:   (u1,t3) (u1,t1) (u1,t2) (u2,t1)  <- ties shuffled""",
+        topic="modifying", level=4),
+    fill("To remove rows that are exact repeats of an earlier row, call `df.____()`.",
+        "drop_duplicates",
+        "drop_... the repeats.",
+        "drop_duplicates() keeps the first copy of each identical row by default (keep='first') and returns a new frame. "
+        "Pass subset=['email'] to dedupe on a key instead of on the whole row, like SELECT DISTINCT vs a unique constraint on one column.",
+        topic="modifying", level=2),
+    mcq("`s` holds 'a', 'b', 'c'. You want 'a' turned into 1 and every other value left alone. Which call does that?",
+        ["s.replace({'a': 1})",
+         "s.map({'a': 1})",
+         "s.map({'a': 1}, na_action='ignore')",
+         "s.astype({'a': 1})"], 0,
+        "One of these treats the dict as the complete lookup table.",
+        "replace only changes the values it finds in the dict and keeps the rest, giving [1, 'b', 'c']. "
+        "map treats the dict as the full mapping: any value not in it becomes NaN, so you'd get [1.0, NaN, NaN]. na_action='ignore' only skips values that were already missing. "
+        "Use map for full lookups like encoding labels, and replace for patching a few values.",
+        code="import pandas as pd\ns = pd.Series(['a', 'b', 'c'])\nprint(s.replace({'a': 1}).tolist(), s.map({'a': 1}).tolist())",
+        topic="apply-vectorise", level=2),
+    tf("On a default object-dtype column of strings, `s.str.lower()` runs about as fast as numeric vectorised math like `n * 2`, because .str methods are compiled C loops.", False,
+        "What is stored in an object column?",
+        "On object dtype, .str methods still call a Python string method once per element; they're tidier and NaN-safe, but in a 1M-row test str.lower took about 0.16 s, apply took 0.25 s and n * 2 took 0.007 s. "
+        "Converting to 'string[pyarrow]' moved str.lower to about 0.035 s, because Arrow strings have real compiled kernels. "
+        "So 'use .str instead of apply' is about clarity first; for big text columns the speed comes from the dtype.",
+        topic="apply-vectorise", level=3),
+    mcq("You must use `df.apply(f)` column-wise with a custom NumPy-only function. What does `df.apply(f, raw=True)` change?",
+        ["f receives each column as a plain ndarray instead of a Series, skipping Series construction and index handling, which is often faster",
+         "f runs in compiled C instead of Python",
+         "f receives the whole frame at once as a 2-D array",
+         "Nothing; raw only affects how the result is printed"], 0,
+        "What object does f get with and without it?",
+        "By default apply builds a Series (values + index + name) for every column or row it hands to f. raw=True passes the bare ndarray, which removes that cost and lets f use NumPy directly. "
+        "f still runs once per column/row in Python, so it is not vectorisation; and f loses access to labels (no row['age']). "
+        "It helps most with axis=1 on many rows, where building one Series per row dominates.",
+        code="import pandas as pd\ndf = pd.DataFrame({'a': [1, 2, 3]})\nprint(df.apply(lambda c: type(c).__name__).tolist(), df.apply(lambda c: type(c).__name__, raw=True).tolist())",
+        topic="apply-vectorise", level=4),
+    mcq("What does `df.set_index('user_id')` do?",
+        ["Returns a new frame where the user_id column becomes the row labels (and is no longer a regular column)",
+         "Sorts df by user_id",
+         "Adds a user_id column filled with 0, 1, 2, ...",
+         "Changes df itself and returns None"], 0,
+        "Think 'primary key'.",
+        "set_index moves the column into the index, so you can then look rows up with df.loc[42] and arithmetic aligns on user_id. "
+        "Like most pandas methods it returns a new frame, so write df = df.set_index('user_id'). It doesn't sort; call sort_index() if you need that.",
+        analogy="Declaring user_id as the table's primary key: rows are now addressed by it.",
+        topic="index-alignment", level=1),
+    mcq("df has index [2, 0, 1]. Which statement about these two assignments is correct?\n`df['l'] = [10, 20, 30]` and `df['s'] = pd.Series([10, 20, 30])`",
+        ["The list is placed by position; the Series is matched by label, so df['s'] becomes [30, 10, 20]",
+         "Both are placed by position, giving [10, 20, 30] each",
+         "Both are matched by label",
+         "The Series assignment raises because the index order differs"], 0,
+        "Only one of the two has labels.",
+        "A list or ndarray has no index, so it is written top to bottom. A Series brings labels 0, 1, 2, and pandas aligns them with df's labels 2, 0, 1, so label 2 gets 30. "
+        "This bites after a sort or a filter: assign model.predict(X) (an ndarray) and it lands by position; assign a Series built elsewhere and it lands by label, with NaN for labels it lacks.",
+        code="import pandas as pd\ndf = pd.DataFrame({'a': [1, 2, 3]}, index=[2, 0, 1])\ndf['l'] = [10, 20, 30]\ndf['s'] = pd.Series([10, 20, 30])\nprint(df)",
+        diagram="""label | list (by position) | Series (by label)
+  2   |        10          |   s[2] = 30
+  0   |        20          |   s[0] = 10
+  1   |        30          |   s[1] = 20""",
+        topic="index-alignment", level=3),
+    mcq("You want to centre each ROW of a numeric df (subtract that row's mean from every cell). Which line is correct?",
+        ["df.sub(df.mean(axis=1), axis=0)",
+         "df - df.mean(axis=1)",
+         "df - df.mean()",
+         "df.sub(df.mean(axis=1))"], 0,
+        "By default, a Series is lined up with the columns.",
+        "df - series matches the Series' labels against the COLUMN names. Row means are labelled by row (0, 1, ...), so df - df.mean(axis=1) gives an all-NaN frame with extra columns. "
+        "axis=0 tells sub to match the Series against the index instead. df - df.mean() is valid but centres each column, which is a different thing.",
+        topic="index-alignment", level=3),
+    fill("To get both Series reindexed to their shared labels only (an inner join on the index) in one call, write `a2, b2 = a.____(b, join='inner')`.",
+        "align",
+        "The verb for what pandas does silently before arithmetic.",
+        "align returns both objects reindexed to a common index: join='outer' (union, what + uses), 'inner', 'left' or 'right'. "
+        "Making it explicit lets you check len(a2) and catch a key mismatch before it turns into NaNs, the same way you'd check row counts after a SQL join.",
+        topic="index-alignment", level=4),
+    tf("`df2 = df` makes a copy, so changing df2 leaves df unchanged.", False,
+        "Python assignment never copies objects.",
+        "Assignment only binds a second name to the same object, just like `b = a` with a JS object or a Python list. Any change through df2 is a change to df. "
+        "Use df2 = df.copy() when you need an independent frame.",
+        analogy="Two variables holding the same object reference, like `const b = a` for a JS object.",
+        topic="copy-view", level=1),
+    mcq("pandas 2.2 with `pd.options.mode.copy_on_write = True`. You run `df['a'][0] = 5`. What happens?",
+        ["df is unchanged, and pandas emits a ChainedAssignmentError warning telling you to use df.loc[0, 'a'] = 5",
+         "df['a'][0] becomes 5, exactly as with CoW off",
+         "It raises SettingWithCopyError and stops the script",
+         "df['a'] becomes 5 in every row"], 0,
+        "Under CoW, df['a'] behaves as a brand-new object.",
+        "With CoW, df['a'] acts like a separate Series; writing into it can never reach df, so chained assignment never works. pandas 2.2 detects the pattern and warns with ChainedAssignmentError (a Warning, not an exception). "
+        "With CoW off, 2.2 still updates df but warns with a FutureWarning that this changes in 3.0. Either way the fix is one indexing call: df.loc[0, 'a'] = 5.",
+        diagram="""df['a'][0] = 5
+ \\_____/ \\___/
+  step 1  step 2: writes into step 1's result
+CoW: step 1 is a new object -> df never changes
+fix: df.loc[0, 'a'] = 5   (one call, writes to df)""",
+        topic="copy-view", level=4),
+    mcq("A `price` column read from a scraped file holds strings like '12.5', '7' and 'N/A'. `astype(float)` raises. Which call turns the good values into numbers and the junk into NaN?",
+        ["pd.to_numeric(df['price'], errors='coerce')",
+         "df['price'].astype(float, errors='ignore')",
+         "pd.to_numeric(df['price'], errors='raise')",
+         "df['price'].astype('Int64')"], 0,
+        "One option means 'force it, and mark failures as missing'.",
+        "errors='coerce' converts what it can and makes unparseable values NaN, giving a float64 column. errors='raise' (the default) fails like astype; astype(errors='ignore') returns the original strings unchanged. "
+        "Afterwards, count the new NaNs (and look at a few raw values) so a format change in the source doesn't quietly turn half the column into NaN.",
+        code="import pandas as pd\ns = pd.Series(['12.5', '7', 'N/A'])\nprint(pd.to_numeric(s, errors='coerce').tolist())",
+        topic="dtypes-memory", level=2),
+    fill("To shrink an int64 column of small numbers to the smallest integer dtype that fits (e.g. int8), call `pd.to_numeric(s, ____='integer')`.",
+        "downcast",
+        "The opposite of upcasting.",
+        "downcast='integer' picks the smallest of int8/int16/int32/int64 that holds every value, so [1, 2, 3] becomes int8: 1 byte per value instead of 8. "
+        "Unlike astype('int8'), it checks the range first, so it never wraps large values around. 'float' and 'unsigned' work the same way.",
+        topic="dtypes-memory", level=3),
+    mcq("`size` is a plain (unordered) category column with values 'S', 'M', 'L'. What does `df[df['size'] > 'M']` do?",
+        ["Raises TypeError: unordered categoricals only support == and !=",
+         "Keeps 'L' rows, because pandas knows S < M < L",
+         "Keeps rows that sort after 'M' alphabetically ('S')",
+         "Returns an empty frame"], 0,
+        "Does pandas know that S < M < L just from the strings?",
+        "An unordered categorical has no ranking, so <, > and sorting by meaning aren't defined and pandas raises TypeError. "
+        "Declare the order: pd.CategoricalDtype(['S', 'M', 'L'], ordered=True). Then > 'M' keeps L, and sort_values sorts S, M, L instead of alphabetically (L, M, S). "
+        "The same idea is useful for ordinal features like education level.",
+        code="import pandas as pd\nt = pd.CategoricalDtype(['S', 'M', 'L'], ordered=True)\ns = pd.Series(['S', 'L', 'M']).astype(t)\nprint((s > 'M').tolist(), s.sort_values().tolist())",
+        topic="dtypes-memory", level=4),
+    tf("`df.groupby(['city', 'year'])['sales'].sum()` returns a Series whose index is a MultiIndex of (city, year) pairs.", True,
+        "Each result row needs both keys to identify it.",
+        "Grouping by two keys gives one result per (city, year) combination, so pandas labels the result with a two-level index. "
+        "That's why m.loc['Pune'] works on it afterwards. If you want flat columns (for a CSV, a chart or a model), call .reset_index() or pass as_index=False to groupby.",
+        diagram="""groupby(['city','year']).sum()
+city  year    sales
+Goa   2023      3
+      2024      1
+Pune  2024      2
+(city, year) = 2-level row labels""",
+        topic="multiindex", level=3),
+    mcq("Training used `pd.get_dummies(train)` on a `city` column with Goa, Pune and Delhi. At serving time a request batch contains only Pune. What goes wrong?",
+        ["The batch gets only a city_Pune column, so the columns don't match the model; reindex to the saved training columns with fill_value=0",
+         "Nothing; get_dummies remembers the training categories",
+         "get_dummies raises because Goa and Delhi are missing",
+         "The batch gets all three columns but filled with NaN"], 0,
+        "get_dummies only sees the data you pass it right now.",
+        "get_dummies makes one column per value present in THIS frame, so a small batch produces fewer (and differently ordered) columns, and scikit-learn rejects it (or, with NumPy input, silently misreads it). "
+        "Save train_cols = X_train.columns and do X.reindex(columns=train_cols, fill_value=0), or use a fitted OneHotEncoder(handle_unknown='ignore'), which keeps the training categories.",
+        analogy="Like an API whose response schema changes depending on which rows the query happened to return.",
+        topic="ml-features", level=3),
+    mcq("Before splitting, a notebook runs `df['age'] = df['age'].fillna(df['age'].mean())`, then `train_test_split`. What is the problem?",
+        ["Leakage: the mean includes the test rows, so test data influences training; compute the mean on the training split only and reuse it for test",
+         "None; the mean is the same either way",
+         "fillna doesn't work before a split",
+         "It changes the dtype of age to object"], 0,
+        "Which rows went into that mean?",
+        "Any statistic you learn from the data (means, scaler parameters, category lists) must be fitted on the training split only and then applied to the test split, or your test score is optimistic. "
+        "Here the effect is small, but the same pattern with target encoding or scaling can inflate metrics a lot. "
+        "In practice, put SimpleImputer in a Pipeline so fit only ever sees training data.",
+        diagram="""wrong:  mean(all rows) -> fill -> split
+                  ^ test rows leak in
+right:  split -> m = mean(train)
+               -> train.fillna(m), test.fillna(m)""",
+        topic="ml-features", level=4),
+    tf("`X = df[['b', 'a']]` gives X with columns in the order b, a, even if df stores them as a, b.", True,
+        "The list you pass is a request, in order.",
+        "Selecting with a list returns the columns in the list's order. That makes df[train_cols] a simple way to force serving data into the training column order. "
+        "It also means a hand-typed list in a different order quietly gives a different X.",
+        topic="ml-features", level=2),
+    mcq("A team encodes city as `X['city'] = X['city'].astype('category').cat.codes`, separately on the training data (Goa, Pune) and on each serving batch. Why do predictions go wrong?",
+        ["Codes depend on which values are in each frame: in a batch of only Pune, Pune gets code 0, which meant Goa in training",
+         "cat.codes returns strings, which models can't use",
+         "Codes are random on every run",
+         "astype('category') drops rows that are new"], 0,
+        "Codes come from the sorted list of categories found in that frame.",
+        "astype('category') builds its category list from the values present, so the same city can get different codes in different frames. Nothing raises; the model just reads the wrong city. "
+        "Save the training categories and reuse them: astype(pd.CategoricalDtype(train_cats)). An unseen city then gets code -1, which you can handle on purpose.",
+        code="import pandas as pd\ntrain = pd.Series(['Goa', 'Pune']).astype('category').cat.codes.tolist()\nbatch = pd.Series(['Pune']).astype('category').cat.codes.tolist()\nprint(train, batch)",
+        diagram="""train:  Goa -> 0   Pune -> 1
+batch:  Pune -> 0          (only Pune present)
+model reads 0 as Goa  -> wrong feature, no error
+fix:    astype(CategoricalDtype(['Goa', 'Pune']))""",
+        topic="ml-features", level=4),
+    mcq("pandas 2.2: `s = pd.Series([1, None], dtype='Int64')`. What does `s.to_numpy()` return?",
+        ["A float64 array [1.0, nan]",
+         "An object array [1, <NA>]",
+         "An int64 array, with the missing value as 0",
+         "It raises because pd.NA can't go into NumPy"], 0,
+        "This changed in pandas 2.2.",
+        "Since 2.2, to_numpy() on nullable numeric dtypes picks a matching NumPy dtype: int64 when nothing is missing, float64 with NaN when something is. Before 2.2 it gave an object array of pd.NA, which broke NumPy and scikit-learn code. "
+        "Nullable boolean with a missing value still gives object. In shared code, be explicit: s.to_numpy(dtype='float64', na_value=np.nan).",
+        code="import pandas as pd\ns = pd.Series([1, None], dtype='Int64')\nprint(s.to_numpy(), s.to_numpy().dtype)",
+        topic="dtypes-memory", level=4),
 ]

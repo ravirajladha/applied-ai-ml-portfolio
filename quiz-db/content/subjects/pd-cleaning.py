@@ -1687,4 +1687,355 @@ May31 label window: [Jun1 ---- Jun30]
         "Sort by (device, time) first, and consider limit= so a device that went offline for a week isn't 'filled' with stale values.",
         code="import pandas as pd\nimport numpy as np\ndf = pd.DataFrame({\"device\": [\"A\", \"A\", \"B\", \"B\"], \"v\": [1.0, np.nan, np.nan, 4.0]})\nprint(df[\"v\"].ffill().tolist(), df.groupby(\"device\")[\"v\"].ffill().tolist())",
         topic="missing", level=3),
+    # ------------------------------------------------------- round 3: conceptual
+    tf("`s.str.upper()` changes the Series `s` in place, so you don't need to assign the result.", False,
+        "Do pandas methods usually modify the original or return a new object?",
+        "Like almost every pandas method, .str.upper() returns a NEW Series and leaves s untouched. Write s = s.str.upper() or df['name'] = df['name'].str.upper(). "
+        "A classic beginner bug is calling the method on its own line and wondering why the data never changed, the same as calling .trim() on a JavaScript string and ignoring the return value.",
+        topic="strings", level=1),
+    tf("When you load a CSV with `pd.read_csv`, an empty cell becomes NaN.", True,
+        "What would pandas put in a numeric column where nothing was written?",
+        "read_csv treats empty fields as missing and stores NaN (a numeric column with a gap becomes float64). So df.isna().sum() right after loading shows you where the gaps are. "
+        "This is the first check in any ETL job: count the missing cells per column before you trust the data.",
+        topic="missing", level=1),
+    tf("`s.value_counts()` lists the most frequent value first.", True,
+        "Think 'top N' report.",
+        "value_counts sorts by count, descending, so .head(5) gives the five most common values, like SELECT city, COUNT(*) ... GROUP BY city ORDER BY 2 DESC. Pass sort=False to keep first-seen order. "
+        "It's the quickest way to spot a dominant class, a typo variant or a placeholder value like 'unknown'.",
+        topic="duplicates", level=1),
+    fill("The SQL query `SELECT city, SUM(sales) FROM df GROUP BY city` becomes `df.____('city')['sales'].sum()` in pandas.",
+        "groupby",
+        "The pandas method is named after the SQL clause.",
+        "groupby splits the rows by key, sum() reduces each group, and the results are combined into one Series indexed by city: split-apply-combine. "
+        "If you know GROUP BY, you already know the mental model; the pandas extras are transform (a window function) and filter (HAVING).",
+        analogy="GROUP BY city in SQL: one bucket of rows per city, one total per bucket.",
+        topic="groupby", level=1),
+    mcq("You have `jan` and `feb` DataFrames with the same columns (one row per order). Which line stacks them into one table of all orders?",
+        ["pd.concat([jan, feb], ignore_index=True)",
+         "jan.merge(feb)",
+         "jan.append(feb)",
+         "jan.join(feb)"], 0,
+        "Stacking rows is a UNION, not a JOIN.",
+        "pd.concat puts feb's rows under jan's; ignore_index=True renumbers them 0..n-1. merge and join match rows by key (a JOIN), which is the wrong operation here. "
+        "DataFrame.append was removed in pandas 2.0, so old tutorials that use it raise AttributeError.",
+        topic="concat", level=1),
+    mcq("Your `order_date` column holds strings like '2024-03-15' (dtype object). What must you do before `df['order_date'].dt.month` works?",
+        ["Convert it: df['order_date'] = pd.to_datetime(df['order_date'])",
+         "Nothing, .dt works on any text column",
+         "Call df['order_date'].astype(str) first",
+         "Use df['order_date'].str.month instead"], 0,
+        ".dt is only available on one kind of dtype.",
+        "The .dt accessor exists only on datetime64 (and timedelta) columns; on strings it raises AttributeError. pd.to_datetime parses the text into real timestamps, and then .dt.month, .dt.day_name() and date arithmetic all work. "
+        "Pass format='%Y-%m-%d' when you know it: it's faster and fails loudly on rows that don't fit.",
+        topic="datetime", level=1),
+    mcq("Which expression gives the FRACTION of missing values in each column (0.25 means a quarter missing)?",
+        ["df.isna().mean()",
+         "df.isna().sum()",
+         "df.count() / df.shape[1]",
+         "df.notna().sum() / len(df)"], 0,
+        "The mean of a True/False column is the share of Trues.",
+        "isna() gives a bool frame; the mean of bools is the fraction True, per column. isna().sum() gives counts, not fractions. df.notna().sum()/len(df) is the fraction PRESENT, the opposite. df.count()/df.shape[1] divides by the number of columns, which is meaningless. "
+        "A missing-rate report like this decides which columns you drop, impute or flag.",
+        topic="missing", level=2),
+    mcq("An `age` column holds whole numbers, but after loading its dtype is float64. What is the most likely reason?",
+        ["At least one age is missing: NaN is a float, so the whole int column becomes float64",
+         "pandas always stores numbers as float64",
+         "Some ages are written as text like 'thirty'",
+         "read_csv converts any column with more than 1,000 rows to float"], 0,
+        "What dtype does NaN itself have?",
+        "Classic NumPy int64 has no 'missing' value, so one NaN forces the column to float64. Text like 'thirty' would make it object, not float. "
+        "If you need integers with gaps, use the nullable dtype: df['age'].astype('Int64') (capital I) keeps ints and shows <NA>.",
+        topic="types", level=2),
+    tf("In pandas 2, `s.str.replace('.', '')` treats '.' as a regex that matches any character, so it deletes every character.", False,
+        "What is the default for regex= in str.replace in pandas 2?",
+        "Since pandas 2.0, str.replace is literal by default (regex=False), so only real dots are removed: 'a.b' becomes 'ab'. str.contains is the opposite: it IS regex by default, so contains('.') matches every non-empty string. "
+        "Passing regex= explicitly in both calls makes the code readable and safe across versions.",
+        topic="strings", level=2),
+    mcq("What is the difference between `df.groupby('city')['sales'].sum()` and `df.groupby('city')[['sales']].sum()`?",
+        ["The first returns a Series, the second a one-column DataFrame; values are the same",
+         "The second sums every column, not just sales",
+         "The first drops cities with zero sales",
+         "There is no difference, both return a DataFrame"], 0,
+        "Single brackets pick one column; double brackets pick a list of columns.",
+        "['sales'] selects one column, so the result is a Series indexed by city. [['sales']] selects a list of columns, so the result keeps the DataFrame shape with a 'sales' column. The numbers are identical. "
+        "It matters downstream: a Series has no .columns, so code that expects a DataFrame (to_csv headers, merge on a named column) behaves differently.",
+        topic="groupby", level=2),
+    mcq("A dashboard needs ONE row per region with its total revenue. Should you use `agg` or `transform`?",
+        ["agg: df.groupby('region')['revenue'].agg('sum') returns one row per region",
+         "transform: df.groupby('region')['revenue'].transform('sum') returns one row per region",
+         "transform, because agg can't compute sums",
+         "Either one, they return the same shape"], 0,
+        "Count the rows you want in the output.",
+        "agg reduces each group to one value (GROUP BY), so you get one row per region. transform broadcasts the group's total back onto every ORIGINAL row (a window function, SUM() OVER (PARTITION BY region)); it's the right tool for a per-row column like 'share of region total', not for a summary table. "
+        "Rule of thumb: summary table -> agg; new column on the same rows -> transform.",
+        topic="groupby-advanced", level=2),
+    mcq("You need a report of EVERY customer with their orders, including customers who never ordered (their order columns can be empty). Which join?",
+        ["customers.merge(orders, on='cust_id', how='left')",
+         "customers.merge(orders, on='cust_id')",
+         "customers.merge(orders, on='cust_id', how='right')",
+         "pd.concat([customers, orders], axis=1)"], 0,
+        "Which table must keep all of its rows?",
+        "A left join keeps every row of the left table (customers) and fills the order columns with NaN where there is no match, exactly LEFT JOIN in SQL. The default inner join silently drops customers with no orders. A right join keeps all orders instead. concat(axis=1) glues by row position/index, not by cust_id. "
+        "Customers with zero orders are often the most interesting rows (churn), so losing them to an inner join is a real reporting bug.",
+        diagram="""
+customers        orders           left join
+cust  name       cust  amt        cust name amt
+1     Ann        1     50         1    Ann  50
+2     Bob        1     20         1    Ann  20
+3     Cy         3     10         2    Bob  NaN  <- kept
+                                  3    Cy   10""",
+        topic="merge", level=2),
+    fill("Both tables have a `price` column besides the key, so the merge names them price_x and price_y. To name them price_old and price_new instead, pass `____=('_old', '_new')`.",
+        "suffixes",
+        "The parameter is named after what gets appended to the column names.",
+        "merge appends suffixes to overlapping non-key columns; the default is ('_x', '_y'). Choose meaningful suffixes like ('_order', '_catalog') so later code isn't guessing which price is which. "
+        "Even better, drop or rename columns you don't need before the merge so there's no clash at all.",
+        topic="merge", level=2),
+    mcq("You melted a wide table (`id`, `q1`, `q2`) into long rows (`id`, `variable`, `value`). Which call turns it back into one column per quarter?",
+        ["long.pivot(index='id', columns='variable', values='value')",
+         "long.melt(id_vars='id')",
+         "long.stack()",
+         "long.groupby('id').sum()"], 0,
+        "melt goes wide -> long; what goes long -> wide?",
+        "pivot is the inverse of melt: index= becomes the rows, columns= becomes the new column headers and values= fills the cells. Melting again makes it even longer, and groupby().sum() would add q1 and q2 together. "
+        "If any (id, variable) pair appears twice, pivot raises; then use pivot_table with an explicit aggfunc.",
+        topic="reshape", level=2),
+    fill("Complete to name the bins instead of showing intervals: `pd.cut(ages, bins=[0, 18, 60, 100], ____=['kid', 'adult', 'senior'])`.",
+        "labels",
+        "The names attached to each bin.",
+        "labels= gives one name per bin, so you need one label fewer than there are edges (4 edges -> 3 bins -> 3 labels). Without it you get Interval values like (18, 60]. labels=False returns the integer bin number instead. "
+        "Named bins make dashboards readable; integer bins are handy as an ordinal model feature.",
+        topic="binning", level=2),
+    fill("In pandas 2.2, `s.resample('M')` warns that 'M' is deprecated. The month-END alias to use instead is `s.resample('____')`.",
+        "ME",
+        "Month + End.",
+        "pandas 2.2 renamed the month-end alias to 'ME' (and quarter/year end to 'QE'/'YE'); 'M' still works but raises a FutureWarning. 'MS' is month START, which labels each bucket with the 1st of the month. "
+        "Pick deliberately: the label you choose becomes the join key when you merge monthly features with other tables.",
+        topic="datetime", level=2),
+    fill("To keep the same 95/5 class ratio in both splits, call `train_test_split(X, y, test_size=0.2, ____=y)`.",
+        "stratify",
+        "The parameter is named after sampling within strata (layers).",
+        "stratify=y makes each split keep the label proportions. With a 5% positive class and a plain random split, a small test set can end up with very few positives, so the metrics swing wildly from seed to seed. "
+        "For time series, don't stratify a random split: split by time instead.",
+        topic="ml-prep", level=2),
+    tf("`df.drop_duplicates()` keeps the FIRST occurrence of each duplicated row by default.", True,
+        "What is the default value of keep=?",
+        "keep='first' is the default; keep='last' keeps the latest copy and keep=False drops every copy. If 'latest record wins' (a user updated their email), sort by timestamp and use keep='last' on the key column with subset=. "
+        "Remember it returns a new DataFrame: assign the result.",
+        topic="duplicates", level=2),
+    tf("`isna()` treats `np.inf` as a missing value.", False,
+        "Infinity is a perfectly valid float.",
+        "isna() flags only NaN, None and NaT (and pd.NA). np.inf is a real float, often produced by dividing by zero (clicks / impressions with 0 impressions). It slips past isna().sum() and then breaks scalers and models. "
+        "Convert it explicitly: df.replace([np.inf, -np.inf], np.nan), then handle it like any other missing value.",
+        topic="missing", level=3),
+    mcq("Before imputing `income` with the training median, a teammate adds `df['income_missing'] = df['income'].isna()`. Why is that often a good idea?",
+        ["Missingness can carry signal (people who skip the income field may behave differently), and the flag keeps that after imputation hides it",
+         "The flag makes the imputation itself more accurate",
+         "Models refuse to train on imputed columns without a flag",
+         "It's needed so that dropna() still works later"], 0,
+        "After filling with the median, can the model still tell which rows were missing?",
+        "Data is often not missing at random: a blank income field can correlate with the target. Once you fill the gap with the median, that information is gone unless you keep a 0/1 indicator. The flag doesn't change the filled values; it adds a feature. "
+        "scikit-learn has this built in: SimpleImputer(add_indicator=True).",
+        analogy="Like logging 'field not provided' in an API request instead of silently defaulting it: the absence itself can be the interesting event.",
+        topic="missing", level=3),
+    tf("With the nullable dtypes ('Int64', 'boolean', 'string'), missing values are `pd.NA`, and `pd.NA == pd.NA` returns True.", False,
+        "NA means 'unknown'. Is unknown equal to unknown?",
+        "pd.NA follows SQL-style three-valued logic: pd.NA == pd.NA returns <NA>, not True (np.nan == np.nan returns False). Comparisons involving NA propagate NA, so a mask built from an Int64 column can contain <NA>. "
+        "As with NaN, test with isna() / pd.isna(), never with ==.",
+        topic="types", level=3),
+    mcq("You want a flat result table with columns `total_sales` and `avg_qty` per store. Which groupby call gives flat, named columns (no MultiIndex)?",
+        ["df.groupby('store').agg(total_sales=('sales', 'sum'), avg_qty=('qty', 'mean'))",
+         "df.groupby('store').agg({'sales': ['sum'], 'qty': ['mean']})",
+         "df.groupby('store')[['sales', 'qty']].agg(['sum', 'mean'])",
+         "df.groupby('store').agg('sum', 'mean')"], 0,
+        "Which syntax lets you choose the output column names?",
+        "Named aggregation, new_name=(column, func), gives exactly one flat column per keyword. A dict of lists or a list of funcs on several columns produces MultiIndex columns like ('sales', 'sum'), which you then have to flatten before to_csv or a merge. agg('sum', 'mean') silently returns only the sums: the extra 'mean' is passed on as an argument, not treated as a second aggregation. "
+        "It reads like SELECT SUM(sales) AS total_sales, AVG(qty) AS avg_qty.",
+        topic="groupby", level=3),
+    mcq("`df['g_mean'] = df.groupby('g')['v'].transform('mean')` where some rows have g = NaN. What do those rows get?",
+        ["NaN: groupby drops NaN keys by default, so those rows belong to no group",
+         "The mean of all the NaN-key rows, as their own group",
+         "The overall mean of v",
+         "A KeyError, because NaN can't be a group key"], 0,
+        "What is the default of groupby's dropna=?",
+        "With dropna=True (the default), rows with a missing key are left out of every group; transform still returns one value per original row, so those rows get NaN. Pass dropna=False to make NaN its own group. "
+        "If you then fillna with this column, rows with a missing category stay unfilled, which is often the bug behind 'why are there still NaNs after group-wise imputation?'.",
+        diagram="""
+g     v   group     transform('mean')
+a     1   a         2.0
+NaN   2   (none)    NaN   <- no group
+a     3   a         2.0""",
+        topic="groupby-advanced", level=3),
+    mcq("Sales rows exist only for days a store sold something. You need a row for EVERY (store, day) pair, with 0 where nothing sold. Which approach works?",
+        ["stores.merge(days, how='cross'), then left-merge the sales onto that grid and fillna(0)",
+         "sales.merge(stores, on='store', how='inner')",
+         "pd.concat([stores, days], axis=1)",
+         "sales.drop_duplicates(['store', 'day'])"], 0,
+        "First build the full grid of keys, then attach the facts.",
+        "how='cross' is a CROSS JOIN: every store paired with every day (3 stores x 30 days = 90 rows). Left-merging the sales onto it keeps every pair, and the unmatched ones get NaN, which you fill with 0. An inner merge keeps only pairs that already exist, so the zero days stay invisible. "
+        "This matters for ML: a rolling 'average daily sales' without the zero days is biased upwards.",
+        diagram="""
+stores x days (cross)   + left merge sales   fillna(0)
+A  d1                   A  d1  5             A  d1  5
+A  d2                   A  d2  NaN           A  d2  0
+B  d1                   B  d1  NaN           B  d1  0
+B  d2                   B  d2  7             B  d2  7""",
+        topic="merge", level=3),
+    tf("`pd.concat([a, b], join='inner')` keeps only the columns that appear in BOTH frames, instead of the default union filled with NaN.", True,
+        "concat's join= controls the OTHER axis.",
+        "When stacking rows, join='outer' (the default) keeps the union of columns and fills gaps with NaN (often turning int columns into float). join='inner' keeps only the shared columns. "
+        "It's the column-level equivalent of UNION over the common fields; use it when files from different sources have a few extra columns you don't want.",
+        topic="concat", level=3),
+    mcq("`pd.pivot_table(df, index='store', columns='month', values='qty', aggfunc='sum')` shows NaN for (store B, Mar). Why, and what's the usual fix?",
+        ["No rows exist for B in March; if 'no rows' means zero sales, pass fill_value=0",
+         "B's March qty values were all NaN; use dropna=False",
+         "pivot_table averages instead of summing; use aggfunc='mean'",
+         "A bug: pivot_table always fills missing cells with 0"], 0,
+        "What would the sum of zero rows look like in a pivot cell?",
+        "pivot_table builds the grid from all index x column values seen, so any combination with no rows becomes NaN. If absence really means zero (no sales), fill_value=0 fills those cells. If absence means 'unknown' (sensor offline), keep the NaN, because 0 would be a lie. "
+        "Decide this per business meaning, not per habit.",
+        topic="reshape", level=3),
+    tf("With `pd.cut(ages, bins=[0, 18, 60], right=False)`, an 18-year-old falls in the bin [18, 60).", True,
+        "right=False flips which edge is included.",
+        "By default bins are right-closed, (0, 18] and (18, 60], so 18 goes with the kids. right=False makes them left-closed, [0, 18) and [18, 60), so 18 joins the adults. "
+        "Edge values like 18, 60 or a price of exactly 100 are common in real data, so pick the convention that matches the business rule ('18 and over').",
+        topic="binning", level=3),
+    mcq("`t = pd.Timestamp('2024-03-30 12:00', tz='Europe/Berlin')`. Clocks jump forward that night. What are `t + pd.Timedelta(days=1)` and `t + pd.DateOffset(days=1)`?",
+        ["13:00 and 12:00 on 31 March: Timedelta adds exactly 24 hours, DateOffset adds one calendar day",
+         "Both 12:00 on 31 March",
+         "Both 13:00 on 31 March",
+         "12:00 and 13:00: DateOffset adds 24 hours, Timedelta adds one calendar day"], 0,
+        "One is absolute elapsed time, the other follows the wall clock.",
+        "Timedelta is a fixed duration: 24 real hours later, and because the night was only 23 hours long, the wall clock shows 13:00. DateOffset(days=1) means 'same local time tomorrow', 12:00. "
+        "For 'one day later' in business logic (send at 9 am tomorrow) use DateOffset; for elapsed durations (24-hour SLA) use Timedelta.",
+        diagram="""
+30 Mar 12:00 ----- 23 real hours ----> 31 Mar 12:00
+                                       (DateOffset)
+30 Mar 12:00 ----- 24 real hours ----> 31 Mar 13:00
+                                       (Timedelta)""",
+        topic="datetime", level=3),
+    fill("To make a time-based window exclude the current row (only past rows count), write `s.rolling('7D', closed='____').mean()`.",
+        "left",
+        "Which end of the window interval should be open?",
+        "closed='left' makes the window [t-7D, t): the row at time t is left out, so the feature only sees the past, the same idea as shift(1) before a row-count window. The default for offset windows is closed='right', (t-7D, t], which includes the current row and therefore the label. "
+        "SQL analogy: ROWS BETWEEN ... PRECEDING AND 1 PRECEDING instead of AND CURRENT ROW.",
+        topic="windows", level=3),
+    mcq("For a churn model trained on 2023 events, a teammate adds `df['user_total_spend'] = df.groupby('user')['amount'].transform('sum')` over the whole events table (2023 and 2024). What's wrong?",
+        ["Each 2023 row sees spending that happens later (including 2024), so the feature leaks the future; use a cumulative sum of PAST rows instead",
+         "transform('sum') returns one row per user, so the column misaligns",
+         "Nothing; totals per user are a standard, safe feature",
+         "It should use agg('sum') so the result is smaller"], 0,
+        "At the time of a 2023 event, could you have known the user's 2024 spending?",
+        "A whole-history total includes rows after the prediction time, so users who will keep buying get high totals and the model learns 'high total = not churned' from information it won't have when serving. Build point-in-time features: sort by (user, ts) and use groupby('user')['amount'].cumsum() minus the current amount, or shift(1) then cumsum. "
+        "This is the 'works great offline, fails in production' bug interviewers love.",
+        diagram="""
+user A:  t1 ---- t2 ---- t3 | ---- t4 (2024)
+feature at t2 must see:  t1      (past only)
+whole-history sum sees:  t1 t2 t3 t4   <- future""",
+        topic="ml-features", level=3),
+    mcq("A 5-million-row `city` column holds only 40 distinct strings and uses about 300 MB. What does `df['city'] = df['city'].astype('category')` do?",
+        ["Stores the 40 strings once plus a small integer code per row, cutting memory sharply and speeding up groupby on that column",
+         "Sorts the column alphabetically to save space",
+         "Compresses each string with gzip, so every read is slower",
+         "Converts the strings to one-hot columns"], 0,
+        "Think of a lookup table of unique values plus a pointer per row.",
+        "A categorical keeps a small array of categories and an int8/int16 code per row, so 5M Python string objects become 5M small integers (on a toy test, 300k repeated city names went from about 16 MB to 0.3 MB). groupby and value_counts work on the codes, so they get faster too. "
+        "It only pays off when the number of distinct values is small compared to the row count; for unique IDs it's worse. Remember observed=True when grouping by it.",
+        analogy="Like a foreign key to a lookup table (or a database enum): store 'city_id = 3' per row, not the full name.",
+        topic="ml-prep", level=3),
+    mcq("Each click event needs the user's latest profile snapshot taken AT OR BEFORE the click. You use `pd.merge_asof(clicks, snapshots, on='ts', by='user')`. Which statement is right?",
+        ["The default direction='backward' picks the last snapshot with ts <= click ts, so no future data leaks in; both frames must be sorted by ts",
+         "merge_asof picks the nearest snapshot in either direction by default",
+         "merge_asof works on unsorted data as long as by= is given",
+         "direction='forward' is the leak-free choice because it uses the next snapshot"], 0,
+        "As-of = 'as known at that moment'.",
+        "merge_asof is a point-in-time join: for each left row it takes the last right row whose key is <= the left key (direction='backward', the default). 'forward' and 'nearest' can pick a snapshot from after the click, which is future leakage. Both inputs must be sorted on the on= key, or it raises ValueError ('keys must be sorted'). "
+        "Pass allow_exact_matches=False if a snapshot written at the same timestamp might already include the click's outcome.",
+        diagram="""
+snapshots:  s1(t=1)        s2(t=5)        s3(t=9)
+clicks:            c(t=4)         c(t=7)
+backward:   c@4 -> s1        c@7 -> s2   (past only)
+forward:    c@4 -> s2        c@7 -> s3   (future!)""",
+        topic="merge", level=4),
+    mcq("With scikit-learn 1.6's `TargetEncoder`, why does `enc.fit_transform(X_train, y_train)` give DIFFERENT training values than `enc.fit(X_train, y_train).transform(X_train)`?",
+        ["fit_transform uses internal cross-fitting (cv=5): each row is encoded with category means learned from the other folds, so its own label never enters its feature",
+         "fit_transform adds random noise for regularisation",
+         "transform ignores the smoothing parameter",
+         "It's a bug; the two should always be identical"], 0,
+        "What would a row's encoding contain if it were computed from data including its own label?",
+        "fit().transform() on the training rows encodes each row with means that include its OWN target, which leaks the label and lets the model overfit rare categories. fit_transform does out-of-fold encoding for the training set, while the stored full-train means (smoothed towards the global mean) are used by transform on validation, test and serving data. "
+        "So always call fit_transform on train and transform on everything else; calling fit(...).transform(train) quietly brings the leak back.",
+        diagram="""
+train folds: [F1][F2][F3][F4][F5]
+rows in F1 encoded with means from F2..F5
+rows in F2 encoded with means from F1,F3..F5
+...
+test rows encoded with means from ALL train""",
+        topic="ml-features", level=4),
+    tf("`TimeSeriesSplit(n_splits=2, gap=2)` on 10 time-ordered rows gives a first fold that trains on rows 0-1 and tests on rows 4-6, skipping rows 2-3.", True,
+        "gap= removes rows between the end of train and the start of test.",
+        "The test blocks are fixed (rows 4-6, then 7-9). Without a gap the first fold trains on rows 0-3, right up to the test rows; gap=2 removes the 2 training rows just before the test block, so train ends at row 1. "
+        "Use a gap at least as long as the label horizon (for 'churn in the next 30 days', 30 days of rows), otherwise the last training labels overlap the test period and the validation score is too optimistic.",
+        topic="ml-features", level=4),
+    mcq("You fit quartile edges on train with `_, edges = pd.qcut(train['income'], 4, retbins=True)`, then apply `pd.cut(test['income'], edges)`. Some test rows come back NaN. Why, and what's the fix?",
+        ["Test values below the train minimum or above the train maximum fall outside the edges; set edges[0] = -np.inf and edges[-1] = np.inf",
+         "pd.cut can't reuse edges from qcut; call pd.qcut(test['income'], 4) instead",
+         "Test income has NaN values only; there's nothing to fix",
+         "The edges must be sorted descending for pd.cut"], 0,
+        "The outer edges are the train min and max.",
+        "qcut's outer edges are the training min and max, so a test value outside that range belongs to no bin and becomes NaN. Opening the outer edges to -inf and +inf keeps the train-fitted inner cut points and catches every value. "
+        "Re-running qcut on test is the leakage bug: test would get its own quartiles and bin 3 would mean different incomes in train and test.",
+        diagram="""
+train edges:  min      q1     q2     q3      max
+               |------|------|------|-------|
+test value: x (below min)            y (above max) -> NaN
+fixed:      -inf ----|------|------|------ +inf""",
+        topic="binning", level=4),
+    mcq("A log stores local Berlin times without a timezone. `pd.Series(times).dt.tz_localize('Europe/Berlin')` raises on '2024-03-31 02:30'. Why?",
+        ["That wall-clock time never happened: clocks jumped from 02:00 to 03:00, so it raises NonExistentTimeError (pass nonexistent= or store UTC)",
+         "tz_localize only accepts UTC",
+         "The string wasn't parsed as a datetime",
+         "02:30 happened twice that night, so it's ambiguous"], 0,
+        "What happens to the clock on the last Sunday of March in Europe?",
+        "On the spring-forward night the local hour 02:00-03:00 is skipped, so 02:30 doesn't exist and tz_localize raises NonExistentTimeError. In October 02:30 happens twice, which raises AmbiguousTimeError instead (the tempting wrong answer). Options: nonexistent='shift_forward', ambiguous='infer' or 'NaT'. "
+        "The real fix is upstream: have services log UTC (or an offset), and convert to local time only for display.",
+        topic="datetime", level=4),
+    mcq("`df['r'] = df.groupby('user')['v'].rolling(3, min_periods=1).mean()` raises TypeError ('incompatible index'). What's going on?",
+        ["groupby().rolling() returns a Series indexed by (user, original index), which doesn't match df's index; drop the user level with reset_index(level=0, drop=True) or use transform",
+         "rolling can't be used after groupby",
+         "min_periods must equal the window size inside a groupby",
+         "The result has fewer rows than df because the first rows are NaN"], 0,
+        "Print the index of the rolling result.",
+        "groupby().rolling() prepends the group key as an extra index level, so the result's MultiIndex (user, row) can't be aligned onto df's plain index. Either .reset_index(level=0, drop=True) before assigning (alignment then works on the original row labels), or use groupby('user')['v'].transform(lambda s: s.rolling(3, min_periods=1).mean()), which returns df's index directly. "
+        "Assigning via .values instead 'works' but silently misaligns rows when df isn't sorted by user, which is a far worse bug.",
+        analogy="Like a SQL window query that returns (user_id, row_id, value): you join it back on row_id, not by position.",
+        topic="windows", level=4),
+    mcq("A `country_code` column loaded with `pd.read_csv` shows NaN for every Namibia row, even though the file contains 'NA'. What happened?",
+        ["read_csv's default na_values include 'NA' (and 'null', 'None', 'n/a', ''), so the string became NaN; pass keep_default_na=False and list your own na_values",
+         "The column was too long for read_csv",
+         "'NA' isn't valid UTF-8",
+         "read_csv drops strings shorter than 3 characters"], 0,
+        "Which strings does read_csv treat as missing out of the box?",
+        "read_csv converts a built-in list of tokens to NaN by default: '', 'NA', 'N/A', 'n/a', 'NULL', 'null', 'None', 'nan' and more. That's handy for messy exports but destroys real values like Namibia's ISO code or a product named 'None'. keep_default_na=False plus na_values=[''] (or a per-column dict) gives you control. "
+        "Note the contrast: in a Series you build yourself, the string 'n/a' is NOT missing; only read_csv converts it.",
+        analogy="Like a JSON parser that maps the string \"null\" to null: convenient until a user is really called Null.",
+        topic="missing", level=4),
+    mcq("In `for _, row in df.iterrows(): ids.append(row['user_id'])`, the int `user_id` values come out as 1.0, 2.0... because df also has a float column. Why?",
+        ["iterrows builds each row as one Series, and a Series has a single dtype, so int and float values are upcast to float64",
+         "user_id was stored as float in the DataFrame all along",
+         "Python's append converts ints to floats",
+         "iterrows always returns strings that look like floats"], 0,
+        "A row of mixed types has to fit in one Series.",
+        "Each row from iterrows is a Series, and a Series needs a common dtype, so ints next to floats become float64 (next to strings, everything becomes object). Large IDs can even lose precision above 2**53. itertuples keeps each column's type and is much faster. "
+        "Best of all, avoid the loop: ids = df['user_id'].tolist() or a vectorised column expression.",
+        topic="ml-prep", level=4),
+    mcq("A date column mixes '2024-01-05' and '05/02/2024'. `pd.to_datetime(s, format='mixed')` parses without error. Why is that risky?",
+        ["The format is inferred per element, so ambiguous strings like '05/02/2024' are silently read month-first (2 May), and nothing warns you that rows used different rules",
+         "format='mixed' turns every unparseable value into NaT",
+         "It parses all dates as UTC",
+         "It always reads day-first, so '05/02/2024' becomes 5 February"], 0,
+        "When every row may follow its own rule, who decides day vs month?",
+        "format='mixed' tells pandas to guess each element separately: flexible, slower, and silent about ambiguity. '05/02/2024' is read month-first unless you also pass dayfirst=True, and a file that mixes US and EU styles comes out half wrong with no error. "
+        "Safer: find out which source produced which style, parse each group with an explicit format=, and check the min/max dates and the share of NaT afterwards.",
+        topic="types", level=4),
 ]

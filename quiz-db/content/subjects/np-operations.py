@@ -2334,4 +2334,426 @@ norm(axis=-1)  (5, 4)    D[i, j] = |A[i] - B[j]|
          "rng.bit_generator.state is a dict describing the PCG64 state. Assign it back to resume the same stream, "
          "e.g. after restarting a crashed training job, so data order and augmentations replay exactly.",
          topic="random", level=4),
+
+    # ------------------------------------------------------------------ round 3: conceptual mix
+    mcq("In plain Python, `[1, 2, 3] * 2` gives `[1, 2, 3, 1, 2, 3]`. What does `np.array([1, 2, 3]) * 2` give?",
+        ["[2 4 6]: every element is doubled",
+         "[1 2 3 1 2 3]: the array is repeated, like a list",
+         "A TypeError, because arrays can't be multiplied by an int",
+         "12: the elements are summed and then doubled"], 0,
+        "Arrays do maths; lists do sequence operations.",
+        "On a NumPy array, * is element-wise arithmetic, so each element is multiplied by 2. The list behaviour "
+        "(repetition) is the trap: converting a list to an array silently changes what * and + mean, so "
+        "`[1, 2] + [3, 4]` concatenates but the array version adds.",
+        topic="ufuncs", level=1),
+    mcq("For `a = np.array([1, 5, 3])`, what is `a > 2`?",
+        ["A boolean array of the same shape: [False  True  True]",
+         "A single True, because at least one element is bigger than 2",
+         "A single False, because not every element is bigger than 2",
+         "The values bigger than 2: [5 3]"], 0,
+        "Comparisons are ufuncs too.",
+        "> compares element by element and returns a boolean mask. To get the values, index with it: a[a > 2]. "
+        "To get one answer, reduce it with .any() or .all(). Masks like this drive filtering, accuracy and ReLU.",
+        topic="compare-where", level=1),
+    tf("`A @ B` only works when the number of columns of A equals the number of rows of B.", True,
+       "Each output is a row of A dotted with a column of B.",
+       "A row of A and a column of B must have the same length to be dotted, so (m, k) @ (k, n) is fine and "
+       "(m, k) @ (j, n) with k != j raises ValueError. In a neural net, this is why a layer's weight shape must "
+       "match the previous layer's output size.",
+       topic="linalg", level=1),
+    tf("After `rng = np.random.default_rng(0)`, calling `rng.random()` twice returns the same number both times.", False,
+       "The seed fixes the sequence, not each value.",
+       "A seed fixes the whole stream; each call moves along it, so the two numbers differ. What repeats is the "
+       "sequence: re-run the script and you get the same first, second, third number again.",
+       analogy="Like a playlist with a fixed shuffle order: the same songs in the same order every run, "
+               "but pressing 'next' still gives a new song.",
+       topic="random", level=1),
+    mcq("`X` holds 100 samples with 3 features, shape (100, 3), and `w` is a (3,) weight vector. What shape is `X @ w`?",
+        ["(100,): one prediction per sample", "(3,): one value per feature", "(100, 3)", "(1,): a single number"], 0,
+        "The 3s match and disappear.",
+        "(100, 3) @ (3,) contracts the feature axis, leaving one weighted sum per row: 100 predictions. "
+        "If you got (100, 3), you used * instead of @.",
+        topic="ml-numpy", level=1),
+    fill("Compare two floats with a tolerance instead of `==`: `np.____(a, b)`", "isclose",
+         "Is it close enough?",
+         "np.isclose(a, b) returns True when |a - b| <= atol + rtol * |b|, element by element. np.allclose "
+         "gives one answer for whole arrays, like assertAlmostEqual in a unit test.",
+         topic="precision", level=1),
+    tf("`np.round(2.5)` gives 3.0.", False,
+       "NumPy does not round halves the way school maths does.",
+       "np.round rounds exact halves to the nearest EVEN number (banker's rounding): 2.5 -> 2.0, 1.5 -> 2.0, "
+       "0.5 -> 0.0. Python's built-in round does the same. It avoids an upward bias when rounding many values, "
+       "but surprises people who expect 'half up'.",
+       topic="ufuncs", level=2),
+    mcq("You have `a` of shape (4,) and `b` of shape (3,), and you want the (4, 3) table of every difference "
+        "`a[i] - b[j]`. Which expression gives it?",
+        ["a[:, None] - b", "a - b", "a - b[:, None]", "np.subtract(a, b, axis=1)"], 0,
+        "Turn one of them into a column.",
+        "a[:, None] has shape (4, 1); against (3,) it broadcasts to (4, 3). a - b fails (4 vs 3). a - b[:, None] "
+        "also broadcasts, but to (3, 4), the transposed table. This is the pattern behind every pairwise "
+        "distance matrix.",
+        diagram=C("""
+            a[:, None]  (4, 1)    b  (3,) -> (1, 3)
+                         \\         /
+                     result (4, 3): a[i] - b[j]
+            b[:, None] instead -> (3, 4), transposed
+            """),
+        topic="broadcasting", level=2),
+    mcq("`scores` has shape (n_students, n_subjects). Which call gives each student's average mark?",
+        ["scores.mean(axis=1)", "scores.mean(axis=0)", "scores.mean()", "np.mean(scores, axis=-2)"], 0,
+        "Name the axis you want to collapse.",
+        "Each student is a row, so you average across the subjects axis (axis=1) and get one value per student. "
+        "axis=0 (and axis=-2, the same axis here) gives one average per subject; no axis gives a single "
+        "class-wide number.",
+        diagram=C("""
+                      subjects (axis=1) ->
+            student 0 [ 70  80  90 ]  -> mean(axis=1) = 80
+            student 1 [ 50  60  70 ]  -> 60
+                        |   |   |
+                     mean(axis=0) = [60 70 80] per subject
+            """),
+        topic="aggregation", level=2),
+    tf("For a 2D array `a`, `a.max(axis=0)` and `a.argmax(axis=0)` have the same shape.", True,
+       "Both collapse the same axis.",
+       "Both remove axis 0 and give one result per column; max gives the values, argmax the row positions. "
+       "That's why `a[a.argmax(axis=0), np.arange(a.shape[1])]` equals `a.max(axis=0)`.",
+       topic="aggregation", level=2),
+    mcq("`if losses > 0:` raises `ValueError: The truth value of an array with more than one element is ambiguous`. "
+        "What is the right fix?",
+        ["Say what you mean: `if (losses > 0).any():` or `if (losses > 0).all():`",
+         "Wrap it: `if bool(losses > 0):`",
+         "Use `if losses > 0 == True:`",
+         "Use `and`: `if losses and losses > 0:`"], 0,
+        "A mask of many booleans has no single truth value.",
+        "losses > 0 is a whole boolean array, and Python's if needs ONE bool. NumPy refuses to guess whether you "
+        "meant 'any' or 'all'. bool(...) raises the same error, and `and` / `or` call bool() too. (A size-1 array "
+        "is allowed, which is why the bug can hide until the batch grows.)",
+        analogy="Like asking 'is the test suite green?' with a list of 50 results: you must say whether one pass "
+                "or all passes counts.",
+        topic="compare-where", level=2),
+    fill("Check that two arrays have the same shape AND the same elements, giving one bool: `np.____(a, b)`",
+         "array_equal",
+         "Two words joined by an underscore.",
+         "np.array_equal(a, b) is False if the shapes differ, whereas (a == b).all() broadcasts first and can say "
+         "True for (3,) vs (1, 3). For floats, use np.allclose instead.",
+         topic="compare-where", level=2),
+    mcq("A table `X` has rows of (user_id, score). To order it by score, a teammate writes `np.sort(X, axis=0)`. What goes wrong?",
+        ["Each column is sorted on its own, so ids and scores no longer belong to the same row",
+         "Nothing: axis=0 sorts the rows by their first column",
+         "It raises ValueError because sort needs a 1D array",
+         "It sorts the rows by score but in descending order"], 0,
+        "np.sort works on values along an axis, not on whole rows.",
+        "np.sort(X, axis=0) sorts every column independently, silently mixing records. To keep rows intact, sort "
+        "by an index: X[X[:, 1].argsort()], the NumPy version of ORDER BY score.",
+        diagram=C("""
+            X (id, score)     np.sort(X, axis=0)
+            [[3, 70],         [[1, 70],   <- id 1 had 90!
+             [1, 90],          [2, 80],
+             [2, 80]]          [3, 90]]
+            fix: X[X[:, 1].argsort()] keeps rows whole
+            """),
+        topic="sorting", level=2),
+    mcq("A layer stores its weights PyTorch-style as `W` of shape (out_features, in_features) = (4, 3). The batch "
+        "`X` has shape (5, 3). Which expression gives the (5, 4) outputs?",
+        ["X @ W.T", "X @ W", "W @ X", "X * W"], 0,
+        "Line up the inner sizes.",
+        "(5, 3) @ (3, 4) = (5, 4), so W must be transposed. X @ W is (5, 3) @ (4, 3) and raises ValueError; "
+        "W @ X fails too; X * W tries element-wise broadcasting. This is exactly what torch.nn.Linear computes: "
+        "x @ W.T + b.",
+        topic="linalg", level=2),
+    ask("What happens to the caller's array here?", C("""
+        import numpy as np
+
+        def centre(v):
+            v -= v.mean()
+            return v
+
+        data = np.array([1.0, 2.0, 3.0])
+        out = centre(data)
+        """),
+        ["data is changed too: it is now [-1. 0. 1.], because v and data are the same array",
+         "data is unchanged; the function received a copy",
+         "data is unchanged, because -= inside a function creates a local array",
+         "It raises an error, because function arguments are read-only"], 0,
+        "Python passes a reference to the object, not a copy.",
+        "v and data name the same buffer, and -= writes into it, so the caller's data is mutated. Use "
+        "v = v - v.mean() (new array) or copy first if callers don't expect it. With an int array, the same "
+        "line raises UFuncTypeError, since the float mean can't be written into ints.",
+        analogy="Like passing a JS object to a function that does obj.count -= 1: the caller sees the change.",
+        topic="inplace", level=2),
+    fill("Write a ufunc's result into an existing array instead of allocating a new one: `np.add(a, b, ____=a)`", "out",
+         "Where the output goes.",
+         "out= makes the ufunc write straight into the given buffer, so no new array is allocated. The buffer must "
+         "already have the broadcast result shape and a dtype the result can be cast to.",
+         topic="inplace", level=2),
+    fill("Create the recommended random generator object: `rng = np.random.____(42)`", "default_rng",
+         "It returns a Generator, not the legacy global state.",
+         "np.random.default_rng(seed) gives an independent Generator you pass around. The legacy np.random.seed "
+         "sets one global state that every library shares, so any import that draws a random number shifts your "
+         "results, like a mutable global singleton.",
+         topic="random", level=2),
+    mcq("Features are price (around 1000s) and rating (1-5). What is wrong with `Z = (X - X.mean()) / X.std()`?",
+        ["It uses one mean and std for ALL features, so the small-scale rating column ends up almost constant",
+         "Nothing: mean() and std() default to per-column statistics",
+         "It raises ValueError because the shapes don't broadcast",
+         "It standardises each row instead of each column"], 0,
+        "With no axis, a reduction covers the whole array.",
+        "X.mean() is one number across both columns, dominated by the prices. The rating column then has a "
+        "std of about 0.001 instead of 1, so a model barely sees it. Use X.mean(axis=0) and X.std(axis=0): "
+        "one statistic per feature, computed on the training set only.",
+        topic="ml-idioms", level=2),
+    ask("You count token frequencies with a fancy-indexed in-place add. Why is the count for token 0 wrong?", C("""
+        import numpy as np
+        counts = np.zeros(3, dtype=int)
+        ids = np.array([0, 0, 2])
+        counts[ids] += 1
+        print(counts)          # [1 0 1], expected [2 0 1]
+        """),
+        ["It computes counts[ids] + 1 from the OLD values, then assigns, so a repeated id just writes 1 twice",
+         "The int dtype overflows after the first add",
+         "Fancy indexing returns a copy, so nothing is written back at all",
+         "In-place operators are applied right to left, so the last id overwrites the first"], 0,
+        "Expand it: counts[ids] = counts[ids] + 1.",
+        "The line becomes counts[ids] = counts[ids] + 1: the right side is [1, 1, 1], and writing it to "
+        "position 0 twice still leaves 1. np.add.at(counts, ids, 1) is unbuffered and counts every occurrence; "
+        "np.bincount(ids, minlength=3) is faster for plain counting. Classic bug in histogram and gradient "
+        "scatter code.",
+        topic="ufuncs", level=3),
+    mcq("Attention scores have shape (B, H, T, T) (batch, heads, queries, keys). The padding mask is (B, T), True "
+        "for real keys. Which reshape lets the mask broadcast over heads and queries?",
+        ["mask[:, None, None, :]  -> (B, 1, 1, T)",
+         "mask[:, None, :]  -> (B, 1, T)",
+         "mask[None, None, :, :]  -> (1, 1, B, T)",
+         "mask.reshape(B, T, 1, 1)"], 0,
+        "Right-align the mask's key axis with the scores' last axis.",
+        "(B, 1, 1, T) matches batch and keys and stretches over heads and queries. (B, 1, T) right-aligns as "
+        "(1, B, 1, T): it raises if B != H, and silently mixes batch with heads if B == H. (B, T, 1, 1) masks "
+        "queries instead of keys. Same rule as PyTorch attention masks.",
+        diagram=C("""
+            scores   B  H  T  T
+            mask     B  1  1  T   OK: keys line up
+            mask     .  B  1  T   wrong: B lines up with H
+            """),
+        topic="broadcasting", level=3),
+    fill("A feature column contains a few NaNs, so `x.mean()` returns nan. Which function averages while ignoring them? `np.____(x)`",
+         "nanmean",
+         "Prefix the usual name with what it skips.",
+         "np.nanmean skips NaNs (np.nansum, np.nanmax, np.nanstd work the same way). One NaN poisons a plain "
+         "reduction, and a NaN mean then spreads into every standardised value. Still count the NaNs first: "
+         "silently ignoring missing data is a modelling decision.",
+         topic="aggregation", level=3),
+    mcq("`np.unique(['b', 'a', 'b', 'c'])` returns `['a' 'b' 'c']`. How do you get the distinct values in order of "
+        "FIRST appearance, `['b' 'a' 'c']`?",
+        ["u, i = np.unique(x, return_index=True), then x[np.sort(i)]",
+         "np.unique(x, sort=False)",
+         "np.unique(x)[::-1]",
+         "np.unique(x, return_counts=True)[0]"], 0,
+        "unique can also tell you where each value first appears.",
+        "return_index gives the first position of each unique value; sorting those positions restores the "
+        "original order. In NumPy 2.1, np.unique always sorts its output (there is no sort=False flag), and reversing a sorted result is not the same as "
+        "first-appearance order. (Python's list(dict.fromkeys(x)) does the same for small lists.)",
+        topic="sorting", level=3),
+    fill("Bucket ages with edges `[18, 30, 50]` so that an age exactly on an edge (30) goes to the UPPER bucket: "
+         "`np.searchsorted(edges, ages, side=\"____\")`",
+         "right",
+         "The default is the other side.",
+         "side='right' puts equal values after the edge, so 30 lands in bucket 2 ([30, 50)). The default "
+         "side='left' would put 30 in bucket 1. np.digitize(ages, edges) gives the same as side='right' here.",
+         topic="sorting", level=3),
+    mcq("A and B are (n, n) matrices and v is an (n,) vector, with n = 5000. Which is much faster, and why?",
+        ["A @ (B @ v): two matrix-vector products, O(n^2), instead of a matrix-matrix product, O(n^3)",
+         "(A @ B) @ v: BLAS is optimised for matrix-matrix products",
+         "They take the same time, because @ is associative",
+         "A @ B @ v: Python evaluates it right to left automatically"], 0,
+        "Count the multiply-adds for each bracketing.",
+        "Both give the same answer (up to rounding), but A @ B costs about n^3 = 1.25e11 multiply-adds, while "
+        "each matrix-vector product is n^2 = 2.5e7. A @ B @ v is evaluated LEFT to right, so it is the slow "
+        "one. np.linalg.multi_dot picks the cheapest order for chains.",
+        diagram=C("""
+            (A @ B) @ v :  n x n x n  +  n x n   ~ n^3
+            A @ (B @ v) :  n x n      +  n x n   ~ 2 n^2
+            n = 5000   ->  1.25e11  vs  5e7 multiply-adds
+            """),
+        analogy="Like a database query plan: same result, but joining two big tables first is far slower than "
+                "filtering down to one row and then joining.",
+        topic="linalg", level=3),
+    ask("Why is this loop slow for large n?", C("""
+        import numpy as np
+        out = np.empty(0)
+        for i in range(1000):
+            out = np.append(out, i * 2)
+        """),
+        ["np.append copies the whole array every time, so the loop does O(n^2) work",
+         "np.append is a Python function, so each call is compiled again",
+         "It isn't slow: np.append grows the array in place like list.append",
+         "The empty starting array forces float64, which is slower than int"], 0,
+        "NumPy arrays have a fixed size.",
+        "An array can't grow in place, so np.append allocates a new array and copies all existing elements on "
+        "every call. Collect values in a Python list and call np.array once, or preallocate np.empty(n) and "
+        "fill by index; here it is just np.arange(1000) * 2.",
+        analogy="Like building a long string with s = s + piece in a loop in Java: every step copies everything "
+                "so far. Use a StringBuilder (a Python list here).",
+        topic="vectorisation", level=3),
+    tf("If `a` is float32 and `b` is float64, `a += b` works and `a` stays float32.", True,
+       "In-place ops allow 'same_kind' casts.",
+       "The sum is computed as float64 and cast back to float32, which is allowed because both are floats "
+       "(same_kind casting). Only crossing kinds fails, e.g. int += float. The catch: you silently lose the "
+       "extra precision, which matters for running totals.",
+       topic="inplace", level=3),
+    mcq("`np.arange(1, 1.3, 0.1)` returns 4 values, the last printing as `1.3`, even though the stop is meant to be "
+        "excluded. What is the robust way to build a float grid?",
+        ["np.linspace(1, 1.2, 3): give the number of points, not a float step",
+         "np.arange(1, 1.3, 0.1)[:-1]",
+         "np.arange(1, 1.3, 0.1, dtype=np.float32)",
+         "np.round(np.arange(1, 1.3, 0.1), 1)"], 0,
+        "The length of arange depends on (stop - start) / step in floating point.",
+        "arange computes its length as ceil((stop - start) / step), and 0.3 / 0.1 is slightly above 3, so a 4th "
+        "point (1.3000000000000003) sneaks in. Slicing off the last element breaks for other ranges, and float32 "
+        "or rounding don't fix the length. linspace takes a count, so the length is exact.",
+        topic="precision", level=3),
+    tf("A bootstrap sample `rng.choice(n, size=n, replace=True)` contains only about 63% of the distinct original rows "
+       "when n is large.", True,
+       "The chance a given row is never picked is (1 - 1/n)^n.",
+       "(1 - 1/n)^n tends to 1/e, about 0.368, so about 63.2% of rows appear at least once and the rest are "
+       "duplicates. The left-out ~37% are the 'out-of-bag' rows random forests use as a free validation set.",
+       topic="random", level=3),
+    tf("Subtracting the max in softmax only matters for large positive logits; very negative logits are always safe.", False,
+       "What is exp(-1000) in float64?",
+       "exp(-1000) underflows to 0, so a row of all very negative logits gives 0 / 0 = nan with the naive "
+       "formula. After subtracting the max, the largest term is exp(0) = 1, so the sum is at least 1 and both "
+       "overflow AND underflow are handled.",
+       topic="stability", level=3),
+    mcq("A sequence model multiplies 1000 per-token probabilities of about 0.01 each and gets exactly 0.0. What is the "
+        "standard fix?",
+        ["Work in log space: add the log-probabilities instead of multiplying the probabilities",
+         "Use float128 so the product doesn't underflow",
+         "Multiply by 100 after each step to keep the number large",
+         "Clip the product with np.clip(p, 1e-300, 1)"], 0,
+        "0.01 ** 1000 = 1e-2000, far below what float64 can store.",
+        "float64's smallest positive value is about 5e-324, so the product underflows to 0, and log(0) = -inf. "
+        "Summing logs gives about -4605, perfectly representable. Rescaling hacks and clipping lose the real "
+        "value; logsumexp then combines log-probabilities when you need a sum.",
+        diagram=C("""
+            product:  0.01 x 0.01 x ... (1000)  -> 1e-2000 -> 0.0
+            logs:     -4.6 + -4.6 + ... (1000)  -> -4605.2  OK
+            """),
+        topic="stability", level=3),
+    mcq("A k-NN vote uses `np.bincount(neighbour_labels).argmax()`. With k = 2 and neighbour labels [2, 0], what "
+        "does it predict, and what is the problem?",
+        ["0: on a tie, argmax returns the FIRST maximum, so ties always go to the smallest label",
+         "2: the label of the closest neighbour wins ties",
+         "A random choice between 0 and 2",
+         "It raises ValueError because the vote is tied"], 0,
+        "argmax of [1, 0, 1].",
+        "bincount gives [1, 0, 1] and argmax returns the first index with the max, so label 0 wins every tie, a "
+        "quiet bias toward low class ids. Use an odd k for two classes, break ties by distance, or weight "
+        "votes by 1 / distance.",
+        topic="ml-numpy", level=3),
+    mcq("Under NumPy 2's promotion rules (NEP 50), which of these results is float64?",
+        ["np.ones(3, dtype=np.float32) * np.float64(2.0)",
+         "np.ones(3, dtype=np.float32) * 2.0",
+         "np.float32(0.1) + 0.2",
+         "np.ones(3, dtype=np.float32) + 1"], 0,
+        "Python numbers are 'weak'; NumPy scalars have a real dtype.",
+        "A plain Python int or float adapts to the array's dtype, so the last three stay float32. A NumPy scalar "
+        "like np.float64(2.0) is strongly typed, so float32 with float64 promotes to float64, even though it is a "
+        "scalar. NumPy 1 did the opposite in two places (value-based casting), which is why upgrades can change "
+        "dtypes, memory use and results in old code.",
+        topic="ufuncs", level=4),
+    mcq("An activation is written as `np.where(x > 0, x, 0)`. Upstream, a bad batch produces NaNs. What does this ReLU do "
+        "with them, compared to `np.maximum(x, 0)`?",
+        ["np.where turns NaN into 0 (NaN > 0 is False), hiding the bug; np.maximum propagates the NaN",
+         "Both propagate the NaN",
+         "Both turn the NaN into 0",
+         "np.where raises FloatingPointError on NaN; np.maximum returns 0"], 0,
+        "Every comparison with NaN is False.",
+        "NaN > 0 is False, so np.where picks the 0 branch and the NaN silently disappears, so training "
+        "carries on with corrupted data. np.maximum propagates NaNs (np.fmax is the variant that ignores them). "
+        "When debugging divergence, prefer the op that lets NaNs surface, or assert np.isfinite(x).all().",
+        analogy="Like a try/except that swallows every exception: the service stays up, but you lose the signal "
+                "that something upstream broke.",
+        topic="compare-where", level=4),
+    tf("A determinant very close to 0 is a reliable sign that a matrix is nearly singular.", False,
+       "Scale a perfectly healthy matrix by 0.1.",
+       "det scales with size and units: 0.1 * np.eye(100) has det 1e-100 but condition number 1 (perfectly "
+       "safe), while a nearly collinear matrix scaled by 1e6 can have det about 100 and condition number about "
+       "2.5e11. Use np.linalg.cond or np.linalg.matrix_rank (based on singular values) to judge.",
+       topic="linalg", level=4),
+    mcq("`a` is a C-ordered float64 array of shape (4000, 4000). Why is `a[:, 0].sum()` noticeably slower than "
+        "`a[0].sum()`, although both add 4000 numbers?",
+        ["A column's elements are 32,000 bytes apart, so each one needs its own cache line; a row is contiguous",
+         "Column slices are copies, so NumPy copies the column first",
+         "sum() switches to a Python loop for non-contiguous input",
+         "Column sums use pairwise summation and row sums don't"], 0,
+        "Look at a[:, 0].strides.",
+        "In C order a row is one contiguous block, so the CPU streams it through cache and SIMD. a[:, 0] is a "
+        "view with stride 32,000 bytes, so every element is a separate memory fetch. Lay data out so the hot "
+        "loop runs along the last axis, or make a contiguous copy if you reuse the column a lot.",
+        diagram=C("""
+            memory (C order):  row 0 ........ | row 1 ........ | ...
+            a[0]     -> reads 4000 neighbours   (stride 8 B)
+            a[:, 0]  -> one value per row       (stride 32000 B)
+                        ^              ^              ^
+            """),
+        topic="vectorisation", level=4),
+    tf("`x[x > 0][0] = 99` sets the first positive element of `x` to 99.", False,
+       "Which half of that line is a read?",
+       "x[x > 0] is a boolean-mask read, which returns a COPY; [0] = 99 then writes into that temporary, and x "
+       "never changes. A single indexing step on the left of = does write: x[x > 0] = 99, or "
+       "x[np.flatnonzero(x > 0)[0]] = 99 for just the first one. Same family as pandas' chained-assignment trap.",
+       diagram=C("""
+           x[x > 0][0] = 99
+           \\______/
+            copy  -> write goes into the copy, x unchanged
+           x[x > 0] = 99   -> one __setitem__ on x: writes
+           """),
+       topic="inplace", level=4),
+    tf("Seeding workers with `default_rng(0)`, `default_rng(1)`, `default_rng(2)` gives highly correlated streams "
+       "because the seeds are adjacent numbers.", False,
+       "The seed goes through SeedSequence before it reaches the bit generator.",
+       "default_rng hashes the seed with SeedSequence, so neighbouring seeds give unrelated streams. The real risks "
+       "are seed COLLISIONS (e.g. seed = epoch + worker_id repeats across epochs) and hand-managed bookkeeping; "
+       "rng.spawn(n) or SeedSequence(seed).spawn(n) avoids both.",
+       topic="random", level=4),
+    mcq("A language model has a 50,000-token vocabulary and you compute cross-entropy for 1,000,000 tokens. Why not "
+        "build one-hot targets with `np.eye(50_000)[y]`?",
+        ["The one-hot matrix is 1e6 x 5e4 float64, about 400 GB; pick the right log-probs with log_p[np.arange(n), y]",
+         "np.eye only works up to 65,536 rows",
+         "One-hot targets give a different loss value from integer labels",
+         "Indexing np.eye with an array returns a view, so the targets would be shared"], 0,
+        "Multiply the shape by 8 bytes.",
+        "1,000,000 x 50,000 x 8 bytes = 4e11 bytes. Multiplying by a one-hot row just selects one entry, so "
+        "gathering log_p[np.arange(n), y] gives the same loss with no extra memory. This is why frameworks take "
+        "integer class labels (sparse categorical cross-entropy).",
+        analogy="Like storing a user's favourite product as a 50,000-column row of zeros with one 1, instead of "
+                "just storing the product id.",
+        topic="ml-idioms", level=4),
+    ask("Why does this 'numerically stable' sigmoid still print overflow warnings for z = [-1000, 0, 1000]?", C("""
+        import numpy as np
+        z = np.array([-1000.0, 0.0, 1000.0])
+        with np.errstate(over="ignore", invalid="ignore"):
+            s = np.where(z >= 0, 1 / (1 + np.exp(-z)), np.exp(z) / (1 + np.exp(z)))
+        print(s)
+        """),
+        ["np.where evaluates BOTH branches for every element, so exp(1000) is still computed; use e = np.exp(-np.abs(z))",
+         "The z >= 0 branch is wrong; it should be z > 0",
+         "np.exp overflows for any input above 100, so the trick can't work in float64",
+         "np.where short-circuits, but errstate checks the whole array before it runs"], 0,
+        "Function arguments are computed before the function runs.",
+        "Both branch arrays are built in full, so exp(1000) overflows (and inf / inf gives nan) in positions that "
+        "np.where then throws away. The output is right, but the warnings are real work and can surface as "
+        "nan in gradients. Computing e = exp(-|z|) once keeps every exponent <= 0: "
+        "np.where(z >= 0, 1 / (1 + e), e / (1 + e)), which is what scipy.special.expit does safely.",
+        topic="stability", level=4),
+    mcq("A central-difference gradient check with h = 1e-5 agrees to about 1e-10 in float64 but only to about 1e-3 "
+        "in float32. What is going on?",
+        ["float32 has ~7 digits; f(w+h) - f(w-h) cancels most of them, and dividing by 2h amplifies the rounding error",
+         "The analytic gradient is wrong in float32",
+         "Central differences only work for float64 inputs",
+         "h is too large; use h = 1e-12 in float32"], 0,
+        "float32 epsilon is about 1.2e-7; compare it with h.",
+        "The rounding error in each f value is about eps * |f|, and dividing by 2h makes the relative error up to about "
+        "eps / h: 1e-7 / 1e-5 = 1e-2 in float32 vs 1e-16 / 1e-5 = 1e-11 in float64. A smaller h makes it worse. "
+        "Run gradient checks in float64 (as PyTorch's gradcheck requires).",
+        topic="ml-numpy", level=4),
 ]
