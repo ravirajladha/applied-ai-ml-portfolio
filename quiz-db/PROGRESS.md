@@ -10,17 +10,17 @@ Target: 120-160 questions per subject, with more L3/L4, informative explanations
 |------|---------|---------|---------|--------|
 | Foundations | py-basics | 73 | 148 | done, pushed |
 | Foundations | py-variables | 78 | 155 | done, pushed |
-| Foundations | py-strings | 87 | 153 → 193 (round 3) | done, pushed |
+| Foundations | py-strings | 87 | 153 → 193 → 233 (round 3) | done, pushed |
 | Foundations | py-lists | 80 | 158 → 198 (round 3) | done, pushed |
-| Foundations | py-dicts | 70 | 146 → 186 (round 3) | done, pushed |
-| Foundations | py-conditions | 71 | 151 → 191 (round 3) | done, pushed |
+| Foundations | py-dicts | 70 | 146 → 186 → 226 (round 3) | done, pushed |
+| Foundations | py-conditions | 71 | 151 → 191 → 231 (round 3) | done, pushed |
 | Foundations | py-loops | 73 | 149 | done, pushed |
 | Foundations | py-functions | 67 | 150 | done, pushed |
 | Foundations | py-comprehensions | 61 | 136 | done, pushed |
 | Foundations | py-errors | 104 | 167 | done, pushed |
-| Foundations | py-classes | 108 | 192 | done, pushed |
+| Foundations | py-classes | 108 | 192 → 233 → 273 (round 3) | done, pushed |
 | Foundations | np-arrays, np-operations | 139, 153 | 203 → 243, 215 → 255 (round 3) | done, pushed |
-| Foundations | pd-dataframes, pd-cleaning | 151, 163 | 194 → 234, 208 → 248 (round 3) | done, pushed |
+| Foundations | pd-dataframes, pd-cleaning | 151, 163 | 194 → 234 → 274, 208 → 248 → 288 (round 3) | done, pushed |
 | Foundations | plotting | 99 | 152 | done, pushed |
 | L1 | ml-what | 69 | 126 | done, pushed |
 | L1 | ml-types | 65 | 122 | done, pushed |
@@ -104,17 +104,24 @@ Section `mledge` under `courses`, 8 subjects (one per handout module) in structu
 | M1 | edge-foundations | 145 | done, pushed (top-up 17-Nov) |
 | M2 | edge-hardware | 102 | done, pushed (top-up 17-Nov) |
 | M3 | edge-data-iot | 95 | done, pushed |
-| M4 | edge-deployment | 94 | done, pushed |
+| M4 | edge-deployment | 114 | done, pushed (webinar top-up 19-Nov) |
 | M5 | edge-mlops | 95 | done, pushed |
-| M6 | edge-optimization | 95 | done, pushed |
+| M6 | edge-optimization | 115 | done, pushed (webinar top-up 19-Nov) |
 | M7 | edge-security | 94 | done, pushed |
-| M8 | edge-benchmarking | 100 | done, pushed |
+| M8 | edge-benchmarking | 120 | done, pushed (webinar top-up 19-Nov) |
 
 **Top-up, 17-Nov-2026, pushed `50aea96`.** New material: the CS1 slides (Module 1, 39 slides), transcripts for S1-3 and the learner's S1-3 notes (extracts in `C:/dev/quizdb-tools/edge-src/new/`). edge-foundations went 90 → 145 (+55, 21 edited), edge-hardware 90 → 102 (+12).
 - **Framework resolved:** the paper's "five-question deployment framework" is BLERP (bandwidth, latency, economics, reliability, privacy) applied letter by letter; connectivity sits under Reliability. The decision questions now use BLERP.
 - **Still unconfirmed:** the five pipeline stages (acquisition → preprocessing → inference → post-processing → action) appear in no slide or transcript. The course teaches sensing → inference → actuation plus a five-step development lifecycle. The bank keeps the five stages as a refinement because the papers ask for five.
 - **Material slips:** the S2 recording is dated 31-Oct-2026 (notes say ~8-Nov). The professor said "activation" for actuation, "transmitting signal" for transforming signals, and "LoRa, low range". Optimisation was announced for S13-14 (the handout says S11-12). The slide framework list includes the retired Google Cloud IoT Core, and Azure Data Box Edge is now Azure Stack Edge.
 - When the Module 2+ slides arrive, top up the other `edge-*` subjects the same way.
+
+**Webinar top-up, 19/20-Nov-2026, pushed `c5fa429`.** Source: Webinar Experiment 1, edge vs cloud inference (`machine-learning-on-the-edge/webinars/01 Edge AI Experiment 1/`, guide + notebook). +20 each to edge-deployment (TFLite/LiteRT interpreter, FastAPI serving), edge-optimization (param counts, dynamic-range quant, the 11.39x ratio) and edge-benchmarking (warm-up, median/P95 vs mean, RTT vs server time, payload bytes, localhost bias). Material slips stated in the explanations and specs:
+  - The 11.39x .keras → .tflite ratio is file-to-file: 3.15x from dropping the Adam state and metadata times 3.62x from int8. It is not the quantization gain.
+  - The 67x edge speedup is a lower bound, since the "cloud" was localhost with no real network or TLS.
+  - `tf.lite.Interpreter` is deprecated in favour of `ai_edge_litert`.
+  - Accuracy after quantization was never measured.
+  - Guide rounding: the HTTP+JSON overhead is 97.6% and the JSON overhead 81.3%. Mean > P95 means at most 5 outlier runs, not fewer than 5.
 
 All 8 were pushed together in `14015da` (753 questions, 8,088 total). The DB is reloaded from that commit. Issues in the course material that the explanations point out:
 - **No slides.** Both frameworks below were rebuilt from the papers, and the questions test the reasoning, not one exact wording. Replace them when the slides arrive.
@@ -160,7 +167,7 @@ Image-only slides (technologies pyramid, DevOps dimensions, DataOps architecture
 ## Known follow-ups
 - Writers stall if they write a whole question block in one edit. Tell them to append at most 10 questions per edit.
 - New questions in dl-neuron and dl-loss-gd are about 42-45% `out`, and in plotting about 57% `out` (targets 35% / 30%). A later pass can turn some into code mcqs.
-- The Python core banks are too `out`-heavy (STANDARD.md wants about 35%). Round 3 appends conceptual mcq/tf/fill, never converts. Pass 1 (18-Nov-2026, `f1056e8`): +40 each to py-conditions (now 62% out), py-dicts (56%), py-strings (54%), py-lists (52%). Pass 2 (18-Nov-2026, `fc57c1c`): +40-41 each to py-classes (233, 51% out), py-variables (195, 48%), py-functions (190, 46%), py-loops (189, 44%), py-errors (208, 42%), py-basics (188, 42%), py-comprehensions (176, 41%). Pass 3 (18-Nov-2026, `2745db9`): +40 each to np-arrays (243, 37% out), np-operations (255, 35%), pd-dataframes (234, 50%), pd-cleaning (248, 52%). **Next:** a second top-up for the banks still above ~45% (py-conditions, py-dicts, py-strings, py-classes, pd-cleaning, pd-dataframes). Unrun facts to spot-check: PyTorch `state_dict` aliasing, `model.eval()` vs `no_grad()`, forward-hook `handle.remove()` (py-loops/py-functions L4), TabError and stale .pyc answers (py-basics L4).
+- The Python core banks are too `out`-heavy (STANDARD.md wants about 35%). Round 3 appends conceptual mcq/tf/fill, never converts. Pass 1 (18-Nov-2026, `f1056e8`): +40 each to py-conditions (now 62% out), py-dicts (56%), py-strings (54%), py-lists (52%). Pass 2 (18-Nov-2026, `fc57c1c`): +40-41 each to py-classes (233, 51% out), py-variables (195, 48%), py-functions (190, 46%), py-loops (189, 44%), py-errors (208, 42%), py-basics (188, 42%), py-comprehensions (176, 41%). Pass 3 (18-Nov-2026, `2745db9`): +40 each to np-arrays (243, 37% out), np-operations (255, 35%), pd-dataframes (234, 50%), pd-cleaning (248, 52%). Pass 4 (19/20-Nov-2026, `c5fa429`): +40 each to py-conditions (231, 52% out), py-dicts (226, 46%), py-strings (233, 45%), py-classes (273, 43%), pd-cleaning (288, 45%), pd-dataframes (274, 42%). **Next:** only py-conditions is still clearly above 45%; one more +30 pass there would finish the type-mix work. Unrun facts to spot-check: PyTorch `state_dict` aliasing, `model.eval()` vs `no_grad()`, forward-hook `handle.remove()` (py-loops/py-functions L4), TabError and stale .pyc answers (py-basics L4).
 - Python 3.12+ `sum()` of floats is compensated: `sum([0.1]*10) == 1.0` is True. Explanations must contrast it with a `+=` loop.
 - Cloud-native banks use old-batch slides only (no papers). When current slides or papers arrive, top up the `cnas-*` subjects. Edge Module 1 slides are in (17-Nov); top up the other `edge-*` subjects as the Module 2+ slides arrive.
 
@@ -180,3 +187,4 @@ Image-only slides (technologies pyramid, DevOps dimensions, DataOps architecture
 | 18-Nov-2026 | Round 3 (type mix): +40 conceptual mcq/tf/fill each to py-conditions, py-dicts, py-strings, py-lists. 9,149 total. Pushed `f1056e8`, DB reloaded (student row kept). Fixed stale cnas pipeline rows. |
 | 18-Nov-2026 | Round 3 pass 2: +282 conceptual mcq/tf/fill across py-classes, py-errors, py-variables, py-basics, py-functions, py-comprehensions, py-loops. 9,431 total. Pushed `fc57c1c`, DB reloaded (student row kept). |
 | 18-Nov-2026 | Round 3 pass 3: +160 conceptual mcq/tf/fill across np-arrays, np-operations, pd-dataframes, pd-cleaning. 9,591 total. Pushed `2745db9`, DB reloaded (student row kept). |
+| 20-Nov-2026 | Edge webinar 1 top-up (+60 across edge-deployment/optimization/benchmarking) and round 3 pass 4 (+240 conceptual mcq/tf/fill across py-conditions, py-dicts, py-strings, py-classes, pd-cleaning, pd-dataframes). 9,891 total. Pushed `c5fa429`, DB reloaded (student row kept). |
