@@ -1312,4 +1312,334 @@ QUESTIONS = [
          "__hash__ = None marks instances as unhashable, so using one as a key raises TypeError instead of silently breaking the 'equal objects have equal hashes' rule. "
          "Define __hash__ from the same fields as __eq__, or use @dataclass(frozen=True).",
          topic="hashability", level=4),
+
+    # ---- round 3 pass 2: conceptual mcq/tf/fill
+    # ---------------------------------------------------------------- level 1
+    mcq("How do you add a new setting `dropout` with the value 0.1 to the dict `cfg`?",
+        ['cfg["dropout"] = 0.1', 'cfg.add("dropout", 0.1)', 'cfg.append({"dropout": 0.1})', 'cfg.insert("dropout", 0.1)'], 0,
+        "The same syntax you use to change an existing value.",
+        "Assigning to a key adds it if it's missing and overwrites it if it's there. Dicts have no add, append or insert methods "
+        "(those belong to sets and lists), so the other options raise AttributeError.",
+        topic="crud", level=1),
+    tf("A dict's values can be any type, including lists and other dicts.", True,
+       "The restriction you may have heard about applies to keys.",
+       "Values have no rules at all: numbers, strings, lists, functions, other dicts. Only keys must be hashable. That's why a JSON API response, "
+       "with lists and objects nested inside each other, maps so naturally onto Python dicts.",
+       topic="crud", level=1),
+    mcq("Which loop gives you only the values of the dict `prices`?",
+        ["for v in prices.values():", "for v in prices:", "for v in prices.keys():", "for v in prices.items():"], 0,
+        "Looping over a dict directly gives you something else.",
+        "values() yields just the values. Looping over the dict itself (or over keys()) yields the keys, and items() yields (key, value) pairs. "
+        "For a total, sum(prices.values()) does it in one line.",
+        topic="iteration", level=1,
+        diagram="""
+ prices = {"tea": 20, "coffee": 30}
+ for x in prices          -> "tea", "coffee"
+ for x in prices.values() -> 20, 30
+ for x in prices.items()  -> ("tea", 20), ("coffee", 30)
+"""),
+    fill("Remove the key 'tmp' from `d` and get its value back in one step: `v = d.____('tmp')`.", "pop",
+         "Same name as the list method that removes and returns an item.",
+         "d.pop(k) deletes the key and returns its value; it raises KeyError if the key is missing unless you pass a default, d.pop(k, None). "
+         "`del d[k]` also removes the key but gives you nothing back.",
+         topic="crud", level=1),
+    mcq("Which expression gives every tag that appears in set `a`, set `b`, or both?",
+        ["a | b", "a & b", "a - b", "a + b"], 0,
+        "You want the combination of the two sets.",
+        "| is union (everything in either set). & is intersection (only the shared items), - is 'in a but not b', and + isn't defined for sets "
+        "(TypeError). Duplicates disappear automatically, because a set holds each value once.",
+        topic="sets", level=1,
+        diagram="""
+   a       b
+ ( x  ( y ) z )      a | b -> x, y, z   (union)
+                     a & b -> y         (intersection)
+                     a - b -> x
+"""),
+    tf("Strings, numbers and tuples of strings or numbers can all be used as dict keys.", True,
+       "What do these types have in common?",
+       "All of them are immutable and hashable, so their hash never changes while they sit in the dict. Tuples are handy for composite keys, "
+       "such as (user_id, item_id) in a recommendation table.",
+       topic="hashability", level=1),
+    mcq("What does `json.dumps(cfg)` return?",
+        ["A str of JSON text", "A new dict", "bytes", "Nothing; it writes to a file"], 0,
+        "The trailing 's' stands for 'string'.",
+        "dumps = 'dump to string': it returns JSON text you can log, send in an HTTP body or store in a database. "
+        "json.dump (no s) writes to an open file instead, and json.loads goes the other way, from text back to a dict.",
+        topic="json-nested", level=1),
+    mcq("A classifier uses `label_map = {'cat': 0, 'dog': 1, 'bird': 2}`. What does `len(label_map)` usually tell you?",
+        ["The number of classes, i.e. how many outputs the model's last layer needs",
+         "The number of training examples",
+         "The highest accuracy the model can reach",
+         "The number of characters in the label names"], 0,
+        "len() of a dict counts its keys.",
+        "Each key is one class, so len(label_map) is 3 and the final layer needs 3 outputs (logits). "
+        "Building the model from len(label_map) instead of a hard-coded 3 keeps the two in sync when a class is added.",
+        topic="ml-patterns", level=1),
+    fill("`from collections import ____` gives a dict subclass that counts how often each item appears.", "Counter",
+         "Its name says what it does; it starts with a capital letter.",
+         "Counter(['a', 'b', 'a']) gives Counter({'a': 2, 'b': 1}), and missing items count as 0 instead of raising KeyError. "
+         "most_common(k) returns the top k, e.g. the most frequent predicted labels.",
+         topic="collections", level=1),
+    mcq("Why would you read a value with `d.get('k', default)` rather than `d['k']`?",
+        ["get returns the default instead of raising KeyError when the key is missing",
+         "get is the only way to read nested dicts",
+         "d['k'] is slower because it copies the dict",
+         "get also adds the key to the dict"], 0,
+        "What happens with each one when the key isn't there?",
+        "d['k'] raises KeyError for a missing key; get returns None, or the default you pass. Use get for optional fields, and d['k'] "
+        "when the key must exist, so a missing one fails loudly. get never changes the dict.",
+        topic="get-setdefault", level=1,
+        analogy="Like Java's `map.getOrDefault(key, fallback)`: a missing key gives you the fallback instead of an error."),
+
+    # ---------------------------------------------------------------- level 2
+    mcq("A cleanup step removes the key 'debug' from `cfg`, which may or may not have it. Which line never raises?",
+        ['cfg.pop("debug", None)', 'del cfg["debug"]', 'cfg.pop("debug")', 'cfg.remove("debug")'], 0,
+        "One of these takes a fallback value.",
+        "pop with a default returns that default when the key is missing instead of raising KeyError. `del` and pop without a default both raise for a "
+        "missing key, and dicts have no remove method (that's for lists and sets). The pop(k, None) idiom makes the cleanup idempotent.",
+        topic="crud", level=2,
+        analogy="Like an idempotent DELETE endpoint that returns 204 whether or not the resource still existed."),
+    mcq("You want to print a dict's keys in alphabetical order without changing the dict. Which loop does that?",
+        ["for k in sorted(d):", "for k in d.sort():", "for k in d.keys().sort():", "for k in sorted(d.values()):"], 0,
+        "Dicts and key views have no sort method.",
+        "sorted() accepts any iterable, and iterating a dict gives its keys, so sorted(d) is a new sorted list of keys; d itself is untouched. "
+        "d.sort() and d.keys().sort() raise AttributeError, and sorted(d.values()) sorts the values, not the keys.",
+        topic="iteration", level=2),
+    tf("When a key appears twice in a dict comprehension's input, the dict keeps the last value seen for that key.", True,
+       "Think of each pair as `d[k] = v`, run in order.",
+       "A comprehension assigns each pair in turn, so a later pair overwrites an earlier one, and the key keeps its original position. "
+       "When you build a label map from raw rows, duplicates vanish silently: compare len(d) with the number of rows if that matters.",
+       topic="comprehensions", level=2),
+    mcq("`cfg = cfg.update(overrides)` leaves `cfg` as None. Why?",
+        ["update changes the dict in place and returns None",
+         "update returns a copy, and the copy is empty",
+         "overrides must be a list of pairs",
+         "update deletes keys that aren't in overrides"], 0,
+        "What do list.sort() and list.append() return?",
+        "Methods that change an object in place return None, and the assignment then throws away your dict. Write `cfg.update(overrides)` on its own line, "
+        "or build a new dict with `cfg = cfg | overrides` (Python 3.9+).",
+        topic="merging", level=2),
+    mcq("Which is the cleanest way to group training examples by their label?",
+        ["by_label = defaultdict(list), then by_label[y].append(x) for each pair",
+         "by_label = Counter(), then by_label[y] += x",
+         "by_label = set(), then by_label.add((y, x))",
+         "by_label = {}, then by_label[y].append(x)"], 0,
+        "You need a list per label that appears the first time the label does.",
+        "defaultdict(list) creates an empty list the first time a label is seen, so the append always works. A plain dict raises KeyError on the first "
+        "append for each label. Counter adds numbers, not lists, and a set of pairs loses the grouping (and duplicates).",
+        topic="collections", level=2,
+        diagram="""
+ pairs:  (1,cat) (2,dog) (3,cat)
+ by_label:
+   cat -> [1, 3]
+   dog -> [2]
+"""),
+    fill("`{}` is an empty dict, so an empty set has to be written as ____.", "set()",
+         "Call the type itself.",
+         "Curly braces with nothing inside were dicts long before sets existed, so {} stays a dict. {1, 2} is a set because it has items and no colons. "
+         "`seen = {}` followed by `seen.add(x)` fails with AttributeError, a common first bug in de-duplication code.",
+         topic="sets", level=2),
+    tf("`len(d)` takes the same time for a dict with 10 keys as for one with 10 million keys.", True,
+       "Does the dict have to count its keys each time?",
+       "A dict keeps track of how many entries it holds, so len() is O(1). The same goes for lists, sets and strings. "
+       "Note the difference with `v in d.values()`, which does have to look at every value.",
+       topic="complexity", level=2),
+    mcq("After `data = json.loads('{\"done\": true, \"err\": null}')`, what are `data['done']` and `data['err']`?",
+        ["True and None", "'true' and 'null'", "1 and 0", "True and 'null'"], 0,
+        "json converts JSON values into the matching Python objects.",
+        "JSON true/false become Python True/False and null becomes None, so `if data['err'] is None:` works as expected. "
+        "Going the other way, json.dumps writes True as true and None as null.",
+        topic="json-nested", level=2),
+    tf("In PyTorch, `model.state_dict()` is a dict-like mapping from parameter names such as 'fc.weight' to tensors.", True,
+       "Checkpoints are saved and loaded by name.",
+       "It's an OrderedDict of names to tensors, which is why checkpoint errors talk about 'missing keys' and 'unexpected keys'. "
+       "Because it's a dict, you can inspect it with .keys(), filter it with a comprehension or rename keys before loading.",
+       topic="ml-patterns", level=2),
+    mcq("`d = {'b': 2, 'a': 1}`. After `keys = sorted(d)`, what is true?",
+        ["keys is the list ['a', 'b'], and d still iterates as 'b', 'a'",
+         "keys is a new dict sorted by key",
+         "d is now sorted too, because sorted works in place",
+         "keys is ['b', 'a'], because dicts keep insertion order"], 0,
+        "What type does sorted() always return?",
+        "sorted() always returns a new list, here of the keys, and never touches the original. To get a dict in key order, rebuild it: "
+        "dict(sorted(d.items())). Insertion order is what d keeps; sorted ignores it.",
+        topic="ordering", level=2),
+
+    # ---------------------------------------------------------------- level 3
+    mcq("In `cache`, None is a legitimate stored value. Which single lookup tells 'key missing' apart from 'key stored as None'?",
+        ["v = cache.get(k, _MISSING), then check `v is _MISSING`, where _MISSING = object()",
+         "v = cache.get(k), then check `v is None`",
+         "v = cache.get(k), then check `not v`",
+         "v = cache.get(k, None), then check `v == None`"], 0,
+        "You need a default that can never be a real value.",
+        "A fresh object() is a unique sentinel: no stored value can be that exact object, so `is _MISSING` only fires for a missing key. "
+        "get(k) returns None both ways, `not v` also fires for 0 and '', and get(k, None) is the same as get(k). `k in cache` works too, at the cost of a second lookup.",
+        topic="get-setdefault", level=3,
+        diagram="""
+ cache = {"a": None}
+ get("a", _MISSING) -> None        (stored, value None)
+ get("b", _MISSING) -> _MISSING    (missing)
+ get("a") / get("b") -> None / None (can't tell)
+"""),
+    tf("`list(d.keys())` and `list(d.values())` are guaranteed to line up position by position, as long as `d` isn't changed in between.", True,
+       "All three views walk the same internal entry array.",
+       "The docs guarantee that keys, values and items iterate in the same order when there are no changes in between, so zip(d.keys(), d.values()) "
+       "rebuilds the pairs. Still, d.items() says what you mean and can't drift if someone adds a line between the two calls.",
+       topic="iteration", level=3),
+    mcq("`words = ['<pad>', 'hello', 'world']`. Which builds the token-to-id vocabulary `{'<pad>': 0, 'hello': 1, 'world': 2}`?",
+        ["{w: i for i, w in enumerate(words)}",
+         "dict(enumerate(words))",
+         "{i: w for i, w in enumerate(words)}",
+         "{w: words.index(w) for w in set(words)}"], 0,
+        "enumerate yields (index, item). Which side should be the key?",
+        "The comprehension swaps the pair so the token is the key. dict(enumerate(words)) and {i: w ...} build the reverse map, id-to-token, which you also need "
+        "for decoding. The set version loses the order of iteration and calls index() each time, an O(n) scan that makes the build O(n^2).",
+        topic="comprehensions", level=3),
+    mcq("`merged = dict(defaults, **overrides)` raises TypeError for some `overrides`. Which ones?",
+        ["Ones with non-string keys, e.g. {1: 'a'}: ** unpacking needs keyword names",
+         "Ones with nested dict values",
+         "Ones that share keys with defaults",
+         "Empty dicts"], 0,
+        "`**` turns each key into a keyword argument.",
+        "Keyword arguments must be strings, so dict({}, **{1: 'a'}) fails with 'keywords must be strings'. Shared keys are fine (overrides win), and so are nested "
+        "values (they're shared, not copied). `defaults | overrides` or `{**defaults, **overrides}` accept any hashable keys.",
+        topic="merging", level=3),
+    tf("`Counter.most_common()` with no argument returns every item sorted by count, and items with equal counts keep the order they were first seen in.", True,
+       "Counter is a dict, and dicts remember insertion order.",
+       "most_common() sorts by count with a stable sort, so ties stay in first-seen order: Counter('abcab').most_common() gives [('a', 2), ('b', 2), ('c', 1)]. "
+       "If ties must be broken by name instead, for reproducible reports, sort yourself: sorted(c.items(), key=lambda kv: (-kv[1], kv[0])).",
+       topic="collections", level=3),
+    mcq("You cache the similarity of two documents, and sim(a, b) is the same as sim(b, a). Which cache key stores each pair once?",
+        ["frozenset((a, b)) (or tuple(sorted((a, b))))",
+         "(a, b)",
+         "{a, b}",
+         "a + b, the two ids joined as one string"], 0,
+        "The key must be hashable and ignore order.",
+        "A frozenset is hashable and order-free, so (a, b) and (b, a) map to one entry. The plain tuple stores both orders separately (twice the work), "
+        "a set is unhashable (TypeError), and string concatenation can collide: 'ab' + 'c' equals 'a' + 'bc'. Sorted tuples work when ids are comparable.",
+        topic="sets", level=3,
+        analogy="Like a friendship table keyed by an unordered pair: Asha-Ravi and Ravi-Asha are the same row."),
+    tf("`min(d, key=d.get)` looks at every key, so it's O(n) even though each `d.get` call is O(1).", True,
+       "How can min() know the smallest without seeing all of them?",
+       "A dict is unordered by value, so finding the smallest value means checking every one. Doing this inside a loop, e.g. picking the lowest-loss "
+       "run after every epoch, makes the loop O(n^2); keep a running best, or a heap (heapq) when you need repeated minimums.",
+       topic="complexity", level=3),
+    fill("Load a checkpoint even though the new head has different keys: `model.load_state_dict(sd, ____=False)`.", "strict",
+         "The keyword that controls whether every key must match.",
+         "With strict=False, PyTorch loads the keys that match and returns lists of missing and unexpected keys instead of raising. "
+         "Always look at those lists: a typo such as a 'module.' prefix can make strict=False load nothing at all, silently.",
+         topic="ml-patterns", level=3),
+    mcq("`json.dumps({(0, 1): 0.93})` fails, though the dict itself is fine in Python. Why?",
+        ["JSON object keys must be strings; json accepts str, int, float, bool or None keys but not tuples",
+         "Tuples aren't hashable",
+         "json can't serialise floats",
+         "The dict must be sorted first"], 0,
+        "What can a key in JSON text be?",
+        "JSON keys are always strings. json converts int, float, bool and None keys to strings for you, but a tuple raises TypeError ('keys must be str, int, float, "
+        "bool or None'). Encode composite keys yourself, e.g. '0,1', or store a list of records like {'pair': [0, 1], 'score': 0.93}.",
+        topic="json-nested", level=3),
+    mcq("A feature dict per example is turned into a model input vector. Why use `[feats.get(name, 0.0) for name in FEATURE_ORDER]` instead of `list(feats.values())`?",
+        ["The vector position must mean the same feature for every example, and insertion order depends on how each dict was built",
+         "values() is slower than a list comprehension",
+         "values() skips features that are 0",
+         "list(feats.values()) returns the keys"], 0,
+        "Column 3 should always be the same feature.",
+        "Dict order follows insertion, so two sources that build the same features in a different order, or skip a missing one, shift every column. "
+        "A fixed FEATURE_ORDER list saved with the model, plus a default for missing features, keeps training and serving aligned.",
+        topic="ml-patterns", level=3),
+    mcq("Why doesn't looking up the same long string key over and over re-hash all its characters each time?",
+        ["str objects cache their hash after the first hash() call",
+         "dicts store keys sorted, so no hashing is needed",
+         "Python hashes only the first 8 characters of a string",
+         "The dict remembers the last key looked up"], 0,
+        "Strings are immutable, so their hash can never change.",
+        "CPython computes a str's hash once and stores it in the string object. Later lookups reuse it and only pay for comparing with the stored key, which "
+        "starts with a pointer check. Hashing still covers every character the first time, so it's O(len) once per string object.",
+        topic="internals", level=3),
+
+    # ---------------------------------------------------------------- level 4
+    mcq("A data pipeline assigns users to train/test with `hash(user_id) % 10 < 8`. Each run puts different users in the test set. Why, and what's the fix?",
+        ["str hashes are randomised per process; use a stable hash such as hashlib.md5(user_id.encode()) and take that modulo 10",
+         "hash() is non-deterministic for every type; sort the users first",
+         "The modulo of a negative hash is negative; use abs()",
+         "Dict ordering changes between runs; use OrderedDict"], 0,
+        "Run `python -c \"print(hash('a'))\"` twice.",
+        "Since Python 3.3, str and bytes hashes are salted with a random per-process seed (unless PYTHONHASHSEED is set), so the split reshuffles on every run and "
+        "test users leak into training over time. Small ints hash to themselves, so it isn't 'every type'. A hashlib digest is stable across processes, machines and versions.",
+        topic="ml-patterns", level=4,
+        diagram="""
+ run 1: hash('user_42') % 10 -> 9  (test)
+ run 2: hash('user_42') % 10 -> 2  (train)   <- leak
+ md5('user_42') % 10        -> same every run
+"""),
+    mcq("Why does CPython randomise str hashes for each process?",
+        ["To stop hash-flooding attacks, where crafted keys all collide and make dict inserts O(n) each",
+         "To make sets print in a different order for testing",
+         "To spread keys more evenly than a fixed hash function could",
+         "To stop programs from depending on hash() at all"], 0,
+        "Think of a web server parsing JSON or form fields from an attacker.",
+        "With a fixed, known hash, an attacker can post thousands of keys that land in the same probe chain, turning parsing into O(n^2) work and pinning the CPU. "
+        "A secret per-process seed (SipHash) makes collisions impossible to predict. The changing set order is a side effect, not the goal.",
+        topic="internals", level=4,
+        analogy="Like rate-limiting a login endpoint: the feature isn't for normal users, it's there so one malicious client can't take the server down."),
+    tf("Since Python 3.10, `Counter(a=1, b=0) == Counter(a=1)` is True, because missing items count as zero.", True,
+       "Counter equality changed in 3.10 to match multiset maths.",
+       "In 3.10+, Counter equality treats a missing element as having count 0, so an explicit b=0 doesn't make the counters differ (before 3.10 it did, like a plain dict). "
+       "The b=0 entry is still stored and shows up in len() and iteration; use +c to drop zero and negative counts.",
+       topic="collections", level=4),
+    mcq("For `d = defaultdict(list)`, `d.get('x')` returns None but `d['x']` returns []. Why?",
+        ["Only d[k] calls __missing__, which runs the default factory; get() never does",
+         "get() checks a separate cache that's empty",
+         "defaultdict overrides get() to return None on purpose",
+         "d['x'] returns a shared empty list stored at creation"], 0,
+        "Which method does dict call when [] doesn't find a key?",
+        "dict.__getitem__ calls __missing__ on a miss, and defaultdict's __missing__ builds the default and inserts it. get(), `in` and pattern matching never call it, "
+        "so they have no side effects. That's handy for read-only checks, and a trap if you expect get() to create the list.",
+        topic="collections", level=4,
+        code='from collections import defaultdict\n\nd = defaultdict(list)\nprint(d.get("x"), dict(d))\nprint(d["x"], dict(d))'),
+    mcq("`cfg = ChainMap(cli, defaults)`. What happens on `cfg['lr'] = 0.5`, and on `del cfg['bs']` when 'bs' exists only in defaults?",
+        ["The write goes into cli only; the del raises KeyError, because writes and deletes only touch the first mapping",
+         "Both change defaults, the mapping that already held the keys",
+         "The write updates every mapping; the del removes 'bs' from defaults",
+         "Both raise TypeError: ChainMap is read-only"], 0,
+        "Reads search every layer. Do writes?",
+        "ChainMap looks keys up through each mapping in order, but writes, updates and deletes only apply to maps[0]. So the defaults stay untouched (good for layered config), "
+        "and deleting a key that lives only in a lower layer raises KeyError. To change a default, write to cfg.maps[-1] explicitly.",
+        topic="merging", level=4,
+        analogy="Like a copy-on-write overlay filesystem in Docker: reads fall through to the lower layers, writes land only in the top layer.",
+        diagram="""
+ read cfg['bs']:  cli? no -> defaults? yes -> 32
+ cfg['lr'] = 0.5: write -> cli only
+ del cfg['bs']:   cli only -> not there -> KeyError
+"""),
+    fill("Read every JSON float as an exact Decimal to avoid binary rounding: `json.loads(s, ____=Decimal)`.", "parse_float",
+         "The hook is named after the kind of number it handles.",
+         "json.loads calls parse_float with the original digit text, so '0.1' becomes Decimal('0.1') instead of the nearest binary float. Useful for money and IDs "
+         "in API payloads; parse_int is the matching hook for integers.",
+         topic="json-nested", level=4),
+    mcq("A sweep builds `configs = [dict(base) for _ in range(3)]` from `base = {'lr': 0.1, 'optim': {'name': 'adam'}}`, then sets `configs[0]['optim']['name'] = 'sgd'`. What happens?",
+        ["base and all three configs now say 'sgd': dict() copies only the top level, so they share one inner optim dict",
+         "Only configs[0] changes, because dict(base) makes a full copy",
+         "TypeError: nested dicts can't be copied with dict()",
+         "base changes but the other configs don't"], 0,
+        "How deep does dict(base) copy?",
+        "dict(base), base.copy() and {**base} are shallow: new outer dicts holding references to the same inner objects. The fix is copy.deepcopy(base) for each config. "
+        "In sweeps this bug quietly runs every trial with the last config's settings, so the results table lies.",
+        topic="ml-patterns", level=4,
+        analogy="Like spreading a JS object `{...base}`: the outer object is new, but nested objects are still the same references.",
+        diagram="""
+ base       -> {'lr': 0.1, 'optim': --+
+ configs[0] -> {'lr': 0.1, 'optim': --+--> {'name': 'sgd'}
+ configs[1] -> {'lr': 0.1, 'optim': --+     (one shared dict)
+"""),
+    fill("`sys.____(s)` returns a single shared copy of the string s, so repeated dict keys can be matched by identity before comparing characters.", "intern",
+         "The word for keeping one canonical copy of a string.",
+         "Interned strings are stored once; a lookup with an interned key finds the stored key by pointer comparison straight away. CPython already interns "
+         "identifiers and attribute names. Interning millions of repeated tokens or column names can also save memory.",
+         topic="internals", level=4),
+    tf("Python 3.12 inlined comprehensions (PEP 709), so a dict comprehension's loop variable now leaks into the surrounding function.", False,
+       "The change was about speed, not scope.",
+       "PEP 709 removed the hidden function call behind list, dict and set comprehensions, but it keeps their isolation: after `{k: 1 for k in 'ab'}`, k is still "
+       "undefined outside. Only Python 2 list comprehensions leaked. What did change: tracebacks no longer show a separate comprehension frame, and locals() inside one also lists the enclosing function's names.",
+       topic="comprehensions", level=4),
 ]
