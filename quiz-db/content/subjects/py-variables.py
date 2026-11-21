@@ -1279,4 +1279,221 @@ int32 range:  -2147483648 ............ 2147483647
      and k == key?  -> found
  equal but different hash -> wrong slot -> 'missing'
 """),
+
+    # ---- round 3 pass 5: conceptual mcq/tf/fill
+    # ---------------------------------------------------------------- level 1
+    mcq("A reviewer asks you to explain the `is` operator in `if a is b:`. What is it actually testing?",
+        ["Whether a and b refer to the very same object",
+         "Whether a and b have equal values",
+         "Whether a and b have the same type",
+         "Whether b is a subclass of a"], 0,
+        "It asks 'same one?', not 'same contents?'.",
+        "`is` compares identity: are both names attached to ONE object? == compares values, so two separate lists [1, 2] are == but not `is`. "
+        "Use `is` for None (x is None) and == for everything else. Mixing them up is one of the most common Python review comments.",
+        topic="identity", level=1,
+        analogy="== asks 'do these two files have the same contents?'; `is` asks 'are these two paths the same file?'."),
+    mcq("After `x = 5`, `y = x`, `x += 1`, y is still 5. Why?",
+        ["Ints can't be changed, so x += 1 makes a new int 6 and moves only the name x to it",
+         "y = x copied the digits of 5 into a new variable",
+         "+= only works on lists",
+         "Python froze y because it was assigned second"], 0,
+        "Can the number 5 itself turn into 6?",
+        "Numbers are immutable. x += 1 computes a new object (6) and rebinds x to it; y is still attached to the original 5. "
+        "Nothing was copied at y = x: for a short time both names pointed at the same 5. With a list, += changes the shared object and both names see it.",
+        topic="binding", level=1,
+        diagram="""
+ y = x      x --> 5 <-- y
+ x += 1     x --> 6
+                  5 <-- y""",),
+    mcq("What does the `: float` part of `lr: float = 0.01` do when the program runs?",
+        ["Nothing is checked: it's a type hint that tells readers and tools (editors, mypy) the intended type",
+         "It converts 0.01 to a float",
+         "It stops lr from ever holding a non-float",
+         "It reserves 8 bytes of memory for lr"], 0,
+        "Python stores the hint. Does it enforce it?",
+        "Type hints are notes. Python records them but never checks them, so lr = 'fast' on the next line runs fine. "
+        "Editors use them for autocompletion and mypy/Pyright report mismatches before you run the code, much like the TypeScript compiler. Libraries such as Pydantic read them on purpose to validate data.",
+        topic="dynamic-typing", level=1),
+    tf("Two different names can refer to the same object at the same time.", True,
+        "Think of two labels stuck on one box.",
+        "After b = a, both names point at one object, and id(a) == id(b). That's harmless for numbers and strings, which can't change. "
+        "For lists and dicts it means a change made through one name is visible through the other. This is aliasing, and it's behind many 'why did my list change?' bugs.",
+        topic="binding", level=1),
+    tf("`x = x + 1` changes the number object that x was pointing to.", False,
+        "Read the right side first: what does x + 1 produce?",
+        "x + 1 builds a brand-new int, and then = attaches x to it. The old number isn't modified, because ints are immutable. "
+        "Assignment never changes an object; it only moves a name. Only operations such as list.append or d[key] = v change an object in place.",
+        topic="binding", level=1),
+    fill("Inside a function, the statement `____ total` makes `total = 0` update the module-level total instead of creating a local one.",
+        "global",
+        "The opposite of 'local', for module level.",
+        "Without it, any assignment inside a function creates a local name. `global total` says 'this name means the module's total'. "
+        "Use it sparingly: functions that change globals are hard to test. Returning the new value is usually cleaner.",
+        topic="scope", level=1),
+    # ---------------------------------------------------------------- level 2
+    mcq("This prints [1, 2] for the second call, not [2]. Why?",
+        ["The default list is created once, when def runs, and every call that omits bucket shares and mutates that same list",
+         "Python caches the return value of each function",
+         "append adds the item twice",
+         "bucket is a global variable"], 0,
+        "When is `[]` in the def line evaluated: at each call, or once?",
+        "Default values are evaluated once, when the def statement runs, and stored on the function. A mutable default is therefore shared by every call that relies on it, "
+        "so it fills up across calls. This is the classic 'mutable default argument' bug: think of a request handler whose `errors=[]` keeps growing between requests.",
+        code="def add(item, bucket=[]):\n    bucket.append(item)\n    return bucket\n\nadd(1)\nprint(add(2))",
+        topic="binding", level=2,
+        diagram="""
+ def add(item, bucket=[])      one list, made at def time
+                    |
+ add(1) -> bucket --+--> [1, 2]
+ add(2) -> bucket --+""",),
+    mcq("What's the idiomatic fix for `def add(item, bucket=[])`?",
+        ["Use `bucket=None` and inside write `if bucket is None: bucket = []`",
+         "Use `bucket=list` and call it later",
+         "Use `bucket=[].copy()` in the def line",
+         "Add `global bucket` at the top of the function"], 0,
+        "Use a default that can't be mutated, then build the list inside.",
+        "None is immutable, so sharing it is harmless, and a fresh list is made on every call that needs one. "
+        "`[].copy()` in the def line still runs only once, so it's the same bug. `bucket=list` gives the class itself, not a list. "
+        "Linters flag mutable defaults (e.g. ruff B006) for exactly this reason.",
+        topic="binding", level=2),
+    tf("Default argument values are evaluated again every time the function is called.", False,
+        "Defaults are computed when Python runs the def statement.",
+        "They are evaluated once, when the function is defined, and kept in f.__defaults__. That's why a mutable default is shared across calls, "
+        "and why `def log(ts=time.time())` stamps every call with the same time. JavaScript does the opposite: its default parameters are evaluated on each call.",
+        topic="binding", level=2),
+    mcq("What does this print, and why?",
+        ["outer: in Python 3 a list comprehension has its own scope, so its x doesn't overwrite the outer x",
+         "2: the comprehension's loop variable leaks out, as in a for loop",
+         "NameError: x was deleted by the comprehension",
+         "[0, 1, 2]"], 0,
+        "A plain for loop leaks its variable. Does a comprehension?",
+        "Comprehensions run in their own scope (in 3.12+ they're inlined but keep that isolation), so their loop variable never touches the surrounding x. "
+        "A normal `for x in range(3):` would leave x = 2 behind. Python 2 leaked comprehension variables, so old tutorials may say otherwise.",
+        code="x = 'outer'\nsquares = [x * x for x in range(3)]\nprint(x)",
+        topic="scope", level=2),
+    mcq("A login check reads `if role is 'admin':`. Why is that a bug even if it works in a quick test?",
+        ["`is` checks for the same object; a string read from a request or a file is usually a different object with equal text, so use ==",
+         "Strings can't be compared at all",
+         "`is` ignores upper and lower case",
+         "'admin' is a keyword"], 0,
+        "Two equal strings: same object or not?",
+        "String literals in the same file are often shared (interned), so a quick test with a literal can pass. A string built at runtime, e.g. parsed from JSON, is a new object, and `is` returns False. "
+        "Python warns (SyntaxWarning: \"is\" with 'str' literal). Use == for strings and other values.",
+        topic="caching", level=2),
+    fill("For an int x, `x += 1` builds a new object and then ____ the name x to it (one word: what assignment does to a name).",
+        "rebinds",
+        "re + the word for attaching a name to an object.",
+        "Immutable objects can't change, so augmented assignment on them computes a new object and rebinds the name. "
+        "Other names still see the old object. For a list, += mutates the list in place AND rebinds the name to the same list.",
+        topic="binding", level=2),
+    # ---------------------------------------------------------------- level 3
+    mcq("A logging helper is written as `def log(msg, ts=time.time()):`. What goes wrong?",
+        ["time.time() runs once, when def runs, so every call that omits ts logs the same timestamp",
+         "time.time() runs twice per call",
+         "It raises TypeError because defaults can't call functions",
+         "Nothing: defaults are recomputed on each call"], 0,
+        "Same rule as the mutable-default bug, but with an immutable value.",
+        "A default can be any expression, but it's evaluated only at definition time. So hours later every log line still carries the import-time timestamp. "
+        "Use `ts=None` and `if ts is None: ts = time.time()`. The same goes for datetime.now(), uuid4() or random seeds placed in a def line.",
+        topic="binding", level=3),
+    mcq("`class Model: layers = []` and each instance does `self.layers.append(...)`. Why do all models end up with every layer?",
+        ["layers is a class attribute: one list shared by every instance, and append mutates that shared list; create it in __init__ with self.layers = []",
+         "append always writes to the class",
+         "Instances copy class attributes, but append skips the copy",
+         "Python merges lists that have the same name"], 0,
+        "Where does self.layers find the list when the instance has no layers of its own?",
+        "Attribute lookup checks the instance first and then the class. With no self.layers set, every instance finds the ONE class-level list and appends to it. "
+        "It's the mutable-default bug at class level. For dataclasses, the fix is field(default_factory=list).",
+        topic="binding", level=3,
+        diagram="""
+ Model.layers --> [conv, conv, fc, fc]   shared
+     ^      ^
+   m1      m2     (no own 'layers', both find the class one)""",),
+    mcq("Which line, inside a function with no `global` statement, raises UnboundLocalError when `items` is a module-level list?",
+        ["items += [1]", "items.append(1)", "items[0] = 1", "print(len(items))"], 0,
+        "Which of these is an assignment to the NAME items?",
+        "items += [1] is an augmented ASSIGNMENT, so the compiler treats items as local for the whole function, and reading it first fails. "
+        "items.append(1) and items[0] = 1 only change the object the global name points to, and print just reads it, so those three work. "
+        "This catches people because += and append do the same thing to a list outside a function.",
+        topic="scope", level=3),
+    mcq("A function body is `print(x)` followed by `global x`. What happens?",
+        ["SyntaxError when the code is compiled: the name is used before the global declaration",
+         "It prints the global x",
+         "UnboundLocalError when the function is called",
+         "The global statement is silently ignored"], 0,
+        "global is a compile-time declaration for the whole function.",
+        "Python decides each name's scope when it compiles the function, so a global statement must come before any use of that name. "
+        "Here the error 'name 'x' is used prior to global declaration' appears before anything runs, even if the function is never called. Put global and nonlocal lines at the top of the function.",
+        topic="scope", level=3),
+    tf("Inside a function, `x = 2` then `del x` then `print(x)` raises UnboundLocalError even when a global x exists.", True,
+        "Does del change which scope the name belongs to?",
+        "Assigning (and del-ing) x makes it local for the whole function. After del, the local slot is empty, and Python does NOT fall back to the global, "
+        "so reading it raises UnboundLocalError. At module level, del of a shadowing global DOES uncover the built-in, because those are separate dicts searched in turn.",
+        code="x = 1\n\ndef f():\n    x = 2\n    del x\n    try:\n        print(x)\n    except UnboundLocalError as e:\n        print(type(e).__name__)\n\nf()",
+        topic="scope", level=3),
+    tf("Each function defined with `def` inside a `for i in range(3)` loop remembers the value i had on that iteration.", False,
+        "Does a function store the value of a free variable, or the variable itself?",
+        "Closures capture variables, not values, with def as with lambda. All three functions look up the same i when called, after the loop ended at 2, so they all return 2. "
+        "Bind the value explicitly: def g(i=i): return i, or functools.partial. In JavaScript, `let` in a for loop makes a fresh binding each iteration; Python has nothing like that.",
+        code="fs = []\nfor i in range(3):\n    def g():\n        return i\n    fs.append(g)\nprint([f() for f in fs])",
+        topic="scope", level=3),
+    fill("A closure keeps its captured outer variables in cell objects, found in the tuple f.____.",
+        "__closure__",
+        "A dunder attribute named after what the function is.",
+        "f.__closure__ holds one cell per free variable (names listed in f.__code__.co_freevars), and cell.cell_contents is the current value. "
+        "Cells are shared with the outer function, which is why late binding happens and why nonlocal writes are seen by every closure over that variable.",
+        code="def make():\n    n = 0\n    def inc():\n        nonlocal n\n        n += 1\n        return n\n    return inc\n\nf = make()\nf()\nprint(f.__code__.co_freevars, f.__closure__[0].cell_contents)",
+        topic="scope", level=3),
+    # ---------------------------------------------------------------- level 4
+    mcq("`M.count` is a class-level int and `M.items` a class-level list. After `a.bump()` the snippet prints `0 1 0 [1] [1] True`. What explains it?",
+        ["self.count += 1 reads the class int and then SETS a new instance attribute on a; self.items += [1] mutates the shared class list in place and also sets an instance attribute pointing to it",
+         "+= always writes to the class, so both M.count and M.items change",
+         "+= always creates per-instance copies, so b is untouched for both",
+         "Instance attributes are read-only, so Python silently ignored count"], 0,
+        "self.x += v reads self.x, computes, and then assigns self.x.",
+        "For the int, __iadd__ doesn't exist, so the result is a new int stored as a.count, which shadows the class's 0. For the list, __iadd__ extends the class's list in place, "
+        "and the assignment then stores that same list as a.items, so b sees [1] too. Same statement, opposite effect, depending only on mutability. Initialise per-instance state in __init__.",
+        code="class M:\n    count = 0\n    items = []\n    def bump(self):\n        self.count += 1\n        self.items += [1]\n\na, b = M(), M()\na.bump()\nprint(M.count, a.count, b.count, M.items, b.items, 'items' in vars(a))",
+        topic="identity", level=4),
+    mcq("A dataclass declares `tags: list = []`. What happens?",
+        ["ValueError when the class is created: dataclasses refuse list, dict and set defaults; use field(default_factory=list)",
+         "Every instance silently shares one list, as with a function default",
+         "Each instance automatically gets its own copy of the list",
+         "TypeError the first time you append"], 0,
+        "dataclasses know about the mutable-default trap.",
+        "The decorator turns field defaults into __init__ defaults, which would be shared across instances. So it raises 'mutable default <class 'list'> for field tags is not allowed: use default_factory'. "
+        "The check looks for unhashable defaults, so a custom mutable class can still slip through. Pydantic models copy defaults per instance instead.",
+        topic="binding", level=4),
+    mcq("Which `is` result is guaranteed by the Python language itself, rather than being a CPython optimisation?",
+        ["After `y = x`, `y is x` is True for any object",
+         "`int('7') is 7` is True",
+         "`'ab' + 'c' is 'abc'` is True",
+         "`() is ()` is True"], 0,
+        "Which one follows from what assignment does, not from caching?",
+        "Assignment binds a name to an existing object and never copies, so y is x holds for every object and every implementation. "
+        "The others rely on CPython details: the small-int cache, constant folding plus string interning, and a shared empty tuple. Some of them also trigger a SyntaxWarning for `is` with a literal. "
+        "PyPy or a future CPython may give different answers, so never let program logic depend on them.",
+        topic="caching", level=4),
+    mcq("A nested function contains `nonlocal q` and `q = 1`, but no enclosing function ever assigns q (only a global q exists). What happens?",
+        ["SyntaxError at compile time: no binding for nonlocal 'q' found",
+         "q is created in the enclosing function",
+         "It falls back to the global q",
+         "UnboundLocalError when the nested function runs"], 0,
+        "nonlocal only searches enclosing FUNCTION scopes, and it does so while compiling.",
+        "nonlocal must refer to a name that some enclosing function already binds. The compiler resolves it, finds nothing and rejects the code before anything runs. "
+        "Unlike global, which can create a new module-level name, nonlocal never creates a variable and never reaches module level. Use global, or define q in the outer function first.",
+        topic="scope", level=4),
+    tf("In Python 3.13, writing `locals()['a'] = 99` inside a function does not change the local variable a.", True,
+        "PEP 667 defined what locals() returns inside a function.",
+        "In an optimised (function) scope, locals() returns an independent snapshot dict, and in 3.13 each call makes a fresh one, so writes to it are discarded. "
+        "Here a stays 1, and even locals()['a'] shows 1 again. Code that 'sets variables dynamically' this way never worked reliably. Use a dict of your own, or setattr on an object.",
+        code="def f():\n    a = 1\n    locals()['a'] = 99\n    print(a, locals()['a'])\n\nf()",
+        topic="scope", level=4),
+    fill("A function's default values are stored on the function object in the tuple f.____, which is where a mutable default lives between calls.",
+        "__defaults__",
+        "A dunder attribute named after default values.",
+        "After def add(item, bucket=[]), add.__defaults__ is ([],), and after a few calls it's ([1, 2],). Keyword-only defaults live in f.__kwdefaults__. "
+        "Looking at __defaults__ is a quick way to prove the shared-default bug in a code review, and some people use a mutable default as a deliberate memo cache. That works, but a dict or functools.lru_cache states the intent clearly.",
+        code="def add(item, bucket=[]):\n    bucket.append(item)\n    return bucket\n\nadd(1)\nadd(2)\nprint(add.__defaults__)",
+        topic="binding", level=4),
 ]

@@ -1334,4 +1334,253 @@ slice set:   plugins.REGISTRY --+
         "remove has two costs: finding the value and closing the gap.",
         "Every remove is a linear search plus a shift, repeated k times. It also only deletes the FIRST match, so duplicates survive. One pass with a set lookup is linear and removes every occurrence. With n = k = 100,000 that's the difference between minutes and milliseconds.",
         topic="complexity", level=4),
+
+    # ---- round 3 pass 5: conceptual mcq/tf/fill
+    mcq("A list has 5 items. What is the largest positive index you can use without an IndexError?",
+        ["4", "5", "6", "There is no limit"], 0,
+        "Counting starts at 0.",
+        "The 5 positions are numbered 0, 1, 2, 3, 4, so the last one is len(a) - 1 = 4. a[5] is one past the end and raises IndexError. "
+        "This off-by-one is the classic loop bug; a[-1] is the safe way to say 'the last item'.",
+        topic="indexing-slicing", level=1),
+    mcq("`labels = ['cat', 'dog', 'cat', 'cat']`. Which expression gives how many 'cat' labels there are?",
+        ["labels.count('cat')", "labels.index('cat')", "len('cat')", "labels.find('cat')"], 0,
+        "One list method is named after exactly this job.",
+        "count(x) returns how many items equal x, here 3. index('cat') gives the position of the first match (0), len('cat') is the length of the string (3, "
+        "but by coincidence), and lists have no find() at all; that's a string method. Counting labels like this is a first check for class imbalance.",
+        topic="methods", level=1),
+    fill("To sort a list from largest to smallest in place, write `nums.sort(____=True)`.", "reverse",
+         "The keyword argument means 'flip the order'.",
+         "nums.sort(reverse=True) sorts descending in place; sorted(nums, reverse=True) does the same but returns a new list. "
+         "Handy for leaderboards: scores sorted best first.",
+         topic="sorting", level=1),
+    mcq("`grid = [[1, 2], [3, 4]]`. Which expression gives the 4?",
+        ["grid[1][1]", "grid[2][2]", "grid[1, 1]", "grid[3]"], 0,
+        "First pick the row, then the item in that row.",
+        "grid[1] is the second row [3, 4], and [1] picks its second item, 4. grid[2][2] is off by one (indexes start at 0), and grid[1, 1] is NumPy syntax: "
+        "on a plain list it raises TypeError because the index is a tuple. A list of lists has no idea it's a grid.",
+        topic="nested", level=1,
+        diagram="""
+              col 0  col 1
+ grid[0] -> [  1  ,  2  ]
+ grid[1] -> [  3  ,  4  ]     grid[1][1] == 4
+"""),
+    mcq("What does `zip(names, scores)` give you when you loop over it?",
+        ["Pairs: the 1st name with the 1st score, the 2nd with the 2nd, and so on",
+         "All the names first, then all the scores",
+         "Every name combined with every score",
+         "One list with names and scores added together"], 0,
+        "Think of a zipper joining two sides tooth by tooth.",
+        "zip walks both lists side by side and yields tuples (name, score). It stops at the shorter list. Every-with-every pairing is itertools.product, "
+        "and joining one list after another is names + scores.",
+        topic="iter-tools", level=1,
+        analogy="Like a SQL join on row number: row 1 with row 1, row 2 with row 2."),
+    tf("Slicing a list, as in `a[1:3]`, never changes the original list `a`.", True,
+       "Does reading part of a list need to touch the list?",
+       "A slice builds a new list with the chosen items and leaves `a` alone. Only slice ASSIGNMENT (a[1:3] = [...]) or `del a[1:3]` changes a. "
+       "That's why `batch = data[i:i + 32]` is safe inside a training loop.",
+       topic="indexing-slicing", level=1),
+    mcq("Which of these is the best fit for a tuple rather than a list?",
+        ["A fixed (height, width) image size",
+         "The training losses, one added per epoch",
+         "A queue of jobs that grows and shrinks",
+         "A buffer that you clear after every batch"], 0,
+        "Which one never changes size after it's made?",
+        "Tuples suit fixed-size records where each position has a meaning: (height, width), (lat, lon), an array's .shape. "
+        "Anything that grows, shrinks or gets cleared needs a list (or a deque for a queue), since a tuple can't be changed in place.",
+        topic="tuples", level=1),
+    mcq("Which expression gives the last 3 items of a list, or the whole list if it has fewer than 3?",
+        ["a[-3:]", "a[len(a) - 3:]", "a[:-3]", "a[-3:-1]"], 0,
+        "Try each one on a = [1, 2].",
+        "a[-3:] starts 3 from the end, and a too-far start just clips to 0, so [1, 2] gives [1, 2]. a[len(a) - 3:] looks the same but for [1, 2] the start "
+        "is -1, which means 'one from the end', giving only [2]. a[:-3] drops the last 3, and a[-3:-1] misses the final item.",
+        topic="indexing-slicing", level=2),
+    tf("`a.insert(100, 'x')` on a 3-item list raises IndexError.", False,
+       "insert treats an index past the end differently from a[100].",
+       "insert clamps the position: anything past the end just appends, so the list becomes [..., 'x']. Reading a[100] would raise IndexError, "
+       "but insert, like slicing, forgives big indexes. It means a wrong index won't crash; it quietly puts the item at the end.",
+       topic="methods", level=2),
+    mcq("Checkpoints are named epoch_2.pt, epoch_10.pt and epoch_9.pt. `sorted(files)` puts epoch_10.pt first. What's the fix?",
+        ["Sort by the number: sorted(files, key=lambda s: int(s.split('_')[1].split('.')[0]))",
+         "Use sorted(files, reverse=True)",
+         "Use files.sort() instead of sorted(files)",
+         "Sort with key=len"], 0,
+        "Strings are compared character by character.",
+        "As strings, '1' < '2' < '9', so 'epoch_10' sorts before 'epoch_2'. Extract the number and sort on the int. key=len happens to work here, "
+        "but breaks once names differ in other ways (epoch_10 vs best_9). Zero-padding names when saving (epoch_002.pt) avoids the problem entirely.",
+        topic="sorting", level=2),
+    fill("You unpack (image, label) pairs but only need the label. The conventional one-character name for the ignored value is: `for ____, label in dataset:`", "_",
+         "It's a valid variable name that says 'I don't care about this'.",
+         "`_` is an ordinary name, but by convention it marks a value you ignore, and linters won't warn that it's unused. With star unpacking it "
+         "also works for many values: `first, *_ = row`. In a REPL `_` also holds the last result, so don't rely on it there.",
+         topic="tuples", level=2),
+    mcq("Which deque method adds an item to the FRONT (the left end)?",
+        ["appendleft", "insert(0)", "push", "prepend"], 0,
+        "deque names its left-end methods by adding 'left'.",
+        "d.appendleft(x) and d.popleft() work at the left end in O(1); append/pop work at the right. A deque does have insert(i, x), but it needs both "
+        "arguments and is O(n). There's no push or prepend. On a list, insert(0, x) shifts every item, which is what deque avoids.",
+        topic="stack-queue", level=2),
+    tf("Reading `a[999_999]` from a million-item list is as fast as reading `a[0]`.", True,
+       "How does a list find item i: walk or jump?",
+       "A list is an array of pointers, so a[i] is one address calculation: O(1) for any i. A linked list would have to walk, but a Python list doesn't. "
+       "Contrast: finding a VALUE with `x in a` or a.index(x) is O(n) because it has to look at items one by one.",
+       topic="complexity", level=2,
+       analogy="Like a JS array or Java ArrayList: get(i) jumps straight to slot i, while indexOf(x) has to scan."),
+    mcq("You need the position and both values while looping over two lists `xs` and `ys` in step. Which loop does it?",
+        ["for i, (x, y) in enumerate(zip(xs, ys)):",
+         "for i, x, y in enumerate(zip(xs, ys)):",
+         "for i, x, y in enumerate(xs, ys):",
+         "for (i, x), y in zip(xs, ys):"], 0,
+        "enumerate gives (index, item), and here the item is itself a pair.",
+        "enumerate yields (i, (x, y)), so the target needs the brackets to unpack the inner pair. Without them Python tries to unpack a 2-tuple into three "
+        "names and raises ValueError. enumerate(xs, ys) passes ys as the `start` number and raises TypeError, and zip(xs, ys) has no index to unpack.",
+        topic="iter-tools", level=2,
+        diagram="""
+ enumerate(zip(xs, ys)) yields:
+   (0, (x0, y0))
+   (1, (x1, y1))
+    i   (x,  y)   <- the target must match this shape
+"""),
+    tf("A function's default argument values are evaluated once, when the `def` statement runs, not each time the function is called.", True,
+       "When does Python see the default expression?",
+       "Defaults are computed when the function object is created and stored in f.__defaults__. That's the root of the mutable-default trap: `def f(acc=[])` "
+       "shares one list across all calls. Use None and create the list inside the function.",
+       topic="mutable-defaults", level=2,
+       analogy="Like a module-level constant computed at import time: every caller gets that same object, not a fresh one."),
+    tf("Indexing into the middle of a deque, `d[len(d) // 2]`, is O(n), not O(1) as it is for a list.", True,
+       "A deque is a linked chain of blocks, not one array.",
+       "deque is O(1) at both ends but has to walk block by block to reach the middle. On a million items, d[500_000] is hundreds of times slower than d[0]. "
+       "Use a deque for queues and sliding windows; if you need random access by index, use a list.",
+       topic="stack-queue", level=3),
+    mcq("You log the mean loss of each batch and the last batch is smaller. Why is `sum(batch_losses) / len(batch_losses)` slightly wrong as the epoch loss, and what's right?",
+        ["It gives the short last batch the same weight as full ones; weight by size: sum(l * n for l, n in zip(losses, sizes)) / sum(sizes)",
+         "sum() loses precision on floats, so use a loop",
+         "It double-counts the last batch",
+         "len() should be replaced by the number of epochs"], 0,
+        "Does a batch of 8 samples deserve the same vote as a batch of 64?",
+        "Each batch loss is already an average over its samples, so a plain mean of them over-weights the small final batch. A size-weighted mean gives the "
+        "true per-sample average, which is what a full-dataset evaluation reports. (sum() itself is accurate: since 3.12 it adds floats with compensation.)",
+        topic="ml-patterns", level=3),
+    mcq("Two runs tie on the best accuracy. Which does each line return?",
+        ["max returns the FIRST tied run; sorted(...)[-1] returns the LAST tied run",
+         "Both return the first tied run",
+         "Both return the last tied run",
+         "Both raise ValueError on a tie"], 0,
+        "max keeps the first winner it saw; a stable sort keeps ties in their original order.",
+        "max only replaces its best on a strictly greater key, so it keeps the earliest of the tied runs. The stable sort keeps tied runs in input order, so the "
+        "later one ends up last. Two 'equivalent' ways to pick the best model can choose different checkpoints. Break ties explicitly in the key.",
+        code="runs = [('a', 0.9), ('b', 0.9), ('c', 0.5)]\nbest1 = max(runs, key=lambda r: r[1])\nbest2 = sorted(runs, key=lambda r: r[1])[-1]",
+        topic="sorting", level=3),
+    mcq("Why is `[f(x) for x in xs]` usually faster than a for loop that calls `out.append(f(x))`?",
+        ["The comprehension uses a dedicated LIST_APPEND bytecode, skipping the `out.append` attribute lookup and method call for every item",
+         "It knows the final length and allocates the whole list once up front",
+         "It runs the items in parallel threads",
+         "It skips calling f for values it has already seen"], 0,
+        "Run dis on both and compare what happens per item.",
+        "The loop looks up `out.append` and makes a method call each time; the comprehension does one LIST_APPEND instruction. It does NOT pre-size: it can't "
+        "know how many items a generator or an `if` filter will give, so it grows with the same over-allocation as append. The gain is modest, and it vanishes "
+        "when f is heavy, such as a model call per item.",
+        topic="internals", level=3),
+    fill("To flatten a list of lists lazily, one inner list at a time, use `itertools.chain.____(list_of_lists)`.", "from_iterable",
+         "It's a classmethod that takes ONE iterable of iterables.",
+         "chain(*lists) needs every list unpacked as arguments up front; chain.from_iterable pulls them one by one, so it even works on a generator of batches. "
+         "Wrap it in list() if you need a list. Avoid sum(lists, []): it copies the growing result every step and is quadratic.",
+         topic="iter-tools", level=3),
+    mcq("A linter flags `def load(path, opts={}):` even though load only reads opts today. What is the real risk?",
+        ["Any later mutation, by load itself or by a caller that load hands opts to, silently changes the default for every future call",
+         "Reading a dict default is slow",
+         "Dicts aren't allowed as default values",
+         "opts is rebuilt on every call, wasting memory"], 0,
+        "Where does that one dict live, and who else can reach it?",
+        "The single dict lives in load.__defaults__. A refactor that adds `opts.setdefault('lr', 0.1)`, or a `return opts` to a caller that adds a key, "
+        "changes it for every later call, and the bug shows up far from its cause. Use `opts=None` and create the dict inside, or an immutable default such as a tuple.",
+        topic="mutable-defaults", level=3),
+    tf("After `a[:] = b`, `a is b` is True.", False,
+       "Slice assignment fills an existing list; it doesn't rebind the name.",
+       "a[:] = b copies b's items into a's own list object. a keeps its identity, so other names that share a see the new contents, but it stays a separate "
+       "list from b: a later b.append(...) won't show up in a. Plain `a = b` is the one that makes both names point at one object.",
+       topic="copying", level=3,
+       diagram="""
+ a = b      a --+
+            b --+--> [x, y]      one shared list
+ a[:] = b   a -----> [x, y]      a's own list, refilled
+            b -----> [x, y]      still a different list
+"""),
+    mcq("A loop builds a result with `t += (x,)` on a tuple, 100,000 times. What does that cost?",
+        ["O(n²) overall: each += builds a brand-new tuple and copies every item so far",
+         "O(n), the same as list.append",
+         "O(n log n)",
+         "Nothing: it raises TypeError, because tuples are immutable"], 0,
+        "A tuple can't grow in place, so what does += have to do?",
+        "For a tuple, t += (x,) means t = t + (x,): a new tuple one item longer, with all the old items copied in. 1 + 2 + ... + n copies is quadratic. "
+        "Collect items in a list and call tuple(items) once at the end. The TypeError option is tempting, but += on a tuple works; it just rebinds the name.",
+        topic="tuples", level=3,
+        analogy="Like building a Java String with += in a loop: each step copies everything so far, which is why StringBuilder exists."),
+    tf("After appending 1,000,000 items to a list and then popping all but 10, CPython keeps the whole million-slot buffer allocated until the list is freed.", False,
+       "Does list_resize only ever grow?",
+       "CPython also shrinks: when the length drops below half the capacity, it reallocates a smaller buffer. Measured with sys.getsizeof, the list went from "
+       "about 8.4 MB to under 200 bytes. Shrinking only at half-full, not on every pop, keeps pop amortised O(1) and avoids constant reallocations when the size "
+       "hovers around a boundary.",
+       topic="internals", level=4),
+    tf("During `lst.sort(key=f)`, if f appends to `lst`, CPython raises ValueError: list modified during sort.", True,
+       "What does the list look like from inside the key function?",
+       "While sorting, CPython detaches the item array and leaves the list looking empty (f sees len(lst) == 0). When it finishes it checks whether anything "
+       "was put into the list meanwhile and raises ValueError if so. Never mutate a list from its own key or comparison function.",
+       topic="sorting", level=4),
+    mcq("When is `array.array('d', ...)` a better choice than a list of floats, and when is NumPy better still?",
+        ["array packs raw 8-byte doubles (about 4x less memory than a list of distinct floats), good for compact storage and binary I/O; NumPy adds fast vectorised math",
+         "array is always faster than NumPy for math because it's in the standard library",
+         "array can hold mixed types, so it's more flexible than a list",
+         "array and list use the same memory; array only adds type checks"], 0,
+        "A list holds pointers. What does each pointer point to?",
+        "A list stores an 8-byte pointer per item, each to a separate 24-byte float object: about 32 bytes per value measured, versus 8 for array.array. "
+        "But arithmetic on an array still pulls out one Python float at a time, so loops are no faster than with a list. NumPy runs the math in C over the buffer. "
+        "array fits compact storage without a NumPy dependency, e.g. array.fromfile on a binary file.",
+        topic="internals", level=4,
+        diagram="""
+ list : [ptr | ptr | ptr]  -> float obj (24 B) each
+          8 B each
+ array: [ 8 B | 8 B | 8 B ]  raw doubles, no objects
+ numpy: same raw buffer + C loops for the math
+"""),
+    mcq("A loader thread produces batches and the training thread consumes them. Why use `queue.Queue(maxsize=8)` rather than a bare deque?",
+        ["Queue.get() blocks until a batch arrives and put() blocks when 8 are waiting, giving back-pressure; a deque needs polling and can grow without limit",
+         "deque can't be used from two threads at all",
+         "Queue is faster per operation than deque",
+         "deque can't hold tensors"], 0,
+        "What should each thread do when the other one is slower?",
+        "deque.append and popleft are thread-safe but never wait: the consumer has to spin or sleep when it's empty, and a fast producer can fill RAM. "
+        "Queue wraps a deque with a lock and conditions: blocking get with a timeout, a bounded put, task_done/join. deque(maxlen=8) is no substitute: "
+        "it silently drops the oldest batch.",
+        topic="stack-queue", level=4,
+        analogy="Like a bounded message queue between two services: consumers wait instead of polling, and a full queue pushes back on the producer."),
+    mcq("Collecting per-step outputs with `arr = np.append(arr, out)` inside the training loop gets slower and slower. Why, and what's the standard fix?",
+        ["np.append copies the whole array on every call (O(n²) overall); append to a Python list (amortised O(1)) and np.concatenate or np.stack once at the end",
+         "np.append sorts the array each time",
+         "NumPy arrays have a size limit, after which np.append slows down",
+         "Each np.append moves the array to the GPU and back"], 0,
+        "Can a NumPy array grow in place?",
+        "A NumPy array has a fixed-size buffer, so np.append allocates a new one and copies everything into it. A list only stores pointers and over-allocates, "
+        "so appends are cheap, and one final concatenate does a single copy. In a 5,000-step test the list version was about 6x faster, and the gap grows with n. "
+        "If the final size is known, preallocate np.empty(n) and fill by index.",
+        topic="ml-patterns", level=4),
+    mcq("A sliding-window loop runs `for i in range(n - k + 1): w = a[i:i + k]` over a Python list. What does it cost, and how is a NumPy slice different?",
+        ["O(n·k): every list slice allocates a new list and copies k pointers; a NumPy basic slice is an O(1) view of the same buffer",
+         "O(n): list slices are views too",
+         "O(n log k)",
+         "O(k): only the first slice copies, the rest are cached"], 0,
+        "Does a list slice share memory with the original?",
+        "A list slice is always a new list: k pointers copied and k refcounts bumped, so n windows cost O(n·k). For a rolling mean keep a running sum or a "
+        "deque(maxlen=k). In NumPy, a[i:i + k] is a view, and np.lib.stride_tricks.sliding_window_view gives every window without copying; just remember "
+        "views share memory, so writing into one changes the original.",
+        topic="indexing-slicing", level=4,
+        diagram="""
+ list  a[i:i+k] : new list, k pointers copied    O(k) each
+ numpy a[i:i+k] : view = same buffer,
+                  new start offset + length      O(1) each
+"""),
+    fill("To control what `copy.deepcopy` does with your class (say, share a huge frozen embedding table instead of copying it), define the method ____(self, memo).", "__deepcopy__",
+         "It's the dunder named after the function that calls it.",
+         "deepcopy calls obj.__deepcopy__(memo) if it exists. Copy the small mutable state with copy.deepcopy(part, memo) and keep a reference to the big read-only "
+         "parts. Passing memo along keeps shared sub-objects shared and stops infinite recursion on cycles. __copy__ does the same for copy.copy.",
+         topic="copying", level=4),
 ]

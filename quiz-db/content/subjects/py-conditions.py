@@ -1708,4 +1708,250 @@ QUESTIONS = [
         "(or HTTP 400) for input checks, and keep assert for internal invariants that should never fail, such as tensor shapes in your own code.",
         topic="if-structure", level=4,
         analogy="Like validation that only exists in the dev build: production traffic goes straight past it."),
+
+    # ---- round 3 pass 5: conceptual mcq/tf/fill
+    mcq("Which operator means 'less than or equal to'?",
+        ["<=", "=<", "<==", "<>"], 0,
+        "Say it out loud: 'less than, or equal'.",
+        "Python writes the symbols in the order you say them: `<=` and `>=`. `=<` is a SyntaxError, and `<>` was Python 2's old spelling of `!=`, "
+        "removed in Python 3. You'll meet `<=` in checks such as `if epoch <= warmup_epochs:`.",
+        topic="comparisons", level=1),
+    tf("An `if` condition doesn't have to be True or False: Python also accepts a number, a string or a list and decides by whether it is truthy.", True,
+       "What does `if` do with the value you give it?",
+       "`if` calls bool() on whatever it gets. 0, '', [], {} and None count as False; most other values count as True. "
+       "That's why `if losses:` is the normal way to ask 'did we record any losses yet?'. No cast or `.length` check is needed.",
+       topic="truthiness", level=1,
+       analogy="Like JavaScript's `if (value)` habit, with one twist: in JS an empty array `[]` is truthy, in Python an empty list is falsy."),
+    mcq("A pixel value `x` must be rejected if it is outside 0..255. Which condition is True for the bad values?",
+        ["x < 0 or x > 255", "x < 0 and x > 255", "0 <= x <= 255", "not x < 0 or x > 255"], 0,
+        "Can one number be below 0 and above 255 at the same time?",
+        "A bad value is too small OR too big. With `and`, both would have to hold at once, which no number can do, so nothing is ever rejected. "
+        "`0 <= x <= 255` is the opposite test: it is True for the good values. The last option reads as `(not x < 0) or x > 255`, which is True for every x from 0 up.",
+        topic="logic-ops", level=1,
+        diagram="""
+   bad    |        good         |    bad
+ <--------0=====================255-------->
+  x < 0      0 <= x <= 255          x > 255
+"""),
+    fill("A block can't be empty. To leave an `if` block with nothing in it for now, write the keyword ____ inside it.", "pass",
+         "It tells Python 'nothing to do here, move on'.",
+         "`if debug:` followed by an indented `pass` is valid; a block with nothing in it is an IndentationError. A comment alone doesn't count, "
+         "because comments aren't statements. Handy while sketching code, e.g. a TODO branch in a training loop.",
+         topic="if-structure", level=1),
+    fill("In a `match command:` statement, each pattern to try starts with the keyword ____.", "case",
+         "It's the same word a C or JS switch uses for its branches.",
+         "`match` names the value and each `case` gives a pattern. Python tries them top to bottom and runs only the first one that matches, "
+         "so there is no `break` to forget like in a C or JS switch.",
+         topic="match-case", level=1),
+    tf("`a == b` asks whether two values are equal, while `a is b` asks whether both names refer to the very same object.", True,
+       "Two separate lists can hold the same numbers.",
+       "Two separate lists [1, 2] are equal (`==` is True) but are two objects (`is` is False). Use `==` for values and `is` mainly for None. "
+       "Mixing them up gives bugs that appear only for some values, because CPython happens to share small ints and short strings.",
+       topic="identity", level=1,
+       diagram="""
+ a --> [1, 2]        a == b  -> True   same contents
+ b --> [1, 2]        a is b  -> False  two objects
+
+ c --> [1, 2] <-- d  c is d  -> True   one object
+"""),
+    mcq("`all(acc > 0.7 for acc in fold_accs)` is True when...",
+        ["every fold's accuracy is above 0.7",
+         "at least one fold's accuracy is above 0.7",
+         "the average accuracy is above 0.7",
+         "the last fold's accuracy is above 0.7"], 0,
+        "all = no exceptions allowed.",
+        "all() is True only if every item passes; any() needs just one. Neither looks at the average: folds of 0.95 and 0.6 average 0.775 "
+        "but fail this all() check. That's a stricter bar for a cross-validated model, which catches one fold that went badly.",
+        topic="any-all", level=1),
+    mcq("`a < b > c` is valid Python. What does it test?",
+        ["a < b and b > c", "(a < b) > c", "a < c", "Nothing: it's a SyntaxError"], 0,
+        "A chain always splits into neighbouring pairs.",
+        "Any chain `a op1 b op2 c` means `a op1 b and b op2 c`, with b evaluated only once. So `a < b > c` says b is bigger than both, and says "
+        "nothing about a versus c. `(a < b) > c` would compare a bool with c. It's legal but confusing; reviewers prefer `b > max(a, c)`.",
+        topic="comparisons", level=2,
+        diagram="""
+  a  <  b  >  c
+  \\____/ \\____/
+  a < b  and  b > c      (b evaluated once)
+"""),
+    tf("`if x:` and `if x is not None:` behave the same for every value of `x`.", False,
+       "Try x = 0 or x = ''.",
+       "`if x:` also skips 0, 0.0, '', [] and {}. When 0 is a real answer (an index, a dropout of 0.0, a count of 0 errors), `if x:` treats it as missing. "
+       "Use `is not None` when None means 'no value' and the falsy values are valid.",
+       topic="truthiness", level=2),
+    mcq("Which expression always gives exactly True or False, whatever kind of values `x` and `y` hold?",
+        ["not x", "x or y", "x and y", "x or False"], 0,
+        "Two of the operators hand back one of their operands.",
+        "`not` always returns a bool. `and` / `or` return one of their operands: `'' or 'n/a'` is 'n/a', and `x or False` gives x itself when x is truthy, "
+        "e.g. a list. When you need a real bool, such as a JSON flag or a metrics field, wrap it: bool(x or y).",
+        topic="logic-ops", level=2),
+    fill("To add an extra condition to a case, write `case [x, y] ____ x == y:`.", "if",
+         "It's the same keyword you'd use in a comprehension filter.",
+         "This is a guard: the pattern must match first (binding x and y), then the condition must be truthy, or Python moves on to the next case. "
+         "Guards check things pattern syntax can't express, such as `case {'loss': l} if l > 10:`.",
+         topic="match-case", level=2),
+    tf("`if loss < best: best = loss` written on a single line is valid Python.", True,
+       "Can one simple statement sit right after the colon?",
+       "A block made of simple statements can follow the colon on the same line. It's legal, but PEP 8 discourages it because the branch is easy to miss "
+       "when reading and in diffs. A nested compound statement can't go there: `if a: if b: pass` is a SyntaxError.",
+       topic="if-structure", level=2),
+    mcq("A helper should accept any real number, but `isinstance(x, float)` rejects `3`. Why, and what's a fix?",
+        ["int is not a subclass of float; check isinstance(x, (int, float)) or numbers.Real",
+         "3 is converted to the string '3' before the check",
+         "isinstance only works with classes you wrote yourself",
+         "float checks must use type(x) == float instead"], 0,
+        "Is int a kind of float in Python's class tree?",
+        "int and float are separate types, so isinstance(3, float) is False even though 3 == 3.0. Accept both with a tuple, or use numbers.Real, "
+        "which NumPy's scalar types also pass. Watch out: bool is a subclass of int, so True passes both checks.",
+        topic="type-checks", level=2),
+    mcq("A 3-class model outputs probs = [0.40, 0.35, 0.25]. Why is checking `p > 0.5` for each class the wrong way to pick the label?",
+        ["The probabilities share a total of 1, so no class may pass 0.5; pick the largest one (argmax)",
+         "A 0.5 threshold only works on integer outputs",
+         "The probabilities must be sorted first",
+         "Python can't compare a float with 0.5 exactly"], 0,
+        "What happens when the winner has only 40%?",
+        "With softmax over 3+ classes, the top class can sit well under 0.5, and then no label gets chosen. For one label per sample use argmax "
+        "(np.argmax(probs)). Per-class thresholds are right for multi-label problems, where each class has its own sigmoid score.",
+        topic="ml-patterns", level=2,
+        diagram="""
+ class :   0      1      2
+ prob  :  0.40   0.35   0.25    (sums to 1)
+ > 0.5?    no     no     no     -> no label at all
+ argmax :  ^ class 0
+"""),
+    mcq("Which is the same as `not any(x < 0 for x in xs)`?",
+        ["all(x >= 0 for x in xs)", "all(x < 0 for x in xs)", "any(x >= 0 for x in xs)", "not all(x < 0 for x in xs)"], 0,
+        "'Not one of them is negative' means...",
+        "'Not any negative' is 'all non-negative': De Morgan's law for any/all. Both forms are True for an empty list too. "
+        "`any(x >= 0 ...)` only needs one non-negative value, so [-1, 5] would wrongly pass it.",
+        topic="any-all", level=2),
+    mcq("Which of these raises TypeError?",
+        ["{'a': 1} < {'a': 2}", "[1, 2] < [1, 3]", "(1, 'x') < (2, 'a')", "{1} < {1, 2}"], 0,
+        "One built-in container has no ordering at all.",
+        "Dicts support == but not <, so ordering them raises TypeError; sort a list of dicts with key=. Lists and tuples compare item by item and stop at the "
+        "first difference, so 'x' vs 'a' is never reached. For sets, < means 'proper subset', so {1} < {1, 2} is True, a surprise of its own.",
+        topic="comparisons", level=3),
+    tf("An object of a class that defines neither `__bool__` nor `__len__` is always truthy.", True,
+       "What can Python fall back on when neither method exists?",
+       "With no __bool__ and no __len__, Python treats every instance as True. So a custom Result whose `.ok` is False still passes `if result:`, "
+       "and an 'empty' dataset wrapper passes `if dataset:`. Define __len__ (or __bool__) if truthiness should mean something.",
+       topic="truthiness", level=3),
+    mcq("Python has no `xor` keyword. Which test is True when exactly one of the bool flags `use_gpu` and `use_tpu` is set?",
+        ["use_gpu != use_tpu", "use_gpu or use_tpu", "use_gpu and not use_tpu", "not (use_gpu and use_tpu)"], 0,
+        "When are two bools different?",
+        "For two bools, != is exclusive or: True only when they differ (`^` also works on bools). `or` also accepts both set, and `not (a and b)` also accepts "
+        "neither set. If the values may not be real bools, such as a device string or None, compare bool(a) != bool(b): 'cuda' != 'tpu' is True even with both set.",
+        topic="logic-ops", level=3),
+    tf("Two different objects can report the same `id()` value during one program run.", True,
+       "What happens to an object's memory once it's freed?",
+       "id() is unique only among objects alive at the same time. In CPython it's the memory address, so once an object is freed a new one can reuse the slot. "
+       "A cache keyed on id(batch) can therefore return stale results for a brand-new batch. Keep a reference alive or use a real key.",
+       topic="identity", level=3),
+    mcq("Which value does `case [first, *rest]:` NOT match?",
+        ['"ab" (a str)', "(1, 2) (a tuple)", "range(3)", "[1] (a one-item list)"], 0,
+        "Sequence patterns make one deliberate exception.",
+        "Sequence patterns match any Sequence (list, tuple, range...) except str, bytes and bytearray, which are left out on purpose so a string isn't "
+        "split into characters. [1] matches with rest = []. Iterators and generators don't match either, since matching must not consume them.",
+        topic="match-case", level=3),
+    mcq("This prints True instead of 4. Why, and what's the fix?",
+        ["`:=` binds more loosely than `>`, so n = (len(data) > 3); write `(n := len(data)) > 3`",
+         "The walrus always stores a bool when used in an if",
+         "len() returns True for a non-empty list",
+         "print converts 4 to True inside an if block"], 0,
+        "Which runs first: the comparison or the assignment?",
+        "The walrus has almost the lowest precedence, so the comparison runs first and n gets its result. Bracket the assignment. "
+        "The same trap hits reading loops: `while chunk := f.read(n) != b''` stores a bool in chunk, not the bytes.",
+        code="data = [1, 2, 3, 4]\nif n := len(data) > 3:\n    print(n)",
+        topic="precedence", level=3),
+    mcq("A fraud model flags a payment when `p >= threshold`. Raising the threshold from 0.5 to 0.8 usually...",
+        ["raises precision and lowers recall: fewer flags, but more of them are real fraud",
+         "raises both precision and recall",
+         "lowers precision and raises recall",
+         "changes nothing, because the model's weights are the same"], 0,
+        "A higher bar lets fewer payments through to the 'flagged' side.",
+        "Only the payments the model is surest about stay above 0.8, so a flag is more often right (precision up), but more real fraud slips under the bar "
+        "(recall down). Pick the threshold on a validation set from the cost of each kind of error, not 0.5 by habit.",
+        topic="ml-patterns", level=3,
+        diagram="""
+ 0.0 ------------ 0.5 --------- 0.8 -------- 1.0
+                   |<---- flagged at 0.5 ---->|
+                                 |<- at 0.8 ->|
+ higher threshold: fewer flags, more precise, more misses
+"""),
+    tf("If a class's `__len__` returns -1, `bool(obj)` raises ValueError instead of returning True.", True,
+       "bool() falls back to __len__, and CPython checks what it gets back.",
+       "With no __bool__, bool() uses __len__ and validates the result: a negative value raises ValueError ('__len__() should return >= 0'), and a float "
+       "raises TypeError. A lazy dataset that returns -1 for 'unknown length' breaks both `if ds:` and len(ds); leave __len__ out for streams of unknown size.",
+       topic="truthiness", level=4),
+    tf("In Python 3.13, `if NotImplemented:` emits a DeprecationWarning.", True,
+       "NotImplemented is meant to be returned, not tested.",
+       "NotImplemented is the value __eq__ or __add__ return so Python tries the other operand. Testing it for truth is almost always a bug, e.g. a wrapper "
+       "doing `if self.__eq__(other):`, which treated NotImplemented as True and called unrelated objects equal. It has warned since 3.9, and Python 3.14 makes it a TypeError.",
+       topic="truthiness", level=4),
+    mcq("`(lo < x) & (x < hi)` works on a NumPy array `x`, but `lo < x < hi` raises ValueError. Why?",
+        ["A chain means `lo < x and x < hi`, and `and` calls bool() on the element-wise array from `lo < x`",
+         "NumPy doesn't support < between an array and a scalar",
+         "Chained comparisons are only allowed between ints",
+         "The two comparisons broadcast to different shapes"], 0,
+        "Rewrite the chain the way Python does.",
+        "A chained comparison is sugar for `and`, which needs one truth value, so it calls bool() on a boolean array: 'truth value of an array ... is ambiguous'. "
+        "Element-wise logic uses `&` with brackets, or np.logical_and. In pandas the same fix applies: df[(df.a > 0) & (df.a < 5)], or df.a.between(0, 5).",
+        topic="comparisons", level=4,
+        diagram="""
+ lo < x < hi
+   == (lo < x) and (x < hi)
+          |
+          v   bool(array([True, False, ...]))  -> ValueError
+ fix: (lo < x) & (x < hi)    element-wise, no bool()
+"""),
+    mcq("In CPython 3.13, how does a `match` with many literal cases (`case 1:`, `case 2:`, ... `case 200:`) find the right branch?",
+        ["It tests the cases one by one, top to bottom, like an if/elif chain",
+         "It compiles to a jump table, so every lookup is O(1)",
+         "It hashes the value and looks it up in a dict built at compile time",
+         "It sorts the cases and binary-searches them"], 0,
+        "Disassemble it with dis and count the comparisons.",
+        "The bytecode is one compare-and-jump per case, so a value that matches case 200 costs 200 comparisons. match is built for taking structure apart, "
+        "not for speed. For a large value-to-handler table, a dict lookup is O(1) and keeps the mapping as data.",
+        topic="match-case", level=4,
+        analogy="A C or Java switch over dense ints often becomes a jump table; Python's match is closer to a long chain of `else if`."),
+    mcq("An eval script checks `all(p == y for p, y in zip(preds, labels))` and reports a perfect score. What's the hidden bug?",
+        ["zip stops at the shorter list, so missing predictions are never compared; use zip(..., strict=True) or check the lengths",
+         "all() only returns True for lists of bools",
+         "== between ints is unreliable inside a generator",
+         "The generator is used up before all() starts"], 0,
+        "What if preds has 900 items and labels has 1,000?",
+        "zip silently drops the 100 labels with no prediction, and all() still says True. zip(..., strict=True) (3.10+) raises ValueError on a length mismatch, "
+        "and for two lists `preds == labels` checks the length too. all() of an empty zip is also True, so a model that produced nothing would 'pass'.",
+        topic="any-all", level=4,
+        analogy="Like a test that loops over the items in an API response: an empty or truncated response passes every assertion."),
+    fill("Define `__eq__` and `__lt__`, then decorate the class with `@functools.____` to get `<=`, `>` and `>=` for free.", "total_ordering",
+         "The decorator's name promises a full ordering.",
+         "total_ordering derives the missing rich comparisons from one of __lt__/__le__/__gt__/__ge__ plus __eq__. The derived methods are slower, "
+         "since each adds extra Python calls, so for a hot sort define them all or sort with key=. @dataclass(order=True) is another route: it compares fields as a tuple.",
+         topic="comparisons", level=4),
+    mcq("Inside a model's forward(), why write 'zero out negative scores' as `torch.where(x > 0, x, 0)` instead of `if x > 0:`?",
+        ["`if` needs one Python bool, so on a batch it raises (or forces a sync and a graph break), while torch.where applies the rule to every element in one op",
+         "torch.where is only shorter; both behave the same",
+         "`if` statements are not allowed inside an nn.Module",
+         "torch.where runs the condition on the CPU, which is faster"], 0,
+        "What is the truth value of a tensor with 64 elements?",
+        "`if tensor:` on more than one element raises RuntimeError. On a one-element GPU tensor it forces the CPU to wait for the GPU, and under torch.compile "
+        "a data-dependent `if` splits the graph. A mask keeps the whole batch on the device in one vectorised kernel and works for any batch size.",
+        topic="ml-patterns", level=4),
+    mcq("On Windows, a training script that builds a DataLoader with num_workers=4 at module level crashes with a RuntimeError about the bootstrapping phase. What's the fix?",
+        ["Put the training code under `if __name__ == '__main__':`, because each spawned worker re-imports the main script",
+         "Set num_workers to a negative number",
+         "Wrap the DataLoader in try/except RuntimeError",
+         "Move the imports below the DataLoader"], 0,
+        "How does a spawned worker get your functions and classes?",
+        "Windows (and macOS by default) starts workers with spawn: each one imports your script fresh, under the name '__mp_main__'. Without the guard that import "
+        "runs the training code again and tries to start more workers, which multiprocessing stops with this error. The guard runs the block only in the real program.",
+        topic="if-structure", level=4,
+        analogy="Python's version of Node's `if (require.main === module)`: top-level code should not run just because the file was imported.",
+        diagram="""
+ python train.py      __name__ == '__main__'    -> train()
+   |-- worker 1: import train   '__mp_main__'   -> skip
+   |-- worker 2: import train   '__mp_main__'   -> skip
+ no guard: every worker calls train() -> RuntimeError
+"""),
 ]

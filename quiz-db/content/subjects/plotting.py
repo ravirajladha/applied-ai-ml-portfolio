@@ -1417,4 +1417,386 @@ acc
  |  /  ~~~~~~
  +---------------------------> epoch""",
         topic="reading-charts", level=4),
+    # ---- round 3 pass 5: conceptual mcq/tf/fill
+    # ---------------------------------------------------------------- level 1
+    mcq("Which of these is a DISTRIBUTION question (best answered with a histogram or box plot)?",
+        ["'What range do most users' session lengths fall in, and are there extreme ones?'",
+         "'Did daily sign-ups go up or down over the last 6 months?'",
+         "'Do users who spend longer per session also buy more?'",
+         "'Which of our 5 regions had the most revenue?'"], 0,
+        "One variable, and you want to know its spread and shape.",
+        "Most chart choices start by naming the question type. A distribution question is about how ONE variable's values spread out: histogram or box plot. "
+        "Change over time is a trend (line). Does X move with Y is a relationship (scatter). Which group is biggest is a comparison (bar). "
+        "In an interview, saying the question type out loud before picking a chart shows you know why the chart fits.",
+        diagram="""
+ question            chart
+ trend over time  -> line
+ compare groups   -> bar
+ distribution     -> histogram / box
+ relationship     -> scatter""",
+        topic="choosing", level=1),
+    mcq("On a standard ROC curve, what goes on each axis?",
+        ["x: false positive rate (share of negatives wrongly flagged); y: true positive rate (share of positives caught)",
+         "x: threshold; y: accuracy",
+         "x: recall; y: precision",
+         "x: epoch; y: loss"], 0,
+        "ROC compares 'caught' against 'false alarms'.",
+        "Each point on a ROC (receiver operating characteristic) curve is one threshold: how many real positives you catch (TPR, also called recall) versus how many negatives you wrongly flag (FPR). "
+        "Recall on x and precision on y is a different plot, the PR curve. Threshold vs accuracy is a third one. Mixing up ROC and PR axes is a common slip in interviews.",
+        topic="ml-plots", level=1),
+    mcq("What does `alpha=0.3` do in `ax.scatter(x, y, alpha=0.3)`?",
+        ["Makes each marker 30% opaque, so places where many points overlap look darker",
+         "Draws only 30% of the points",
+         "Shrinks the markers to 30% of their size",
+         "Sets the significance level of a statistical test"], 0,
+        "alpha is the opacity of the colour.",
+        "alpha goes from 0 (invisible) to 1 (solid). With see-through markers, a pile of overlapping points looks darker than a single point, so you can see where the data is dense. "
+        "It's the first fix for overplotting, where thousands of solid dots merge into one blob. alpha doesn't drop any data.",
+        topic="plot-types", level=1),
+    mcq("A heatmap has a colorbar beside it. What does the colorbar tell you?",
+        ["Which data value each colour stands for",
+         "How many cells the heatmap has",
+         "The order in which the cells were drawn",
+         "Which colours are safe for printing"], 0,
+        "It's the legend for colour.",
+        "A colorbar is the key that maps colours back to numbers, like a map's legend. Without one, a reader can't tell whether dark blue means 0.1 or 100. "
+        "Check its range too: two heatmaps with different colorbar ranges can't be compared by eye.",
+        topic="color-images", level=1),
+    mcq("What does the `dpi` setting control when you save a figure as PNG?",
+        ["Dots (pixels) per inch: how many pixels each inch of the figure becomes, so higher dpi gives a sharper, larger image",
+         "The font size",
+         "The number of data points drawn",
+         "The colour depth of the image"], 0,
+        "dpi = dots per inch.",
+        "A figure is sized in inches (figsize). dpi decides how many pixels each inch becomes, so a 6.4 x 4.8 inch figure at dpi=100 is 640 x 480 pixels, and at 300 it is 1920 x 1440. "
+        "Use around 150-300 for slides and reports. A low-dpi PNG looks blurry when it gets stretched.",
+        topic="pitfalls", level=1),
+    tf("On a ROC plot, the diagonal line from (0, 0) to (1, 1) shows what a model guessing at random would score.", True,
+        "A random guesser flags positives and negatives at the same rate.",
+        "If a model ignores the input and flags, say, 30% of rows at random, it catches 30% of positives AND 30% of negatives, so TPR = FPR: a point on the diagonal. "
+        "A useful model's curve bows up towards the top-left corner. A curve below the diagonal means the scores are flipped.",
+        diagram="""
+ TPR
+ 1 |   ___-----'
+   |  /     .'
+   | /    .'   <- random (diagonal)
+   |/   .'
+ 0 +-------------> FPR
+   0            1""",
+        topic="ml-plots", level=1),
+    tf("Like the bars of a category bar chart, the bars of a histogram can be sorted from tallest to shortest.", False,
+        "What does the x axis of a histogram stand for?",
+        "A histogram's x axis is a number line: each bar is a bin such as 10-20 ms, and the bins must stay in numeric order or the shape of the distribution is lost. "
+        "A bar chart of categories (cities, classes) has no natural order, so sorting by height there makes it easier to read.",
+        topic="plot-types", level=1),
+    tf("If you call `plt.plot([1, 2, 3])` without creating a figure first, pyplot creates a figure and an Axes for you.", True,
+        "pyplot keeps track of a 'current' figure.",
+        "pyplot works like a state machine: when there's no current figure, plt.plot makes one, adds an Axes and draws on it. "
+        "Handy in a quick notebook, but this hidden state is also why plt.* calls sometimes land on the wrong chart in bigger code. "
+        "fig, ax = plt.subplots() makes the objects explicit.",
+        topic="fig-axes", level=1,
+        analogy="Like a global 'current tab' in an editor: commands act on whatever tab happens to be active."),
+    fill("To make the y axis logarithmic in the OO style, call `ax.____('log')`.",
+        "set_yscale",
+        "OO setters start with set_; this one sets the y scale.",
+        "ax.set_yscale('log') (and set_xscale for x) changes how the axis maps values to positions: each factor of 10 gets the same space. "
+        "It's the standard view for losses that fall over several orders of magnitude.",
+        topic="scales-ticks", level=1),
+    fill("`fig.savefig('loss.png', ____=300)` saves a high-resolution image (one word, the pixels-per-inch setting).",
+        "dpi",
+        "Three letters: dots per inch.",
+        "dpi sets the pixel density of raster formats like PNG. dpi=300 is print quality. Vector formats (PDF, SVG) mostly ignore it, because lines and text are stored as shapes, not pixels.",
+        topic="pitfalls", level=1),
+    # ---------------------------------------------------------------- level 2
+    mcq("A figure made with the default figsize (6.4 x 4.8 inches) is saved with `fig.savefig('f.png', dpi=200)`. How big is the PNG?",
+        ["1280 x 960 pixels", "640 x 480 pixels", "200 x 200 pixels", "6.4 x 4.8 pixels, scaled up by the viewer"], 0,
+        "Pixels = inches x dots per inch.",
+        "6.4 x 200 = 1280 and 4.8 x 200 = 960. figsize sets the size in inches and dpi turns inches into pixels, so you can make a sharper image without changing the layout. "
+        "640 x 480 is what you'd get at the default dpi of 100.",
+        topic="pitfalls", level=2),
+    mcq("Your loss chart looks sharp in the notebook but blurry when stretched across a slide. What's the best fix?",
+        ["Save at a higher dpi (e.g. 200-300), or save as SVG/PDF so lines and text stay sharp at any size",
+         "Use a thicker figure border",
+         "Call plt.show() before saving",
+         "Switch to a log scale"], 0,
+        "Blurry means too few pixels for the size it's shown at.",
+        "A PNG has a fixed number of pixels; stretching it past that size blurs it. More dpi means more pixels. A vector format stores shapes instead, so it scales cleanly. "
+        "Vector files get huge with millions of points, though; for those, use a PNG or rasterise just the dense layer.",
+        topic="pitfalls", level=2),
+    tf("If a confusion-matrix heatmap of raw counts shows one very dark diagonal cell, the model must be doing well.", False,
+        "What if one class has 95% of the rows?",
+        "With 950 negatives and 50 positives, a model that predicts 'negative' every time gets a near-black top-left cell, while the positive row is pale and almost all wrong. "
+        "Raw counts let the big class dominate the colour scale. Look at the per-row (recall) view, or annotate each cell with its number.",
+        diagram="""
+            pred 0   pred 1
+ true 0  [  950 ##     0   ]   dark, looks great
+ true 1  [   50 .      0   ]   every positive missed""",
+        topic="heatmaps", level=2),
+    mcq("You log loss after every batch instead of once per epoch, and the curve now looks very jagged. What's the most likely reason?",
+        ["Each batch is a different small sample, so its loss naturally jumps around; the epoch average hides that noise",
+         "The learning rate doubled when you changed the logging",
+         "The model is overfitting",
+         "matplotlib adds random jitter to long lines"], 0,
+        "An epoch average is an average over many batches.",
+        "Per-batch loss depends on which examples landed in that batch, so it's noisy even when training is healthy. Averaging over an epoch smooths it. "
+        "To read the trend, overlay a rolling mean on the raw curve. Worry when the noise grows over time or the trend goes up, not when the line is merely jagged.",
+        topic="training-curves", level=2),
+    mcq("You colour points by model name (5 models, no order between them). Which kind of colormap fits?",
+        ["A qualitative (categorical) map like 'tab10': distinct hues with no implied order",
+         "A sequential map like 'Blues'",
+         "A diverging map like 'RdBu'",
+         "A rainbow map like 'jet'"], 0,
+        "Is 'model C' more than 'model A'?",
+        "Sequential maps (light to dark) say 'more vs less'. Diverging maps say 'above vs below a centre'. Categories with no order need hues that are easy to tell apart and imply no ranking. "
+        "That's 'tab10', matplotlib's default colour cycle. Using 'Blues' would suggest that the darkest model is the 'biggest' one.",
+        diagram="""
+ sequential   light ......... dark       amounts
+ diverging    blue ... white ... red     +/- around 0
+ qualitative  blue orange green red ...  categories""",
+        topic="color-images", level=2),
+    tf("A line chart's y axis must always start at zero, just like a bar chart's.", False,
+        "What does a line encode: length or position?",
+        "Bars encode values as lengths, so a cut-off baseline distorts them. A line encodes values as positions, and zooming in to show a change from 0.91 to 0.94 accuracy is normal and honest, as long as the axis is labelled. "
+        "The trap is the other way round: a line zoomed so far in that noise looks like a big trend.",
+        topic="choosing", level=2),
+    mcq("You tried learning rates 1e-5, 1e-4, 1e-3, 1e-2 and 1e-1 and want to plot final loss against learning rate. How should the x axis be set up?",
+        ["Log scale (ax.set_xscale('log')), so each factor of 10 gets equal space",
+         "Linear scale, so that the true distances are shown",
+         "As categories in a pie chart",
+         "Sorted by final loss instead of learning rate"], 0,
+        "On a linear axis, where would 1e-5, 1e-4 and 1e-3 end up?",
+        "On a linear axis running to 0.1, the points for 1e-5, 1e-4 and 1e-3 sit almost on top of each other at the left edge. Hyperparameters searched in powers of 10 are plotted on a log axis. "
+        "The loss usually forms a U shape there, with its best region visible. The same goes for weight decay or regularisation strength.",
+        topic="scales-ticks", level=2),
+    fill("In pyplot, `plt.____()` returns the current Axes (the one plt.plot would draw on).",
+        "gca",
+        "'get current axes'.",
+        "plt.gca() gets the current Axes and plt.gcf() the current Figure. They connect the pyplot state machine to the OO API: "
+        "when a library has drawn something with plt.*, ax = plt.gca() gives you the object so you can keep customising it.",
+        topic="fig-axes", level=2),
+    fill("For 1 million (x, y) points, `ax.____(x, y, gridsize=50)` groups them into hexagonal bins coloured by count.",
+        "hexbin",
+        "hex + bin.",
+        "hexbin draws a 2-D histogram with hexagonal cells, so dense regions show as counts with a colorbar instead of a solid blob. "
+        "Hexagons tile the plane with less directional bias than squares. Pass bins='log' when counts vary over orders of magnitude.",
+        topic="plot-types", level=2),
+    mcq("Your training loss is flat-ish, then suddenly drops at epoch 30 and again at epoch 60, like a staircase. What usually explains this?",
+        ["A step learning-rate schedule that cuts the LR (e.g. by 10x) at those epochs",
+         "Data leakage that starts at epoch 30",
+         "The validation set was reshuffled",
+         "matplotlib re-scaled the y axis at those points"], 0,
+        "Something changes at exactly fixed epochs.",
+        "With a step schedule (e.g. MultiStepLR at milestones 30 and 60), each LR cut lets the optimiser settle deeper into the minimum, so the loss drops suddenly. "
+        "Plotting the LR on a panel below, with sharex=True, makes the cause obvious. Cosine schedules give a smooth curve instead.",
+        diagram="""
+ loss
+  |\\____
+  |     \\________
+  |              \\________
+  +-----30-------60--------> epoch
+       LR/10    LR/10""",
+        topic="training-curves", level=2),
+    # ---------------------------------------------------------------- level 3
+    mcq("You scatter 2 million points with `alpha=0.05` to fix overplotting. The core of the cloud is still one flat, solid colour. Why?",
+        ["Opacity stacks as 1 - (1 - alpha)^n, so after about 100 overlapping points a spot is over 99% opaque and 100 looks the same as 10,000",
+         "alpha only works on line plots, not on scatter",
+         "matplotlib caps alpha at 0.5",
+         "Transparency is lost when the figure is saved"], 0,
+        "Work out how opaque a spot is after 100 layers of 5%.",
+        "Each marker lets through 95% of what's behind it, so 100 stacked markers let through 0.95^100, about 0.6%: the spot looks solid. Alpha helps in medium-density regions but saturates in the densest ones. "
+        "To see real counts, use hexbin / hist2d with a log colour scale, or a KDE plot.",
+        diagram="""
+ points stacked:   1     10     50    100   1000
+ opacity (a=.05): .05   .40    .92   .99   1.00
+                                 ^ the eye can't tell these apart""",
+        topic="plot-types", level=3),
+    tf("Squaring every score (scores in [0, 1]) leaves the ROC curve and ROC AUC exactly the same.", True,
+        "ROC only cares about the ORDER of the scores.",
+        "Squaring keeps the order of scores in [0, 1], so every threshold splits the rows the same way and each (FPR, TPR) point is unchanged. Any order-preserving transform works the same: log, sigmoid, multiplying by 10. "
+        "The flip side: ROC tells you nothing about whether the probabilities are calibrated. For that you need a reliability plot.",
+        code="from sklearn.metrics import roc_auc_score\ny = [0, 0, 1, 1, 0, 1]\ns = [0.1, 0.4, 0.35, 0.8, 0.6, 0.9]\nprint(roc_auc_score(y, s), roc_auc_score(y, [v ** 2 for v in s]))",
+        topic="ml-plots", level=3),
+    tf("A classifier with ROC AUC 0.99 can still be badly calibrated, e.g. saying 0.99 for cases that are positive only 70% of the time.", True,
+        "AUC measures ranking. Does ranking say anything about the actual probability values?",
+        "AUC only checks that positives get higher scores than negatives. Squash every score towards 0.5, or push them all towards 1, and AUC is unchanged while the probabilities become meaningless. "
+        "If the scores drive decisions such as 'flag if risk > 0.8' or expected-cost maths, check a reliability plot, and calibrate if needed (CalibratedClassifierCV, temperature scaling).",
+        topic="ml-plots", level=3),
+    tf("Saving the same figure with dpi=300 instead of dpi=100 makes the text look smaller relative to the plot.", False,
+        "Font sizes are in points, and a point is 1/72 of an inch.",
+        "Fonts, line widths and the figure itself are all sized in physical units (points and inches). Raising dpi scales EVERYTHING by the same factor: 3x the pixels, 3x the text height in pixels, same proportions. "
+        "To change how big text looks relative to the plot, change figsize or the font size. A large figsize with small fonts is why some saved plots look tiny in papers.",
+        topic="pitfalls", level=3),
+    mcq("A team's model-error heatmap uses red for 'bad' and green for 'good'. Why is that a problem, and what's a better choice?",
+        ["About 1 in 12 men has red-green colour-vision deficiency and can't tell the two apart; use a map that varies in lightness (viridis, cividis) or blue/orange, and print the values in the cells",
+         "Red and green can't be printed",
+         "matplotlib renders red more slowly than other colours",
+         "Heatmaps must always be greyscale"], 0,
+        "Think about who might be reading the chart.",
+        "The most common colour-vision deficiency mixes up red and green, so 'good' and 'bad' look the same muddy colour to some readers. Maps that change steadily in lightness still read correctly in greyscale and for colour-blind viewers. "
+        "Adding the numbers (or a second cue such as hatching) means colour isn't the only thing carrying the information.",
+        topic="color-images", level=3),
+    tf("Printed in greyscale, the 'jet' rainbow colormap still shows low values as dark and high values as light, in order.", False,
+        "Where is jet brightest: at its ends or in the middle?",
+        "jet goes dark blue -> cyan -> yellow -> red -> dark red. Its lightness rises to a peak around cyan/yellow and then falls again, so in greyscale the top values come out dark like the bottom ones. "
+        "viridis and cividis get steadily lighter from end to end, so their order survives greyscale printing and colour-blind viewers.",
+        diagram="""
+ lightness along the map (0 = low value, 1 = high)
+ jet:      __/~~~~\\__     up, then down again
+ viridis:  ______/////     steadily up""",
+        topic="color-images", level=3),
+    mcq("Request sizes range from 100 bytes to 10 MB, with most under 10 KB. A histogram with 50 linear bins shows one tall bar and nothing else. Best fix?",
+        ["Use log-spaced bins (np.logspace) together with ax.set_xscale('log'), so each decade gets its own bins",
+         "Use 5000 linear bins",
+         "Drop every value above 10 KB",
+         "Use a pie chart of the size groups"], 0,
+        "Linear bins 200 KB wide put almost everything in bin one.",
+        "Heavy-tailed data (sizes, latencies, word counts, income) needs bins that grow with the value. np.logspace(2, 7, 50) puts equal-width bins on a log axis and reveals the shape. "
+        "Linear bins on a log axis look odd (the bars get thinner to the right), and many linear bins still squash the small values. Deleting the tail hides the very outliers you want to know about.",
+        topic="choosing", level=3),
+    fill("To compare three confusion-matrix heatmaps by colour, give every imshow the same colour range: pass the same ____ and vmax.",
+        "vmin",
+        "The lower end of the colour scale.",
+        "By default each imshow stretches its colours from its own min to its own max, so 'dark blue' means a different number in each panel. "
+        "Fixing vmin and vmax (or sharing one Normalize object) and drawing a single colorbar makes the panels comparable.",
+        topic="heatmaps", level=3),
+    mcq("You scatter class 0 (10,000 points, blue) and then class 1 (10,000 points, orange) on one Axes. The overlap region looks all orange. What's going on?",
+        ["Artists drawn later sit on top, so orange covers the blue points beneath; shuffle the drawing order, use small markers with alpha, or plot each class in its own panel",
+         "matplotlib mixes the two colours into orange",
+         "Class 1 really outnumbers class 0 in that region",
+         "The legend is hiding the blue points"], 0,
+        "Which points are painted last?",
+        "In one Axes, artists added later are drawn on top (unless you set zorder). With dense overlap the last class drawn wins, and the chart says 'class 1 dominates here' when it may not. "
+        "Plot both classes in one scatter call with rows in random order and a colour array, or use side-by-side panels or density contours. Worth checking in any t-SNE/UMAP plot of labelled points.",
+        topic="reading-charts", level=3),
+    mcq("Scaling-law charts plot test loss against training compute on log-log axes. Why log-log?",
+        ["A power law L = a * C^(-b) becomes a straight line, log L = log a - b log C, so the slope gives the exponent and you can extrapolate along it",
+         "Because loss can be negative",
+         "Log-log axes make every curve look flat",
+         "Compute is always a power of 10"], 0,
+        "Take the log of both sides of L = a * C^(-b).",
+        "On log-log axes, power laws are straight lines, and the slope is -b. That's why scaling plots are read as 'a straight line on log-log', and bends at the end are spotted as departures from the trend. "
+        "On linear axes the same data looks like a curve that has 'flattened out', which hides the steady improvement per 10x of compute. "
+        "Only log-log does this: log-linear axes straighten exponentials, not power laws.",
+        diagram="""
+ log L
+  |\\
+  |  \\         straight line on log-log
+  |    \\       slope = -b
+  |      \\
+  +--------------> log C""",
+        topic="scales-ticks", level=3),
+    # ---------------------------------------------------------------- level 4
+    mcq("From epoch 8 on, validation ACCURACY keeps rising slowly while validation LOSS (cross-entropy) also rises. What is the most likely story?",
+        ["The model is getting over-confident: it gets a few more examples right but is very confident on the ones it gets wrong, and cross-entropy punishes confident mistakes heavily",
+         "It can't happen; the plotting code must have mixed up the curves",
+         "The learning rate is too low",
+         "The model is underfitting"], 0,
+        "Accuracy only checks which side of 0.5 a prediction is on. Loss checks how confident it was.",
+        "Example: going from p(correct) = 0.7 on 8 of 10 rows to 0.99 on 9 rows plus 0.001 on one row raises accuracy from 0.8 to 0.9 but mean loss from 0.47 to 0.70, because -ln(0.001) is about 6.9. "
+        "It's an early form of overfitting and a calibration problem. Which checkpoint to keep depends on the metric you ship. If you use the probabilities, consider early stopping on loss, label smoothing or temperature scaling.",
+        diagram="""
+      val acc  ___----      (slowly up)
+      val loss     __/--    (up)
+ +-------8---------------> epoch""",
+        topic="training-curves", level=4),
+    mcq("A long training run's loss curve shows rare sharp spikes that mostly recover within a few hundred steps, but one doesn't recover. What is the most sensible response?",
+        ["Plot the gradient norm and LR alongside the loss to find the cause; use gradient clipping or a lower peak LR, and for the unrecovered spike, go back to an earlier checkpoint and skip or reshuffle the data that came next",
+         "Ignore it; the spikes are a matplotlib rendering artefact",
+         "Smooth the curve harder until the spikes disappear",
+         "Double the learning rate to get past the spike faster"], 0,
+        "A spike is a symptom. What would you plot next to find out why it happened?",
+        "Spikes usually come with a gradient-norm spike: a bad or unusual batch, too high a peak LR, or optimiser state blowing up (e.g. Adam's second-moment estimate getting tiny). "
+        "Clipping limits the damage, and restoring a checkpoint and skipping the batch is the standard fix for a spike the run doesn't recover from. "
+        "Heavy smoothing only hides the evidence: always keep the raw curve available.",
+        diagram="""
+ loss          |          |
+  |\\           |\\         |\\________  <- no recovery
+  | \\__________| \\________|
+  +------------------------------> step
+ gnorm  ______|____________|________""",
+        topic="reading-charts", level=4),
+    mcq("Why does scikit-learn draw a precision-recall curve as a STEP plot instead of joining the points with straight lines, as ROC plots do?",
+        ["Precision doesn't change linearly between two thresholds, so a straight line shows precision values no threshold actually gives; steps (and average_precision_score's step sum) show only what can be achieved",
+         "Step plots render faster",
+         "PR curves have only two points",
+         "Straight lines are not allowed on a 0-1 axis"], 0,
+        "Between two PR points, recall and precision change together in a non-linear way.",
+        "Moving between two ROC points can be done with a mix of the two thresholds, so a straight line is fair. For PR, precision = TP / (TP + FP) is a ratio, and the true path between two points is curved, not straight. "
+        "That's why PrecisionRecallDisplay uses drawstyle='steps-post', and why average precision (AP) is a sum of steps rather than auc(recall, precision) with the trapezoid rule. "
+        "When you compare papers, check which one they report: the two numbers differ.",
+        topic="ml-plots", level=4),
+    mcq("Your fraud model's scores are mostly below 0.05. A reliability plot with `calibration_curve(y, p, n_bins=10)` shows a jagged line built from a few points at high probabilities. What's the better setup?",
+        ["Use strategy='quantile' so every bin has the same number of samples, and show a histogram of p below the curve",
+         "Increase n_bins to 100 with the default uniform bins",
+         "Drop all predictions below 0.05",
+         "Switch to a ROC curve, which measures calibration better"], 0,
+        "With equal-WIDTH bins, how many rows land in the 0.9-1.0 bin?",
+        "The default strategy='uniform' makes bins of equal width, so nearly every row falls in the first bin and the upper bins have a handful of rows each: the points there are mostly noise. "
+        "strategy='quantile' gives each bin an equal share of the rows, so every point is equally reliable, and the bins crowd in where the predictions are. "
+        "ROC is unaffected by calibration, so it can't measure it.",
+        topic="ml-plots", level=4),
+    mcq("A scatter of hours studied vs exam score for all students slopes DOWN. Coloured by course, every course's own cloud slopes UP. How do you read this?",
+        ["Simpson's paradox: course is a confounder (harder courses need more hours but give lower scores), so the pooled trend is reversed; report the within-group trend and show the groups",
+         "The colouring is wrong; one of the two trends must be a plotting bug",
+         "More study hours lower exam scores",
+         "Scatter plots can't show trends, so neither reading is valid"], 0,
+        "Where does each course's cloud sit compared with the others?",
+        "When groups differ in both x and y, the overall line can join the group centres rather than follow any group's own trend. The groups explain the pooled pattern. "
+        "In ML this appears in metrics too, e.g. a model better on every segment but worse overall because of the segment mix. Colour or facet by the suspected confounder before drawing conclusions from a single trend line.",
+        diagram="""
+ score
+  |  /A/
+  |      /B/        each course slopes up
+  |          /C/    pooled cloud slopes down
+  +----------------> hours""",
+        topic="reading-charts", level=4),
+    mcq("Why are bar charts on a log y axis usually misleading?",
+        ["A log axis has no zero, so each bar starts at an arbitrary lower limit; bar lengths and length ratios then depend on that limit rather than on the values",
+         "matplotlib can't draw bars on a log axis",
+         "Bars on a log axis are always the same height",
+         "Log axes reverse the order of the bars"], 0,
+        "Where does a bar start when log(0) doesn't exist?",
+        "Bars ask the reader to compare lengths from a common zero. On a log axis the baseline is wherever the axis happens to start (say 1 or 0.1), so changing ylim changes how long the bars look relative to each other. "
+        "For values that span orders of magnitude, use a dot plot or point markers on the log axis, or label the bars with the actual numbers.",
+        topic="choosing", level=4),
+    mcq("A learning-rate range test (LR increased each step, loss plotted against LR on a log x axis) shows loss flat, then falling steeply, reaching a minimum at 1e-2 and then exploding. Which LR is the usual pick?",
+        ["Somewhere on the steep downward part, roughly 1e-3 (often about 10x below the minimum), not the minimum itself",
+         "Exactly 1e-2, where the loss is lowest",
+         "The largest LR before the curve explodes",
+         "The smallest LR tested, to be safe"], 0,
+        "At the minimum, the loss is just about to blow up.",
+        "During the test the LR keeps climbing, so the lowest point sits right at the edge of instability, and the plotted loss also lags behind the LR. "
+        "The steepest-descent region is where learning is fastest while still stable, so the rule of thumb is about a tenth of the minimum's LR. "
+        "In an interview, explain that the x axis is the LR, not time, even though each point is one training step.",
+        diagram="""
+ loss
+  |------\\                 /
+  |       \\               /   explodes
+  |        \\___       __/
+  |            \\___/
+  +--1e-5---1e-3---1e-2--1e-1--> LR (log)
+            pick ^    ^ min""",
+        topic="training-curves", level=4),
+    mcq("A chart looks perfect in a Jupyter notebook, but the PNG saved with `fig.savefig('f.png')` has its y-label cut off. What explains the difference?",
+        ["The notebook's inline backend renders with bbox_inches='tight' by default, which grows the image to fit everything; plain savefig keeps the exact figure size, so pass bbox_inches='tight' or use layout='constrained'",
+         "Notebooks use a different font that is narrower",
+         "savefig always crops 10% of each side",
+         "The PNG viewer is cropping the image"], 0,
+        "Notebook display and savefig are two different calls with different defaults.",
+        "matplotlib-inline displays figures through print_figure with {'bbox_inches': 'tight'}, so labels that hang outside the figure edge are pulled back into the image. "
+        "fig.savefig uses rcParams['savefig.bbox'], which defaults to None (the exact figsize), so anything outside the canvas is cut. "
+        "Fixing the layout itself with constrained layout makes both outputs match, which matters in reports generated in CI.",
+        topic="pitfalls", level=4),
+    tf("ROC AUC equals the probability that a randomly chosen positive gets a higher score than a randomly chosen negative, with ties counted as half; for this snippet that gives 0.875.", True,
+        "Count all positive-negative pairs: 2 positives x 2 negatives = 4 pairs.",
+        "Pairs (pos, neg): 0.6 vs 0.2 win, 0.6 vs 0.6 tie (0.5), 0.9 vs 0.2 win, 0.9 vs 0.6 win, so 3.5 / 4 = 0.875. This is the Mann-Whitney U view of AUC. "
+        "It explains why AUC ignores calibration and class balance (it only ranks pairs), and why heavily tied scores, such as a model that outputs only a few distinct values, give a staircase ROC with diagonal segments.",
+        code="from sklearn.metrics import roc_auc_score\nprint(roc_auc_score([0, 0, 1, 1], [0.2, 0.6, 0.6, 0.9]))",
+        topic="ml-plots", level=4),
+    fill("A PDF with a 1-million-point scatter is 200 MB and slow to open. Pass ____=True to that scatter call so only that layer is stored as pixels, while text and axes stay as vectors.",
+        "rasterized",
+        "The opposite of 'vector', as an adjective.",
+        "In vector formats every marker is a separate shape, so file size grows with the number of points. rasterized=True draws that one artist as an embedded bitmap at the savefig dpi. "
+        "A 200k-point test went from about 3 MB to 24 KB, while labels and ticks stay sharp. It's the usual trick for embedding plots in papers.",
+        topic="pitfalls", level=4),
 ]
