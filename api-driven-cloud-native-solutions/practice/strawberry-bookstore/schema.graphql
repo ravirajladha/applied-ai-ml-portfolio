@@ -1,0 +1,18 @@
+type Author {
+  id: Int!
+  name: String!
+}
+
+type Book {
+  id: Int!
+  title: String!
+  price: Float!
+  inStock: Boolean!
+  author: Author!
+}
+
+type Query {
+  hello: String!
+  books(search: String = null, inStock: Boolean = null): [Book!]!
+  book(id: Int!): Book
+}

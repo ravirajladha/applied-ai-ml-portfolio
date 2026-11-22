@@ -1,0 +1,1 @@
+{"query":"query FindBook($bookId: Int!) { book(id: $bookId) { title price author { name } } }","variables":{"bookId":1}}

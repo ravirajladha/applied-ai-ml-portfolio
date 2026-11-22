@@ -1,0 +1,36 @@
+# Paste ONE operation at a time into http://127.0.0.1:8001/graphql.
+
+# 1. Hello
+query Hello { hello }
+
+# 2. Select only titles
+query Titles { books { title } }
+
+# 3. Request more fields; Python in_stock becomes GraphQL inStock
+query Details { books { id title price inStock } }
+
+# 4. Nested objects
+query NestedAuthors { books { title author { name } } }
+
+# 5. Arguments: one record
+query OneBook { book(id: 1) { title price author { name } } }
+
+# 6. Filtering
+query Search { books(search: "python", inStock: true) { title price } }
+
+# 7. Variables: put {"bookId":2} in the Variables panel
+query FindBook($bookId: Int!) {
+  book(id: $bookId) { id title price }
+}
+
+# 8. Aliases: fetch two records in one operation
+query CompareBooks {
+  first: book(id: 1) { title price }
+  second: book(id: 2) { title price }
+}
+
+# 9. Missing record: data.book is null
+query Missing { book(id: 999) { title } }
+
+# 10. Intentional validation error: rating is not in our schema
+query InvalidField { books { title rating } }
