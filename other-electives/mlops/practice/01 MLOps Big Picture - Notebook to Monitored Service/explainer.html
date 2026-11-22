@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MLOps 01 — the big picture, interactive</title>
+<style>
+
+:root{
+  --bg:#f4f6fb;--panel:#fff;--ink:#0f172a;--muted:#64748b;--edge:#e2e8f0;
+  --b:#3b82f6;--v:#8b5cf6;--g:#10b981;--y:#f59e0b;--r:#ef4444;--c:#06b6d4;
+  --shadow:0 8px 26px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.05);
+}
+html[data-theme="dark"]{
+  --bg:#0b1120;--panel:#151d2e;--ink:#e8eefc;--muted:#94a3b8;--edge:#26324a;
+  --shadow:0 8px 26px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.62;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;padding-bottom:80px}
+.wrap{max-width:840px;margin:0 auto;padding:0 18px}
+h1{font-size:clamp(26px,6vw,38px);letter-spacing:-.7px;line-height:1.12;margin:0 0 10px}
+h2{font-size:clamp(20px,4.4vw,26px);letter-spacing:-.4px;margin:0 0 6px}
+h3{font-size:16px;margin:22px 0 6px}
+p{margin:12px 0}
+code{background:color-mix(in srgb,var(--ink) 8%,transparent);padding:2px 6px;border-radius:5px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.87em}
+pre{background:color-mix(in srgb,var(--ink) 6%,transparent);border:1px solid var(--edge);border-radius:12px;
+  padding:14px;overflow-x:auto;font-size:12.8px;line-height:1.5;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+header{padding:44px 0 10px}
+.kicker{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--v);background:color-mix(in srgb,var(--v) 13%,transparent);padding:4px 11px;border-radius:99px;margin-bottom:14px}
+.lede{font-size:17px;color:var(--muted);max-width:64ch}
+.toc{display:flex;flex-wrap:wrap;gap:7px;margin:24px 0 8px;padding:0;list-style:none}
+.toc a{font-size:12.5px;text-decoration:none;color:var(--muted);background:var(--panel);
+  border:1px solid var(--edge);border-radius:99px;padding:5px 11px;display:block}
+.toc a:hover{border-color:var(--v);color:var(--v)}
+section{background:var(--panel);border:1px solid var(--edge);border-radius:20px;padding:26px;
+  margin:20px 0;box-shadow:var(--shadow);scroll-margin-top:16px}
+.snum{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;
+  background:var(--v);color:#fff;font-size:13px;font-weight:700;margin-right:9px;flex:none}
+.shead{display:flex;align-items:center;margin-bottom:4px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+.note{border-left:3px solid var(--b);background:color-mix(in srgb,var(--b) 7%,transparent);
+  padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0;font-size:14.5px}
+.note.warn{border-color:var(--y);background:color-mix(in srgb,var(--y) 9%,transparent)}
+.note.key{border-color:var(--g);background:color-mix(in srgb,var(--g) 8%,transparent)}
+.lab{background:color-mix(in srgb,var(--ink) 3.5%,transparent);border:1px solid var(--edge);
+  border-radius:14px;padding:18px;margin:18px 0}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 12px}
+button{font:inherit;font-size:13px;background:var(--panel);color:var(--ink);border:1px solid var(--edge);
+  border-radius:9px;padding:7px 13px;cursor:pointer}
+button:hover{border-color:var(--v)}
+button.pri{background:var(--v);border-color:var(--v);color:#fff;font-weight:600}
+button.on{background:var(--b);border-color:var(--b);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0}
+th,td{border:1px solid var(--edge);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:color-mix(in srgb,var(--ink) 4%,transparent)}
+.theme{position:fixed;top:14px;right:14px;z-index:9}
+/* pipeline */
+.pipe{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0}
+.stage{border:2px solid var(--edge);border-radius:12px;padding:10px 12px;cursor:pointer;font-size:13.5px;font-weight:600;background:var(--panel)}
+.stage.on{border-color:var(--v);background:color-mix(in srgb,var(--v) 12%,transparent)}
+.arrow{color:var(--muted);font-weight:700}
+.box{min-height:70px;font-size:14.5px}
+/* tokens */
+.toks{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.tok{padding:6px 10px;border-radius:9px;border:1px solid var(--edge);cursor:pointer;font-weight:600;font-size:14px;transition:background .2s}
+.tok.sel{outline:3px solid var(--v)}
+/* grids */
+.grid{display:grid;gap:3px;margin:10px 0;font-size:12.5px}
+.cell{padding:6px 4px;text-align:center;border-radius:6px;font-variant-numeric:tabular-nums}
+.cell.h{font-weight:700;background:none}
+.bar{height:16px;background:var(--b);border-radius:4px}
+.barrow{display:grid;grid-template-columns:90px 1fr 60px;gap:8px;align-items:center;font-size:13.5px;margin:4px 0}
+.quiz .q{margin:16px 0}
+.quiz .opt{display:block;margin:6px 0;text-align:left;width:100%}
+.quiz .opt.right{background:color-mix(in srgb,var(--g) 18%,transparent);border-color:var(--g)}
+.quiz .opt.wrong{background:color-mix(in srgb,var(--r) 14%,transparent);border-color:var(--r)}
+.fb{font-size:13.5px;color:var(--muted);min-height:1em}
+.skip li{margin:4px 0}
+
+.ring{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.mod{border:2px solid var(--edge);border-radius:12px;padding:10px;cursor:pointer;font-size:13px;font-weight:600;background:var(--panel);min-height:62px}
+.mod small{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
+.mod.on{border-color:var(--v);background:color-mix(in srgb,var(--v) 12%,transparent)}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0;font-size:13px}
+.chip{padding:6px 10px;border-radius:9px;border:1px solid var(--edge);background:var(--panel);font-weight:600}
+.chip.g{border-color:var(--g);background:color-mix(in srgb,var(--g) 14%,transparent)}
+.chip.y{border-color:var(--y);background:color-mix(in srgb,var(--y) 16%,transparent)}
+.chip.r{border-color:var(--r);background:color-mix(in srgb,var(--r) 14%,transparent)}
+.chip.v{border-color:var(--v);background:color-mix(in srgb,var(--v) 14%,transparent)}
+.hist{display:flex;align-items:flex-end;gap:3px;height:120px;margin:10px 0;border-bottom:1px solid var(--edge)}
+.hist .col{flex:1;display:flex;gap:1px;align-items:flex-end;height:100%}
+.hist .e{flex:1;background:var(--b);opacity:.55;border-radius:3px 3px 0 0}
+.hist .a{flex:1;background:var(--y);border-radius:3px 3px 0 0}
+.big{font-size:22px;font-weight:700}
+.users{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;margin:10px 0}
+.u{height:16px;border-radius:4px;background:var(--b)}
+.u.c{background:var(--g)}
+.u.s{outline:2px dashed var(--y);outline-offset:-2px}
+.prod{border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) 8%,transparent);padding:10px 14px;border-radius:0 10px 10px 0;font-size:14px;margin:14px 0}
+.prod b{color:var(--c)}
+</style>
+</head>
+<body>
+<button class="theme" onclick="toggleTheme()">🌓 theme</button>
+<div class="wrap">
+<header>
+  <span class="kicker">MLOps · Topic 01 · the whole lifecycle once</span>
+  <h1>MLOps: keeping a model trustworthy after the demo</h1>
+  <p class="lede">Training a model is the easy 10%. MLOps is the other 90%: getting it live, knowing when it goes
+  wrong, and fixing it safely. We follow one story the whole way: <b>DeliverEase</b>, a food-delivery app whose
+  "arrives in 34 min" number comes from a model.</p>
+  <ul class="toc">
+    <li><a href="#s1">1 · Why ML needs its own Ops</a></li>
+    <li><a href="#s2">2 · The lifecycle = the 8 modules</a></li>
+    <li><a href="#s3">3 · Experiment: baseline &amp; skew</a></li>
+    <li><a href="#s4">4 · Track, register, gate</a></li>
+    <li><a href="#s5">5 · Deploy &amp; serve</a></li>
+    <li><a href="#s6">6 · Monitor: drift</a></li>
+    <li><a href="#s7">7 · Test in production</a></li>
+    <li><a href="#s8">8 · Trends</a></li>
+    <li><a href="#s9">9 · Quiz</a></li>
+  </ul>
+</header>
+
+<div class="note key"><b>How this page fits.</b> This is rung ① (picture) for <i>every</i> MLOps module. The notebook is
+rung ③ (hands), the <code>codebase/</code> is rung ④ (system). Each concept below names the codebase file where it lives.</div>
+
+<!-- 1 -->
+<section id="s1">
+  <div class="shead"><span class="snum">1</span><h2>Why ML needs its own "Ops"</h2></div>
+  <p class="sub">In normal software only the <b>code</b> changes. In ML, three things change — and any one can break production.</p>
+  <div class="row"><button class="on" id="ch0" onclick="setChange(0)">Code changes</button><button id="ch1" onclick="setChange(1)">Data changes</button><button id="ch2" onclick="setChange(2)">Model changes</button></div>
+  <div class="lab" id="changeBox"></div>
+  <table>
+    <tr><th>DevOps (you know this)</th><th>MLOps adds</th></tr>
+    <tr><td>Version the code (git)</td><td>Version the <b>data</b> and the <b>model</b> too (DVC, model registry)</td></tr>
+    <tr><td>Unit tests: pass / fail</td><td><b>Model tests</b>: "MAE under 6 min and better than the current model"</td></tr>
+    <tr><td>CI → build → deploy</td><td>+ <b>CT</b> (continuous training): retrain when the world changes</td></tr>
+    <tr><td>Monitor errors, latency</td><td>+ monitor <b>inputs</b> (drift) and <b>accuracy</b>, which fail silently: no exception, just wrong answers</td></tr>
+  </table>
+  <div class="note warn"><b>Hidden technical debt</b> (Sculley et al., Google 2015): in a real ML system the model code is a
+  small box surrounded by data collection, feature pipelines, serving, monitoring and config. That surrounding 90% is
+  what MLOps is about. (Same picture as SE4ML Session 2.)</div>
+  <div class="prod"><b>Interview line:</b> "MLOps is DevOps plus two moving parts, data and models. Models fail silently, so
+  you add data versioning, model tests as CI gates, continuous training and monitoring for drift."</div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <div class="shead"><span class="snum">2</span><h2>The lifecycle — and the course's 8 modules</h2></div>
+  <p class="sub">Click a module. Each one solves one step of the DeliverEase story.</p>
+  <div class="ring" id="ring"></div>
+  <div class="lab" id="modBox"></div>
+  <h3>Maturity levels (Google's MLOps levels)</h3>
+  <table>
+    <tr><th>Level</th><th>What it looks like</th><th>DeliverEase</th></tr>
+    <tr><td><b>0 · Manual</b></td><td>Notebook → someone copies a .pkl to a server. Retrained "when someone remembers".</td><td>Week 1</td></tr>
+    <tr><td><b>1 · Pipeline automation</b></td><td>The training <i>pipeline</i> is code and runs on a schedule or trigger (CT). Gate + registry.</td><td>Our codebase</td></tr>
+    <tr><td><b>2 · CI/CD for pipelines</b></td><td>Changes to the pipeline itself are tested and deployed automatically.</td><td>+ <code>ci/github-actions-ci.yml</code></td></tr>
+  </table>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <div class="shead"><span class="snum">3</span><h2>Experiment: baseline first, and one feature function</h2></div>
+  <p class="sub">Two habits that prevent most beginner failures.</p>
+  <h3>Habit 1 · Always have a baseline</h3>
+  <div class="flow"><span class="chip">"Predict the average" → MAE 9.2 min</span><span class="arrow">vs</span><span class="chip g">Gradient boosting → MAE 2.6 min</span><span class="arrow">=</span><span class="chip v">72% better ✔ worth deploying</span></div>
+  <p>A model that can't clearly beat "always say 38 minutes" isn't worth a server.</p>
+  <h3>Habit 2 · Training and serving share one feature function</h3>
+  <div class="row"><button class="on" id="sk0" onclick="setSkew(false)">Shared function ✔</button><button id="sk1" onclick="setSkew(true)">Two copies ✘</button></div>
+  <div class="lab" id="skewBox"></div>
+  <div class="prod"><b>In the codebase:</b> <code>features.py</code> → imported by <code>train.py</code> AND <code>serve.py</code>. <b>In industry:</b> a
+  feature store (Feast, Tecton) serves the same features to training and to the live API.</div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <div class="shead"><span class="snum">4</span><h2>Track the run, register the model, gate the release</h2></div>
+  <p class="sub">Every model in production must answer: <i>which data, which code, which settings, how good?</i></p>
+  <div class="flow"><span class="chip">train()</span><span class="arrow">→</span><span class="chip v">Tracker: run 0815-a1b2<br><small>params · data v · MAE</small></span><span class="arrow">→</span><span class="chip y">Quality gate</span><span class="arrow">→</span><span class="chip g">Registry: v3 → Production</span></div>
+  <div class="lab">
+    <p class="hint">Click to move model versions through registry stages. Only one version can be in Production.</p>
+    <div id="regBox"></div>
+    <div class="row"><button class="pri" onclick="regStep()">Train a new version ▶</button><button onclick="regReset()">reset</button></div>
+    <p id="regMsg" class="hint"></p>
+  </div>
+  <table>
+    <tr><th>Gate rule (pipeline.py)</th><th>Why</th></tr>
+    <tr><td>MAE ≤ 6 min</td><td>Business requirement</td></tr>
+    <tr><td>≥ 30% better than baseline</td><td>Proves it learned something</td></tr>
+    <tr><td>Better than the current Production model <b>on the same fresh data</b></td><td>Champion vs challenger. Comparing on different data is a real bug (this codebase had it first!)</td></tr>
+  </table>
+  <div class="prod"><b>Industry:</b> MLflow Tracking + Model Registry, Weights &amp; Biases, SageMaker/Azure ML registries.
+  <b>Packaging:</b> the model is serialised (joblib/pickle, ONNX, TorchScript) and the service is a container (<code>Dockerfile</code>);
+  the model file is mounted, not baked in, so models and code ship separately.</div>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <div class="shead"><span class="snum">5</span><h2>Deploy &amp; serve: batch or online?</h2></div>
+  <p class="sub">Answer three questions about the use case; get a serving pattern.</p>
+  <div class="lab">
+    <div class="row" style="margin:6px 0"><b style="width:260px">Needed while the user waits?</b><button id="q1y" onclick="ans(0,1)">yes</button><button id="q1n" onclick="ans(0,0)">no</button></div>
+    <div class="row" style="margin:6px 0"><b style="width:260px">Inputs known in advance?</b><button id="q2y" onclick="ans(1,1)">yes</button><button id="q2n" onclick="ans(1,0)">no</button></div>
+    <div class="row" style="margin:6px 0"><b style="width:260px">Events arrive as a continuous stream?</b><button id="q3y" onclick="ans(2,1)">yes</button><button id="q3n" onclick="ans(2,0)">no</button></div>
+    <div id="serveOut" style="margin-top:10px"></div>
+  </div>
+  <table>
+    <tr><th>Pattern</th><th>DeliverEase example</th><th>Codebase</th></tr>
+    <tr><td><b>Online</b> (request → response)</td><td>"Arrives in 34 min" at checkout</td><td><code>serve.py</code> FastAPI <code>/predict</code></td></tr>
+    <tr><td><b>Batch</b> (score a whole file on a schedule)</td><td>Tomorrow's pre-scheduled orders, nightly</td><td><code>batch.py</code></td></tr>
+    <tr><td><b>Streaming</b> (score events as they flow)</td><td>Update ETA every time the rider's GPS moves</td><td>(later topic: Kafka + consumer)</td></tr>
+  </table>
+  <p><b>The serving questions</b> from the course (M5): <b>Load</b> (requests/sec) · <b>Latency</b> (ms budget) · <b>Location</b>
+  (cloud, edge, browser) · <b>Hardware</b> (CPU/GPU) · <b>Execution</b> (sync/async) · <b>Feature pipeline</b> (where features come from at request time).</p>
+  <div class="prod"><b>Industry:</b> FastAPI/BentoML, KServe/Seldon on Kubernetes, SageMaker/Vertex endpoints. <b>What breaks:</b>
+  a slow feature lookup blows the latency budget even though the model itself takes 2 ms.</div>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <div class="shead"><span class="snum">6</span><h2>Monitor: the monsoon arrives</h2></div>
+  <p class="sub">Models don't crash when the world changes — they quietly become wrong. Drag the slider to bring the monsoon.</p>
+  <div class="lab">
+    <div class="row"><b>Monsoon strength</b><input type="range" min="0" max="100" value="0" id="mon" oninput="drawDrift()" style="flex:1"><span id="monLbl"></span></div>
+    <p class="hint">Kitchen prep time (<code>prep_min</code>): <span style="color:var(--b)">■ training data</span> vs <span style="color:var(--y)">■ live data</span></p>
+    <div class="hist" id="hist"></div>
+    <div class="row"><span>PSI = <span class="big" id="psiVal">0</span></span><span id="psiStat" class="chip g">ok</span><span>Model error (MAE): <span class="big" id="maeVal">2.6</span> min</span></div>
+  </div>
+  <table>
+    <tr><th></th><th>Data drift</th><th>Concept drift</th></tr>
+    <tr><td>What changes</td><td>The <b>inputs</b> (more rain, longer prep)</td><td>The <b>rule</b> input → output (rain now costs 15 min, not 9)</td></tr>
+    <tr><td>Needs labels?</td><td>No: compare input distributions (PSI, KS test)</td><td>Yes: wait for real delivery times, compute MAE</td></tr>
+    <tr><td>DeliverEase signal</td><td>PSI on <code>is_raining</code> 1.73, <code>prep_min</code> 1.36 → ALERT</td><td>MAE jumps 2.6 → 10.9 min</td></tr>
+  </table>
+  <p><b>PSI</b> (Population Stability Index): split training values into bins; compare the % in each bin now vs then.
+  <code>PSI = Σ (a% − e%) · ln(a% / e%)</code>. &lt; 0.1 ok · 0.1–0.25 watch · &gt; 0.25 alert.</p>
+  <div class="prod"><b>Monitor three layers:</b> system (latency, errors: Prometheus/Grafana) · data (drift: Evidently, Arize) ·
+  model (accuracy once labels arrive). <b>Feedback loop:</b> labels arrive late (delivery finishes 40 min later), so drift is your early warning.</div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <div class="shead"><span class="snum">7</span><h2>Retrain and test in production</h2></div>
+  <p class="sub">The pipeline retrains on monsoon data. Now: how do you swap models without betting every customer on it?</p>
+  <div class="row"><button class="on" id="rp0" onclick="setRoll(0)">Shadow</button><button id="rp1" onclick="setRoll(1)">Canary</button><button id="rp2" onclick="setRoll(2)">A/B test</button><button id="rp3" onclick="setRoll(3)">Big bang</button></div>
+  <div class="row" id="canRow" style="display:none"><b>Canary %</b><input type="range" min="0" max="100" value="10" id="can" oninput="drawRoll()" style="flex:1"><span id="canLbl"></span></div>
+  <div class="users" id="users"></div>
+  <p class="hint"><span style="color:var(--b)">■ old model serves</span> · <span style="color:var(--g)">■ new model serves</span> · dashed = new model also runs silently (shadow)</p>
+  <div class="lab" id="rollBox"></div>
+  <table>
+    <tr><th>Term</th><th>One line</th></tr>
+    <tr><td><b>Stateless retraining</b></td><td>Retrain from scratch on a recent window of data</td></tr>
+    <tr><td><b>Stateful training</b></td><td>Continue training the existing model on only the new data (cheaper, risk of forgetting)</td></tr>
+    <tr><td><b>Offline vs online evaluation</b></td><td>Test set before release vs real users after release</td></tr>
+    <tr><td><b>Interleaving / bandits</b></td><td>Mix both models' results per user / shift traffic automatically toward the winner</td></tr>
+  </table>
+  <div class="prod"><b>In the codebase:</b> <code>rollout.py</code> routes by a hash of the order id, so a customer always lands on
+  the same model. <b>Industry:</b> Argo Rollouts / Istio traffic splitting, SageMaker shadow variants.</div>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <div class="shead"><span class="snum">8</span><h2>Trends (M8)</h2></div>
+  <table>
+    <tr><th>Trend</th><th>One line</th><th>DeliverEase</th></tr>
+    <tr><td><b>Model compression</b></td><td>Make the model smaller and faster: quantization, pruning, distillation</td><td>ETA model small enough for the rider's phone</td></tr>
+    <tr><td><b>ML in browsers / phones</b></td><td>Run inference on the client (TF.js, ONNX Runtime Web, Core ML, TFLite)</td><td>Offline ETA when the signal drops</td></tr>
+    <tr><td><b>Edge ML</b></td><td>Inference on devices near the data, not in the cloud</td><td>Your ML-on-the-Edge course</td></tr>
+    <tr><td><b>Continuous ML</b></td><td>Retrain and redeploy automatically and often</td><td>Pipeline triggered by the drift alert</td></tr>
+    <tr><td><b>Federated learning</b></td><td>Train across devices; only model updates leave the device, never raw data</td><td>Learn from riders' phones without uploading their GPS trails</td></tr>
+  </table>
+</section>
+
+<!-- 9 -->
+<section id="s9" class="quiz">
+  <div class="shead"><span class="snum">9</span><h2>Quiz — 8 questions</h2></div>
+  <div id="quiz"></div>
+  <p id="score" style="font-weight:700"></p>
+</section>
+</div>
+
+<script>
+function toggleTheme(){const h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'':'dark'}
+function tog(prefix,n,i){for(let k=0;k<n;k++){const b=document.getElementById(prefix+k);if(b)b.className=k===i?'on':''}}
+
+/* 1 three changes */
+const CH=[["Code changes","A developer edits <code>features.py</code>: <code>is_peak</code> now includes 19:00. Normal software practice catches this: code review, unit tests, CI. <b>DevOps already handles it.</b>"],
+ ["Data changes","Nobody touched the code. The monsoon arrived: 60% of orders are in rain, kitchens are slower. The model still answers instantly, with no errors, but it's <b>10 minutes wrong</b>. No exception, no failing test. <b>Only monitoring catches it.</b>"],
+ ["Model changes","A teammate retrains with deeper trees and copies <code>model.pkl</code> to the server. Is it better? On which data? Can you roll back? <b>Needs tracking, a registry and a quality gate.</b>"]];
+function setChange(i){tog('ch',3,i);document.getElementById('changeBox').innerHTML='<b>'+CH[i][0]+'.</b> '+CH[i][1]}
+setChange(0);
+
+/* 2 modules */
+const MODS=[["M1","Foundations","Lifecycle, people (data scientist, ML engineer, platform), challenges, maturity","Founders decide: ETA model needs to be live and trustworthy, not a notebook."],
+ ["M2","Process & Tooling","Infrastructure, dev/prod environments, ML platforms (Uber Michelangelo, Spotify TFX, Netflix)","Pick the tool stack: git + tracking + registry + API + monitoring."],
+ ["M3","Experimentation & Packaging","Experiments, versioning, metadata, registry, file formats, serialization, containers","train.py logs every run; registry.py holds versions; Dockerfile packages the API."],
+ ["M4","Deployment & Orchestration","Deployment patterns (static / dynamic / streaming), pipelines with Airflow / Kubeflow / Beam","pipeline.py: data → train → gate → register, on a schedule."],
+ ["M5","Model Serving","Load, latency, location, hardware; batch vs online; model API design; MLaaS","serve.py answers /predict at checkout; batch.py scores tomorrow's orders."],
+ ["M6","Monitoring & Observability","Why ML systems fail, degradation, drift detection, feedback loops, metrics","monitor.py: PSI alert when the monsoon arrives; MAE 2.6 → 10.9."],
+ ["M7","Continual Learning & Testing","Stateless vs stateful retraining, offline vs online eval, shadow, A/B, canary, bandits","Retrain on monsoon data; canary 10% → 100%."],
+ ["M8","Trends","Compression, browser/mobile ML, edge, continuous ML, federated learning","ETA model on the rider's phone; learn without uploading GPS trails."]];
+let modOn=0;
+function drawRing(){const r=document.getElementById('ring');r.innerHTML='';MODS.forEach((m,i)=>{const d=document.createElement('div');d.className='mod'+(i===modOn?' on':'');d.innerHTML=m[0]+' · '+m[1]+'<small>'+m[3].slice(0,48)+'…</small>';d.onclick=()=>{modOn=i;drawRing()};r.appendChild(d)});
+ const m=MODS[modOn];document.getElementById('modBox').innerHTML=`<b>${m[0]} · ${m[1]}</b><br>Course topics: ${m[2]}<br><b>DeliverEase:</b> ${m[3]}`}
+drawRing();
+
+/* 3 skew */
+function setSkew(bad){document.getElementById('sk0').className=bad?'':'on';document.getElementById('sk1').className=bad?'on':'';
+ document.getElementById('skewBox').innerHTML=bad?
+ `<b>Training</b> (notebook): <code>is_peak = hour in (13,14,20,21)</code><br><b>API</b> (rewritten by another dev): <code>is_peak = 12 &lt;= hour &lt;= 14</code><br>
+ → An order at 20:00 is "peak" in training but "not peak" live. The model under-predicts every dinner order by ~6 min. <b>No error is thrown.</b> This is <b>training-serving skew</b>.`:
+ `Both training and the API call <code>build_features()</code> from <code>features.py</code>. An order at 20:00 is "peak" everywhere. One definition, one test, no skew.`}
+setSkew(false);
+
+/* 4 registry */
+let regs=[];
+function regDraw(){document.getElementById('regBox').innerHTML='<div class="flow">'+(regs.length?regs.map(r=>`<span class="chip ${r.stage==='Production'?'g':r.stage==='Staging'?'y':r.stage==='Archived'?'':'v'}">v${r.v} · MAE ${r.mae}<br><small>${r.stage}</small></span>`).join(''):'<span class="hint">no versions yet</span>')+'</div>'}
+const MAES=[2.6,2.9,2.4,2.5];
+function regStep(){const v=regs.length+1;if(v>MAES.length){document.getElementById('regMsg').textContent='(that\'s enough versions for the demo)';return}
+ const mae=MAES[v-1],prod=regs.find(r=>r.stage==='Production');let msg;
+ if(!prod||mae<prod.mae){if(prod)prod.stage='Archived';regs.push({v,mae,stage:'Production'});msg=`v${v} (MAE ${mae}) beat ${prod?'v'+prod.v+' ('+prod.mae+')':'no model'} → promoted to Production.`}
+ else{regs.push({v,mae,stage:'Staging'});msg=`v${v} (MAE ${mae}) is not better than Production v${prod.v} (${prod.mae}) → stays in Staging.`}
+ document.getElementById('regMsg').textContent=msg;regDraw()}
+function regReset(){regs=[];document.getElementById('regMsg').textContent='';regDraw()}
+regDraw();
+
+/* 5 serving chooser */
+const A=[null,null,null];
+function ans(q,v){A[q]=v;['q1','q2','q3'].forEach((p,i)=>{document.getElementById(p+'y').className=A[i]===1?'on':'';document.getElementById(p+'n').className=A[i]===0?'on':''});
+ let out='';if(A.includes(null)){out='<span class="hint">answer all three…</span>'}
+ else if(A[2]===1)out='<span class="chip v">Streaming</span> score each event as it arrives (Kafka/Kinesis + a consumer calling the model).';
+ else if(A[0]===1&&A[1]===0)out='<span class="chip g">Online</span> a REST/gRPC endpoint; keep latency low (e.g. p95 &lt; 100 ms).';
+ else if(A[1]===1)out='<span class="chip y">Batch</span> precompute on a schedule and store results; the app just looks them up. Cheapest and simplest.';
+ else out='<span class="chip g">Online</span> (async is fine: the user isn\'t waiting, but inputs aren\'t known ahead).';
+ document.getElementById('serveOut').innerHTML=out}
+ans(0,null);
+
+/* 6 drift */
+function normPdf(x,m,s){return Math.exp(-0.5*((x-m)/s)**2)}
+function drawDrift(){const k=+document.getElementById('mon').value/100;document.getElementById('monLbl').textContent=k===0?'dry season':k<.5?'early rain':'full monsoon';
+ const bins=12,lo=0,hi=36,e=[],a=[];for(let i=0;i<bins;i++){const x=lo+(i+.5)*(hi-lo)/bins;e.push(normPdf(x,12,4));a.push(normPdf(x,12+4*k*1.6,4+1.5*k))}
+ const se=e.reduce((p,c)=>p+c),sa=a.reduce((p,c)=>p+c);const E=e.map(v=>Math.max(v/se,1e-4)),Aa=a.map(v=>Math.max(v/sa,1e-4));
+ const mx=Math.max(...E,...Aa);document.getElementById('hist').innerHTML=E.map((v,i)=>`<div class="col"><div class="e" style="height:${v/mx*100}%"></div><div class="a" style="height:${Aa[i]/mx*100}%"></div></div>`).join('');
+ const p=E.reduce((s,v,i)=>s+(Aa[i]-v)*Math.log(Aa[i]/v),0);document.getElementById('psiVal').textContent=p.toFixed(2);
+ const st=document.getElementById('psiStat');st.textContent=p>.25?'ALERT':p>.1?'watch':'ok';st.className='chip '+(p>.25?'r':p>.1?'y':'g');
+ document.getElementById('maeVal').textContent=(2.6+8.3*k*k).toFixed(1)}
+drawDrift();
+
+/* 7 rollout */
+let roll=0;const RB=["<b>Shadow.</b> Every request is answered by the old model. The new model runs on the same request silently and its answer is only logged. <b>Zero user risk</b>; compare offline afterwards.",
+ "<b>Canary.</b> A small, stable slice of users gets the new model. Watch its errors and latency; raise the slice step by step (10 → 25 → 50 → 100%). Roll back = set it to 0%.",
+ "<b>A/B test.</b> Split users 50/50 for a fixed period and compare a <i>business</i> metric (e.g. complaint rate about late deliveries) with a statistical test.",
+ "<b>Big bang.</b> Everyone switches at once. Simple, but if the new model is bad, every customer sees it. Avoid for anything important."];
+function setRoll(i){roll=i;tog('rp',4,i);document.getElementById('canRow').style.display=i===1?'flex':'none';drawRoll()}
+function drawRoll(){const pc=roll===1?+document.getElementById('can').value:roll===2?50:roll===3?100:0;document.getElementById('canLbl').textContent=pc+'%';
+ let h='';for(let i=0;i<100;i++){const isNew=i<pc;h+=`<div class="u${isNew?' c':''}${roll===0?' s':''}"></div>`}document.getElementById('users').innerHTML=h;document.getElementById('rollBox').innerHTML=RB[roll]}
+setRoll(0);
+
+/* 9 quiz */
+const Q=[["Which change can break an ML system with no code change and no error?",["A refactor","The input data shifting (e.g. monsoon)","A new API route"],1,"§1/§6: data changes fail silently."],
+ ["Why compare against a baseline first?",["To make training faster","To prove the model learned something worth deploying","Because the registry needs it"],1,"§3: 'predict the average' MAE 9.2 vs model 2.6."],
+ ["Training-serving skew is prevented by…",["A bigger model","One feature function used by both training and serving","More test data"],1,"§3: features.py imported by train.py and serve.py."],
+ ["What does the model registry answer?",["Which model version is live, and how it was trained","How many users we have","Which feature is most important"],0,"§4: single source of truth for 'what's in Production'."],
+ ["Tomorrow's pre-scheduled orders need ETAs once a night. Best pattern?",["Online API","Batch","Streaming"],1,"§5: inputs known in advance → batch."],
+ ["PSI of 0.4 on a feature means…",["Stable","Watch","Alert: the distribution moved a lot"],2,"§6: > 0.25 = alert."],
+ ["Which drift needs real labels to detect?",["Data drift","Concept drift","Both need none"],1,"§6: the input→output rule changed; only real outcomes show it."],
+ ["Which rollout carries zero user risk?",["Canary","Shadow","A/B test"],1,"§7: shadow only logs the new model's answers."]];
+let score=0,answered=0;
+(function(){const box=document.getElementById('quiz');Q.forEach((q,i)=>{const d=document.createElement('div');d.className='q';d.innerHTML=`<b>${i+1}. ${q[0]}</b>`;
+ q[1].forEach((o,j)=>{const b=document.createElement('button');b.className='opt';b.textContent=o;b.onclick=()=>{if(d.dataset.done)return;d.dataset.done=1;answered++;
+  if(j===q[2]){b.classList.add('right');score++}else{b.classList.add('wrong');d.querySelectorAll('.opt')[q[2]].classList.add('right')}
+  d.querySelector('.fb').textContent=q[3];if(answered===Q.length)document.getElementById('score').textContent=`Score: ${score}/${Q.length}`+(score>=6?' — open the notebook 🎉':' — re-read the sections in the feedback, refresh, retry.')};d.appendChild(b)});
+ const f=document.createElement('div');f.className='fb';d.appendChild(f);box.appendChild(d)})})();
+</script>
+</body>
+</html>

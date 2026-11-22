@@ -1,0 +1,4 @@
+mlops_workdir/
+runs/
+registry/
+artifacts/

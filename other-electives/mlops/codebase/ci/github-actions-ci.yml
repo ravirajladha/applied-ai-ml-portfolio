@@ -1,0 +1,18 @@
+# M2/M3 · Continuous integration for the ML project (example; copy to .github/workflows/ in a real repo).
+# Every push: install, run code + data + model tests. The model tests include the quality gate,
+# so a change that makes the model worse fails CI exactly like a failing unit test.
+name: deliverease-ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: other-electives/mlops/codebase
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: pytest -q

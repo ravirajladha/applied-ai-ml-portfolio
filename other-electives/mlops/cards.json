@@ -1,0 +1,434 @@
+[
+ {
+  "id": "mlops-01-001",
+  "subject": "mlops",
+  "module": 1,
+  "concept": "MLOps",
+  "q": "What is MLOps?",
+  "a": "DevOps practices plus versioning, testing and monitoring of data and models, so ML stays reliable in production.",
+  "analogy": "DevOps for a program whose behaviour also depends on data.",
+  "kind": "definition",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-01-002",
+  "subject": "mlops",
+  "module": 1,
+  "concept": "Three things that change",
+  "q": "What three things can change and break an ML system?",
+  "a": "Code, data and the model. Only code changes are caught by normal DevOps.",
+  "analogy": "A recipe (code), ingredients (data) and the cook's skill (model).",
+  "kind": "why",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-01-003",
+  "subject": "mlops",
+  "module": 1,
+  "concept": "Hidden technical debt",
+  "q": "Why is the ML code only a small part of an ML system?",
+  "a": "Data collection, features, serving, monitoring and config dwarf the model code and carry most of the risk.",
+  "analogy": "The model is the engine; MLOps is the rest of the car.",
+  "kind": "why",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-01-004",
+  "subject": "mlops",
+  "module": 1,
+  "concept": "Maturity levels",
+  "q": "What are Google's MLOps maturity levels 0, 1 and 2?",
+  "a": "0 manual notebooks; 1 automated training pipeline with continuous training; 2 CI/CD for the pipeline itself.",
+  "analogy": "Hand-built release → scripted release → fully automated release train.",
+  "kind": "compare",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-02-001",
+  "subject": "mlops",
+  "module": 2,
+  "concept": "ML platform",
+  "q": "What is an ML platform (e.g. Uber Michelangelo)?",
+  "a": "Shared internal tooling for data, training, registry, serving and monitoring so teams don't rebuild them.",
+  "analogy": "An internal PaaS, but for models.",
+  "kind": "definition",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-03-001",
+  "subject": "mlops",
+  "module": 3,
+  "concept": "Baseline",
+  "q": "What is a baseline and why build it first?",
+  "a": "The simplest possible predictor, like always the average; a real model must clearly beat it to be worth deploying.",
+  "analogy": "Checking a new database index beats a full table scan.",
+  "kind": "definition",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-03-002",
+  "subject": "mlops",
+  "module": 3,
+  "concept": "Training-serving skew",
+  "q": "What is training-serving skew?",
+  "a": "Production computes inputs differently from training, so the model sees data it never learned from.",
+  "analogy": "Testing on Chrome while users run an old Safari.",
+  "kind": "definition",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-03-003",
+  "subject": "mlops",
+  "module": 3,
+  "concept": "Skew prevention",
+  "q": "How do you prevent training-serving skew?",
+  "a": "One feature function (or feature store) used by both the training pipeline and the serving API.",
+  "analogy": "One shared library instead of two copy-pasted versions.",
+  "kind": "how",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-03-004",
+  "subject": "mlops",
+  "module": 3,
+  "concept": "Experiment tracking",
+  "q": "What is experiment tracking?",
+  "a": "Recording every training run's params, data version, metrics and model file.",
+  "analogy": "Git log plus test results, for training runs.",
+  "kind": "definition",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-03-005",
+  "subject": "mlops",
+  "module": 3,
+  "concept": "Model registry",
+  "q": "What is a model registry?",
+  "a": "Single source of truth for model versions and which one is in Production.",
+  "analogy": "A container registry with a movable 'production' tag.",
+  "kind": "definition",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-03-006",
+  "subject": "mlops",
+  "module": 3,
+  "concept": "Packaging",
+  "q": "How is a model packaged for deployment?",
+  "a": "Serialise the model (joblib, ONNX, TorchScript) and run the service in a container; mount the model so code and model ship separately.",
+  "analogy": "Ship the app image; load the config file at start-up.",
+  "kind": "how",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-04-001",
+  "subject": "mlops",
+  "module": 4,
+  "concept": "Quality gate",
+  "q": "What is a quality gate in an ML pipeline?",
+  "a": "Automatic rules a new model must pass before promotion, like CI that must be green.",
+  "analogy": "Branch protection: no merge until checks pass.",
+  "kind": "definition",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-04-002",
+  "subject": "mlops",
+  "module": 4,
+  "concept": "Champion vs challenger",
+  "q": "Why compare champion and challenger on the same data?",
+  "a": "Different eval data makes errors incomparable; a better model can be wrongly rejected, or a worse one accepted.",
+  "analogy": "Benchmark two servers with the same load test, not different ones.",
+  "kind": "why",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-04-003",
+  "subject": "mlops",
+  "module": 4,
+  "concept": "Orchestration",
+  "q": "What does an orchestrator like Airflow or Kubeflow do?",
+  "a": "Runs the pipeline steps as a DAG on a schedule or trigger, with retries and logs.",
+  "analogy": "cron plus a dependency graph plus a dashboard.",
+  "kind": "definition",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-05-001",
+  "subject": "mlops",
+  "module": 5,
+  "concept": "Serving patterns",
+  "q": "Batch vs online vs streaming serving?",
+  "a": "Score a file on a schedule / answer each request live / score events as they flow.",
+  "analogy": "Nightly report vs API call vs Kafka consumer.",
+  "kind": "compare",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-05-002",
+  "subject": "mlops",
+  "module": 5,
+  "concept": "Serving questions",
+  "q": "What questions decide how to serve a model?",
+  "a": "Load, latency, location, hardware, execution mode and where request-time features come from.",
+  "analogy": "Capacity planning for any service.",
+  "kind": "how",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-05-003",
+  "subject": "mlops",
+  "module": 5,
+  "concept": "Traceable predictions",
+  "q": "Why return the model version with every prediction?",
+  "a": "So any prediction can be traced to the exact model and training run when debugging or auditing.",
+  "analogy": "Build number in the response header.",
+  "kind": "why",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-06-001",
+  "subject": "mlops",
+  "module": 6,
+  "concept": "Data drift",
+  "q": "What is data drift?",
+  "a": "Input distributions change from what the model was trained on.",
+  "analogy": "Your API suddenly gets traffic from a new country.",
+  "kind": "definition",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-06-002",
+  "subject": "mlops",
+  "module": 6,
+  "concept": "Concept drift",
+  "q": "What is concept drift?",
+  "a": "The relationship between inputs and the right answer changes.",
+  "analogy": "Same order details, but monsoon roads now make it 6 minutes slower.",
+  "kind": "definition",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-06-003",
+  "subject": "mlops",
+  "module": 6,
+  "concept": "PSI",
+  "q": "What is PSI and its thresholds?",
+  "a": "Population Stability Index: how much a feature's distribution moved; < 0.1 ok, 0.1-0.25 watch, > 0.25 alert.",
+  "analogy": "A diff score between two histograms.",
+  "kind": "numerical",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-06-004",
+  "subject": "mlops",
+  "module": 6,
+  "concept": "Delayed labels",
+  "q": "Why monitor drift if you can monitor accuracy?",
+  "a": "True outcomes often arrive late (hours or weeks), so input drift is the early warning.",
+  "analogy": "Smoke detector before the fire report.",
+  "kind": "why",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-07-001",
+  "subject": "mlops",
+  "module": 7,
+  "concept": "Shadow deployment",
+  "q": "What is a shadow deployment?",
+  "a": "New model runs on real traffic but only logs answers; users see the old model.",
+  "analogy": "Dark launch of a backend service.",
+  "kind": "definition",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-07-002",
+  "subject": "mlops",
+  "module": 7,
+  "concept": "Canary release",
+  "q": "What is a canary release?",
+  "a": "A small share of users get the new model first; ramp up if metrics hold.",
+  "analogy": "Rolling out an app update to 10% of users.",
+  "kind": "definition",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-07-003",
+  "subject": "mlops",
+  "module": 7,
+  "concept": "Stateless vs stateful retraining",
+  "q": "Stateless vs stateful retraining?",
+  "a": "Stateless retrains from scratch on recent data; stateful continues training the existing model on new data only.",
+  "analogy": "Full rebuild vs incremental build.",
+  "kind": "compare",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-07-004",
+  "subject": "mlops",
+  "module": 7,
+  "concept": "Continuous training",
+  "q": "What is continuous training (CT)?",
+  "a": "Retraining automatically on a schedule or a trigger such as a drift alert.",
+  "analogy": "A CI pipeline that also rebuilds the model.",
+  "kind": "definition",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-08-001",
+  "subject": "mlops",
+  "module": 8,
+  "concept": "Federated learning",
+  "q": "What is federated learning?",
+  "a": "Training across many devices where only model updates leave the device, never the raw data.",
+  "analogy": "Each phone sends a diff, never the files.",
+  "kind": "definition",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ },
+ {
+  "id": "mlops-08-002",
+  "subject": "mlops",
+  "module": 8,
+  "concept": "Model compression",
+  "q": "Name three model compression techniques.",
+  "a": "Quantization (lower precision), pruning (remove weights), distillation (small model learns from a big one).",
+  "analogy": "Minify and compress a JS bundle.",
+  "kind": "how",
+  "tags": [
+   "interview",
+   "exam"
+  ],
+  "source": "handouts/Older batch - MLOps (S2-25_AIMLCZG523) COURSE HANDOUT.docx",
+  "topic": "01 MLOps Big Picture"
+ }
+]
