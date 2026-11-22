@@ -13,7 +13,10 @@ rather than committed — link them here instead.
 
 ## Reference papers / external links
 
-- _Title_ — link
+**Papers** — `materials/papers/` (2, added 22-Nov-2026)
+
+- [Hidden Technical Debt in Machine Learning Systems (Sculley et al., NIPS 2015)](materials/papers/NIPS-2015-hidden-technical-debt-in-machine-learning-systems-Paper.pdf)
+- [Hidden Technical Debt in ML — summary](materials/papers/Hidden_Technical_Debt_ML_Summary.pdf)
 
 ## Seniors' and shared-drive resources
 
