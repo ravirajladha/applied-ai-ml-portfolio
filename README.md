@@ -1,4 +1,4 @@
-﻿# Applied AI/ML Coursework Portfolio
+# Applied AI/ML Coursework Portfolio
 
 Personal archive of notes, lab notebooks, slides, and webinar material from my
 ongoing M.Tech journey — mirrors the subject/session structure used on the
@@ -19,6 +19,7 @@ Large binary files (`.pptx`, `.xlsx`) are tracked with [Git LFS](https://git-lfs
 | *Semester 3* — API Driven Cloud Native Solutions (AIMLCZG549) | [`api-driven-cloud-native-solutions/`](api-driven-cloud-native-solutions/) |
 | *Semester 3* — Machine Learning on the Edge (AIMLCZG535) | [`machine-learning-on-the-edge/`](machine-learning-on-the-edge/) |
 | *Semester 3* — NLP Applications (AIMLCZG519) | [`nlp-applications/`](nlp-applications/) |
+| *Reference* — electives I am not taking (handouts, past papers, slides) | [`other-electives/`](other-electives/) |
 
 **Not sure what to study next? Open [`TRACK.md`](TRACK.md).**
 

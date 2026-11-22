@@ -41,3 +41,6 @@ __pycache__/
 # Python virtual environments and Jupyter LSP scratch files
 .venv*/
 .virtual_documents/
+
+# personal resume (phone, address): local only, never pushed
+resume/

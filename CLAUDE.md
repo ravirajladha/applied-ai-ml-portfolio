@@ -23,6 +23,12 @@
 - Every topic ends with an **interview angle**: the one-minute spoken answer, and the SDE analogy.
 - NLP: don't re-read the handouts. Use only the revision chapters listed in `TRACK.md` §5.
 
+## Seniors' and shared-drive resources (look here when asked to "take reference")
+- **My semester-3 subjects** (`llm-engineering/`, `nlp-applications/`, `machine-learning-on-the-edge/`, `api-driven-cloud-native-solutions/`): `materials/handouts/`, `materials/past-question-papers/`, `materials/old-batch-slides/`, `materials/lecture-slides/`, `books/` or `materials/books/`, `transcript/other-sections/` (other professors' lecture `.vtt` transcripts). Each subject's `resources.md` lists every file.
+- **Electives I'm not taking**: `other-electives/<subject>/` (same subfolder names), indexed in `other-electives/README.md`.
+- Old-batch material can differ from the current syllabus: always check the current handout first. Past question papers are the best signal for what's examined.
+- **Building an elective in depth:** follow `other-electives/STUDY-STANDARD.md` (repetition ladder, folder layout, `cards.json` format) and that subject's `SPEC.md`. Build one subject at a time, one practice topic at a time. MLOps is the reference example (`other-electives/mlops/`: codebase + practice/01).
+
 ## The teaching workflow (do this for EVERY new topic)
 When teaching or practicing a new topic, create a **topic folder** at `<subject>/practice/<NN Topic Name>/` (zero-padded number for ordering, e.g. `01 MDP - Value Iteration`) and put these three files inside, so each topic is self-contained and reusable later:
 

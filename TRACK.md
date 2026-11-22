@@ -115,7 +115,7 @@ Climb in order. **You're done with a level when you can answer its 5 questions o
 - How is CI/CD different for ML (data + model versions)?
 - Design an LLM support chatbot end to end (system design).
 
-📂 `software-engineering-for-machine-learning/materials/notes/` (Sessions 2, 5, 12, 14) · `interview-preparation/application-development/categories/10-ml-ai-integration.html`, `11-system-design.html`
+📂 **`other-electives/mlops/practice/01 …`** (explainer + notebook + a real codebase with tests) · `software-engineering-for-machine-learning/materials/notes/` (Sessions 2, 5, 12, 14) · `interview-preparation/application-development/categories/10-ml-ai-integration.html`, `11-system-design.html`
 
 ---
 
@@ -130,14 +130,14 @@ are **separate blocks**, so don't cut them for this. If a week goes badly, do on
 | **2 · 23–29 Nov** | **Session 2 + 3 notes** · Webinar 1 · start Assignment 1A | L1: top-100 Q21–50, models-explained (4 models) | ch02 cosine/TF-IDF + ch03 word2vec (2 h) |
 | **3 · 30 Nov–6 Dec** | **Assignment 1A: CPT + QLoRA runs** · Webinar 2 | L2: deep-learning.md first sections | ch04 n-grams & perplexity (1 h) |
 | **4 · 7–13 Dec** | **Assignment 1A: results + write-up** | L3 + L4 questions out loud · write your 2-min pitch (§6) | ch08 prompting/transfer (1 h) |
-| **5 · 14–20 Dec** | **Submit 1A (19-Dec)** · start mid-sem revision (modules 1–5, closed book) | L5 + one mock system design | — |
+| **5 · 14–20 Dec** | **Submit 1A (19-Dec)** · start mid-sem revision (modules 1–5, closed book) | L5 via **MLOps topic 01** (`other-electives/mlops/`) + one mock system design | — |
 
 ### Checklist
 - [ ] W1 — Session 1 note · Transformer topic 02 · top-100 Q1–20 · 1A/1B form
 - [ ] W2 — Session 2 & 3 notes · Webinar 1 · L1 questions · NLP ch02–03
 - [ ] W3 — 1A training runs · L2 questions · NLP ch04
 - [ ] W4 — 1A write-up · L3/L4 out loud · pitch written · NLP ch08
-- [ ] W5 — 1A submitted · L5 · mid-sem revision started
+- [ ] W5 — 1A submitted · L5 (MLOps 01) · mid-sem revision started
 
 ---
 
@@ -182,7 +182,13 @@ interviews reuse, from the revision pack you already built (`natural-language-pr
 
 ---
 
-## 7. Global skip list (for now)
+## 7. Long-term library (after week 5)
+
+`other-electives/` holds every semester-3 elective I'm not taking: resources plus a `SPEC.md` study plan each, built to
+`other-electives/STUDY-STANDARD.md`. **Not part of the 5-week plan**, except MLOps topic 01 (counted in L5 above).
+Build order after 20-Dec: MLOps 02–09 → ML System Optimisation → Conversational AI → Multimodal IR (see the standard's §6).
+
+## 8. Global skip list (for now)
 
 Maths derivations (backprop algebra, SVD proofs, RoPE) · reinforcement learning beyond one-liners · CNN internals beyond
 one-liners · writing models from scratch in PyTorch · reading research papers end to end · any new course or
