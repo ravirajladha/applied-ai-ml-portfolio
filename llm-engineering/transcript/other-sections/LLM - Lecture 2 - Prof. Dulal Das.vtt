@@ -1,0 +1,4903 @@
+WEBVTT
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/15-0
+00:00:33.174 --> 00:00:34.614
+<v Dulal Das .>Thank you, then I will just start.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/19-0
+00:00:39.414 --> 00:00:42.462
+<v Dulal Das .>Hello, you can hear,
+you can hear me right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/16-0
+00:00:39.894 --> 00:00:41.254
+<v MS TEAMS LECTURES SPECIFIC>Yes, sir, yes, sir.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/19-1
+00:00:42.462 --> 00:00:45.094
+<v Dulal Das .>You can hear me right? Yeah, yeah, OK.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/18-0
+00:00:42.694 --> 00:00:43.654
+<v MS TEAMS LECTURES SPECIFIC>Yeah, yeah, yes, sir.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/23-0
+00:00:46.734 --> 00:00:53.898
+<v Dulal Das .>Okay, so before we start for today,
+let me just give a quick recap of what we</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/23-1
+00:00:53.898 --> 00:00:57.572
+<v Dulal Das .>did,
+what we discussed last time in our</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/23-2
+00:00:57.572 --> 00:01:02.899
+<v Dulal Das .>session. So in our last session,
+we will do a few things,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/23-3
+00:01:02.899 --> 00:01:05.654
+<v Dulal Das .>like what a language model is.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/28-0
+00:01:06.854 --> 00:01:11.645
+<v Dulal Das .>And what it does,
+it assigns probabilities to sequence of</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/28-1
+00:01:11.645 --> 00:01:15.527
+<v Dulal Das .>tokens.
+We also looked into one of the example</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/28-2
+00:01:15.527 --> 00:01:21.969
+<v Dulal Das .>where a sentence where all of a sudden I
+noticed three guys standing on dash.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/28-3
+00:01:21.969 --> 00:01:24.694
+<v Dulal Das .>We looked into how it worked, how</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/29-0
+00:01:25.174 --> 00:01:32.118
+<v Dulal Das .>the sentence was converted into tokens,
+something like that. And based on that,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/29-1
+00:01:32.118 --> 00:01:33.854
+<v Dulal Das .>we also looked into.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/30-0
+00:01:34.774 --> 00:01:35.654
+<v Dulal Das .>Chain Rule.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/31-0
+00:01:38.494 --> 00:01:43.807
+<v Dulal Das .>which is the probability of a sentence
+and is the product of a next token</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/31-1
+00:01:43.807 --> 00:01:47.611
+<v Dulal Das .>probabilities.
+So one training objective would be to</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/31-2
+00:01:47.611 --> 00:01:49.334
+<v Dulal Das .>just, you know, predict.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/32-0
+00:01:51.414 --> 00:01:52.694
+<v Dulal Das .>The next token.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/33-0
+00:01:56.134 --> 00:02:02.045
+<v Dulal Das .>And this also lets a model both to score
+the text and generate and also generate</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/33-1
+00:02:02.045 --> 00:02:02.774
+<v Dulal Das .>some text.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/34-0
+00:02:04.134 --> 00:02:05.574
+<v Dulal Das .>After that, we also looked.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/35-0
+00:02:07.014 --> 00:02:11.574
+<v Dulal Das .>Important topic: why the models are
+called Large Language Models?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/39-0
+00:02:14.294 --> 00:02:17.521
+<v Dulal Das .>where we looked into the billions of
+parameters,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/39-1
+00:02:17.521 --> 00:02:20.749
+<v Dulal Das .>which is based on which the models are
+designed,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/39-2
+00:02:20.749 --> 00:02:25.161
+<v Dulal Das .>trillions of training tokens and long
+context windows. Parameters,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/39-3
+00:02:25.161 --> 00:02:28.454
+<v Dulal Das .>we looked into parameters,
+we looked into tokens.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/40-0
+00:02:29.414 --> 00:02:30.934
+<v Dulal Das .>Context Windows.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/43-0
+00:02:33.574 --> 00:02:39.009
+<v Dulal Das .>It is see we also looked into how it is
+trained with self-supervised training and</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/43-1
+00:02:39.009 --> 00:02:43.714
+<v Dulal Das .>because the label is simple,
+simply the next token and it's already in</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/43-2
+00:02:43.714 --> 00:02:47.094
+<v Dulal Das .>the text. So why it is self-supervised?
+Because...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/44-0
+00:02:49.254 --> 00:02:53.654
+<v Dulal Das .>Self-supervise because the text is or the
+token is already present in.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/46-0
+00:02:56.334 --> 00:02:57.254
+<v Dulal Das .>In the Text.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/47-0
+00:02:59.374 --> 00:03:01.654
+<v Dulal Das .>Then we also looked into the generation
+loop.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/48-0
+00:03:04.054 --> 00:03:05.334
+<v Dulal Das .>Which is?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/49-0
+00:03:06.534 --> 00:03:08.454
+<v Dulal Das .>Predict sample.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/52-0
+00:03:09.574 --> 00:03:12.563
+<v Dulal Das .>Then,
+append the text back to the predicted</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/52-1
+00:03:12.563 --> 00:03:13.174
+<v Dulal Das .>sentence.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/53-0
+00:03:15.574 --> 00:03:19.174
+<v Dulal Das .>And repeat,
+this is this is what is called.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/54-0
+00:03:20.374 --> 00:03:21.574
+<v Dulal Das .>Autoregressive.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/61-0
+00:03:25.094 --> 00:03:29.318
+<v Dulal Das .>or auto-regressive decoding as well if I
+want to say.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/61-1
+00:03:29.318 --> 00:03:35.654
+<v Dulal Das .>Then we looked into mapping of a model.
+The model can be mapped into four boxes.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/63-0
+00:03:37.134 --> 00:03:43.161
+<v Dulal Das .>Which will have one a tokenizer,
+then out of the tokenizer we will get the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/63-1
+00:03:43.161 --> 00:03:46.294
+<v Dulal Das .>embeddings with some positional values.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/64-0
+00:03:49.414 --> 00:03:51.734
+<v Dulal Das .>Out of this,
+we will have the decoder block.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/65-0
+00:03:54.774 --> 00:03:57.094
+<v Dulal Das .>And this goes into the MLM head.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/68-0
+00:04:00.534 --> 00:04:03.163
+<v Dulal Das .>Here,
+the attention is communication between</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/68-1
+00:04:03.163 --> 00:04:06.258
+<v Dulal Das .>the tokens. We also looked into attention,
+actually.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/68-2
+00:04:06.258 --> 00:04:10.054
+<v Dulal Das .>And this attention is just the
+communication between the tokens.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/69-0
+00:04:11.974 --> 00:04:18.419
+<v Dulal Das .>The FN,
+the and the FN also does the computation</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/69-1
+00:04:18.419 --> 00:04:19.734
+<v Dulal Das .>per token.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/70-0
+00:04:20.854 --> 00:04:25.094
+<v Dulal Das .>We have the FN, and in the end,
+the residual.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/71-0
+00:04:25.974 --> 00:04:26.854
+<v Dulal Das .>Streams.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/72-0
+00:04:29.414 --> 00:04:29.894
+<v Dulal Das .>And.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/73-0
+00:04:32.534 --> 00:04:32.694
+<v Dulal Das .>But.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/76-0
+00:04:33.694 --> 00:04:37.959
+<v Dulal Das .>After this,
+we also have checked how a tokenizer look,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/76-1
+00:04:37.959 --> 00:04:42.534
+<v Dulal Das .>what are the different types of
+tokenizers we looked into.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/77-0
+00:04:44.614 --> 00:04:45.814
+<v Dulal Das .>We looked into.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/80-0
+00:04:47.174 --> 00:04:50.829
+<v Dulal Das .>Different types of tokenizers,
+like word tokenizers,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/80-1
+00:04:50.829 --> 00:04:55.105
+<v Dulal Das .>which uses word vocabularies,
+which breaks down unseen words,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/80-2
+00:04:55.105 --> 00:04:59.725
+<v Dulal Das .>which breaks down on unseen words.
+We also looked into characters,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/80-3
+00:04:59.725 --> 00:05:04.208
+<v Dulal Das .>which makes up sequences to long subwords
+sitting between words.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/80-4
+00:05:04.208 --> 00:05:08.414
+<v Dulal Das .>We also look into BPE,
+byte pair encoding type of tokenizer.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/81-0
+00:05:08.694 --> 00:05:15.526
+<v Dulal Das .>which merges the most frequent pair again
+and again. It falls to, it also fails to,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/81-1
+00:05:15.526 --> 00:05:19.511
+<v Dulal Das .>you know,
+do some actual work during some cases,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/81-2
+00:05:19.511 --> 00:05:24.716
+<v Dulal Das .>which we also looked into.
+Then we also looked by level by BPE,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/81-3
+00:05:24.716 --> 00:05:28.294
+<v Dulal Das .>which also starts from different 256
+bytes.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/87-0
+00:05:29.334 --> 00:05:34.924
+<v Dulal Das .>In the end, we looked into tokenization,
+effects, cost, and context,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/87-1
+00:05:34.924 --> 00:05:39.379
+<v Dulal Das .>and what kind of tokenization framework
+we should use.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/87-2
+00:05:39.379 --> 00:05:43.429
+<v Dulal Das .>So we have seen these things in our last
+session.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/87-3
+00:05:43.429 --> 00:05:48.694
+<v Dulal Das .>So what we want to do here in today's
+session is look into from.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/89-0
+00:05:49.094 --> 00:05:53.254
+<v Dulal Das .>The text is, you know,
+converted in the end into token IDs,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/89-1
+00:05:53.254 --> 00:05:57.622
+<v Dulal Das .>right? So, in today,
+we want to look into token embeddings and</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/89-2
+00:05:57.622 --> 00:06:00.742
+<v Dulal Das .>positional encodings,
+like how these tokens,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/89-3
+00:06:00.742 --> 00:06:04.972
+<v Dulal Das .>how our sentence is now, you know,
+converted into token IDs,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/89-4
+00:06:04.972 --> 00:06:07.814
+<v Dulal Das .>and from those token IDs, how embeddings.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/90-0
+00:06:08.214 --> 00:06:13.757
+<v Dulal Das .>Are created, so, as of now, our sentence,
+whatever sentence we took as an example</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/90-1
+00:06:13.757 --> 00:06:14.974
+<v Dulal Das .>in our last class.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/95-0
+00:06:16.134 --> 00:06:22.060
+<v Dulal Das .>is now a list of token IDs, right?
+So we had a sentence earlier,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/95-1
+00:06:22.060 --> 00:06:29.353
+<v Dulal Das .>and that sentence from our last session,
+we know how to convert this into token</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/95-2
+00:06:29.353 --> 00:06:31.814
+<v Dulal Das .>IDs, right? This token IDs.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/98-0
+00:06:33.654 --> 00:06:40.313
+<v Dulal Das .>So today we want to also look into how
+this we can turn this token IDs into</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/98-1
+00:06:40.313 --> 00:06:41.014
+<v Dulal Das .>vectors.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/99-0
+00:06:43.734 --> 00:06:48.110
+<v Dulal Das .>And some kind of stamps each vector into
+some kind of positioning.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/99-1
+00:06:48.110 --> 00:06:51.768
+<v Dulal Das .>So we will convert,
+we will see how these token IDs are</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/99-2
+00:06:51.768 --> 00:06:57.254
+<v Dulal Das .>converted into vectors and these vectors
+can be stamped into some kind of position.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/100-0
+00:07:03.574 --> 00:07:04.054
+<v Dulal Das .>Okay.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/101-0
+00:07:04.934 --> 00:07:11.011
+<v Dulal Das .>So the next two slides that we are going
+to look is the handshake between box one</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/101-1
+00:07:11.011 --> 00:07:16.421
+<v Dulal Das .>that we did till last session,
+which is sentence to token IDs and box 2,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/101-2
+00:07:16.421 --> 00:07:21.164
+<v Dulal Das .>which is, which we will look today,
+which is embeddings, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/101-3
+00:07:21.164 --> 00:07:26.723
+<v Dulal Das .>So they look back, how they look back,
+so it is like they look back at the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/101-4
+00:07:26.723 --> 00:07:29.094
+<v Dulal Das .>tokenization for a moment, okay?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/102-0
+00:07:29.654 --> 00:07:34.105
+<v Dulal Das .>So what we can do here is,
+let's look into the diagram on the left.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/102-1
+00:07:34.105 --> 00:07:37.771
+<v Dulal Das .>On the left,
+a new sentence is now tokenized. You know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/102-2
+00:07:37.771 --> 00:07:40.651
+<v Dulal Das .>as you can see here,
+the sentence comes in,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/102-3
+00:07:40.651 --> 00:07:44.578
+<v Dulal Das .>the sentence is tokenized,
+and each token is looked up in a</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/102-4
+00:07:44.578 --> 00:07:47.589
+<v Dulal Das .>vocabulary with IDs.
+So this is the sentence,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/102-5
+00:07:47.589 --> 00:07:49.814
+<v Dulal Das .>this sentence is tokenized into...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/103-0
+00:07:50.374 --> 00:07:54.061
+<v Dulal Das .>Tokens like this,
+and these tokens are looked into a</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/103-1
+00:07:54.061 --> 00:07:55.174
+<v Dulal Das .>vocabulary here.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/104-0
+00:07:56.614 --> 00:08:00.810
+<v Dulal Das .>right, to get an ID.
+So what we are trying to do here is for</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/104-1
+00:08:00.810 --> 00:08:06.381
+<v Dulal Das .>the token, let's say the token brown,
+we will try to get the ID. Here for brown,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/104-2
+00:08:06.381 --> 00:08:10.852
+<v Dulal Das .>the ID is 0. On the right hand side,
+which is an important part,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/104-3
+00:08:10.852 --> 00:08:15.254
+<v Dulal Das .>is that the tokenizer and the model are
+matched at the pair. So</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/105-0
+00:08:15.654 --> 00:08:19.803
+<v Dulal Das .>So here on left,
+the sentence is converted into tokens.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/105-1
+00:08:19.803 --> 00:08:24.915
+<v Dulal Das .>The tokens are matched with some token
+IDs from the vocabulary list.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/105-2
+00:08:24.915 --> 00:08:29.508
+<v Dulal Das .>And on the right hand side,
+this whole part is the tokenizer,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/105-3
+00:08:29.508 --> 00:08:35.212
+<v Dulal Das .>right on left. So on the right hand side,
+this is matched with a model pair.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/105-4
+00:08:35.212 --> 00:08:38.694
+<v Dulal Das .>So what you can see here is the model
+here is.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/106-0
+00:08:39.214 --> 00:08:44.073
+<v Dulal Das .>Let's have a transformer MLM. Okay,
+we have the tokenizer here.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/106-1
+00:08:44.073 --> 00:08:47.489
+<v Dulal Das .>With it in the tokenizer,
+we have different,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/106-2
+00:08:47.489 --> 00:08:52.348
+<v Dulal Das .>the tokenizer has around 50,
+000 entries and the mode and these</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/106-3
+00:08:52.348 --> 00:08:57.055
+<v Dulal Das .>entries will be what?
+These entries will be the token IDs for</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/106-4
+00:08:57.055 --> 00:08:57.814
+<v Dulal Das .>the token.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/109-0
+00:08:58.134 --> 00:09:02.918
+<v Dulal Das .>Okay, and at the same time,
+the model has also has exactly 1</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/109-1
+00:09:02.918 --> 00:09:08.486
+<v Dulal Das .>embedding for each token ID.
+So if you see here, the tokenizer has 50,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/109-2
+00:09:08.486 --> 00:09:13.504
+<v Dulal Das .>000 entries. Inside the tokenizer,
+we have different token IDs,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/109-3
+00:09:13.504 --> 00:09:17.974
+<v Dulal Das .>and these token IDs will exactly have one
+embedding row.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/110-0
+00:09:18.014 --> 00:09:19.334
+<v Dulal Das .>In the model, as well.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/112-0
+00:09:20.614 --> 00:09:26.425
+<v Dulal Das .>So let's take an example of, let's say,
+111002 in the tokenizer means,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/112-1
+00:09:26.425 --> 00:09:31.417
+<v Dulal Das .>so let's say we have an ID in the
+tokenizer with value 1102,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/112-2
+00:09:31.417 --> 00:09:34.854
+<v Dulal Das .>the ID of the token. So this means that...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/114-0
+00:09:36.294 --> 00:09:41.412
+<v Dulal Das .>That 1102 row in the model. OK,
+so this is how the tokenizer and the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/114-1
+00:09:41.412 --> 00:09:45.863
+<v Dulal Das .>model is mapped. OK,
+so the practical consequences would be</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/114-2
+00:09:45.863 --> 00:09:50.684
+<v Dulal Das .>for anyone who will fine tune,
+who wants to fine tune a model or</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/114-3
+00:09:50.684 --> 00:09:55.654
+<v Dulal Das .>something like that. OK,
+the tokenizer ships with the model, so...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/117-0
+00:09:55.974 --> 00:10:00.368
+<v Dulal Das .>If we want to fine tune a model,
+so what we should have,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/117-1
+00:10:00.368 --> 00:10:04.530
+<v Dulal Das .>we should have the model plus the
+tokenizer together.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/117-2
+00:10:04.530 --> 00:10:09.077
+<v Dulal Das .>It's like a lock and key part if I try to
+give an analogy.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/117-3
+00:10:09.077 --> 00:10:13.240
+<v Dulal Das .>So the tokenizer will have the tokens,
+the token IDs,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/117-4
+00:10:13.240 --> 00:10:16.014
+<v Dulal Das .>these token IDs will be also mapped.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/118-0
+00:10:16.054 --> 00:10:19.294
+<v Dulal Das .>With the with a row in the model inside
+the model.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/119-0
+00:10:20.414 --> 00:10:23.761
+<v Dulal Das .>So the thing is that if we swipe,
+let's say the,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/119-1
+00:10:23.761 --> 00:10:29.294
+<v Dulal Das .>let's say we have this model and we swipe
+this tokenizer with another tokenizer.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/125-0
+00:10:30.334 --> 00:10:33.891
+<v Dulal Das .>OK,
+the IDs in the other tokenizer will point</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/125-1
+00:10:33.891 --> 00:10:38.917
+<v Dulal Das .>to wrong rows inside the model,
+and the model output will become</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/125-2
+00:10:38.917 --> 00:10:45.103
+<v Dulal Das .>meaningless. So, when we are fine tuning,
+let's say we will take fine tune this</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/125-3
+00:10:45.103 --> 00:10:49.974
+<v Dulal Das .>model based on the a tokenizer, OK,
+and it should go in pairs.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/126-0
+00:10:51.174 --> 00:10:54.509
+<v Dulal Das .>Okay,
+if we switch to a different tokenizer for</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/126-1
+00:10:54.509 --> 00:10:58.051
+<v Dulal Das .>the same model,
+that different tokenizer will have</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/126-2
+00:10:58.051 --> 00:11:01.802
+<v Dulal Das .>different token IDs.
+That token IDs will be mapped to</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/126-3
+00:11:01.802 --> 00:11:06.734
+<v Dulal Das .>different rows in the model,
+and the model output will be meaningless.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/127-0
+00:11:07.694 --> 00:11:14.698
+<v Dulal Das .>So this is how the the tokenizer and the
+model go hand in hand and they they are</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/127-1
+00:11:14.698 --> 00:11:19.454
+<v Dulal Das .>always a pair of like it's like lock and
+the key pair.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/130-0
+00:11:25.854 --> 00:11:28.800
+<v Dulal Das .>Now,
+now we have seen the vocabulary also</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/130-1
+00:11:28.800 --> 00:11:33.008
+<v Dulal Das .>contains, you know,
+special tokens that never appeared in a</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/130-2
+00:11:33.008 --> 00:11:36.585
+<v Dulal Das .>normal text.
+So it can have special tokens, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/130-3
+00:11:36.585 --> 00:11:41.354
+<v Dulal Das .>So which doesn't appear in the normal
+text. So this figure is from,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/130-4
+00:11:41.354 --> 00:11:45.702
+<v Dulal Das .>here is from Rashka's book,
+which will say simple word level.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/130-5
+00:11:45.702 --> 00:11:46.894
+<v Dulal Das .>This is a simple.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/131-0
+00:11:47.054 --> 00:11:52.430
+<v Dulal Das .>Word level tokenizer. As you can see,
+there is a set sentence sequence here,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/131-1
+00:11:52.430 --> 00:11:58.014
+<v Dulal Das .>and it's tokenized based on the words
+here, and the brown dog playful it is in.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/134-0
+00:11:59.734 --> 00:12:03.443
+<v Dulal Das .>Okay,
+so which is a simple word level tokenizer</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/134-1
+00:12:03.443 --> 00:12:07.075
+<v Dulal Das .>first.
+So what it does is here in the diagram,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/134-2
+00:12:07.075 --> 00:12:12.174
+<v Dulal Das .>it adds an unknown token,
+if you can just see, which is UNK here.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/135-0
+00:12:13.774 --> 00:12:18.062
+<v Dulal Das .>So there was,
+these were the tokens already present in</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/135-1
+00:12:18.062 --> 00:12:23.988
+<v Dulal Das .>the vocabulary from the sentence,
+but it has also added a unknown tokenizer</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/135-2
+00:12:23.988 --> 00:12:29.290
+<v Dulal Das .>here, UNK. As we just saw,
+like at byte level tokenizer never needs</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/135-3
+00:12:29.290 --> 00:12:32.174
+<v Dulal Das .>one, right? So at byte level, this...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/136-0
+00:12:32.734 --> 00:12:37.757
+<v Dulal Das .>This is not required.
+The token that matters in a real model is</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/136-1
+00:12:37.757 --> 00:12:40.974
+<v Dulal Das .>the second one, which is the end of text.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/137-0
+00:12:42.054 --> 00:12:42.894
+<v Dulal Das .>Token.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/138-0
+00:12:44.174 --> 00:12:48.374
+<v Dulal Das .>So, why, why this is important? So,
+during pre-training,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/138-1
+00:12:48.374 --> 00:12:53.901
+<v Dulal Das .>let's say millions of, you know,
+unrelated documents are concatenated into</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/138-2
+00:12:53.901 --> 00:12:57.585
+<v Dulal Das .>one long text, so,
+and into one long text stream,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/138-3
+00:12:57.585 --> 00:13:03.037
+<v Dulal Das .>something like that, and cut into fix,
+like we we collate all the unknown</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/138-4
+00:13:03.037 --> 00:13:03.774
+<v Dulal Das .>documents.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/139-0
+00:13:04.494 --> 00:13:11.152
+<v Dulal Das .>The text is connected into one stream and
+it is cut into fixed length chunks.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/139-1
+00:13:11.152 --> 00:13:16.274
+<v Dulal Das .>So end of end of text marks where one
+document ends, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/139-2
+00:13:16.274 --> 00:13:21.054
+<v Dulal Das .>So there were doc one for pre-training
+and then we had.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/142-0
+00:13:22.094 --> 00:13:26.285
+<v Dulal Das .>Dog 2 like this,
+this we had N number of dogs, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/142-1
+00:13:26.285 --> 00:13:32.183
+<v Dulal Das .>So how we know that one dog has, you know,
+ended and the other dog started?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/142-2
+00:13:32.183 --> 00:13:35.054
+<v Dulal Das .>So this end of text is embedded here.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/146-0
+00:13:39.534 --> 00:13:43.772
+<v Dulal Das .>Right,
+so the end of text token marks where one</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/146-1
+00:13:43.772 --> 00:13:50.480
+<v Dulal Das .>document ends and the next one begins.
+So the model learns not to carry the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/146-2
+00:13:50.480 --> 00:13:55.336
+<v Dulal Das .>context from the last document or across
+the boundary.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/146-3
+00:13:55.336 --> 00:14:00.014
+<v Dulal Das .>So the model knows that the context of
+this document</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/147-0
+00:14:00.334 --> 00:14:05.189
+<v Dulal Das .>We'll end here with the end of text token,
+then the context of another document</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/147-1
+00:14:05.189 --> 00:14:05.614
+<v Dulal Das .>starts.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/149-0
+00:14:06.974 --> 00:14:11.108
+<v Dulal Das .>So this is very useful.
+And this creates the context boundary</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/149-1
+00:14:11.108 --> 00:14:14.841
+<v Dulal Das .>across the documents.
+The chat models and more of this,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/149-2
+00:14:14.841 --> 00:14:18.108
+<v Dulal Das .>let's say something here on the right
+hand side.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/149-3
+00:14:18.108 --> 00:14:21.841
+<v Dulal Das .>So there are different chat models that
+we know, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/149-4
+00:14:21.841 --> 00:14:26.708
+<v Dulal Das .>So markers for the system prompt,
+the user turn, and the assistant turn.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/149-5
+00:14:26.708 --> 00:14:31.574
+<v Dulal Das .>That's what a chat template is, right?
+So we will see it in fine tuning.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/150-0
+00:14:31.654 --> 00:14:35.856
+<v Dulal Das .>session. So here,
+what happens is that these two tokens,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/150-1
+00:14:35.856 --> 00:14:40.573
+<v Dulal Das .>especially the end of text token,
+is very important for context</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/150-2
+00:14:40.573 --> 00:14:45.733
+<v Dulal Das .>understanding for the model.
+And it will come up more in reality when</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/150-3
+00:14:45.733 --> 00:14:51.409
+<v Dulal Das .>we look into chat models and when we try
+to do fine tuning sessions for chat</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/150-4
+00:14:51.409 --> 00:14:53.694
+<v Dulal Das .>models or for different models.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/151-0
+00:14:54.254 --> 00:14:58.351
+<v Dulal Das .>Why,
+while fine-tuning the text coming from</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/151-1
+00:14:58.351 --> 00:14:59.934
+<v Dulal Das .>one document can?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/152-0
+00:15:01.294 --> 00:15:04.314
+<v Dulal Das .>can be learned,
+then we can have a end of text token in</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/152-1
+00:15:04.314 --> 00:15:08.520
+<v Dulal Das .>between the two documents so that the
+model understand that this is where the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/152-2
+00:15:08.520 --> 00:15:12.834
+<v Dulal Das .>first document ends and the context of
+the first document is something exercise</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/152-3
+00:15:12.834 --> 00:15:15.260
+<v Dulal Das .>and something like this.
+And from the token,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/152-4
+00:15:15.260 --> 00:15:18.981
+<v Dulal Das .>after the token end of text,
+there should be a new document starting</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/152-5
+00:15:18.981 --> 00:15:22.054
+<v Dulal Das .>and for the new document,
+the context will be different.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/153-0
+00:15:22.654 --> 00:15:25.934
+<v Dulal Das .>So this is very important for the context
+understanding.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/156-0
+00:15:31.134 --> 00:15:35.047
+<v Dulal Das .>Now, let's look into token IDs to,
+you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/156-1
+00:15:35.047 --> 00:15:40.263
+<v Dulal Das .>how this token IDs will be converted into
+token embeddings.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/156-2
+00:15:40.263 --> 00:15:45.479
+<v Dulal Das .>So now into the box to proper,
+let's take the example here.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/156-3
+00:15:45.479 --> 00:15:50.174
+<v Dulal Das .>This is an example,
+the text here present here. Okay.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/157-0
+00:15:50.414 --> 00:15:54.094
+<v Dulal Das .>So, this text becomes becomes 5 tokens.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/158-0
+00:15:55.454 --> 00:15:55.534
+<v Dulal Das .>Ah.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/161-0
+00:15:56.814 --> 00:16:00.244
+<v Dulal Das .>In the next page,
+this depends on what kind of, of course,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/161-1
+00:16:00.244 --> 00:16:04.721
+<v Dulal Das .>what kind of tokenizer we are using.
+In this example, the tokenizer is word,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/161-2
+00:16:04.721 --> 00:16:06.174
+<v Dulal Das .>word level tokenizer, OK?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/162-0
+00:16:07.534 --> 00:16:11.762
+<v Dulal Das .>So, the example is, this is an example.
+This is the input text.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/162-1
+00:16:11.762 --> 00:16:15.924
+<v Dulal Das .>This will be tokenized into this is 1
+token, is another token,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/162-2
+00:16:15.924 --> 00:16:21.341
+<v Dulal Das .>and another token example, another token,
+and of course the full stop in the end.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/162-3
+00:16:21.341 --> 00:16:26.494
+<v Dulal Das .>So, this will be the tokenized text.
+This tokenized text will have different.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/163-0
+00:16:26.654 --> 00:16:27.374
+<v Dulal Das .>IDs.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/164-0
+00:16:28.334 --> 00:16:36.677
+<v Dulal Das .>OK, as you can see here in the next step,
+OK, and this will exactly have 5 IDs,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/164-1
+00:16:36.677 --> 00:16:45.333
+<v Dulal Das .>because we have 5 tokens, and in the end,
+these five IDs will be will be mapped to</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/164-2
+00:16:45.333 --> 00:16:45.854
+<v Dulal Das .>five.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/165-0
+00:16:46.814 --> 00:16:47.694
+<v Dulal Das .>Lectures.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/166-0
+00:16:52.334 --> 00:16:55.694
+<v Dulal Das .>OK,
+so this is this is how the tokens are</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/166-1
+00:16:55.694 --> 00:17:01.294
+<v Dulal Das .>converted into token embeddings. In short,
+and so at very high level,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/166-2
+00:17:01.294 --> 00:17:06.814
+<v Dulal Das .>this is the step, right? So,
+sentence is converted into tokens based</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/166-3
+00:17:06.814 --> 00:17:11.214
+<v Dulal Das .>on the token tokenizer.
+The the tokens are then given.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/167-0
+00:17:11.294 --> 00:17:15.515
+<v Dulal Das .>some token IDs from those token IDs,
+token embeddings,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/167-1
+00:17:15.515 --> 00:17:20.811
+<v Dulal Das .>or the vectors are mapped.
+The same happens to any of our, you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/167-2
+00:17:20.811 --> 00:17:24.342
+<v Dulal Das .>sentence.
+Each of its token becomes a vector.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/167-3
+00:17:24.342 --> 00:17:29.023
+<v Dulal Das .>So a sentence is present,
+then tokens out of that tokens are</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/167-4
+00:17:29.023 --> 00:17:33.014
+<v Dulal Das .>derived,
+and each token is converted into a vector.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/168-0
+00:17:33.094 --> 00:17:33.294
+<v Dulal Das .>Two.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/169-0
+00:17:34.814 --> 00:17:37.294
+<v Dulal Das .>So now, what are these?
+What are these vectors?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/170-0
+00:17:39.214 --> 00:17:43.365
+<v Dulal Das .>What are these vectors and where do they
+come from? So, of course,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/170-1
+00:17:43.365 --> 00:17:47.454
+<v Dulal Das .>the token IDs are converted into vector
+embeddings here, but how?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/171-0
+00:17:48.734 --> 00:17:51.694
+<v Dulal Das .>And where from where they came came up,
+right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/172-0
+00:17:56.174 --> 00:18:01.335
+<v Dulal Das .>So this is when we will look into what
+are embeddings, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/172-1
+00:18:01.335 --> 00:18:06.080
+<v Dulal Das .>So embeddings in a way,
+as I said in the previous slide,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/172-2
+00:18:06.080 --> 00:18:11.408
+<v Dulal Das .>so sentence, tokens, token IDs,
+then in the end vectors, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/172-3
+00:18:11.408 --> 00:18:14.654
+<v Dulal Das .>So what has happened in this stage? And</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/175-0
+00:18:15.134 --> 00:18:18.323
+<v Dulal Das .>How they,
+how they are converted into vectors?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/175-1
+00:18:18.323 --> 00:18:22.665
+<v Dulal Das .>We will look into that,
+so this is where we jump into the topic</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/175-2
+00:18:22.665 --> 00:18:23.614
+<v Dulal Das .>of embeddings.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/179-0
+00:18:24.654 --> 00:18:30.992
+<v Dulal Das .>The first intuition here is that let's
+take on the diagram here on the left hand</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/179-1
+00:18:30.992 --> 00:18:31.774
+<v Dulal Das .>side here.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/182-0
+00:18:33.214 --> 00:18:40.061
+<v Dulal Das .>Imagine like here what we have to do is
+that like it's the induition or intuition</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/182-1
+00:18:40.061 --> 00:18:45.238
+<v Dulal Das .>of the embeddings here.
+So imagine each dimension here on the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/182-2
+00:18:45.238 --> 00:18:46.574
+<v Dulal Das .>left here is it.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/183-0
+00:18:48.814 --> 00:18:51.971
+<v Dulal Das .>We say properties. OK,
+so this on the left hand side,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/183-1
+00:18:51.971 --> 00:18:54.894
+<v Dulal Das .>this this can these are properties.
+Let's cheque.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/184-0
+00:18:56.254 --> 00:19:03.952
+<v Dulal Das .>Animal is only one, human, plural,
+fruit are different properties, right? So,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/184-1
+00:19:03.952 --> 00:19:12.144
+<v Dulal Das .>as you can take this example here, puppy,
+puppy is high on animal, as you can see,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/184-2
+00:19:12.144 --> 00:19:15.894
+<v Dulal Das .>the property animal or puppy has high.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/185-0
+00:19:16.014 --> 00:19:22.090
+<v Dulal Das .>High rating 9.
+93 and newborn is also high 0.71 Apple.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/185-1
+00:19:22.090 --> 00:19:27.614
+<v Dulal Das .>If I take another example here,
+Apple is high on.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/186-0
+00:19:29.054 --> 00:19:33.422
+<v Dulal Das .>High on fruit here, 0.89, right?
+So that's a teaching device.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/186-1
+00:19:33.422 --> 00:19:38.212
+<v Dulal Das .>So what we are trying to do here is we
+want to teach it, right? No,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/186-2
+00:19:38.212 --> 00:19:43.496
+<v Dulal Das .>it's actually not a reality here,
+but it's just an intuition of how we are</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/186-3
+00:19:43.496 --> 00:19:46.596
+<v Dulal Das .>teaching it.
+So the real dimensions are not</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/186-4
+00:19:46.596 --> 00:19:47.934
+<v Dulal Das .>individually inter.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/188-0
+00:19:48.174 --> 00:19:54.798
+<v Dulal Das .>predictable. Okay, no one assigns them.
+We don't assign like this while learning,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/188-1
+00:19:54.798 --> 00:19:59.886
+<v Dulal Das .>but the geometry is very real.
+So if I can convert this into a</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/188-2
+00:19:59.886 --> 00:20:04.894
+<v Dulal Das .>geometrical figure here,
+which is the right hand side figure.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/189-0
+00:20:06.094 --> 00:20:10.282
+<v Dulal Das .>This is very real.
+What happens here is after training,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/189-1
+00:20:10.282 --> 00:20:15.742
+<v Dulal Das .>the tokens are used in similar contexts.
+Okay, so if you see the tokens,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/189-2
+00:20:15.742 --> 00:20:20.155
+<v Dulal Das .>different tokens used,
+and the tokens which are in similar</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/189-3
+00:20:20.155 --> 00:20:25.614
+<v Dulal Das .>contexts will come up near to each other.
+So let's say cats, dog, puppy.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/191-0
+00:20:26.094 --> 00:20:30.118
+<v Dulal Das .>As you can see,
+they are clustered together, apple,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/191-1
+00:20:30.118 --> 00:20:34.141
+<v Dulal Das .>banana, which is like fruit,
+and these are animals,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/191-2
+00:20:34.141 --> 00:20:37.623
+<v Dulal Das .>all similar categories or similar,
+you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/191-3
+00:20:37.623 --> 00:20:43.272
+<v Dulal Das .>tokens or similar context to context,
+tokens having similar context will</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/191-4
+00:20:43.272 --> 00:20:44.974
+<v Dulal Das .>categorise in similar.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/192-0
+00:20:45.854 --> 00:20:52.242
+<v Dulal Das .>nearby geometry, right? So they will have,
+they will be clustered in a way that the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/192-1
+00:20:52.242 --> 00:20:53.534
+<v Dulal Das .>distance between.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/196-0
+00:20:55.454 --> 00:20:59.680
+<v Dulal Das .>Between them are less,
+so the distance in this space in this</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/196-1
+00:20:59.680 --> 00:21:01.134
+<v Dulal Das .>whole geometry space.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/197-0
+00:21:02.814 --> 00:21:07.815
+<v Dulal Das .>carries meaning. Okay, so this,
+if you see this cluster building houses,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/197-1
+00:21:07.815 --> 00:21:12.267
+<v Dulal Das .>I think this can be clustered as
+buildings or something like the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/197-2
+00:21:12.267 --> 00:21:15.692
+<v Dulal Das .>infrastructure, right? So here,
+Adele may be the,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/197-3
+00:21:15.692 --> 00:21:20.555
+<v Dulal Das .>so this can be categorised something into
+a different category, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/197-4
+00:21:20.555 --> 00:21:23.774
+<v Dulal Das .>So the distance in this space carries
+meaning.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/198-0
+00:21:24.134 --> 00:21:29.937
+<v Dulal Das .>which is what raw IDs could not give us.
+So as you can see, the raw IDs,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/198-1
+00:21:29.937 --> 00:21:34.308
+<v Dulal Das .>tokens to token IDs,
+we know that there is a token ID,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/198-2
+00:21:34.308 --> 00:21:40.667
+<v Dulal Das .>but by itself we don't know exactly what
+meaning it's trying to give us, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/198-3
+00:21:40.667 --> 00:21:42.574
+<v Dulal Das .>So this is where this...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/199-0
+00:21:42.814 --> 00:21:47.487
+<v Dulal Das .>intuition comes into picture where in
+this geometrical figure here,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/199-1
+00:21:47.487 --> 00:21:52.365
+<v Dulal Das .>if you see the tokens with similar
+context or similar meanings will be</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/199-2
+00:21:52.365 --> 00:21:54.014
+<v Dulal Das .>categorised together in.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/200-0
+00:21:55.174 --> 00:21:57.884
+<v Dulal Das .>Categorised together closer in the
+geometry,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/200-1
+00:21:57.884 --> 00:22:00.654
+<v Dulal Das .>so this geometry gives a same meaning,
+right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/201-0
+00:22:06.694 --> 00:22:10.527
+<v Dulal Das .>Now, we can look into, we have understood,
+right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/201-1
+00:22:10.527 --> 00:22:14.820
+<v Dulal Das .>So how the tokens are converted into IDs.
+From the IDs,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/201-2
+00:22:14.820 --> 00:22:20.645
+<v Dulal Das .>we get the vectors and how these vectors
+are formed as an intuition, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/201-3
+00:22:20.645 --> 00:22:25.934
+<v Dulal Das .>So values of amendings represent the
+properties that are present. So</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/204-0
+00:22:26.294 --> 00:22:29.788
+<v Dulal Das .>This is what is an embedding, right?
+So if you can see here,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/204-1
+00:22:29.788 --> 00:22:34.255
+<v Dulal Das .>the embeddings represent the properties
+that are used to represent the words.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/204-2
+00:22:34.255 --> 00:22:38.894
+<v Dulal Das .>So these are just different properties,
+which we saw on the left hand side here.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/205-0
+00:22:40.734 --> 00:22:45.966
+<v Dulal Das .>We may oversimplify this by imagining
+that the dimensions represents different</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/205-1
+00:22:45.966 --> 00:22:49.542
+<v Dulal Das .>concepts and they, you know,
+but actually they don't,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/205-2
+00:22:49.542 --> 00:22:54.774
+<v Dulal Das .>but it helps in expressing the idea. Okay,
+so we can think these are concepts,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/205-3
+00:22:54.774 --> 00:22:58.814
+<v Dulal Das .>but this is just an intuition. In reality,
+they don't exist.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/210-0
+00:23:05.374 --> 00:23:10.041
+<v Dulal Das .>Now the mechanism, which is, you know,
+simpler. I think people may think that,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/210-1
+00:23:10.041 --> 00:23:12.818
+<v Dulal Das .>okay,
+embedding and the mechanism used to form</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/210-2
+00:23:12.818 --> 00:23:17.426
+<v Dulal Das .>embeddings are complex parts, right?
+But it is simpler than how people think,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/210-3
+00:23:17.426 --> 00:23:21.266
+<v Dulal Das .>expect, or something like that.
+The embeddings and these things,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/210-4
+00:23:21.266 --> 00:23:25.756
+<v Dulal Das .>the embedding layers and the concept used
+here in the embedding layer or in</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/210-5
+00:23:25.756 --> 00:23:28.414
+<v Dulal Das .>embeddings is very simple.
+It's just like a.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/211-0
+00:23:29.614 --> 00:23:30.454
+<v Dulal Das .>Look up table.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/214-0
+00:23:34.254 --> 00:23:38.654
+<v Dulal Das .>So as the headings here say,
+it's lookup on a row. OK,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/214-1
+00:23:38.654 --> 00:23:43.934
+<v Dulal Das .>it's just a lookup table.
+So what the embeddings will have is the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/214-2
+00:23:43.934 --> 00:23:46.734
+<v Dulal Das .>embedding matrix E here, let's say.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/215-0
+00:23:47.974 --> 00:23:53.074
+<v Dulal Das .>This concept here,
+he has one row per vocabulary entry,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/215-1
+00:23:53.074 --> 00:24:00.268
+<v Dulal Das .>so it will have per vocabulary entry,
+it will have one row for that particular</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/215-2
+00:24:00.268 --> 00:24:00.814
+<v Dulal Das .>token.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/216-0
+00:24:02.254 --> 00:24:07.454
+<v Dulal Das .>Okay, vocabulary entry.
+So what happens is the matrix E.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/217-0
+00:24:11.294 --> 00:24:13.614
+<v Dulal Das .>Will have one row.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/218-0
+00:24:14.694 --> 00:24:15.614
+<v Dulal Das .>For token.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/219-0
+00:24:22.574 --> 00:24:27.694
+<v Dulal Das .>So, which will be,
+which will be the value of V into D,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/219-1
+00:24:27.694 --> 00:24:31.534
+<v Dulal Das .>which is V are the rows, this is the rows.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/220-0
+00:24:32.494 --> 00:24:34.814
+<v Dulal Das .>OK, and D is the columns.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/221-0
+00:24:37.134 --> 00:24:41.694
+<v Dulal Das .>And the columns of the model dimension
+here.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/222-0
+00:24:46.334 --> 00:24:46.734
+<v Dulal Das .>Ohh.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/225-0
+00:24:48.174 --> 00:24:57.168
+<v Dulal Das .>So, let's take this toy example here,
+so fox jumps over dog in this part in</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/225-1
+00:24:57.168 --> 00:24:59.534
+<v Dulal Das .>this toy example we.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/226-0
+00:25:00.574 --> 00:25:09.188
+<v Dulal Das .>We sort number of rows, so here we can be,
+I think, 4, 6, so sorry,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/226-1
+00:25:09.188 --> 00:25:17.674
+<v Dulal Das .>fox jumps over the dog here in this in
+this toy example, actually,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/226-2
+00:25:17.674 --> 00:25:20.334
+<v Dulal Das .>so from the from the.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/227-0
+00:25:21.254 --> 00:25:27.283
+<v Dulal Das .>Point 2 here from the dimension,
+if you can see the example given here is</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/227-1
+00:25:27.283 --> 00:25:31.031
+<v Dulal Das .>6 by three, so V,
+which is which is the rows,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/227-2
+00:25:31.031 --> 00:25:32.334
+<v Dulal Das .>will become six.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/228-0
+00:25:33.374 --> 00:25:36.174
+<v Dulal Das .>And the D, which are the columns,
+will become.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/229-0
+00:25:37.454 --> 00:25:45.525
+<v Dulal Das .>Three, yeah, so let's take this.
+So fox jumps over dog becomes ID 2351.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/229-1
+00:25:45.525 --> 00:25:51.354
+<v Dulal Das .>For each ID,
+what happens is take that row of E for</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/229-2
+00:25:51.354 --> 00:25:56.734
+<v Dulal Das .>each ID, take that row of E,
+which is this, OK?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/230-0
+00:25:57.454 --> 00:26:04.144
+<v Dulal Das .>And stack the rows into input order,
+so which is here on the right hand side,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/230-1
+00:26:04.144 --> 00:26:06.974
+<v Dulal Das .>the table on the right hand side.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/231-0
+00:26:09.294 --> 00:26:13.471
+<v Dulal Das .>So, the result is, what, how,
+what will be the result? This,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/231-1
+00:26:13.471 --> 00:26:17.374
+<v Dulal Das .>the result is X,
+which the result is here X, which is...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/234-0
+00:26:19.294 --> 00:26:24.347
+<v Dulal Das .>N by N into D, so what happens?
+The shape will be,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/234-1
+00:26:24.347 --> 00:26:31.777
+<v Dulal Das .>shape will be given by N by D here,
+4 by three. So, as you know, N is for,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/234-2
+00:26:31.777 --> 00:26:38.414
+<v Dulal Das .>and we have N here, 4, right?
+Fox jumps over dog, one, two, three.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/235-0
+00:26:38.494 --> 00:26:44.254
+<v Dulal Das .>Four and the D is 3,
+so the shape will be 4 by three.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/236-0
+00:26:46.654 --> 00:26:53.083
+<v Dulal Das .>Okay, for our class,
+for our class sentence of about 11 tokens,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/236-1
+00:26:53.083 --> 00:26:59.310
+<v Dulal Das .>which we saw last time,
+in any of the models like Lama 38B or</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/236-2
+00:26:59.310 --> 00:27:04.734
+<v Dulal Das .>something like that,
+X would be mostly for, you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/237-0
+00:27:06.294 --> 00:27:10.377
+<v Dulal Das .>Let's say we let's take an example.
+So we had a token,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/237-1
+00:27:10.377 --> 00:27:14.014
+<v Dulal Das .>I think tokens equals to 11 and we have a
+llama.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/238-0
+00:27:16.014 --> 00:27:25.118
+<v Dulal Das .>38B model so llama has dimension of 4096
+so the shape of our tokens in a way will</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/238-1
+00:27:25.118 --> 00:27:26.894
+<v Dulal Das .>be 11 into 4096.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/241-0
+00:27:28.894 --> 00:27:32.827
+<v Dulal Das .>The 3 here,
+the three most important properties that</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/241-1
+00:27:32.827 --> 00:27:38.688
+<v Dulal Das .>we have to remember is that the values
+are initialised randomly and learned by</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/241-2
+00:27:38.688 --> 00:27:41.953
+<v Dulal Das .>back propagation like any other weight.
+OK,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/241-3
+00:27:41.953 --> 00:27:48.334
+<v Dulal Das .>the lookup is positioned from independent,
+so here we can look into three properties.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/240-0
+00:27:47.934 --> 00:27:48.414
+<v PRAVEER KIRTI MOHAN JAIN .>I do think.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/242-0
+00:27:51.054 --> 00:27:51.534
+<v Dulal Das .>Yes.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/244-0
+00:27:55.694 --> 00:28:01.045
+<v Dulal Das .>So the values are initialised as a random
+value here.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/244-1
+00:28:01.045 --> 00:28:04.414
+<v Dulal Das .>It is learned by back propagation.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/245-0
+00:28:05.614 --> 00:28:11.009
+<v Dulal Das .>over some weights. Okay,
+how learning is done in back propagation.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/245-1
+00:28:11.009 --> 00:28:15.921
+<v Dulal Das .>The lookup is portion independent.
+So here, the lookup here,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/245-2
+00:28:15.921 --> 00:28:21.074
+<v Dulal Das .>which we saw in the centre figure,
+is it's portion independent.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/245-3
+00:28:21.074 --> 00:28:24.939
+<v Dulal Das .>As you can see,
+the fox in our text came first,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/245-4
+00:28:24.939 --> 00:28:30.334
+<v Dulal Das .>but it was assigned a row third here with
+the ID given to the fox.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/246-0
+00:28:30.654 --> 00:28:34.578
+<v Dulal Das .>Okay, as I said,
+the lookup is portion independent.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/246-1
+00:28:34.578 --> 00:28:39.408
+<v Dulal Das .>The same token gets, you know,
+same vector wherever it appears.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/246-2
+00:28:39.408 --> 00:28:45.294
+<v Dulal Das .>So if fox appears somewhere else also,
+it will get the same vector, you know.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/249-0
+00:28:47.054 --> 00:28:53.546
+<v Dulal Das .>And the table, you know,
+it's the table will be always, of course,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/249-1
+00:28:53.546 --> 00:28:59.457
+<v Dulal Das .>always very large. So,
+what we saw here in Lama 38B example,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/249-2
+00:28:59.457 --> 00:29:06.530
+<v Dulal Das .>it will be E will be always very large
+because we had the dimensions of,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/249-3
+00:29:06.530 --> 00:29:09.534
+<v Dulal Das .>let's say, 4096 and for our 11.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/250-0
+00:29:09.854 --> 00:29:16.016
+<v Dulal Das .>token example, it will be 11 into 4096,
+something like this. Okay,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/250-1
+00:29:16.016 --> 00:29:21.074
+<v Dulal Das .>so there are different ways of, you know,
+calculating.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/250-2
+00:29:21.074 --> 00:29:27.143
+<v Dulal Das .>So this 11 into 4096 can become roughly
+some X parameters, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/250-3
+00:29:27.143 --> 00:29:29.534
+<v Dulal Das .>So this is how the models.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/251-0
+00:29:29.854 --> 00:29:32.894
+<v Dulal Das .>become, you know,
+million parameters or billion parameters.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/252-0
+00:29:37.134 --> 00:29:40.073
+<v Dulal Das .>Now,
+when we have these tokens for token IDs</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/252-1
+00:29:40.073 --> 00:29:43.665
+<v Dulal Das .>for the text,
+and we have a lookup table where we look</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/252-2
+00:29:43.665 --> 00:29:48.824
+<v Dulal Das .>into the token IDs and what are the
+dimension values, and you know, we map it,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/252-3
+00:29:48.824 --> 00:29:51.566
+<v Dulal Das .>right?
+So this is how the cost of a whole</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/252-4
+00:29:51.566 --> 00:29:54.766
+<v Dulal Das .>vocabulary size,
+the bigger the vocabulary size,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/252-5
+00:29:54.766 --> 00:29:57.574
+<v Dulal Das .>the cost will increase, right?
+This is the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/253-0
+00:29:57.774 --> 00:30:02.894
+<v Dulal Das .>Cost vocabulary trade-off or vocabulary
+size trade-off of everything here.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/255-0
+00:30:15.014 --> 00:30:15.134
+<v Dulal Das .>The.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/256-0
+00:30:16.894 --> 00:30:20.878
+<v Dulal Das .>Now,
+let's look into types of text embeddings</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/256-1
+00:30:20.878 --> 00:30:26.507
+<v Dulal Das .>that we can have. Okay,
+a brief side note on this slide is that,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/256-2
+00:30:26.507 --> 00:30:31.098
+<v Dulal Das .>and you know,
+these are the different embeddings for</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/256-3
+00:30:31.098 --> 00:30:35.774
+<v Dulal Das .>textual kinds only. So,
+embeddings exist at a very...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/257-0
+00:30:36.094 --> 00:30:41.294
+<v Dulal Das .>Several different levels. OK,
+so the embeddings can be at.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/261-0
+00:30:42.774 --> 00:30:48.295
+<v Dulal Das .>Embeddings can be at, you know,
+token level, word level, sentence level,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/261-1
+00:30:48.295 --> 00:30:53.438
+<v Dulal Das .>document, document level also.
+So embeddings can exist at all these</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/261-2
+00:30:53.438 --> 00:30:59.261
+<v Dulal Das .>levels, so it can be token embeddings,
+word embeddings, sentence embeddings,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/261-3
+00:30:59.261 --> 00:31:01.454
+<v Dulal Das .>and even document embeddings.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/263-0
+00:31:01.854 --> 00:31:06.848
+<v Dulal Das .>And so these are separate,
+they have separate use of the same idea.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/263-1
+00:31:06.848 --> 00:31:11.475
+<v Dulal Das .>So these embeddings are formed because of
+different use cases,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/263-2
+00:31:11.475 --> 00:31:14.853
+<v Dulal Das .>but the idea is same of the embedding,
+right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/263-3
+00:31:14.853 --> 00:31:20.654
+<v Dulal Das .>So if we need somewhere token embeddings,
+we will create the token embeddings.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/264-0
+00:31:21.014 --> 00:31:23.731
+<v Dulal Das .>somewhere document embeddings are
+required.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/264-1
+00:31:23.731 --> 00:31:28.177
+<v Dulal Das .>We create embeddings for the document.
+The idea, the intuition is same,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/264-2
+00:31:28.177 --> 00:31:30.894
+<v Dulal Das .>but maybe are used for different use
+cases.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/266-0
+00:31:34.214 --> 00:31:38.672
+<v Dulal Das .>Inside the MLM,
+as you can see here in the figure,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/266-1
+00:31:38.672 --> 00:31:43.305
+<v Dulal Das .>we only ever use token embedding.
+So we have a text.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/266-2
+00:31:43.305 --> 00:31:49.075
+<v Dulal Das .>The text is converted into tokens.
+Tokens have IDs. From the IDs,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/266-3
+00:31:49.075 --> 00:31:54.494
+<v Dulal Das .>we also generate or map the token
+embeddings in a way, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/267-0
+00:31:55.054 --> 00:31:58.203
+<v Dulal Das .>So this in a model,
+whatever the model it is,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/267-1
+00:31:58.203 --> 00:32:03.064
+<v Dulal Das .>the text is not directly used, right?
+So the embeddings for that text,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/267-2
+00:32:03.064 --> 00:32:05.254
+<v Dulal Das .>for that token is actually used.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/268-0
+00:32:07.694 --> 00:32:12.814
+<v Dulal Das .>And always in model, as I can say, only.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/269-0
+00:32:14.414 --> 00:32:16.414
+<v Dulal Das .>Embeddings are used.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/272-0
+00:32:21.934 --> 00:32:25.102
+<v Dulal Das .>And there are various different examples
+here, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/272-1
+00:32:25.102 --> 00:32:28.564
+<v Dulal Das .>So sentence embeddings can be used for
+different examples.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/272-2
+00:32:28.564 --> 00:32:33.433
+<v Dulal Das .>Document embeddings are separate use of
+the same idea, but in a different example.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/272-3
+00:32:33.433 --> 00:32:37.305
+<v Dulal Das .>So central to what this,
+why this happens is because so there can</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/272-4
+00:32:37.305 --> 00:32:39.534
+<v Dulal Das .>be some use cases, right? So sentence.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/273-0
+00:32:40.094 --> 00:32:46.512
+<v Dulal Das .>can be one use case where we want to have
+sentence embeddings and doc embeddings we</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/273-1
+00:32:46.512 --> 00:32:52.471
+<v Dulal Das .>want to have for a bigger document.
+So these topics are centred to central to</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/273-2
+00:32:52.471 --> 00:32:55.374
+<v Dulal Das .>some a concept called semantic search.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/274-0
+00:32:57.574 --> 00:33:02.336
+<v Dulal Das .>and RAG, as you can,
+you may have already used or heard in the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/274-1
+00:33:02.336 --> 00:33:05.814
+<v Dulal Das .>market.
+So these concepts are very central to</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/274-2
+00:33:05.814 --> 00:33:09.895
+<v Dulal Das .>sentence embeddings and document
+embeddings in a way.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/274-3
+00:33:09.895 --> 00:33:14.657
+<v Dulal Das .>So we will come back to this module later
+in the module, okay?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/274-4
+00:33:14.657 --> 00:33:17.454
+<v Dulal Das .>But this is how things are. So input.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/277-0
+00:33:18.054 --> 00:33:22.293
+<v Dulal Das .>comes into as a text,
+then this text is split into,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/277-1
+00:33:22.293 --> 00:33:27.428
+<v Dulal Das .>I will try to just repeat here,
+the text comes in as an input,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/277-2
+00:33:27.428 --> 00:33:32.725
+<v Dulal Das .>the text is split into tokens,
+the tokens is passed through some</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/277-3
+00:33:32.725 --> 00:33:37.534
+<v Dulal Das .>representation model which does the
+embedding of the text.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/278-0
+00:33:37.774 --> 00:33:42.363
+<v Dulal Das .>And the embeddings comes out as vectors
+and numbers in some form, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/278-1
+00:33:42.363 --> 00:33:46.323
+<v Dulal Das .>So these vectors and numbers can be
+formed at different level.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/278-2
+00:33:46.323 --> 00:33:50.031
+<v Dulal Das .>So it can be just a token embeddings,
+as you can see here,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/278-3
+00:33:50.031 --> 00:33:54.054
+<v Dulal Das .>it can be also word embeddings,
+it can be a document embedding,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/278-4
+00:33:54.054 --> 00:33:56.254
+<v Dulal Das .>and it can be a sentence embedding.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/279-0
+00:33:56.334 --> 00:34:00.807
+<v Dulal Das .>I said, based on the use case,
+based on the scenario,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/279-1
+00:34:00.807 --> 00:34:03.374
+<v Dulal Das .>but the intuition is same text.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/280-0
+00:34:04.574 --> 00:34:09.288
+<v Dulal Das .>splitting of text into tokens,
+tokens pass through an embedding model,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/280-1
+00:34:09.288 --> 00:34:13.404
+<v Dulal Das .>and the embedding is generated.
+This is the common intuition.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/280-2
+00:34:13.404 --> 00:34:16.857
+<v Dulal Das .>And of course,
+a few embedding styles like document</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/280-3
+00:34:16.857 --> 00:34:21.969
+<v Dulal Das .>embeddings and sentence embeddings are
+very central to the latest concept of</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/280-4
+00:34:21.969 --> 00:34:23.894
+<v Dulal Das .>semantic search and even REG.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/281-0
+00:34:27.694 --> 00:34:30.942
+<v Dulal Das .>Now,
+let's look into positional embeddings. So,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/281-1
+00:34:30.942 --> 00:34:35.407
+<v Dulal Das .>if, if let's take any example,
+so whatever example we had, right,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/281-2
+00:34:35.407 --> 00:34:38.654
+<v Dulal Das .>we had different sentences as an example,
+so...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/284-0
+00:34:40.414 --> 00:34:46.923
+<v Dulal Das .>with the same words in a different order,
+a different probability can happen, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/284-1
+00:34:46.923 --> 00:34:52.283
+<v Dulal Das .>So let's say we had an example,
+the cat is something like this. Okay,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/284-2
+00:34:52.283 --> 00:34:58.332
+<v Dulal Das .>so these words are in some order, right?
+So the comes before cat and cat comes</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/284-3
+00:34:58.332 --> 00:34:59.174
+<v Dulal Das .>before cat.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/288-0
+00:34:59.294 --> 00:35:02.908
+<v Dulal Das .>Is so,
+if I jumble this sentence or this these</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/288-1
+00:35:02.908 --> 00:35:08.521
+<v Dulal Das .>three words like this cat, the is,
+so this may have different, you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/288-2
+00:35:08.521 --> 00:35:12.212
+<v Dulal Das .>if I if I shuffle it so the order of this
+word,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/288-3
+00:35:12.212 --> 00:35:18.363
+<v Dulal Das .>so they may have a different probability
+of you know what the next word will be</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/288-4
+00:35:18.363 --> 00:35:21.054
+<v Dulal Das .>right, what the next token will be.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/289-0
+00:35:21.454 --> 00:35:24.720
+<v Dulal Das .>So here's the problem.
+So after the lookup,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/289-1
+00:35:24.720 --> 00:35:29.915
+<v Dulal Das .>what happens is that the shuffle sentence
+produces exactly, you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/289-2
+00:35:29.915 --> 00:35:35.259
+<v Dulal Das .>same set of vectors. So what happens,
+why this positional embeddings is</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/289-3
+00:35:35.259 --> 00:35:38.969
+<v Dulal Das .>important?
+Because we are creating embeddings for</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/289-4
+00:35:38.969 --> 00:35:39.934
+<v Dulal Das .>the position.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/290-0
+00:35:40.254 --> 00:35:47.217
+<v Dulal Das .>So, let's say, in this example,
+the cat is the next token can be the cat</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/290-1
+00:35:47.217 --> 00:35:47.694
+<v Dulal Das .>is...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/291-0
+00:35:48.894 --> 00:35:53.243
+<v Dulal Das .>Eating and then the next token something
+like this, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/291-1
+00:35:53.243 --> 00:35:56.560
+<v Dulal Das .>So if I create embeddings for this
+sentence,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/291-2
+00:35:56.560 --> 00:36:02.088
+<v Dulal Das .>it doesn't matter if I fumble the
+sentence in some way. Let's say the cat,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/291-3
+00:36:02.088 --> 00:36:07.763
+<v Dulal Das .>the eating is something like this, right?
+So if I create embeddings also the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/291-4
+00:36:07.763 --> 00:36:08.574
+<v Dulal Das .>embeddings.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/292-0
+00:36:09.854 --> 00:36:13.692
+<v Dulal Das .>Is coming,
+the embeddings will be from a lookup,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/292-1
+00:36:13.692 --> 00:36:17.451
+<v Dulal Das .>right?
+So there is a lookup from the vocabulary</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/292-2
+00:36:17.451 --> 00:36:22.699
+<v Dulal Das .>lookup and something like this.
+So where the shuffle sentence also</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/292-3
+00:36:22.699 --> 00:36:26.536
+<v Dulal Das .>produces the same exact,
+if it is shuffled also,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/292-4
+00:36:26.536 --> 00:36:28.494
+<v Dulal Das .>it will produce the same.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/293-0
+00:36:29.254 --> 00:36:31.694
+<v Dulal Das .>Exact vectors.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/294-0
+00:36:34.734 --> 00:36:38.734
+<v Dulal Das .>But it can be in it can be in different.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/295-0
+00:36:40.174 --> 00:36:40.734
+<v Dulal Das .>Order.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/298-0
+00:36:46.494 --> 00:36:50.996
+<v Dulal Das .>And, of course,
+there is this concept of attention also,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/298-1
+00:36:50.996 --> 00:36:57.393
+<v Dulal Das .>which we will look in our coming slides,
+and we will see how it treats the input</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/298-2
+00:36:57.393 --> 00:37:02.369
+<v Dulal Das .>as a set of as a set of words or tokens
+in the end, right? So,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/298-3
+00:37:02.369 --> 00:37:05.054
+<v Dulal Das .>there is attention mechanism also.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/299-0
+00:37:05.334 --> 00:37:08.713
+<v Dulal Das .>But through positional embeddings,
+whatever,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/299-1
+00:37:08.713 --> 00:37:13.217
+<v Dulal Das .>however the sentence is shuffled,
+the vectors will be same,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/299-2
+00:37:13.217 --> 00:37:15.694
+<v Dulal Das .>but it may be in different order.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/301-0
+00:37:17.374 --> 00:37:20.559
+<v Dulal Das .>So, what portional embeddings are useful?
+So,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/301-1
+00:37:20.559 --> 00:37:26.305
+<v Dulal Das .>the portional embeddings are added to the
+token embeddings of the vector to create</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/301-2
+00:37:26.305 --> 00:37:29.767
+<v Dulal Das .>the input embeddings for the MLM. So,
+in the end,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/301-3
+00:37:29.767 --> 00:37:34.959
+<v Dulal Das .>this portional embeddings used used with
+the token embeddings as a vector,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/301-4
+00:37:34.959 --> 00:37:37.174
+<v Dulal Das .>and it is used at the MLM level.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/302-0
+00:37:40.654 --> 00:37:43.922
+<v Dulal Das .>And of course,
+remember the positional positional</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/302-1
+00:37:43.922 --> 00:37:45.294
+<v Dulal Das .>embeddings will have.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/303-0
+00:37:46.414 --> 00:37:48.894
+<v Dulal Das .>same token embeddings.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/304-0
+00:37:50.574 --> 00:37:51.294
+<v Dulal Das .>Dimension.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/308-0
+00:38:01.374 --> 00:38:04.094
+<v Dulal Das .>As you can also see here in the figure.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/309-0
+00:38:17.934 --> 00:38:22.734
+<v Dulal Das .>I can give you one more example.
+Let's take the example dog.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/310-0
+00:38:24.014 --> 00:38:29.374
+<v Dulal Das .>bytes man this is one sentence or I can
+also say that man</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/311-0
+00:38:30.334 --> 00:38:39.070
+<v Dulal Das .>Bites dog, right? So, in this example,
+it is the same same 3 tokens. OK, man,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/311-1
+00:38:39.070 --> 00:38:44.894
+<v Dulal Das .>dog, bites. OK,
+this will have the same same three.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/312-0
+00:38:45.774 --> 00:38:51.322
+<v Dulal Das .>Tokens first, then same 3 vectors. OK,
+but without the personal information,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/312-1
+00:38:51.322 --> 00:38:56.654
+<v Dulal Das .>the model cannot tell tell that these two
+sentences are different, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/315-0
+00:38:58.574 --> 00:39:03.450
+<v Dulal Das .>In a way, so to to fix this,
+what we have done is we have also started</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/315-1
+00:39:03.450 --> 00:39:06.472
+<v Dulal Das .>creating embeddings for the portion
+itself.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/315-2
+00:39:06.472 --> 00:39:11.760
+<v Dulal Das .>Create A potional vector for each portion.
+So for each portion of the token,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/315-3
+00:39:11.760 --> 00:39:17.254
+<v Dulal Das .>we are creating a position vector, OK,
+with the same dimension D of the of the.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/316-0
+00:39:18.334 --> 00:39:22.280
+<v Dulal Das .>input input vector tokens, okay,
+token embeddings, it is same.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/316-1
+00:39:22.280 --> 00:39:27.353
+<v Dulal Das .>The emission should be same for the token
+embeddings and as well as the position</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/316-2
+00:39:27.353 --> 00:39:30.485
+<v Dulal Das .>embeddings.
+The token embedding plus the position</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/316-3
+00:39:30.485 --> 00:39:34.305
+<v Dulal Das .>embedding gives us the input input
+embedding. So in the end,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/316-4
+00:39:34.305 --> 00:39:37.374
+<v Dulal Das .>this token embedding plus positional
+embeddings.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/317-0
+00:39:38.014 --> 00:39:39.374
+<v Dulal Das .>This will give the input.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/318-0
+00:39:40.254 --> 00:39:44.586
+<v Dulal Das .>For you know,
+this will give the input embeddings in a</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/318-1
+00:39:44.586 --> 00:39:45.294
+<v Dulal Das .>in short.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/319-0
+00:39:46.894 --> 00:39:50.645
+<v Dulal Das .>Okay, so now the dog at position one,
+let's take this.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/319-1
+00:39:50.645 --> 00:39:55.896
+<v Dulal Das .>The dog at position one and the dog in
+position three are different vectors.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/319-2
+00:39:55.896 --> 00:40:00.534
+<v Dulal Das .>But without the positional vector,
+the model will think that, okay,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/319-3
+00:40:00.534 --> 00:40:05.648
+<v Dulal Das .>these two sentences are similar because
+or same because the embeddings are</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/319-4
+00:40:05.648 --> 00:40:07.694
+<v Dulal Das .>similar, right, for all these.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/322-0
+00:40:07.774 --> 00:40:11.144
+<v Dulal Das .>Words,
+but by adding the version and vector and</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/322-1
+00:40:11.144 --> 00:40:16.198
+<v Dulal Das .>by creating this value of token
+embeddings plus version and embeddings,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/322-2
+00:40:16.198 --> 00:40:21.041
+<v Dulal Das .>we get the input embeddings,
+and this input embeddings will have now</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/322-3
+00:40:21.041 --> 00:40:24.621
+<v Dulal Das .>different values for this two different
+sentences,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/322-4
+00:40:24.621 --> 00:40:29.534
+<v Dulal Das .>where dog bites man will have a in
+totally different embedding value.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/323-0
+00:40:29.774 --> 00:40:33.679
+<v Dulal Das .>And man bites dog will have a in total in
+total will have a different embedding</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/323-1
+00:40:33.679 --> 00:40:36.021
+<v Dulal Das .>value.
+In total means here the token embeddings</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/323-2
+00:40:36.021 --> 00:40:37.534
+<v Dulal Das .>plus the positional embeddings.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/326-0
+00:40:47.534 --> 00:40:50.218
+<v Dulal Das .>So,
+there are three ways to produce those</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/326-1
+00:40:50.218 --> 00:40:54.115
+<v Dulal Das .>portional vectors,
+or this portional embeddings or portional</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/326-2
+00:40:54.115 --> 00:40:58.269
+<v Dulal Das .>vectors, and they are very, you know,
+historical. In this slide,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/326-3
+00:40:58.269 --> 00:41:01.527
+<v Dulal Das .>we have given it in historical order. So,
+earlier,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/326-4
+00:41:01.527 --> 00:41:04.977
+<v Dulal Das .>what used to happen is the learned
+absolute portions,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/326-5
+00:41:04.977 --> 00:41:06.894
+<v Dulal Das .>which is used in GPT and BERT.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/329-0
+00:41:07.854 --> 00:41:12.073
+<v Dulal Das .>They used to take it from the learn
+personal embeddings.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/329-1
+00:41:12.073 --> 00:41:15.922
+<v Dulal Das .>This is this is one one way of, you know,
+doing it.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/329-2
+00:41:15.922 --> 00:41:18.734
+<v Dulal Das .>It was just like another lookup table.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/331-0
+00:41:20.654 --> 00:41:24.984
+<v Dulal Das .>And one row per portion.
+It has one row per portion per vector,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/331-1
+00:41:24.984 --> 00:41:29.111
+<v Dulal Das .>something like that,
+trained with the same model and simple.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/331-2
+00:41:29.111 --> 00:41:30.734
+<v Dulal Das .>It was very simple also.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/332-0
+00:41:32.094 --> 00:41:37.302
+<v Dulal Das .>But the table was a fixed, you know, size,
+so the model cannot handle portions</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/332-1
+00:41:37.302 --> 00:41:42.641
+<v Dulal Das .>beyond what it was already trained on. So,
+the learn personal embeddings used in</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/332-2
+00:41:42.641 --> 00:41:45.542
+<v Dulal Das .>GPT-2 were bird earlier had a lookup
+table,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/332-3
+00:41:45.542 --> 00:41:50.618
+<v Dulal Das .>but it was always a fixed fixed size
+table. So, when this learning was made,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/332-4
+00:41:50.618 --> 00:41:53.254
+<v Dulal Das .>this table was made and it became fixed.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/333-0
+00:41:53.614 --> 00:41:56.722
+<v Dulal Das .>So, uh,
+so the model cannot handle portions</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/333-1
+00:41:56.722 --> 00:42:00.254
+<v Dulal Das .>beyond what it was already trained on in
+in SHAH.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/334-0
+00:42:01.294 --> 00:42:06.211
+<v Dulal Das .>Then we have the sinusoidal encodings,
+which was used on the original</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/334-1
+00:42:06.211 --> 00:42:07.054
+<v Dulal Das .>transformer.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/335-0
+00:42:08.254 --> 00:42:12.011
+<v Dulal Das .>OK,
+so this these were some kind of fixed</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/335-1
+00:42:12.011 --> 00:42:18.094
+<v Dulal Das .>patterns of sines and cosines at
+geometrical space level, you know.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/336-0
+00:42:19.214 --> 00:42:23.105
+<v Dulal Das .>And nothing to learn.
+It's defined for any position.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/336-1
+00:42:23.105 --> 00:42:26.409
+<v Dulal Das .>So these are just defined at some
+positions.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/336-2
+00:42:26.409 --> 00:42:30.814
+<v Dulal Das .>There were some geometrical frequencies
+of sine and cosine.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/337-0
+00:42:32.334 --> 00:42:35.430
+<v Dulal Das .>OK, add it,
+and they were in the end added to the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/337-1
+00:42:35.430 --> 00:42:37.534
+<v Dulal Das .>token embeddings as a value, then.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/340-0
+00:42:38.494 --> 00:42:46.458
+<v Dulal Das .>We have the rotary portional embeddings
+rope used in Lama, Queen, Deepak now,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/340-1
+00:42:46.458 --> 00:42:53.401
+<v Dulal Das .>so the rope does not add any anything at
+the input actually, so no,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/340-2
+00:42:53.401 --> 00:42:56.974
+<v Dulal Das .>it adds nothing at input level, OK?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/341-0
+00:42:58.334 --> 00:43:04.907
+<v Dulal Das .>Inside every attention layer, it rotates.
+We have this Q and K value, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/341-1
+00:43:04.907 --> 00:43:10.455
+<v Dulal Das .>The query and the key vector.
+So what happens is that inside the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/341-2
+00:43:10.455 --> 00:43:14.723
+<v Dulal Das .>attention layer, this Q,
+the query and key value,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/341-3
+00:43:14.723 --> 00:43:17.454
+<v Dulal Das .>this query and key value vector.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/342-0
+00:43:18.094 --> 00:43:19.134
+<v Dulal Das .>are rotated.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/344-0
+00:43:24.334 --> 00:43:29.347
+<v Dulal Das .>are rotated by an angle proportional to
+the position.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/344-1
+00:43:29.347 --> 00:43:35.289
+<v Dulal Das .>So what happens is that the rope doesn't
+add anything at input.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/344-2
+00:43:35.289 --> 00:43:41.694
+<v Dulal Das .>What it takes is the query and the key
+value during the whole cycle.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/345-0
+00:43:42.574 --> 00:43:42.614
+<v Dulal Das .>Uhh...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/346-0
+00:43:44.414 --> 00:43:48.262
+<v Dulal Das .>It, it,
+it is used at the attention at the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/346-1
+00:43:48.262 --> 00:43:49.694
+<v Dulal Das .>attention layer.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/347-0
+00:43:51.134 --> 00:43:56.334
+<v Dulal Das .>Okay, it takes the value, it rotates it.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/348-0
+00:43:58.974 --> 00:44:03.700
+<v Dulal Das .>Rotate its means from geometry level by
+an angle, actually, OK,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/348-1
+00:44:03.700 --> 00:44:05.694
+<v Dulal Das .>which is proportional to...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/349-0
+00:44:06.774 --> 00:44:07.534
+<v Dulal Das .>To the position.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/350-0
+00:44:10.654 --> 00:44:16.094
+<v Dulal Das .>So when you take the dot product of this
+rotated, you know, rotated.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/353-0
+00:44:17.614 --> 00:44:21.595
+<v Dulal Das .>then dot product of rotated K,
+which is the key,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/353-1
+00:44:21.595 --> 00:44:26.632
+<v Dulal Das .>the result depends only on a difference
+between that portion.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/353-2
+00:44:26.632 --> 00:44:31.588
+<v Dulal Das .>So only this portion,
+the result of this dot product will be</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/353-3
+00:44:31.588 --> 00:44:37.682
+<v Dulal Das .>different based on the only on the
+portion of this Q rotated Q and rotated</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/353-4
+00:44:37.682 --> 00:44:38.494
+<v Dulal Das .>key value.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/354-0
+00:44:41.534 --> 00:44:44.939
+<v Dulal Das .>So,
+the attention score becomes a function of</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/354-1
+00:44:44.939 --> 00:44:48.935
+<v Dulal Das .>the, you know,
+the distance relative distance between</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/354-2
+00:44:48.935 --> 00:44:53.227
+<v Dulal Das .>the between the Q and K and difference of
+their portions,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/354-3
+00:44:53.227 --> 00:44:57.150
+<v Dulal Das .>and which generalises actually this when
+we do this,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/354-4
+00:44:57.150 --> 00:45:01.294
+<v Dulal Das .>the rotation of the Q and K and at the
+attention level.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/355-0
+00:45:02.414 --> 00:45:07.736
+<v Dulal Das .>What happens is this generalises well for,
+you know, most of the techniques,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/355-1
+00:45:07.736 --> 00:45:11.745
+<v Dulal Das .>most of the context understanding,
+most of the, you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/355-2
+00:45:11.745 --> 00:45:17.067
+<v Dulal Das .>context techniques where we want to
+understand context from the text, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/355-3
+00:45:17.067 --> 00:45:21.144
+<v Dulal Das .>And also, of course,
+we will also derive it in an advanced</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/355-4
+00:45:21.144 --> 00:45:23.494
+<v Dulal Das .>architectural session in the next.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/356-0
+00:45:23.614 --> 00:45:27.774
+<v Dulal Das .>Next coming slides or in the next
+sessions, but this is how it is so.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/357-0
+00:45:29.774 --> 00:45:33.098
+<v Dulal Das .>In this slide,
+we have seen the personal encoding,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/357-1
+00:45:33.098 --> 00:45:37.204
+<v Dulal Das .>how it has, you know,
+developed historically from GPT2 to even</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/357-2
+00:45:37.204 --> 00:45:41.310
+<v Dulal Das .>Lamako and seek deepseek,
+where we are using RoPE, which just,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/357-3
+00:45:41.310 --> 00:45:44.699
+<v Dulal Das .>you know,
+which doesn't do anything at input layer.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/357-4
+00:45:44.699 --> 00:45:48.414
+<v Dulal Das .>It does everything at attention layer,
+where it takes...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/358-0
+00:45:48.814 --> 00:45:52.994
+<v Dulal Das .>query and key.
+It rotates query and key rotating here is</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/358-1
+00:45:52.994 --> 00:45:58.934
+<v Dulal Das .>the geometrical angle rotation with the
+position and the dot product of rotating</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/358-2
+00:45:58.934 --> 00:46:04.728
+<v Dulal Das .>Q dot rotation of K will have a different
+value because of the position or the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/358-3
+00:46:04.728 --> 00:46:08.614
+<v Dulal Das .>relative distance between the rotated K
+and rotated.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/359-0
+00:46:09.134 --> 00:46:09.534
+<v Dulal Das .>Q.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/362-0
+00:46:14.494 --> 00:46:19.612
+<v Dulal Das .>So till now,
+what we have seen is our tokens have now</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/362-1
+00:46:19.612 --> 00:46:20.654
+<v Dulal Das .>embeddings.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/365-0
+00:46:22.974 --> 00:46:25.923
+<v Dulal Das .>OK,
+the token embeddings plus the position,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/365-1
+00:46:25.923 --> 00:46:31.621
+<v Dulal Das .>right, which is the positional embeddings.
+So our token now have this embeddings and</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/365-2
+00:46:31.621 --> 00:46:35.709
+<v Dulal Das .>the position, right?
+So our sentence is now now has become a</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/365-3
+00:46:35.709 --> 00:46:40.334
+<v Dulal Das .>what is this called? Instead of vectors,
+now it has become a matrix.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/368-0
+00:46:43.774 --> 00:46:47.999
+<v Dulal Das .>So,
+what this has what it has is 1 vector per</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/368-1
+00:46:47.999 --> 00:46:53.325
+<v Dulal Das .>token and each carrying different
+different portions. So,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/368-2
+00:46:53.325 --> 00:46:57.642
+<v Dulal Das .>if I can show it in a matrix format like
+this,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/368-3
+00:46:57.642 --> 00:47:01.774
+<v Dulal Das .>let's take so each row each row has a
+token.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/369-0
+00:47:03.694 --> 00:47:04.174
+<v Dulal Das .>Right.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/370-0
+00:47:05.254 --> 00:47:06.334
+<v Dulal Das .>Which is a vector?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/371-0
+00:47:07.294 --> 00:47:11.350
+<v Dulal Das .>And each row also has a meaning to the
+vector, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/371-1
+00:47:11.350 --> 00:47:14.654
+<v Dulal Das .>There is a meaning plus there is a
+portion.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/376-0
+00:47:31.294 --> 00:47:37.410
+<v Dulal Das .>Okay, so now we have,
+what we did was that in last session we</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/376-1
+00:47:37.410 --> 00:47:44.314
+<v Dulal Das .>were in, let's take bucket one or box one,
+where we have seen a text,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/376-2
+00:47:44.314 --> 00:47:48.654
+<v Dulal Das .>then text into tokens and token IDs,
+right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/379-0
+00:47:50.014 --> 00:47:56.957
+<v Dulal Das .>We have seen this in the box 2 or the
+bucket 2 that we discussed till today.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/379-1
+00:47:56.957 --> 00:48:02.366
+<v Dulal Das .>Today has where we have seen token IDs
+into embeddings. OK,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/379-2
+00:48:02.366 --> 00:48:07.054
+<v Dulal Das .>and inside this embeddings also we have
+seen token.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/380-0
+00:48:08.094 --> 00:48:12.654
+<v Dulal Das .>Token embeddings plus original embeddings.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/381-0
+00:48:14.414 --> 00:48:17.756
+<v Dulal Das .>Okay,
+now we are jumping into bucket 3 or box 3,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/381-1
+00:48:17.756 --> 00:48:18.574
+<v Dulal Das .>I would say.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/382-0
+00:48:21.214 --> 00:48:23.874
+<v Dulal Das .>Okay,
+so that we will look into language</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/382-1
+00:48:23.874 --> 00:48:28.286
+<v Dulal Das .>modelling and different heads,
+embedding and unembedding layers and</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/382-2
+00:48:28.286 --> 00:48:31.854
+<v Dulal Das .>different layers of max layers of the
+language models.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/391-0
+00:48:51.214 --> 00:48:52.094
+<v Dulal Das .>Just a minute.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/400-0
+00:49:12.974 --> 00:49:16.853
+<v Dulal Das .>OK, before I jump into this,
+I would like to talk a few things here,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/400-1
+00:49:16.853 --> 00:49:17.134
+<v Dulal Das .>so...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/401-0
+00:49:19.134 --> 00:49:19.374
+<v Dulal Das .>Um...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/404-0
+00:49:21.774 --> 00:49:26.323
+<v Dulal Das .>You have understood, right?
+So our sentence enters into a stack of</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/404-1
+00:49:26.323 --> 00:49:31.075
+<v Dulal Das .>metrics. Let's say it has become,
+it has become from a text to token,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/404-2
+00:49:31.075 --> 00:49:34.944
+<v Dulal Das .>token to token IDs,
+token IDs to some embeddings and the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/404-3
+00:49:34.944 --> 00:49:39.289
+<v Dulal Das .>embeddings has also become into a matrix
+form where embeddings,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/404-4
+00:49:39.289 --> 00:49:43.294
+<v Dulal Das .>we have token embeddings and positional
+embeddings, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/405-0
+00:49:43.854 --> 00:49:44.734
+<v Dulal Das .>So.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/406-0
+00:49:45.654 --> 00:49:52.169
+<v Dulal Das .>It has it has transformed into this. OK,
+so inside this also inside of this is</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/406-1
+00:49:52.169 --> 00:49:58.435
+<v Dulal Das .>taken inside the attention layer or or
+you know mechanism inside a language</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/406-2
+00:49:58.435 --> 00:50:04.208
+<v Dulal Das .>model where each token produces 3 vectors
+out of this. OK, embedding.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/406-3
+00:50:04.208 --> 00:50:05.774
+<v Dulal Das .>So if you remember.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/412-0
+00:50:06.214 --> 00:50:12.219
+<v Dulal Das .>like the MLM classes where, you know,
+we talk about 3 vectors where Q is the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/412-1
+00:50:12.219 --> 00:50:17.132
+<v Dulal Das .>query and K is the key.
+We also have a value vector in the NV.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/412-2
+00:50:17.132 --> 00:50:23.214
+<v Dulal Das .>Think of the query as what I am looking
+for. Let's say what I am looking for.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/413-0
+00:50:27.374 --> 00:50:33.054
+<v Dulal Das .>This is one, this is security.
+The key can be what do I contain.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/414-0
+00:50:37.494 --> 00:50:41.000
+<v Dulal Das .>OK,
+and the value as what will what will I</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/414-1
+00:50:41.000 --> 00:50:43.854
+<v Dulal Das .>what I will pass on if you pick me?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/415-0
+00:50:55.294 --> 00:51:00.140
+<v Dulal Das .>Each token's query is compared with the
+keys of the other tokens and using a dot</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/415-1
+00:51:00.140 --> 00:51:04.867
+<v Dulal Das .>product, right? So these are compared.
+So those scores go through a softmax to</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/415-2
+00:51:04.867 --> 00:51:09.294
+<v Dulal Das .>become weights and the token takes a
+weighted average of the values. Now.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/416-0
+00:51:10.734 --> 00:51:15.498
+<v Dulal Das .>One crucial rule here is that a token may
+only attend to itself and two tokens</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/416-1
+00:51:15.498 --> 00:51:18.573
+<v Dulal Das .>before it.
+So these are different concepts we have</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/416-2
+00:51:18.573 --> 00:51:23.336
+<v Dulal Das .>seen in large language model or the
+transformers attention mechanism concepts,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/416-3
+00:51:23.336 --> 00:51:27.919
+<v Dulal Das .>right? So this is for the attention,
+right? So never 2 tokens and after it,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/416-4
+00:51:27.919 --> 00:51:30.934
+<v Dulal Das .>okay? So there are some concepts where,
+you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/416-5
+00:51:30.934 --> 00:51:35.094
+<v Dulal Das .>a token may only attend to itself or two
+tokens before it and never.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/419-0
+00:51:35.294 --> 00:51:40.320
+<v Dulal Das .>Two tokens after it, so this,
+this is also called, if you remember,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/419-1
+00:51:40.320 --> 00:51:42.094
+<v Dulal Das .>this is called a causal.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/421-0
+00:51:43.974 --> 00:51:48.330
+<v Dulal Das .>causal mask, something like that. Why?
+Because during training,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/421-1
+00:51:48.330 --> 00:51:52.141
+<v Dulal Das .>we are teaching each portion to predict
+the next token.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/421-2
+00:51:52.141 --> 00:51:57.450
+<v Dulal Das .>And if portion 5 could see portion 6,
+it could simply copy the answer, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/421-3
+00:51:57.450 --> 00:52:02.894
+<v Dulal Das .>So we used to mask till the current token
+only and not for the future token. So</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/422-0
+00:52:04.654 --> 00:52:08.320
+<v Dulal Das .>Because of this only we have different
+architectures,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/422-1
+00:52:08.320 --> 00:52:13.547
+<v Dulal Das .>different mechanism where decoder only
+models fit next token prediction very</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/422-2
+00:52:13.547 --> 00:52:17.688
+<v Dulal Das .>naturally, you know,
+because the decoder only was a good fit</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/422-3
+00:52:17.688 --> 00:52:21.083
+<v Dulal Das .>for this.
+The caution mask means one forward pass</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/422-4
+00:52:21.083 --> 00:52:26.174
+<v Dulal Das .>over a sentence of N tokens gives a valid
+prediction at different portion.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/423-0
+00:52:26.494 --> 00:52:30.014
+<v Dulal Das .>something like this can happen.
+So why I'm saying this because...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/424-0
+00:52:31.614 --> 00:52:37.040
+<v Dulal Das .>These concepts will be used here in our
+language modelling head,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/424-1
+00:52:37.040 --> 00:52:40.713
+<v Dulal Das .>and you know how we look into the MLM
+head,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/424-2
+00:52:40.713 --> 00:52:46.724
+<v Dulal Das .>how there is this loss and context
+understanding is made or understood,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/424-3
+00:52:46.724 --> 00:52:50.814
+<v Dulal Das .>and how this embeddings to unembedding
+layer is.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/427-0
+00:52:51.054 --> 00:52:55.692
+<v Dulal Das .>done and what is the softmax layer doing.
+So we will look into these concepts here,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/427-1
+00:52:55.692 --> 00:52:59.060
+<v Dulal Das .>here on which I will categorise as a
+three different bucket.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/427-2
+00:52:59.060 --> 00:53:02.814
+<v Dulal Das .>Third bucket where we will look into the
+MLM head and MLM concepts.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/428-0
+00:53:11.374 --> 00:53:12.894
+<v Dulal Das .>So, for our box.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/429-0
+00:53:15.214 --> 00:53:18.742
+<v Dulal Das .>For our bucket,
+we have two important parts,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/429-1
+00:53:18.742 --> 00:53:23.054
+<v Dulal Das .>which is the unembedding layer and the
+soft max layer.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/432-0
+00:53:31.534 --> 00:53:36.676
+<v Dulal Das .>Okay, so as you can see,
+the output on the right is a like from</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/432-1
+00:53:36.676 --> 00:53:43.103
+<v Dulal Das .>this diagram. So let's take this MLM.
+So what it does is the MLM maps the final</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/432-2
+00:53:43.103 --> 00:53:48.164
+<v Dulal Das .>hidden state at each portion to some
+vocabulary logits, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/432-3
+00:53:48.164 --> 00:53:50.494
+<v Dulal Das .>So these are the logits here.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/433-0
+00:53:50.814 --> 00:53:55.294
+<v Dulal Das .>On the right hand side, this is the MLM.
+On the left hand side,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/433-1
+00:53:55.294 --> 00:54:00.124
+<v Dulal Das .>the MLM has the tokenizer,
+then we have the block of the transformer</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/433-2
+00:54:00.124 --> 00:54:03.974
+<v Dulal Das .>with different block layers,
+and we have the MLM head.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/433-3
+00:54:03.974 --> 00:54:06.494
+<v Dulal Das .>So this MLM head, what it does is...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/436-0
+00:54:10.174 --> 00:54:16.034
+<v Dulal Das .>It maps it with some token vocabulary
+logic, right? So here the personal logic,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/436-1
+00:54:16.034 --> 00:54:21.454
+<v Dulal Das .>so at each portion it tries to do some
+probability, right, of the tokens.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/437-0
+00:54:22.974 --> 00:54:27.601
+<v Dulal Das .>So the output here,
+the output here is the distribution we</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/437-1
+00:54:27.601 --> 00:54:32.933
+<v Dulal Das .>have been, we have seen. Okay,
+every token in the vocabulary gets a</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/437-2
+00:54:32.933 --> 00:54:37.010
+<v Dulal Das .>probability.
+So let's say token ID 0 for this token</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/437-3
+00:54:37.010 --> 00:54:42.734
+<v Dulal Das .>has a probability distribution or
+probability of when it will be picked.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/438-0
+00:54:43.454 --> 00:54:48.014
+<v Dulal Das .>So, few, let's take the the the token.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/440-0
+00:54:49.174 --> 00:54:59.997
+<v Dulal Das .>ID 1102 here, which is token deer.
+The token deer has 40% probability. OK,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/440-1
+00:54:59.997 --> 00:55:07.934
+<v Dulal Das .>and ZZ, the last ID has 1% here. OK,
+for our sentence.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/441-0
+00:55:08.014 --> 00:55:12.254
+<v Dulal Das .>This is where sidewalk would get OK,
+so so.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/442-0
+00:55:13.694 --> 00:55:18.144
+<v Dulal Das .>So we would get say 30%,
+would get say 30% and refrigerator almost</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/442-1
+00:55:18.144 --> 00:55:22.926
+<v Dulal Das .>nothing. So something like this.
+So what happens is this is this is for</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/442-2
+00:55:22.926 --> 00:55:26.047
+<v Dulal Das .>our centres,
+this is where sidewalk would get,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/442-3
+00:55:26.047 --> 00:55:29.368
+<v Dulal Das .>let's take something like that.
+So it may get to,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/442-4
+00:55:29.368 --> 00:55:32.821
+<v Dulal Das .>it may give us a positional, you know,
+probability,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/442-5
+00:55:32.821 --> 00:55:38.134
+<v Dulal Das .>the word with the highest positional
+probability we will get for our as a next.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/443-0
+00:55:38.214 --> 00:55:43.165
+<v Dulal Das .>token and those words which may not come
+after the token or which may not be</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/443-1
+00:55:43.165 --> 00:55:46.894
+<v Dulal Das .>intuited for after the token will get
+less probabilities.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/444-0
+00:55:50.414 --> 00:55:53.415
+<v Dulal Das .>So I just want to read here what is
+returned.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/444-1
+00:55:53.415 --> 00:55:58.633
+<v Dulal Das .>So LM maps the final hidden state at each
+portion to here, as you can see here,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/444-2
+00:55:58.633 --> 00:56:01.504
+<v Dulal Das .>to some vocabulary logits.
+During training,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/444-3
+00:56:01.504 --> 00:56:05.548
+<v Dulal Das .>each portion predicts the next token.
+So during the training,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/444-4
+00:56:05.548 --> 00:56:09.853
+<v Dulal Das .>each portion will predict the next token,
+while during inference,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/444-5
+00:56:09.853 --> 00:56:11.614
+<v Dulal Das .>the last portion is useful.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/445-0
+00:56:11.694 --> 00:56:13.054
+<v Dulal Das .>To generate the next token.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/446-0
+00:56:19.054 --> 00:56:26.069
+<v Dulal Das .>So at training time,
+what happens is each portion predicts the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/446-1
+00:56:26.069 --> 00:56:27.294
+<v Dulal Das .>next token.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/447-0
+00:56:29.294 --> 00:56:29.694
+<v Dulal Das .>OK.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/448-0
+00:56:33.774 --> 00:56:34.814
+<v Dulal Das .>Add inference.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/452-0
+00:56:37.694 --> 00:56:42.254
+<v Dulal Das .>Only the last question is used.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/456-0
+00:57:00.974 --> 00:57:06.094
+<v Dulal Das .>Now, let us move to this slide. OK, so...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/458-0
+00:57:08.974 --> 00:57:13.831
+<v Dulal Das .>Moving ahead,
+so as you can see in the figure here,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/458-1
+00:57:13.831 --> 00:57:20.461
+<v Dulal Das .>the last in the in the the we have two
+equations here, where you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/458-2
+00:57:20.461 --> 00:57:28.212
+<v Dulal Das .>here you if you can see here the language
+model had takes H to L and N and outputs</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/458-3
+00:57:28.212 --> 00:57:31.294
+<v Dulal Das .>a distribution over a vocabulary.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/461-0
+00:57:31.854 --> 00:57:36.604
+<v Dulal Das .>like in the same simplest form what we
+spoke in our last slide.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/461-1
+00:57:36.604 --> 00:57:42.245
+<v Dulal Das .>So the two equations here is this,
+U equal to H raised to LN for N to L for</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/461-2
+00:57:42.245 --> 00:57:46.624
+<v Dulal Das .>H and E raised to T,
+this is 1 equation and Y which is the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/461-3
+00:57:46.624 --> 00:57:51.374
+<v Dulal Das .>soft max and that is the soft max of EU
+from the last equation.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/462-0
+00:57:52.174 --> 00:57:52.574
+<v Dulal Das .>Okay.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/463-0
+00:57:54.094 --> 00:58:00.618
+<v Dulal Das .>So here the edge subscript to L and
+subscript to N is the vector for the last</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/463-1
+00:58:00.618 --> 00:58:03.294
+<v Dulal Das .>position. So this is the vector.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/464-0
+00:58:04.894 --> 00:58:06.574
+<v Dulal Das .>For last question.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/465-0
+00:58:08.574 --> 00:58:15.134
+<v Dulal Das .>N OK after the final after the final
+block layer block L.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/466-0
+00:58:19.054 --> 00:58:22.564
+<v Dulal Das .>Okay,
+that's the vector that comes out of the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/466-1
+00:58:22.564 --> 00:58:24.014
+<v Dulal Das .>three of the box 3.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/467-0
+00:58:25.534 --> 00:58:28.574
+<v Dulal Das .>OK, shape, shape by D, so.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/468-0
+00:58:31.294 --> 00:58:36.849
+<v Dulal Das .>If you can see here,
+so this is this is the this is the output</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/468-1
+00:58:36.849 --> 00:58:43.374
+<v Dulal Das .>which comes out of box D with shape one
+is to 11 by D. This is the shape.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/469-0
+00:58:46.174 --> 00:58:53.108
+<v Dulal Das .>Okay, so multiplied,
+so this will be multiplied by E transpose</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/469-1
+00:58:53.108 --> 00:59:00.592
+<v Dulal Das .>to get U in the end. If you can see here,
+it will be multiplied by,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/469-2
+00:59:00.592 --> 00:59:04.334
+<v Dulal Das .>so what it does here is, so this U</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/470-0
+00:59:07.854 --> 00:59:14.894
+<v Dulal Das .>This vector here, H2LNN,
+which will be multiplied by.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/471-0
+00:59:16.254 --> 00:59:21.811
+<v Dulal Das .>You like multiplied by E,
+which is the E transpose to get this will</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/471-1
+00:59:21.811 --> 00:59:27.694
+<v Dulal Das .>give you which are the logits in the end,
+so these are the logits here.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/472-0
+00:59:29.454 --> 00:59:33.887
+<v Dulal Das .>Okay, so one raw score per.
+So what are these logits actually?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/472-1
+00:59:33.887 --> 00:59:35.294
+<v Dulal Das .>So these logits are.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/473-0
+00:59:37.134 --> 00:59:39.534
+<v Dulal Das .>One row score.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/476-0
+00:59:41.374 --> 00:59:43.374
+<v Dulal Das .>Per entry, per vocab entry.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/477-0
+00:59:45.134 --> 00:59:49.177
+<v Dulal Das .>OK,
+then what happens after this is that it</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/477-1
+00:59:49.177 --> 00:59:55.057
+<v Dulal Das .>goes through softmax,
+and softmax turns them into probabilities</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/477-2
+00:59:55.057 --> 01:00:01.489
+<v Dulal Das .>of Y, which are positive, and some 21. So,
+this goes through softmax,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/477-3
+01:00:01.489 --> 01:00:03.694
+<v Dulal Das .>and this softmax will...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/478-0
+01:00:04.494 --> 01:00:09.614
+<v Dulal Das .>I know it will again turn this into
+probabilities. Let's take Y.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/479-0
+01:00:11.814 --> 01:00:18.165
+<v Dulal Das .>And this will be always positive values,
+and the addition of all the probabilities</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/479-1
+01:00:18.165 --> 01:00:23.214
+<v Dulal Das .>values will come to one,
+so this is what Softmax does in the end.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/480-0
+01:00:25.294 --> 01:00:34.526
+<v Dulal Das .>So one example we can take here is for,
+let's take for Lama 3, 8 billion,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/480-1
+01:00:34.526 --> 01:00:43.134
+<v Dulal Das .>this model. Here H is, as you can see,
+the edge will be 1 into 4096.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/483-0
+01:00:44.174 --> 01:00:49.294
+<v Dulal Das .>Dimensions,
+so this will be output of box 3.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/484-0
+01:00:50.574 --> 01:00:55.054
+<v Dulal Das .>OK, then ET, which is an embedding.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/485-0
+01:00:57.534 --> 01:01:05.841
+<v Dulal Das .>An embedding will be 4096 into 128256,
+which is this 128K values,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/485-1
+01:01:05.841 --> 01:01:12.261
+<v Dulal Das .>which is the shape,
+which will be the shape of it.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/485-2
+01:01:12.261 --> 01:01:16.414
+<v Dulal Das .>So this will be this will be one.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/486-0
+01:01:16.734 --> 01:01:22.574
+<v Dulal Das .>column per vocab token which will be
+around 525 million parameters.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/487-0
+01:01:23.454 --> 01:01:27.134
+<v Dulal Das .>Then we have you, you will be the logics.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/491-0
+01:01:28.174 --> 01:01:35.395
+<v Dulal Das .>So, you will be one into 128, 256,
+so one raw score per token,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/491-1
+01:01:35.395 --> 01:01:40.094
+<v Dulal Das .>and in the end, Y will be softmax of you.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/492-0
+01:01:41.374 --> 01:01:49.013
+<v Dulal Das .>Which will be 1 into 128 to 56 token,
+which will be the probabilities and sum</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/492-1
+01:01:49.013 --> 01:01:52.734
+<v Dulal Das .>to one, so this is how it will be, so.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/493-0
+01:01:54.894 --> 01:01:58.528
+<v Dulal Das .>Notice that E is always the transform
+transpose,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/493-1
+01:01:58.528 --> 01:02:04.756
+<v Dulal Das .>and if the output matrix is literally the
+transpose of the input embeddings matrix,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/493-2
+01:02:04.756 --> 01:02:10.392
+<v Dulal Das .>that's called wake time in the end.
+So then the logic for each token is the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/493-3
+01:02:10.392 --> 01:02:13.654
+<v Dulal Das .>dot product between H and, you know,
+H and.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/494-0
+01:02:14.174 --> 01:02:17.905
+<v Dulal Das .>This,
+it will be dot product of edge and that</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/494-1
+01:02:17.905 --> 01:02:20.094
+<v Dulal Das .>token embedding in the end.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/502-0
+01:02:28.974 --> 01:02:32.249
+<v Dulal Das .>As you can see here,
+I just would like to highlight it.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/502-1
+01:02:32.249 --> 01:02:35.991
+<v Dulal Das .>So while training the logits at all N
+portions are in parallel,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/502-2
+01:02:35.991 --> 01:02:39.266
+<v Dulal Das .>used in parallel,
+so which will be N predictions and at</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/502-3
+01:02:39.266 --> 01:02:42.014
+<v Dulal Das .>inference level only the last portion is
+used.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/504-0
+01:02:51.334 --> 01:02:53.374
+<v Dulal Das .>Now let's move to context length.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/505-0
+01:02:54.574 --> 01:02:59.777
+<v Dulal Das .>One operational constraint before we zoom
+out of this is that zoom out of this</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/505-1
+01:02:59.777 --> 01:03:04.717
+<v Dulal Das .>concepts of modelling and LLMs here is
+that context length and the context</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/505-2
+01:03:04.717 --> 01:03:08.734
+<v Dulal Das .>length is the maximum number of tokens a
+model can you know.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/508-0
+01:03:09.574 --> 01:03:12.850
+<v Dulal Das .>A model can process at once.
+As you can see,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/508-1
+01:03:12.850 --> 01:03:17.653
+<v Dulal Das .>it's simple to understand concept here.
+So this is the, you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/508-2
+01:03:17.653 --> 01:03:23.330
+<v Dulal Das .>context length represents the maximum
+number of tokens a model can process at</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/508-3
+01:03:23.330 --> 01:03:23.694
+<v Dulal Das .>once.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/511-0
+01:03:26.334 --> 01:03:33.028
+<v Dulal Das .>And it counts the prompt and it also and
+this counting is not only at the prompt</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/511-1
+01:03:33.028 --> 01:03:36.334
+<v Dulal Das .>level,
+but it also plus it also what it</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/511-2
+01:03:36.334 --> 01:03:40.383
+<v Dulal Das .>generates.
+So this context length is always like</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/511-3
+01:03:40.383 --> 01:03:43.854
+<v Dulal Das .>this context length would be the count of.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/512-0
+01:03:47.534 --> 01:03:48.094
+<v Dulal Das .>Rompt.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/513-0
+01:03:48.974 --> 01:03:50.734
+<v Dulal Das .>Plus, everything.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/514-0
+01:03:52.414 --> 01:03:53.214
+<v Dulal Das .>Generative.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/517-0
+01:03:58.814 --> 01:04:05.752
+<v Dulal Das .>Everything generated so far in the model
+context level. In the figure, the prompt,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/517-1
+01:04:05.752 --> 01:04:11.854
+<v Dulal Das .>tell me something about LLMs.
+This is the prompt. OK, it has six tokens.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/518-0
+01:04:13.214 --> 01:04:18.968
+<v Dulal Das .>The model generated llamas are,
+so the model then generated 2 token here,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/518-1
+01:04:18.968 --> 01:04:21.534
+<v Dulal Das .>let's say 7 and eight llamas are.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/519-0
+01:04:24.654 --> 01:04:28.620
+<v Dulal Das .>Okay,
+so the context has again increased from 6</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/519-1
+01:04:28.620 --> 01:04:34.568
+<v Dulal Das .>to 8. Okay. Then it generates a new token,
+which is this, domesticated.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/519-2
+01:04:34.568 --> 01:04:40.351
+<v Dulal Das .>So this sentence becomes tell me
+something about llamas and the model</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/519-3
+01:04:40.351 --> 01:04:44.894
+<v Dulal Das .>operator llamas are domesticated,
+which is here again.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/520-0
+01:04:45.214 --> 01:04:50.454
+<v Dulal Das .>another token. So again,
+the length is now increased to 9.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/520-1
+01:04:50.454 --> 01:04:55.871
+<v Dulal Das .>So what happens is here,
+the new token is again appended in,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/520-2
+01:04:55.871 --> 01:05:01.022
+<v Dulal Das .>and the context length is now 9,
+or the context is now 9.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/520-3
+01:05:01.022 --> 01:05:04.574
+<v Dulal Das .>Each turn of autoregressive rule from...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/521-0
+01:05:05.134 --> 01:05:08.417
+<v Dulal Das .>You know,
+as we looked into this concept of</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/521-1
+01:05:08.417 --> 01:05:11.774
+<v Dulal Das .>auto-regressive,
+so this comes into picture.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/522-0
+01:05:12.974 --> 01:05:18.193
+<v Dulal Das .>So,
+each loop of this auto-regressive process</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/522-1
+01:05:18.193 --> 01:05:19.214
+<v Dulal Das .>will add.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/523-0
+01:05:21.934 --> 01:05:22.894
+<v Dulal Das .>Or grow.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/524-0
+01:05:24.174 --> 01:05:25.454
+<v Dulal Das .>The context window.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/527-0
+01:05:26.654 --> 01:05:30.017
+<v Dulal Das .>So this will,
+the context window will grow one by one,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/527-1
+01:05:30.017 --> 01:05:34.174
+<v Dulal Das .>one token by token through this
+autoregressive pipeline or process.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/528-0
+01:05:43.934 --> 01:05:48.005
+<v Dulal Das .>So like this,
+the context length will grow, right? So,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/528-1
+01:05:48.005 --> 01:05:53.852
+<v Dulal Das .>but all models have a context length or
+context length limitation or a maximum</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/528-2
+01:05:53.852 --> 01:05:58.071
+<v Dulal Das .>number of length of, you know,
+context that it can take.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/528-3
+01:05:58.071 --> 01:06:02.734
+<v Dulal Das .>So when this context is maximum or when
+this hits the maximum.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/529-0
+01:06:03.134 --> 01:06:07.214
+<v Dulal Das .>Let's take here the example of context
+line is 512. Okay.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/530-0
+01:06:09.294 --> 01:06:13.508
+<v Dulal Das .>So when this context length is hit at 512
+for this example,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/530-1
+01:06:13.508 --> 01:06:17.932
+<v Dulal Das .>the generation must stop or the oldest
+tokens must be dropped.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/530-2
+01:06:17.932 --> 01:06:22.707
+<v Dulal Das .>So 2 things can happen, right?
+So either the next generation of the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/530-3
+01:06:22.707 --> 01:06:28.254
+<v Dulal Das .>token should stop or old tokens has to be
+removed, flush out from the context.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/531-0
+01:06:28.294 --> 01:06:28.934
+<v Dulal Das .>context.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/534-0
+01:06:36.254 --> 01:06:40.847
+<v Dulal Das .>So let's take an example, right?
+So a quick cheque would be,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/534-1
+01:06:40.847 --> 01:06:46.795
+<v Dulal Das .>let's take our context length is 512 and
+we have already generated 500 tokens.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/534-2
+01:06:46.795 --> 01:06:52.141
+<v Dulal Das .>So now for the next question,
+how long can be the answer? This can be,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/534-3
+01:06:52.141 --> 01:06:54.174
+<v Dulal Das .>how long can the answer be?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/535-0
+01:06:54.974 --> 01:06:59.205
+<v Dulal Das .>So, this can be one thought process,
+right? So,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/535-1
+01:06:59.205 --> 01:07:04.140
+<v Dulal Das .>based on our limit here for our maximum
+context length,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/535-2
+01:07:04.140 --> 01:07:11.279
+<v Dulal Das .>and as we have already reached 500 tokens,
+the logical mind would say the answer</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/535-3
+01:07:11.279 --> 01:07:15.774
+<v Dulal Das .>length or the answer length for our next
+question.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/536-0
+01:07:16.174 --> 01:07:18.814
+<v Dulal Das .>should be at least 12 tokens here, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/537-0
+01:07:21.014 --> 01:07:24.840
+<v Dulal Das .>Okay,
+so now we can combine three things from</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/537-1
+01:07:24.840 --> 01:07:26.254
+<v Dulal Das .>tonight in a way.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/540-0
+01:07:29.014 --> 01:07:32.438
+<v Dulal Das .>Of course,
+tokens also depends on languages.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/540-1
+01:07:32.438 --> 01:07:37.764
+<v Dulal Das .>Let's say Hindi text needs more tokens
+per sentence. This can be one.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/540-2
+01:07:37.764 --> 01:07:43.166
+<v Dulal Das .>Attention cost grows with the, you know,
+so I could just highlight it.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/540-3
+01:07:43.166 --> 01:07:46.894
+<v Dulal Das .>So for context length,
+depends on language also.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/541-0
+01:07:48.334 --> 01:07:54.057
+<v Dulal Das .>So for example,
+Hindi text may need more tokens,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/541-1
+01:07:54.057 --> 01:08:00.947
+<v Dulal Das .>so the context length can be limiting its
+answer in a way.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/541-2
+01:08:00.947 --> 01:08:04.334
+<v Dulal Das .>Attention or cost also grows.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/542-0
+01:08:07.694 --> 01:08:13.752
+<v Dulal Das .>with the context and all of this will
+also affect the API cost of our usage,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/542-1
+01:08:13.752 --> 01:08:17.372
+<v Dulal Das .>right?
+So API pricing per token is per token,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/542-2
+01:08:17.372 --> 01:08:23.430
+<v Dulal Das .>right? So the API cost will also grow.
+So the same request in Hindi can cost</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/542-3
+01:08:23.430 --> 01:08:26.734
+<v Dulal Das .>more and leave us less room for an answer.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/543-0
+01:08:26.974 --> 01:08:30.654
+<v Dulal Das .>based on another language as compared to
+Hindi.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/546-0
+01:08:32.094 --> 01:08:38.572
+<v Dulal Das .>So this is why tokenizer efficiency for
+Indian language can be a real engineering</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/546-1
+01:08:38.572 --> 01:08:42.680
+<v Dulal Das .>topic, okay?
+Or for any language where we see that,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/546-2
+01:08:42.680 --> 01:08:46.472
+<v Dulal Das .>okay,
+if some language is taking up more tokens</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/546-3
+01:08:46.472 --> 01:08:50.501
+<v Dulal Das .>to answer,
+and that will be limited by the context</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/546-4
+01:08:50.501 --> 01:08:51.054
+<v Dulal Das .>length.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/547-0
+01:08:51.214 --> 01:08:54.472
+<v Dulal Das .>Okay,
+so we this can be one field of work where</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/547-1
+01:08:54.472 --> 01:09:00.172
+<v Dulal Das .>you know to make the tokenizer efficiency
+or efficient can be one engineering topic</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/547-2
+01:09:00.172 --> 01:09:01.054
+<v Dulal Das .>to look into.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/548-0
+01:09:04.974 --> 01:09:08.116
+<v Dulal Das .>Here,
+the one important concept would be we</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/548-1
+01:09:08.116 --> 01:09:13.685
+<v Dulal Das .>would like to keep long context more
+affordable during generation through the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/548-2
+01:09:13.685 --> 01:09:18.183
+<v Dulal Das .>through the KV cache.
+So what we want to do is so we have long</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/548-3
+01:09:18.183 --> 01:09:22.109
+<v Dulal Das .>context, right?
+So we want this to be more affordable.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/548-4
+01:09:22.109 --> 01:09:23.894
+<v Dulal Das .>Okay, how we can do that?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/549-0
+01:09:24.014 --> 01:09:28.073
+<v Dulal Das .>is through the KV cache.
+If you remember the concepts of</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/549-1
+01:09:28.073 --> 01:09:33.200
+<v Dulal Das .>transformers and the various mechanisms
+inside transformers, we can do,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/549-2
+01:09:33.200 --> 01:09:37.614
+<v Dulal Das .>we can improve this long context
+affordance through KV cache.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/552-0
+01:09:40.334 --> 01:09:45.044
+<v Dulal Das .>And maybe this is what we will look into
+in our first inference model module later</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/552-1
+01:09:45.044 --> 01:09:45.214
+<v Dulal Das .>on.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/557-0
+01:09:56.894 --> 01:10:01.574
+<v Dulal Das .>Now let's look into various language
+model landscape.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/557-1
+01:10:01.574 --> 01:10:05.474
+<v Dulal Das .>So you have already seen the whole
+pipeline.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/557-2
+01:10:05.474 --> 01:10:10.934
+<v Dulal Das .>What we do is that the pipeline is this,
+tokenizer. This is 1,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/557-3
+01:10:10.934 --> 01:10:16.654
+<v Dulal Das .>then we look into embeddings.
+Then we look into different blocks.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/558-0
+01:10:17.534 --> 01:10:19.134
+<v Dulal Das .>Of the MLM, then.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/561-0
+01:10:20.014 --> 01:10:26.065
+<v Dulal Das .>We have also seen the head, right?
+So here's the surprising part of history.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/561-1
+01:10:26.065 --> 01:10:31.566
+<v Dulal Das .>The four boxes are same ones.
+These are the same ones that GPT-2 used</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/561-2
+01:10:31.566 --> 01:10:36.674
+<v Dulal Das .>initially in 2019. Okay.
+The parts inside have been refined now.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/561-3
+01:10:36.674 --> 01:10:40.918
+<v Dulal Das .>So it is the same what when GPT-2 was
+launched in 19.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/561-4
+01:10:40.918 --> 01:10:44.454
+<v Dulal Das .>It is these blocks are similar,
+the same of.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/562-0
+01:10:44.534 --> 01:10:49.714
+<v Dulal Das .>Of that, but inside the blocks we have,
+maybe we have refined the parts,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/562-1
+01:10:49.714 --> 01:10:54.254
+<v Dulal Das .>but most of the change has been in,
+you know, so that that has.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/563-0
+01:10:53.374 --> 01:10:55.934
+<v RAYASAM ADITYA .>In 1668, it was the.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/564-0
+01:10:58.174 --> 01:10:58.734
+<v Dulal Das .>Sorry.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/565-0
+01:11:00.894 --> 01:11:02.814
+<v RAYASAM ADITYA .>Hey, Nina.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/566-0
+01:11:04.734 --> 01:11:08.254
+<v Dulal Das .>Ma'am, can you please mute yourself?
+I think you're unmuted.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/567-0
+01:11:15.374 --> 01:11:18.503
+<v Dulal Das .>So,
+these are the main blocks that has been,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/567-1
+01:11:18.503 --> 01:11:22.118
+<v Dulal Das .>you know,
+developed during the GPT to 2019 release,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/567-2
+01:11:22.118 --> 01:11:26.638
+<v Dulal Das .>and nothing much has changed,
+but of course we have improved the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/567-3
+01:11:26.638 --> 01:11:30.601
+<v Dulal Das .>internal part of it or refined the
+internal parts of it,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/567-4
+01:11:30.601 --> 01:11:34.494
+<v Dulal Das .>but the bigger changes or the broader
+changes that has.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/568-0
+01:11:34.574 --> 01:11:39.294
+<v Dulal Das .>came into picture after this has been on
+more on scale.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/569-0
+01:11:40.494 --> 01:11:41.134
+<v Dulal Das .>Data.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/570-0
+01:11:42.494 --> 01:11:47.244
+<v Dulal Das .>And of course, who get what access? So,
+this, this were the uh,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/570-1
+01:11:47.244 --> 01:11:48.654
+<v Dulal Das .>the bigger changes.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/573-0
+01:11:51.934 --> 01:11:57.408
+<v Dulal Das .>Here, if I just go through the slide,
+the earlier foundational models,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/573-1
+01:11:57.408 --> 01:12:03.345
+<v Dulal Das .>which were late 2010s, where ELMO,
+which was pre-training based on long shot</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/573-2
+01:12:03.345 --> 01:12:08.665
+<v Dulal Das .>this LSTMs, which also help,
+which were fine tuning help task in the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/573-3
+01:12:08.665 --> 01:12:12.675
+<v Dulal Das .>end, then we,
+I think many of us has also used BERT</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/573-4
+01:12:12.675 --> 01:12:13.214
+<v Dulal Das .>models.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/575-0
+01:12:14.734 --> 01:12:19.558
+<v Dulal Das .>pre-training with which were pre-training
+with transformers,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/575-1
+01:12:19.558 --> 01:12:25.251
+<v Dulal Das .>fine-tuning helped us similar.
+We may have also used T5 models and they</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/575-2
+01:12:25.251 --> 01:12:30.865
+<v Dulal Das .>said text-to-text models based,
+which has 11 billion parameters at the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/575-3
+01:12:30.865 --> 01:12:35.214
+<v Dulal Das .>time, they cost,
+they cost everything as text-to-text.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/576-0
+01:12:35.694 --> 01:12:41.734
+<v Dulal Das .>So phase one was this late 2010s where
+pre-tained and fine-tuned was the concept.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/576-1
+01:12:41.734 --> 01:12:47.480
+<v Dulal Das .>Elmo pre-tained LSTM language models and
+showed the representation, you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/576-2
+01:12:47.480 --> 01:12:52.636
+<v Dulal Das .>transferred to other tasks.
+BERT did it with transformer encodings or</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/576-3
+01:12:52.636 --> 01:12:56.392
+<v Dulal Das .>transfer encoder at the time and
+dominated the NL.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/576-4
+01:12:56.392 --> 01:12:59.854
+<v Dulal Das .>So I remember we used to use a BERT for
+every.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/578-0
+01:13:00.534 --> 01:13:07.488
+<v Dulal Das .>NLP task and it dominated all the NLP
+benchmarks. And after that we used T5,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/578-1
+01:13:07.488 --> 01:13:13.358
+<v Dulal Das .>the 11 billion parameters framed for
+every task as text to text,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/578-2
+01:13:13.358 --> 01:13:17.963
+<v Dulal Das .>which is the idea from slide 10 that we
+discussed.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/578-3
+01:13:17.963 --> 01:13:21.214
+<v Dulal Das .>Then later on came the second phase.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/579-0
+01:13:21.854 --> 01:13:25.334
+<v Dulal Das .>You know, the phase two had scale and...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/580-0
+01:13:26.254 --> 01:13:33.820
+<v Dulal Das .>Scale looked into scaling and and the the
+door closed for, you know, GPT to 1.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/580-1
+01:13:33.820 --> 01:13:38.416
+<v Dulal Das .>5 billion parameters generated fluent
+text, so,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/580-2
+01:13:38.416 --> 01:13:45.694
+<v Dulal Das .>so opening a GPT to came came into
+picture, so with 1.5 billion parameters.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/581-0
+01:13:46.094 --> 01:13:48.414
+<v Dulal Das .>It was able to generate fluent text.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/582-0
+01:13:49.614 --> 01:13:53.252
+<v Dulal Das .>at the time and showed early zero shot
+behaviour.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/582-1
+01:13:53.252 --> 01:13:58.491
+<v Dulal Das .>So it also showed some zero shot learning
+behaviour at the time, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/582-2
+01:13:58.491 --> 01:14:02.929
+<v Dulal Das .>It was released in different in stages
+over misuse concerns.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/582-3
+01:14:02.929 --> 01:14:07.294
+<v Dulal Das .>So there were some misuse concerns also
+where we, you know.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/583-0
+01:14:09.534 --> 01:14:13.984
+<v Dulal Das .>Later on,
+we also looked into Kalpan's scaling loss,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/583-1
+01:14:13.984 --> 01:14:18.014
+<v Dulal Das .>which came into picture that showed that,
+okay,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/583-2
+01:14:18.014 --> 01:14:22.380
+<v Dulal Das .>the loss falls predictably as you scale
+parameters.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/583-3
+01:14:22.380 --> 01:14:26.494
+<v Dulal Das .>So the more the parameters are,
+the scale fails.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/584-0
+01:14:28.334 --> 01:14:34.772
+<v Dulal Das .>This is 1 based on the data and compute.
+So there were different concepts used,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/584-1
+01:14:34.772 --> 01:14:39.440
+<v Dulal Das .>then came into Open AI GPT-3 with 175
+billion parameters.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/584-2
+01:14:39.440 --> 01:14:41.934
+<v Dulal Das .>It had the in-context learning.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/587-0
+01:14:44.174 --> 01:14:48.586
+<v Dulal Das .>This also came into picture. Later on,
+showed in context learning,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/587-1
+01:14:48.586 --> 01:14:54.118
+<v Dulal Das .>put a few examples in the prompt and the
+model picks up the task. So if we do some,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/587-2
+01:14:54.118 --> 01:14:58.860
+<v Dulal Das .>if we put some examples in GPT-3,
+see the model was able to learn tasks</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/587-3
+01:14:58.860 --> 01:15:03.733
+<v Dulal Das .>from that without any weight updates.
+So we didn't have to do some weight</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/587-4
+01:15:03.733 --> 01:15:05.774
+<v Dulal Das .>updates for GPT-3 at that time.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/588-0
+01:15:06.054 --> 01:15:10.734
+<v Dulal Das .>We could give us as examples or few short
+learnings in some way at the time.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/589-0
+01:15:13.294 --> 01:15:19.639
+<v Dulal Das .>And the Open AI GPT-3,
+I think it was initially API only based.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/589-1
+01:15:19.639 --> 01:15:26.380
+<v Dulal Das .>Okay. Then came Palm, PALM.
+This went from GPT's 175 billion to 540</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/589-2
+01:15:26.380 --> 01:15:31.534
+<v Dulal Das .>billion,
+but was undertrained relative to its size.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/590-0
+01:15:31.614 --> 01:15:35.397
+<v Dulal Das .>Initially, I,
+I think these were the news at the time,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/590-1
+01:15:35.397 --> 01:15:39.661
+<v Dulal Das .>then DeepMind's Chinchilla came into
+picture with 70 billion,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/590-2
+01:15:39.661 --> 01:15:44.131
+<v Dulal Das .>only 70 billion parameters,
+but it was able to beat large larger</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/590-3
+01:15:44.131 --> 01:15:47.294
+<v Dulal Das .>models by training on far more tokens, so.
+..</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/591-0
+01:15:49.214 --> 01:15:54.672
+<v Dulal Das .>This was a lesser parameter-based model,
+but it was able to be, you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/591-1
+01:15:54.672 --> 01:15:59.614
+<v Dulal Das .>defeat larger models because it was it
+was trained on more tokens.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/592-0
+01:16:05.454 --> 01:16:11.050
+<v Dulal Das .>So, from the second phase,
+what I what I could derive is that we</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/592-1
+01:16:11.050 --> 01:16:16.215
+<v Dulal Das .>could we could learn this for a for a
+fixed compute budget.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/592-2
+01:16:16.215 --> 01:16:20.174
+<v Dulal Das .>Let's say we have a fixed compute budget,
+OK?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/593-0
+01:16:22.894 --> 01:16:27.694
+<v Dulal Das .>What we can do is scale,
+we can scale data and...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/594-0
+01:16:29.054 --> 01:16:30.174
+<v Dulal Das .>Parameters together.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/595-0
+01:16:33.854 --> 01:16:38.982
+<v Dulal Das .>OK, if we from this this phase,
+we learn that if we have fixed, you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/595-1
+01:16:38.982 --> 01:16:42.862
+<v Dulal Das .>compute budget,
+what we can do is we can just scale our</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/595-2
+01:16:42.862 --> 01:16:47.643
+<v Dulal Das .>data and parameters together,
+and this is this is that is why Lama 3</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/595-3
+01:16:47.643 --> 01:16:51.454
+<v Dulal Das .>trained on 8 billion model on 15 million
+tokens, so...</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/598-0
+01:16:53.454 --> 01:16:57.079
+<v Dulal Das .>This is where this is the concept used by
+Lama 3,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/598-1
+01:16:57.079 --> 01:17:02.734
+<v Dulal Das .>which was trained on 8 billion parameters
+and modelled on 15 trillion tokens.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/598-2
+01:17:02.734 --> 01:17:07.374
+<v Dulal Das .>So scaling laws are the core context of
+maybe our next session.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/601-0
+01:17:14.574 --> 01:17:19.781
+<v Dulal Das .>Of course,
+we also had this phase three where Illuta</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/601-1
+01:17:19.781 --> 01:17:26.952
+<v Dulal Das .>AI released file data set and GPTJ.
+We also have seen metas opt with 175</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/601-2
+01:17:26.952 --> 01:17:33.534
+<v Dulal Das .>billion parameters. You know,
+it also published its training logs.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/604-0
+01:17:33.574 --> 01:17:38.512
+<v Dulal Das .>problems included big science bloom also
+came into picture,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/604-1
+01:17:38.512 --> 01:17:43.533
+<v Dulal Das .>focused on documented multilingual,
+you know, data sourcing.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/604-2
+01:17:43.533 --> 01:17:50.364
+<v Dulal Das .>Then the families of families most of you
+will actually work with is later on will</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/604-3
+01:17:50.364 --> 01:17:52.174
+<v Dulal Das .>be is, you know, Lama.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/605-0
+01:17:52.654 --> 01:17:53.934
+<v Dulal Das .>Queen Deepak.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/606-0
+01:17:55.134 --> 01:17:56.974
+<v Dulal Das .>Almost something is like that.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/607-0
+01:18:03.614 --> 01:18:08.182
+<v Dulal Das .>So in this slide, we have seen,
+we have used these models, right?</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/607-1
+01:18:08.182 --> 01:18:13.650
+<v Dulal Das .>So we are just trying to see the openness
+of these models, GPD, Gemini, Cloud,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/607-2
+01:18:13.650 --> 01:18:18.080
+<v Dulal Das .>all are closed models.
+So we can access them only through APIs.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/607-3
+01:18:18.080 --> 01:18:22.094
+<v Dulal Das .>We have open weight models also like Lama,
+DeepSee, Quin.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/610-0
+01:18:22.374 --> 01:18:27.625
+<v Dulal Das .>Where the weights are available,
+and its various papers with different</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/610-1
+01:18:27.625 --> 01:18:33.689
+<v Dulal Das .>architectural details are also presented,
+and some training details with are also</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/610-2
+01:18:33.689 --> 01:18:39.679
+<v Dulal Das .>presented, but no data details are given.
+We have we also have nowadays the open</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/610-3
+01:18:39.679 --> 01:18:41.454
+<v Dulal Das .>source models like Almo.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/611-0
+01:18:41.854 --> 01:18:46.635
+<v Dulal Das .>where weights and data is also available
+for this model, how it was trained,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/611-1
+01:18:46.635 --> 01:18:50.174
+<v Dulal Das .>and the paper with most of the details
+are also present.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/612-0
+01:18:51.614 --> 01:18:54.912
+<v Dulal Das .>So the open source models such as Almo,
+here, weight, data,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/612-1
+01:18:54.912 --> 01:18:59.419
+<v Dulal Das .>and most of the details will be presented.
+Even then, you will be rarely get the,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/612-2
+01:18:59.419 --> 01:19:02.221
+<v Dulal Das .>you know,
+failed experiments or the reasons behind</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/612-3
+01:19:02.221 --> 01:19:05.134
+<v Dulal Das .>why every decision was taken and why it
+was failing.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/613-0
+01:19:17.774 --> 01:19:20.734
+<v Dulal Das .>Now, in this slide,
+we see the current frontier.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/614-0
+01:19:22.094 --> 01:19:25.352
+<v Dulal Das .>We have the latest models here in,
+you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/614-1
+01:19:25.352 --> 01:19:30.637
+<v Dulal Das .>key releases or model releases in the
+model families. Open AI has GPT-6,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/614-2
+01:19:30.637 --> 01:19:34.257
+<v Dulal Das .>which can be used for deep reasoning,
+tool usage,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/614-3
+01:19:34.257 --> 01:19:39.324
+<v Dulal Das .>even the concepts of Agentic AI concepts
+can be used to build agents.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/614-4
+01:19:39.324 --> 01:19:42.654
+<v Dulal Das .>Few things are already released in this
+form.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/617-0
+01:19:43.214 --> 01:19:50.322
+<v Dulal Das .>We have Google's Gemini 4 and Gamma 4
+released. Gemini 4 can, you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/617-1
+01:19:50.322 --> 01:19:57.628
+<v Dulal Das .>well can do well problem solving.
+It is also multimodal and Gamma is also</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/617-2
+01:19:57.628 --> 01:20:01.774
+<v Dulal Das .>open weight. It has open weight reasoning.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/618-0
+01:20:02.414 --> 01:20:08.518
+<v Dulal Das .>concepts. It is also multi-modal.
+We have Entropics Opus 5.5, long context,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/618-1
+01:20:08.518 --> 01:20:14.542
+<v Dulal Das .>context has increased for it can be used
+for reasoning, coding, of course,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/618-2
+01:20:14.542 --> 01:20:20.565
+<v Dulal Das .>the Agentic work through Claude,
+and of course we have the other different</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/618-3
+01:20:20.565 --> 01:20:22.814
+<v Dulal Das .>models for various purposes.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/619-0
+01:20:23.094 --> 01:20:26.642
+<v Dulal Das .>But of course, I,
+when we do a few things in enterprise,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/619-1
+01:20:26.642 --> 01:20:31.807
+<v Dulal Das .>create software development based on our
+use case, based on our business use case,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/619-2
+01:20:31.807 --> 01:20:35.853
+<v Dulal Das .>we transform that business use case into
+some kind of, you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/619-3
+01:20:35.853 --> 01:20:40.272
+<v Dulal Das .>engineering problem where we try to see
+what kind of model we can use.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/619-4
+01:20:40.272 --> 01:20:42.014
+<v Dulal Das .>We directly don't jump into.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/620-0
+01:20:42.334 --> 01:20:45.346
+<v Dulal Das .>one particular model,
+we do some benchmarking,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/620-1
+01:20:45.346 --> 01:20:50.344
+<v Dulal Das .>benchmarking based on our use case and
+use case and later on we decide, okay,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/620-2
+01:20:50.344 --> 01:20:54.894
+<v Dulal Das .>which model fits for our business use
+case or our use case in general.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/621-0
+01:21:00.174 --> 01:21:06.535
+<v Dulal Das .>If you want to refer on, you know,
+and learn something more on the models</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/621-1
+01:21:06.535 --> 01:21:10.404
+<v Dulal Das .>and and their history and the
+architectures,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/621-2
+01:21:10.404 --> 01:21:14.702
+<v Dulal Das .>you can refer this this links here or
+this books.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/621-3
+01:21:14.702 --> 01:21:20.633
+<v Dulal Das .>Dan Jurevsky's released on Jan 2026,
+Speech and Language Processing,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/621-4
+01:21:20.633 --> 01:21:22.094
+<v Dulal Das .>this is good one.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/624-0
+01:21:22.574 --> 01:21:27.430
+<v Dulal Das .>Hands on Large Language Models by JL
+Alamar. This is also nice,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/624-1
+01:21:27.430 --> 01:21:32.134
+<v Dulal Das .>and you can use also see Rashka's,
+you know, concepts papers,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/624-2
+01:21:32.134 --> 01:21:37.673
+<v Dulal Das .>and even the books for the large language
+modelling for research papers,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/624-3
+01:21:37.673 --> 01:21:41.694
+<v Dulal Das .>neural machine translation with
+bite-level subwords.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/625-0
+01:21:41.774 --> 01:21:45.042
+<v Dulal Das .>can be also, you know,
+read and this will give us a good level</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/625-1
+01:21:45.042 --> 01:21:49.294
+<v Dulal Das .>understanding of byte level sub words and
+those tokenization concepts in the end.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/626-0
+01:21:55.374 --> 01:22:01.336
+<v Dulal Das .>So for this week,
+Juraski and Martin chapters 278 and 278</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/626-1
+01:22:01.336 --> 01:22:09.046
+<v Dulal Das .>has been covered. Alamar for chapter 1, 2,
+3, 1, 2, 3 is also looked into.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/626-2
+01:22:09.046 --> 01:22:13.774
+<v Dulal Das .>Rashka's chapter 1 and 2 is also looked
+into.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/628-0
+01:22:15.054 --> 01:22:19.545
+<v Dulal Das .>You can read,
+you can go through these books and you</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/628-1
+01:22:19.545 --> 01:22:24.799
+<v Dulal Das .>can read about them.
+Raska Chapter 2 because it builds Raskas</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/628-2
+01:22:24.799 --> 01:22:30.900
+<v Dulal Das .>Chapter 2 is important for tokenizer
+building and even embedding layer.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/628-3
+01:22:30.900 --> 01:22:34.374
+<v Dulal Das .>This is a good one. And maps, this, this.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/629-0
+01:22:34.574 --> 01:22:37.134
+<v Dulal Das .>maps directly into our assignments
+actually.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/632-0
+01:22:41.374 --> 01:22:46.782
+<v Dulal Das .>You can also, of course,
+use the Hugging Face MLM course,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/632-1
+01:22:46.782 --> 01:22:53.309
+<v Dulal Das .>and this captures 6 and 5,
+which also gives you a walkthrough of BPE,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/632-2
+01:22:53.309 --> 01:22:54.894
+<v Dulal Das .>BPE step by step.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/639-0
+01:23:03.854 --> 01:23:09.245
+<v Dulal Das .>We also have added some additional review
+slides here. You can just go through.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/639-1
+01:23:09.245 --> 01:23:13.153
+<v Dulal Das .>These slides are for encoder only models
+where, you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/639-2
+01:23:13.153 --> 01:23:18.004
+<v Dulal Das .>Bert and Roberta use these concepts.
+You can just have a look into this</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/639-3
+01:23:18.004 --> 01:23:22.047
+<v Dulal Das .>encoder only models.
+We also have given some details of the</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/639-4
+01:23:22.047 --> 01:23:26.494
+<v Dulal Das .>decoder only models which were used by
+GPT, used by GPT and Lama.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/642-0
+01:23:27.134 --> 01:23:31.539
+<v Dulal Das .>Various concepts of decoder block is
+given here. Then of course,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/642-1
+01:23:31.539 --> 01:23:35.809
+<v Dulal Das .>we have this encoder-decoder model blocks
+used by T5 and Watt.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/642-2
+01:23:35.809 --> 01:23:37.774
+<v Dulal Das .>This can be also looked into.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/647-0
+01:23:39.694 --> 01:23:43.463
+<v Dulal Das .>And this slide contains the whole,
+you know,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/647-1
+01:23:43.463 --> 01:23:50.414
+<v Dulal Das .>encoder-decoder of a block of the whole
+transformer. This can be also looked into.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/656-0
+01:23:59.774 --> 01:24:05.934
+<v Dulal Das .>So this is what we have now from our
+session, from our class one.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/656-1
+01:24:05.934 --> 01:24:11.721
+<v Dulal Das .>And we could now look into also class 2
+sessions if required.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/656-2
+01:24:11.721 --> 01:24:16.201
+<v Dulal Das .>And if you guys have any questions or
+anything,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/656-3
+01:24:16.201 --> 01:24:23.201
+<v Dulal Das .>you can just message in the chat.
+We will look into things and I will also</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/656-4
+01:24:23.201 --> 01:24:23.854
+<v Dulal Das .>try to.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/657-0
+01:24:23.894 --> 01:24:29.182
+<v Dulal Das .>reply to your questions with answers and
+any doubts or any queries,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/657-1
+01:24:29.182 --> 01:24:33.536
+<v Dulal Das .>you can message me directly also,
+or even in the group,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/657-2
+01:24:33.536 --> 01:24:38.824
+<v Dulal Das .>and I will try to find the answers and
+reply back with the answers.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/657-3
+01:24:38.824 --> 01:24:44.811
+<v Dulal Das .>And if you have any enterprise grade
+questions for any modelling concepts or</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/657-4
+01:24:44.811 --> 01:24:48.854
+<v Dulal Das .>any tokenizer concepts,
+we can also look into that.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/658-0
+01:24:48.934 --> 01:24:52.399
+<v Dulal Das .>that I will just, you know,
+try to find out the answer for your</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/658-1
+01:24:52.399 --> 01:24:56.405
+<v Dulal Das .>questions and we will, you know,
+I will share those details with you guys</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/658-2
+01:24:56.405 --> 01:24:57.054
+<v Dulal Das .>in the chat.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/659-0
+01:24:59.134 --> 01:25:07.609
+<v Dulal Das .>So this is what is for from our CS1 intro
+for MLM. I think the time is already 10,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/659-1
+01:25:07.609 --> 01:25:12.307
+<v Dulal Das .>so we will drop for today.
+From next session,</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/659-2
+01:25:12.307 --> 01:25:19.454
+<v Dulal Das .>I will start the CS2 class and various
+topics that we will look into.</v>
+
+b4c4ff46-6ec5-4125-b58d-3a8104ab977c/660-0
+01:25:20.694 --> 01:25:21.134
+<v Dulal Das .>Thank you.</v>
