@@ -44,3 +44,29 @@ __pycache__/
 
 # personal resume (phone, address): local only, never pushed
 resume/
+
+# Third-party course material lives in the private repo ai-ml-materials (see materials.sh).
+# Own notes (*.md) and .gitkeep in these folders stay public.
+**/materials/**
+**/transcript/**
+**/books/**
+other-electives/*/handouts/**
+other-electives/*/labware/**
+other-electives/*/lecture-slides/**
+other-electives/*/past-question-papers/**
+other-electives/*/old-batch-slides/**
+!**/materials/**/
+!**/transcript/**/
+!**/books/**/
+!other-electives/*/handouts/**/
+!other-electives/*/labware/**/
+!other-electives/*/lecture-slides/**/
+!other-electives/*/past-question-papers/**/
+!other-electives/*/old-batch-slides/**/
+!**/materials/**/*.md
+!**/transcript/**/*.md
+!**/books/**/*.md
+!**/.gitkeep
+# re-ignore caches the directory re-includes above would expose
+__pycache__/
+.ipynb_checkpoints/

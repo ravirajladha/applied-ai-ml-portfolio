@@ -24,6 +24,7 @@
 - NLP: don't re-read the handouts. Use only the revision chapters listed in `TRACK.md` §5.
 
 ## Seniors' and shared-drive resources (look here when asked to "take reference")
+- **Where the files live:** third-party material (handouts, slides, past papers, transcripts, labware, books) is git-ignored here and versioned in the **private** repo `ravirajladha/ai-ml-materials`, overlaid on the same paths. `bash materials.sh pull|push|status` syncs it; never commit it to this public repo. Own notes (`*.md`) in those folders stay here.
 - **My semester-3 subjects** (`llm-engineering/`, `nlp-applications/`, `machine-learning-on-the-edge/`, `api-driven-cloud-native-solutions/`): `materials/handouts/`, `materials/past-question-papers/`, `materials/old-batch-slides/`, `materials/lecture-slides/`, `books/` or `materials/books/`, `transcript/other-sections/` (other professors' lecture `.vtt` transcripts). Each subject's `resources.md` lists every file.
 - **Electives I'm not taking**: `other-electives/<subject>/` (same subfolder names), indexed in `other-electives/README.md`.
 - Old-batch material can differ from the current syllabus: always check the current handout first. Past question papers are the best signal for what's examined.
